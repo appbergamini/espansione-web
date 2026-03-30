@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log(`[API Engine] Recebida requisicao para aprovar checkpoint ${checkpointNum}`);
     await db.updateCheckpoint(projetoId, checkpointNum, status || 'aprovado', notas || '');
     
     // Atualiza o status do projeto para refletir aprovação para facilitar na UI depois se quiser
