@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import Logo from '../../components/Logo';
 
 const AGENT_NAMES = [
   "00. Intake & Contexto",
@@ -131,11 +132,14 @@ export default function ProjetoDetalhes() {
       </Head>
       <div className="page-container">
         <main className="container">
-          <Link href="/consultor">
-            <span style={{ color: 'var(--accent-blue)', cursor: 'pointer', display: 'inline-block', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-              &larr; Voltar ao Painel Gerencial
-            </span>
-          </Link>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <Link href="/consultor">
+              <span style={{ color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.9rem' }}>
+                &larr; Voltar ao Painel Gerencial
+              </span>
+            </Link>
+            <Logo size="sm" showTagline={false} />
+          </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
             {/* Esquerda: Informações Gerais */}
