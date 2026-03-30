@@ -108,7 +108,7 @@ export default function ProjetoDetalhes() {
   if (errorMsg) return <div style={{ color: 'var(--brand-red)', padding: '2rem' }}>{errorMsg}</div>;
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
 
-  const { projeto, outputs = [], formularios = [] } = data;
+  const { projeto, outputs = [], formularios = [], intake } = data;
   
   // Calcular qual é o próximo agente baseado no último output gerado
   const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : -1;
@@ -151,8 +151,16 @@ export default function ProjetoDetalhes() {
               <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Diagnósticos Essenciais</h3>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem' }}>
-                  <li style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>✅ Intake do Consultor</span>
+                  <li style={{ paddingBottom: '0.75rem', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 500 }}>{intake && Object.keys(intake).length > 2 ? '✅' : '⏳'} Form. Cliente (Intake)</span>
+                    </div>
+                    {(!intake || Object.keys(intake).length <= 2) && (
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-start' }}>
+                        <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=express`)} style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>Copiar Link (Express)</button>
+                        <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=completa`)} style={{ background: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: '#000', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Copiar Link (Completo)</button>
+                      </div>
+                    )}
                   </li>
                   <li style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{formularios.some(f => f.tipo === 'proposito') ? '✅' : '⏳'} Form. Liderança (Propósito)</span>
