@@ -27,6 +27,7 @@ export default function ProjetoDetalhes() {
   
   const [runningAgent, setRunningAgent] = useState(null); // agente atual
   const [engineError, setEngineError] = useState('');
+  const [approving, setApproving] = useState(false);
 
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
@@ -50,6 +51,28 @@ export default function ProjetoDetalhes() {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  const handleApproveCheckpoint = async (checkpointNum) => {
+    setApproving(true);
+    setEngineError('');
+    try {
+      const res = await fetch('/api/engine/checkpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projetoId: id, checkpointNum, status: 'aprovado' })
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setEngineError(json.error || 'Falha ao aprovar checkpoint.');
+      } else {
+        await loadData();
+      }
+    } catch (err) {
+      setEngineError('Falha ao comunicar com o servidor.');
+    } finally {
+      setApproving(false);
+    }
+  };
 
   const handleRunNext = async (agentNum) => {
     setRunningAgent(agentNum);
@@ -89,6 +112,11 @@ export default function ProjetoDetalhes() {
   // Calcular qual é o próximo agente baseado no último output gerado
   const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : -1;
   const nextAgent = lastOutputNum < 10 ? lastOutputNum + 1 : null;
+  
+  const { pendingCheckpoints = [] } = data;
+  const pendingCkpt = (pendingCheckpoints && pendingCheckpoints.length > 0) 
+    ? [...pendingCheckpoints].sort((a,b) => a.checkpoint_num - b.checkpoint_num)[0]
+    : null;
 
   // Render formatters
   const renderMarkdownText = (text) => {
@@ -136,7 +164,26 @@ export default function ProjetoDetalhes() {
               {/* Box de Ação Principal */}
               <div className="glass-card outline-glow" style={{ padding: '1.5rem', background: 'rgba(56, 189, 248, 0.05)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
                 <h3 style={{ marginBottom: '1rem', color: 'var(--accent-blue)' }}>Orquestrador de IA</h3>
-                {nextAgent === null ? (
+                {pendingCkpt ? (
+                  <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                    <p style={{ color: 'var(--warning)', fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>🛑</span> Checkpoint {pendingCkpt.checkpoint_num} Pendente
+                    </p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
+                      Valide os relatórios formatados entregues até agora. Eles devem ser apresentados ao cliente. 
+                      Se aprovado, o sistema destravará a próxima etapa da esteira.
+                    </p>
+                    <button 
+                      className="btn-primary" 
+                      style={{ width: '100%', padding: '0.75rem', background: 'var(--warning)', color: '#000', filter: 'none', boxShadow: 'none' }}
+                      onClick={() => handleApproveCheckpoint(pendingCkpt.checkpoint_num)}
+                      disabled={approving}
+                    >
+                      {approving ? 'Aprovando...' : `Aprovar Checkpoint ${pendingCkpt.checkpoint_num}`}
+                    </button>
+                    {engineError && <p style={{ color: 'var(--brand-red)', marginTop: '0.5rem', fontSize: '0.85rem' }}>{engineError}</p>}
+                  </div>
+                ) : nextAgent === null ? (
                   <p style={{ color: 'var(--success)', fontWeight: 600 }}>Cérebro 100% Processado! 🎉</p>
                 ) : (
                   <>
