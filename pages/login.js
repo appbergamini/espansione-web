@@ -100,17 +100,16 @@ export default function Login() {
             ) : (
               <form onSubmit={verifyOTP}>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', textAlign: 'center' }}>
-                  Enviamos um código de 6 dígitos para o e-mail: <strong style={{color: '#fff'}}>{email}</strong>
+                  Enviamos um código de acesso para o e-mail: <strong style={{color: '#fff'}}>{email}</strong>
                 </p>
                 <div className="form-group">
-                  <label>Código PIN (6 Dígitos)</label>
+                  <label>Código PIN Numérico</label>
                   <input 
                     type="text" 
                     className="form-input" 
                     value={pin} 
                     onChange={e => setPin(e.target.value)} 
-                    placeholder="000000"
-                    maxLength={6}
+                    placeholder="00000000"
                     style={{ textAlign: 'center', letterSpacing: '0.2rem', fontSize: '1.5rem' }}
                     required 
                     autoComplete="one-time-code"
