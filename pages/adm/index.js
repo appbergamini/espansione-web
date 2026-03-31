@@ -73,39 +73,40 @@ export default function AdminPanel() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
-                      <th style={{ padding: '1rem 0', fontWeight: 500 }}>Empresa</th>
-                      <th style={{ padding: '1rem 0', fontWeight: 500 }}>Segmento</th>
-                      <th style={{ padding: '1rem 0', fontWeight: 500 }}>Status</th>
-                      <th style={{ padding: '1rem 0', fontWeight: 500 }}>Progresso</th>
-                      <th style={{ padding: '1rem 0', fontWeight: 500 }}>Ações</th>
+                      <th style={{ padding: '1rem', fontWeight: 500 }}>Empresa</th>
+                      <th style={{ padding: '1rem', fontWeight: 500 }}>Segmento</th>
+                      <th style={{ padding: '1rem', fontWeight: 500 }}>Status</th>
+                      <th style={{ padding: '1rem', fontWeight: 500 }}>Progresso</th>
+                      <th style={{ padding: '1rem', fontWeight: 500, textAlign: 'right' }}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {projetos.map(proj => (
                       <tr key={proj.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }}>
-                        <td style={{ padding: '1.25rem 0', fontWeight: 600, color: 'var(--text-primary)' }}>{proj.cliente}</td>
-                        <td style={{ padding: '1.25rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{proj.segmento}</td>
-                        <td style={{ padding: '1.25rem 0' }}>
+                        <td style={{ padding: '1.25rem 1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{proj.cliente}</td>
+                        <td style={{ padding: '1.25rem 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{proj.segmento}</td>
+                        <td style={{ padding: '1.25rem 1rem' }}>
                           <span style={{ 
-                            padding: '0.25rem 0.75rem', 
+                            padding: '0.3rem 0.8rem', 
                             fontSize: '0.8rem', 
                             borderRadius: '12px', 
                             background: proj.status.includes('concluido') ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                            color: proj.status.includes('concluido') ? 'var(--success)' : 'var(--warning)'
+                            color: proj.status.includes('concluido') ? 'var(--success)' : 'var(--warning)',
+                            whiteSpace: 'nowrap'
                           }}>
                             {proj.status.replace(/_/g, ' ')}
                           </span>
                         </td>
-                        <td style={{ padding: '1.25rem 0' }}>
+                        <td style={{ padding: '1.25rem 1rem', minWidth: '150px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <div style={{ width: '100px', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden' }}>
                               <div style={{ height: '100%', width: `${Math.min(100, (proj.etapa_atual / 10) * 100)}%`, background: 'var(--accent-blue)' }} />
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Agent {proj.etapa_atual}/10</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Agent {proj.etapa_atual}/10</span>
                           </div>
                         </td>
-                        <td style={{ padding: '1.25rem 0' }}>
-                          <button className="btn-secondary" onClick={() => router.push(`/adm/${proj.id}`)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.875rem' }}>Ver Detalhes</button>
+                        <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
+                          <button className="btn-secondary" onClick={() => router.push(`/adm/${proj.id}`)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>Ver Detalhes</button>
                         </td>
                       </tr>
                     ))}

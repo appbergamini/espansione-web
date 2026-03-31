@@ -221,7 +221,7 @@ export default function IntakeForm() {
                 {/* BLOCO C */}
                 <div style={{ marginBottom: '3rem' }}>
                   <h2 style={{ color: 'var(--accent-green)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-                    {isCompleta ? 'Bloco C — ' : 'Bloco Final — '}Visão, Propósito e Futuro
+                    {isCompleta ? 'Bloco C — ' : ''}Visão, Propósito e Futuro
                   </h2>
 
                   <div className="form-group">
@@ -252,28 +252,24 @@ export default function IntakeForm() {
                   {isCompleta && (
                     <>
                       <div className="form-group">
-                        <label style={{ color: 'var(--text-primary)', marginBottom: '1rem', display: 'block' }}>Aponte 3 impulsionadores, 3 detratores e 3 aceleradores da sua organização:</label>
-                        
-                        <div style={{ marginBottom: '1.5rem' }}>
-                          <strong style={{ color: 'var(--success)', display: 'block', marginBottom: '0.5rem' }}>⬆️ IMPULSIONADORES (Forças e Vantagens)</strong>
-                          <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_impulsionador_1" placeholder="Impulsionador 1" onChange={handleInputChange} required />
-                          <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_impulsionador_2" placeholder="Impulsionador 2" onChange={handleInputChange} required />
-                          <input className="form-input" name="c6_impulsionador_3" placeholder="Impulsionador 3" onChange={handleInputChange} required />
-                        </div>
-                        
-                        <div style={{ marginBottom: '1.5rem' }}>
-                          <strong style={{ color: 'var(--brand-red)', display: 'block', marginBottom: '0.5rem' }}>⬇️ DETRATORES (Fragilidades e Dores)</strong>
-                          <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_detrator_1" placeholder="Detrator 1" onChange={handleInputChange} required />
-                          <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_detrator_2" placeholder="Detrator 2" onChange={handleInputChange} required />
-                          <input className="form-input" name="c6_detrator_3" placeholder="Detrator 3" onChange={handleInputChange} required />
-                        </div>
-                        
-                        <div>
-                          <strong style={{ color: 'var(--accent-blue)', display: 'block', marginBottom: '0.5rem' }}>🚀 ACELERADORES (Oportunidades de Crescimento)</strong>
-                          <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_acelerador_1" placeholder="Acelerador 1" onChange={handleInputChange} required />
-                          <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_acelerador_2" placeholder="Acelerador 2" onChange={handleInputChange} required />
-                          <input className="form-input" name="c6_acelerador_3" placeholder="Acelerador 3" onChange={handleInputChange} required />
-                        </div>
+                        <label>Aponte 3 IMPULSIONADORES (Forças e Vantagens) da sua organização:</label>
+                        <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_impulsionador_1" placeholder="Impulsionador 1" onChange={handleInputChange} required />
+                        <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_impulsionador_2" placeholder="Impulsionador 2" onChange={handleInputChange} required />
+                        <input className="form-input" name="c6_impulsionador_3" placeholder="Impulsionador 3" onChange={handleInputChange} required />
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Aponte 3 DETRATORES (Fragilidades e Dores) da sua organização:</label>
+                        <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_detrator_1" placeholder="Detrator 1" onChange={handleInputChange} required />
+                        <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_detrator_2" placeholder="Detrator 2" onChange={handleInputChange} required />
+                        <input className="form-input" name="c6_detrator_3" placeholder="Detrator 3" onChange={handleInputChange} required />
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Aponte 3 ACELERADORES (Oportunidades de Crescimento) da sua organização:</label>
+                        <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_acelerador_1" placeholder="Acelerador 1" onChange={handleInputChange} required />
+                        <input className="form-input" style={{ marginBottom: '0.5rem' }} name="c6_acelerador_2" placeholder="Acelerador 2" onChange={handleInputChange} required />
+                        <input className="form-input" name="c6_acelerador_3" placeholder="Acelerador 3" onChange={handleInputChange} required />
                       </div>
 
                       <div className="form-group">
