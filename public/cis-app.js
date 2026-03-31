@@ -2,7 +2,7 @@
 // VERTHO ASSESSMENT v2.1 — Adaptado para Next.js + Supabase
 // ═══════════════════════════════════════════════════════════════
 
-const L=`<svg viewBox="0 0 40 40" fill="none"><path d="M20 4L6 36h8l6-16 6 16h8L20 4z" fill="#2DD4BF"/><circle cx="20" cy="2" r="2.5" fill="#2DD4BF"/></svg>`;
+const L=`<span style="color:#Da3144;font-size:1.5em;font-weight:800;font-style:italic;letter-spacing:-0.05em;transform:scaleX(1.15) rotate(-5deg);display:inline-block;margin-right:-2px">e</span><span style="color:#004198;font-weight:800;letter-spacing:-0.04em">spansione</span>`;
 const DC={D:'#EF4444',I:'#FBBF24',S:'#22C55E',C:'#3B82F6'};
 const DN={D:'Dominância',I:'Influência',S:'Estabilidade',C:'Conformidade'};
 
@@ -87,14 +87,13 @@ function pct(){
   else if(G.ph==='rank2')d=14+G.gi;
   else if(G.ph==='pair2_intro')d=22;
   else if(G.ph==='pair2')d=22+G.pi;
-  else if(G.ph==='learnpref')d=28;
-  else if(G.ph==='calc'||G.ph==='results')d=29;
-  return(d/29)*100;
+  else if(G.ph==='calc'||G.ph==='results')d=28;
+  return(d/28)*100;
 }
 function prg(label){const p=pct();return`<div class="prg"><div class="prg-h"><span>${label}</span><span>${Math.round(p)}%</span></div><div class="prg-t"><div class="prg-f" style="width:${p}%"></div></div></div>`}
 
 function R(){
-  const fns={onboard:rOnb,welcome:rWel,rank1_intro:()=>rIntro(1,'rank'),rank1:rRank,pair1_intro:()=>rIntro(1,'pair'),pair1:rPair,rank2_intro:()=>rIntro(2,'rank'),rank2:rRank,pair2_intro:()=>rIntro(2,'pair'),pair2:rPair,learnpref:rLearnPref,calc:rCalc,results:rRes};
+  const fns={onboard:rOnb,welcome:rWel,rank1_intro:()=>rIntro(1,'rank'),rank1:rRank,pair1_intro:()=>rIntro(1,'pair'),pair1:rPair,rank2_intro:()=>rIntro(2,'rank'),rank2:rRank,pair2_intro:()=>rIntro(2,'pair'),pair2:rPair,calc:rCalc,results:rRes};
   (fns[G.ph]||rOnb)();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -102,7 +101,7 @@ function R(){
 function rOnb(){
   app.innerHTML=`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:40px 0">
   <div class="onb-bg"></div>
-  <div class="onb-a logo" style="position:relative;z-index:1">${L}<span style="font-size:28px">VERTHO</span></div>
+  <div class="onb-a" style="position:relative;z-index:1;font-size:28px;font-family:var(--hd)">${L}</div>
   <p class="onb-b body" style="margin-top:10px;position:relative;z-index:1">Mapeamento de Perfil Comportamental</p>
   <div class="onb-c" style="display:flex;gap:8px;margin-top:28px;width:100%;max-width:320px;position:relative;z-index:1">
     ${[{i:'🧬',t:'Perfil DISC'},{i:'⚡',t:'Pares rápidos'},{i:'📊',t:'16 Competências'}].map(c=>`<div style="flex:1;background:var(--bg2);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:14px 6px;text-align:center"><div style="font-size:22px;margin-bottom:4px">${c.i}</div><div style="font-size:10px;font-weight:700;color:var(--off)">${c.t}</div></div>`).join('')}
@@ -116,7 +115,7 @@ function rOnb(){
 function rWel(){
   var urlEmail=new URLSearchParams(window.location.search).get('email')||'';
   if(urlEmail&&!G.ud.email){G.ud.email=urlEmail;G.ud.name=urlEmail.split('@')[0];G.ud.gender='';}
-  app.innerHTML=`<div class="vi"><div class="sg" style="text-align:center;padding:12px 0"><div class="logo">${L}<span>VERTHO</span></div></div>
+  app.innerHTML=`<div class="vi"><div class="sg" style="text-align:center;padding:12px 0"><div style="font-size:24px;font-family:var(--hd)">${L}</div></div>
   <div class="sg gl"><p class="tag" style="margin-bottom:8px">Seus dados</p>
   <input class="fi" id="fn" placeholder="Nome completo" value="${G.ud.name}">
   <input class="fi" id="fe" placeholder="E-mail" type="email" value="${G.ud.email}">
@@ -220,28 +219,11 @@ function advPair(){
   if(G.pi<5){G.pi++;R()}
   else{
     if(etapa===1){G.ph='rank2_intro';R()}
-    else{G.ph='learnpref';R()}
+    else{G.ph='calc';R();setTimeout(()=>{G.sc=calcScores(G.raw);saveToSupabase();G.ph='results';R()},600)}
   }
 }
 
-function rLearnPref(){
-  const allRated=Object.keys(G.learnPrefs).length===FORMATS.length;
-  app.innerHTML=`<div class="vi">${prg('Preferências de Aprendizagem')}
-  <div class="sg"><p class="tag">Última etapa</p><p class="hd" style="margin-top:3px">Como você aprende melhor?</p><p class="body" style="margin-top:6px">Dê de 1 a 5 estrelas para cada formato:</p></div>
-  ${FORMATS.map(f=>{
-    const cur=G.learnPrefs[f.id]||0;
-    return`<div class="sg star-row"><span class="star-icon">${f.icon}</span><span class="star-label">${f.label}</span><div class="stars">${[1,2,3,4,5].map(n=>`<button class="star${n<=cur?' on':''}" data-fid="${f.id}" data-n="${n}">★</button>`).join('')}</div></div>`;
-  }).join('')}
-  <div class="sg"><button class="btn btn-p" id="nx"${allRated?'':' disabled'}>VER MEU PERFIL →</button></div></div>`;
-  document.querySelectorAll('.star').forEach(s=>s.addEventListener('click',e=>{
-    const fid=e.currentTarget.dataset.fid,n=+e.currentTarget.dataset.n;
-    G.learnPrefs[fid]=n;
-    document.querySelectorAll('.star[data-fid="'+fid+'"]').forEach(function(s){s.classList.toggle('on',+s.dataset.n<=n)});
-    var allR=Object.keys(G.learnPrefs).length===FORMATS.length;
-    var nxBtn=$('nx');if(nxBtn)nxBtn.disabled=!allR;
-  }));
-  if($('nx'))$('nx').addEventListener('click',()=>{G.ph='calc';R();setTimeout(()=>{G.sc=calcScores(G.raw);saveToSupabase();G.ph='results';R()},600)});
-}
+// Learning preferences removed per user request
 
 function rCalc(){
   app.innerHTML=`<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px"><div class="spinner"></div><p style="font-size:14px;font-weight:600">Calculando seu perfil...</p><p class="cap">Salvando resultados</p></div>`;
@@ -278,7 +260,7 @@ function rRes(){
   const compG=[{t:'Dominância',c:DC.D,k:['Ousadia','Comando','Objetividade','Assertividade']},{t:'Influência',c:DC.I,k:['Persuasão','Extroversão','Entusiasmo','Sociabilidade']},{t:'Estabilidade',c:DC.S,k:['Empatia','Paciência','Persistência','Planejamento']},{t:'Conformidade',c:DC.C,k:['Organização','Detalhismo','Prudência','Concentração']}];
 
   app.innerHTML=`<div class="vi">
-  <div class="sg" style="text-align:center;padding:16px 0 20px"><div class="logo" style="margin-bottom:12px">${L}<span>VERTHO</span></div>
+  <div class="sg" style="text-align:center;padding:16px 0 20px"><div style="font-size:28px;font-family:var(--hd);margin-bottom:12px">${L}</div>
   <p class="tag" style="margin-bottom:6px">Seu perfil comportamental</p>
   <div style="font-family:var(--hd);font-size:52px;font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${s.profile}</div>
   <p class="cap" style="margin-top:4px">${G.ud.name}</p></div>
@@ -297,15 +279,8 @@ function rRes(){
   <div class="sg gl"><p class="tag" style="margin-bottom:8px">Liderança</p>${Object.entries(s.lead).map(([k,v])=>bar(k,v,'var(--teal)',50)).join('')}</div>
   ${compG.map(g=>`<div class="sg gl"><p class="tag" style="color:${g.c};margin-bottom:8px">Competências — ${g.t}</p>${g.k.map(k=>bar(k,s.comp[k],g.c,100)).join('')}</div>`).join('')}
 
-  <div class="sg gl"><p class="tag" style="color:var(--gold);margin-bottom:10px">Preferências de Aprendizagem</p>
-  ${FORMATS.sort((a,b)=>(G.learnPrefs[b.id]||0)-(G.learnPrefs[a.id]||0)).map(f=>{
-    const stars=G.learnPrefs[f.id]||0;
-    const cl=stars>=4?'var(--gold)':stars>=3?'var(--ml)':'var(--muted)';
-    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:12px">${f.icon}</span><span style="flex:1;font-size:12px;font-weight:600">${f.label}</span><span style="font-size:12px;color:${cl};letter-spacing:1px">${'★'.repeat(stars)}${'☆'.repeat(5-stars)}</span></div>`;
-  }).join('')}</div>
-
   <div class="sg" style="margin-top:14px"><button class="btn btn-p" id="genPdf" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">📄</span> BAIXAR RELATÓRIO PDF</button><p class="cap" style="margin-top:6px;text-align:center">Relatório completo personalizado</p></div>
-  <div class="sg footer">Vertho © 2026 — Instrumento Proprietário v2.1</div></div>`;
+  <div class="sg footer">Espansione © 2026 — Mapeamento Comportamental v2.1</div></div>`;
 
   // Radar chart
   setTimeout(()=>{
