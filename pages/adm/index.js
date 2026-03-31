@@ -37,8 +37,8 @@ export default function AdminPanel() {
         <main className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <Logo size="sm" showTagline={false} />
-              <div style={{ height: '32px', width: '1px', background: 'var(--glass-border)' }}></div>
+              <Logo size="lg" showTagline={false} />
+              <div style={{ height: '64px', width: '1px', background: 'var(--glass-border)' }}></div>
               <h1 className="animate-fade-in" style={{ fontSize: '1.5rem' }}>Painel Gerencial</h1>
             </div>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

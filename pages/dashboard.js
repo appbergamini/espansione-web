@@ -60,6 +60,9 @@ export default function Dashboard() {
         {/* Header */}
         <header className="flex justify-between items-center mb-10">
           <div>
+            <div className="mb-6">
+              <Logo size="lg" />
+            </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Bom dia, Administrador</h1>
             <p className="text-slate-500 mt-1">Aqui está o resumo dos projetos ativos hoje.</p>
           </div>
