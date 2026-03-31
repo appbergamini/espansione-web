@@ -114,24 +114,23 @@ function rOnb(){
 
 function rWel(){
   var urlEmail=new URLSearchParams(window.location.search).get('email')||'';
-  if(urlEmail&&!G.ud.email){G.ud.email=urlEmail;G.ud.name=urlEmail.split('@')[0];G.ud.gender='';}
+  if(urlEmail&&!G.ud.email){G.ud.email=urlEmail;G.ud.name=urlEmail.split('@')[0];}
   app.innerHTML=`<div class="vi"><div class="sg" style="text-align:center;padding:12px 0"><div style="font-size:24px;font-family:var(--hd)">${L}</div></div>
   <div class="sg gl"><p class="tag" style="margin-bottom:8px">Seus dados</p>
   <input class="fi" id="fn" placeholder="Nome completo" value="${G.ud.name}">
-  <input class="fi" id="fe" placeholder="E-mail" type="email" value="${G.ud.email}">
-  <select class="fi" id="fg"><option value="">Gênero</option><option value="m"${G.ud.gender==='m'?' selected':''}>Masculino</option><option value="f"${G.ud.gender==='f'?' selected':''}>Feminino</option><option value="o"${G.ud.gender==='o'?' selected':''}>Outro</option></select></div>
+  <input class="fi" id="fe" placeholder="E-mail" type="email" value="${G.ud.email}"></div>
   <div class="sg gl gl-g"><p class="body"><strong style="color:var(--white)">2 etapas:</strong> como você é (natural) e como esperam que você seja (adaptado). Cada etapa tem <strong style="color:var(--white)">rankings + escolhas rápidas</strong>.</p></div>
   <div class="sg"><button class="btn btn-p" id="go">INICIAR MAPEAMENTO</button></div></div>`;
-  const u=()=>{G.ud.name=$('fn').value;G.ud.email=$('fe').value;G.ud.gender=$('fg').value;$('go').disabled=!(G.ud.name&&G.ud.email)};
-  ['fn','fe','fg'].forEach(id=>$(id).addEventListener('input',u));
+  const u=()=>{G.ud.name=$('fn').value;G.ud.email=$('fe').value;$('go').disabled=!(G.ud.name&&G.ud.email)};
+  ['fn','fe'].forEach(id=>$(id).addEventListener('input',u));
   $('go').addEventListener('click',()=>{u();G.ph='rank1_intro';R()});u();
 }
 
 function rIntro(etapa,tipo){
   const isRank=tipo==='rank';
   const titles={1:{rank:'Perfil Natural',pair:'Escolhas Rápidas'},2:{rank:'Perfil Adaptado',pair:'Escolhas Rápidas'}};
-  const descs={1:{rank:'Ordene 4 palavras do que <strong style="color:var(--white)">mais se parece com você</strong> ao que menos se parece.',pair:'Agora, <strong style="color:var(--white)">6 escolhas rápidas</strong> para refinar seu perfil. Escolha A ou B — qual te descreve melhor?'},2:{rank:'Mesmas palavras, mas agora ordene como <strong style="color:var(--white)">as pessoas esperam que você seja</strong>.',pair:'Novamente <strong style="color:var(--white)">6 escolhas rápidas</strong>, agora sob a ótica do que os outros esperam de você.'}};
-  const tips={1:{rank:'Como você realmente é no dia a dia.',pair:'Vá com a primeira impressão — não pense demais.'},2:{rank:'Como seu ambiente espera que você se comporte.',pair:'Pense em como os outros gostariam que você agisse.'}};
+  const descs={1:{rank:'Ordene 4 palavras do que <strong style="color:var(--white)">mais se parece com você</strong> ao que menos se parece.',pair:'Agora, <strong style="color:var(--white)">6 escolhas rápidas</strong> para refinar seu perfil. Escolha A ou B — qual te descreve melhor?'},2:{rank:'Mesmas palavras, mas agora ordene <strong style="color:var(--white)">COMO as pessoas ESPERAM que você seja</strong> — não como você realmente é, mas como o seu ambiente profissional e pessoal deseja que você se comporte.',pair:'Novamente <strong style="color:var(--white)">6 escolhas rápidas</strong>. Desta vez, pense <strong style="color:var(--white)">COMO OS OUTROS ESPERAM que você aja</strong>, não como você age naturalmente.'}};
+  const tips={1:{rank:'Como você realmente é no dia a dia.',pair:'Vá com a primeira impressão — não pense demais.'},2:{rank:'⚠️ Atenção: NÃO é como você é, mas como os OUTROS ESPERAM que você seja.',pair:'⚠️ Pense em como os outros gostariam que você agisse, não como você realmente age.'}};
   const next={1:{rank:()=>{G.gi=0;G.ph='rank1';G.it=shuf(RG[0]);R()},pair:()=>{G.pi=0;G.ph='pair1';R()}},2:{rank:()=>{G.gi=0;G.ph='rank2';G.it=shuf(RG[0]);R()},pair:()=>{G.pi=0;G.ph='pair2';R()}}};
   app.innerHTML=`<div class="vi">${prg(`Etapa ${etapa} — ${titles[etapa][tipo]}`)}
   <div class="sg" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -254,30 +253,30 @@ function saveToSupabase(){
 // ═══ RESULTS ═══
 function rRes(){
   const s=G.sc;
-  function bar(n,v,c,m){return`<div class="br"><div class="br-h"><span class="br-n">${n}</span><span class="br-v" style="color:${c}">${v}</span></div><div class="br-t"><div class="br-f" style="width:${(v/m)*100}%;background:${c}"></div></div></div>`}
+  function bar(n,v,c,m){return`<div class="br"><div class="br-h"><span class="br-n" style="font-size:14px">${n}</span><span class="br-v" style="color:${c};font-size:14px">${v}</span></div><div class="br-t"><div class="br-f" style="width:${(v/m)*100}%;background:${c}"></div></div></div>`}
   const sorted=Object.entries(s.comp).sort((a,b)=>b[1]-a[1]);
   const top3=sorted.slice(0,3),gap3=sorted.slice(-3).reverse();
   const compG=[{t:'Dominância',c:DC.D,k:['Ousadia','Comando','Objetividade','Assertividade']},{t:'Influência',c:DC.I,k:['Persuasão','Extroversão','Entusiasmo','Sociabilidade']},{t:'Estabilidade',c:DC.S,k:['Empatia','Paciência','Persistência','Planejamento']},{t:'Conformidade',c:DC.C,k:['Organização','Detalhismo','Prudência','Concentração']}];
 
   app.innerHTML=`<div class="vi">
   <div class="sg" style="text-align:center;padding:16px 0 20px"><div style="font-size:28px;font-family:var(--hd);margin-bottom:12px">${L}</div>
-  <p class="tag" style="margin-bottom:6px">Seu perfil comportamental</p>
-  <div style="font-family:var(--hd);font-size:52px;font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${s.profile}</div>
-  <p class="cap" style="margin-top:4px">${G.ud.name}</p></div>
+  <p class="tag" style="margin-bottom:6px;font-size:12px">Seu perfil comportamental</p>
+  <div style="font-family:var(--hd);font-size:60px;font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${s.profile}</div>
+  <p class="cap" style="margin-top:4px;font-size:14px">${G.ud.name}</p></div>
 
-  <div class="sg gl"><p class="tag" style="margin-bottom:8px">DISC</p>
-  <canvas id="rc" style="width:100%;max-width:240px;display:block;margin:0 auto"></canvas>
-  <div style="display:flex;justify-content:center;gap:14px;margin-top:8px"><span style="font-size:10px;font-weight:700;color:var(--teal)">● Natural</span><span style="font-size:10px;font-weight:700;color:var(--coral)">● Adaptado</span></div></div>
+  <div class="sg gl"><p class="tag" style="margin-bottom:8px;font-size:12px">DISC</p>
+  <canvas id="rc" style="width:100%;max-width:280px;display:block;margin:0 auto"></canvas>
+  <div style="display:flex;justify-content:center;gap:14px;margin-top:8px"><span style="font-size:12px;font-weight:700;color:var(--teal)">● Natural</span><span style="font-size:12px;font-weight:700;color:var(--coral)">● Adaptado</span></div></div>
 
   <div class="sg" style="display:flex;gap:6px">
-    <div class="gl" style="flex:1;text-align:center;margin:0"><p style="font-size:9px;font-weight:800;color:var(--green);letter-spacing:1px">FORÇAS</p>${top3.map(([k,v])=>`<p style="font-size:11px;font-weight:700;margin-top:4px">${k} <span style="color:var(--green)">${v}</span></p>`).join('')}</div>
-    <div class="gl" style="flex:1;text-align:center;margin:0"><p style="font-size:9px;font-weight:800;color:var(--coral);letter-spacing:1px">DESENVOLVIMENTO</p>${gap3.map(([k,v])=>`<p style="font-size:11px;font-weight:700;margin-top:4px">${k} <span style="color:var(--coral)">${v}</span></p>`).join('')}</div>
+    <div class="gl" style="flex:1;text-align:center;margin:0"><p style="font-size:11px;font-weight:800;color:var(--green);letter-spacing:1px">FORÇAS</p>${top3.map(([k,v])=>`<p style="font-size:14px;font-weight:700;margin-top:6px">${k} <span style="color:var(--green)">${v}</span></p>`).join('')}</div>
+    <div class="gl" style="flex:1;text-align:center;margin:0"><p style="font-size:11px;font-weight:800;color:var(--coral);letter-spacing:1px">DESENVOLVIMENTO</p>${gap3.map(([k,v])=>`<p style="font-size:14px;font-weight:700;margin-top:6px">${k} <span style="color:var(--coral)">${v}</span></p>`).join('')}</div>
   </div>
 
-  <div class="sg gl" style="margin-top:10px"><p class="tag" style="margin-bottom:8px">DISC Natural</p>${Object.entries(s.disc).map(([k,v])=>bar(DN[k],v,DC[k],100)).join('')}</div>
-  <div class="sg gl"><p class="tag" style="color:var(--coral);margin-bottom:8px">DISC Adaptado</p>${Object.entries(s.dA).map(([k,v])=>bar(DN[k],v,DC[k],100)).join('')}</div>
-  <div class="sg gl"><p class="tag" style="margin-bottom:8px">Liderança</p>${Object.entries(s.lead).map(([k,v])=>bar(k,v,'var(--teal)',50)).join('')}</div>
-  ${compG.map(g=>`<div class="sg gl"><p class="tag" style="color:${g.c};margin-bottom:8px">Competências — ${g.t}</p>${g.k.map(k=>bar(k,s.comp[k],g.c,100)).join('')}</div>`).join('')}
+  <div class="sg gl" style="margin-top:10px"><p class="tag" style="margin-bottom:8px;font-size:12px">DISC Natural</p>${Object.entries(s.disc).map(([k,v])=>bar(DN[k],v,DC[k],100)).join('')}</div>
+  <div class="sg gl"><p class="tag" style="color:var(--coral);margin-bottom:8px;font-size:12px">DISC Adaptado</p>${Object.entries(s.dA).map(([k,v])=>bar(DN[k],v,DC[k],100)).join('')}</div>
+  <div class="sg gl"><p class="tag" style="margin-bottom:8px;font-size:12px">Liderança</p>${Object.entries(s.lead).map(([k,v])=>bar(k,v,'var(--teal)',50)).join('')}</div>
+  ${compG.map(g=>`<div class="sg gl"><p class="tag" style="color:${g.c};margin-bottom:8px;font-size:12px">Competências — ${g.t}</p>${g.k.map(k=>bar(k,s.comp[k],g.c,100)).join('')}</div>`).join('')}
 
   <div class="sg" style="margin-top:14px"><button class="btn btn-p" id="genPdf" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">📄</span> BAIXAR RELATÓRIO PDF</button><p class="cap" style="margin-top:6px;text-align:center">Relatório completo personalizado</p></div>
   <div class="sg footer">Espansione © 2026 — Mapeamento Comportamental v2.1</div></div>`;
