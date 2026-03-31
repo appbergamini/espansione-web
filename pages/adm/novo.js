@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Logo from '../../components/Logo';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -17,9 +18,16 @@ export default function Home() {
     const campos = Object.fromEntries(formData.entries());
 
     try {
+      // 1. Obter token de acesso para garantir autenticação no servidor
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       const res = await fetch('/api/projetos/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify(campos)
       });
 

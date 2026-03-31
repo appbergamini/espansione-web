@@ -14,7 +14,8 @@ export default function Register() {
     nomeCompleto: '',
     email: '',
     password: '',
-    empresaNome: ''
+    empresaNome: '',
+    whatsapp: ''
   });
 
   async function handleRegister(e) {
@@ -44,7 +45,8 @@ export default function Register() {
       const { error: rpcError } = await supabase.rpc('setup_new_tenant', {
         user_id: user.id,
         full_name: formData.nomeCompleto,
-        company_name: formData.empresaNome
+        company_name: formData.empresaNome,
+        whatsapp_number: formData.whatsapp
       });
 
       if (rpcError) throw rpcError;
@@ -85,6 +87,18 @@ export default function Register() {
                 className="w-full bg-[#0a1122] border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all"
                 value={formData.nomeCompleto}
                 onChange={(e) => setFormData({...formData, nomeCompleto: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">WhatsApp</label>
+              <input
+                required
+                type="tel"
+                placeholder="(00) 00000-0000"
+                className="w-full bg-[#0a1122] border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all"
+                value={formData.whatsapp}
+                onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
               />
             </div>
 
