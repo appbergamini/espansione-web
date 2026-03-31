@@ -13,7 +13,44 @@
   --font-body: "Andada Pro", "Andada", serif;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&family=Nunito:wght@800;900&display=swap');
+/* ─── Fontes locais: Família Rebrand ─── */
+@font-face {
+  font-family: 'Rebrand Dis';
+  src: url('/fonts/Rebrand Dis Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Rebrand Dis';
+  src: url('/fonts/Rebrand Dis ExBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Rebrand Dis';
+  src: url('/fonts/Rebrand Dis Heavy.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Rebrand Dis';
+  src: url('/fonts/Rebrand Dis Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Rebrand Txt';
+  src: url('/fonts/Rebrand Txt Bold it.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&display=swap');
 
 :root {
   /* Globais Premium Legados (utilizados por componentes JS antigos) */
@@ -37,9 +74,9 @@
   --brand-gray: #F0F0F0;      /* Cinza claro #F0F0F0 */
   
   /* Fontes - Brand Book */
-  --font-logo: "Nunito", "Cabin", sans-serif;     /* Rebrand Dis Bold → fallback web */
-  --font-heading: "Cabin", sans-serif;            /* Texto e Tagline */
-  --font-body: "Andada Pro", "Andada", serif;     /* Texto de Apoio */
+  --font-logo: 'Rebrand Dis', 'Cabin', sans-serif;      /* Rebrand Dis Bold */
+  --font-heading: 'Cabin', sans-serif;                   /* Texto e Tagline */
+  --font-body: 'Andada Pro', 'Andada', serif;            /* Texto de Apoio */
   
   /* Cores de destaque - Brand Book */
   --brand-red: #Da3144;                           /* Vermelho principal #Da3144 */

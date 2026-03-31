@@ -68,8 +68,8 @@ export default function Logo({ showTagline = false, size = 'md', center = false 
 
         {/* ── Texto "espansione" ── */}
         <span style={{
-          fontFamily: '"Nunito", "Cabin", sans-serif',
-          fontWeight: 900,
+          fontFamily: "'Rebrand Dis', 'Cabin', sans-serif",
+          fontWeight: 700,
           fontSize: c.text,
           color: '#00326D',
           letterSpacing: '-0.01em',
