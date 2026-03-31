@@ -72,7 +72,8 @@ const G={
   ph:'onboard',ud:{name:'',email:'',gender:''},
   gi:0,it:[],pi:0,pairChoice:null,
   raw:{r1:[],p1:[],r2:[],p2:[]},
-  sc:null,learnPrefs:{}
+  sc:null,learnPrefs:{},
+  projetoId:null
 };
 const shuf=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
 const $=id=>document.getElementById(id);
@@ -99,6 +100,19 @@ function R(){
 }
 
 function rOnb(){
+  const urlParams=new URLSearchParams(window.location.search);
+  const pid=urlParams.get('projeto')||'';
+  if(!pid){
+    app.innerHTML=`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px">
+    <div style="font-size:28px;font-family:var(--hd);margin-bottom:16px">${L}</div>
+    <div style="background:rgba(218,49,68,.08);border:1px solid rgba(218,49,68,.2);border-radius:var(--r);padding:24px;max-width:320px;width:100%">
+      <p style="font-size:22px;margin-bottom:8px">🔒</p>
+      <p style="font-family:var(--hd);font-size:18px;font-weight:900;color:var(--coral);margin-bottom:8px">Acesso Inválido</p>
+      <p style="font-size:13px;color:var(--off);line-height:1.6">Este link não contém um código de projeto válido.<br/>Solicite o link correto ao seu administrador.</p>
+    </div></div>`;
+    return;
+  }
+  G.projetoId=pid;
   app.innerHTML=`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:40px 0">
   <div class="onb-bg"></div>
   <div class="onb-a" style="position:relative;z-index:1;font-size:28px;font-family:var(--hd)">${L}</div>
@@ -120,10 +134,37 @@ function rWel(){
   <input class="fi" id="fn" placeholder="Nome completo" value="${G.ud.name}">
   <input class="fi" id="fe" placeholder="E-mail" type="email" value="${G.ud.email}"></div>
   <div class="sg gl gl-g"><p class="body"><strong style="color:var(--white)">2 etapas:</strong> como você é (natural) e como esperam que você seja (adaptado). Cada etapa tem <strong style="color:var(--white)">rankings + escolhas rápidas</strong>.</p></div>
+  <div class="sg" id="err-box" style="display:none;background:rgba(218,49,68,.1);border:1px solid rgba(218,49,68,.2);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--coral)"></div>
   <div class="sg"><button class="btn btn-p" id="go">INICIAR MAPEAMENTO</button></div></div>`;
   const u=()=>{G.ud.name=$('fn').value;G.ud.email=$('fe').value;$('go').disabled=!(G.ud.name&&G.ud.email)};
   ['fn','fe'].forEach(id=>$(id).addEventListener('input',u));
-  $('go').addEventListener('click',()=>{u();G.ph='rank1_intro';R()});u();
+  $('go').addEventListener('click',async()=>{
+    u();
+    if(!G.ud.name||!G.ud.email) return;
+    $('go').disabled=true;
+    $('go').textContent='Verificando...';
+    $('err-box').style.display='none';
+    try{
+      const r=await fetch('/api/cis/verificar-acesso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({projeto_id:G.projetoId,email:G.ud.email.trim().toLowerCase()})});
+      const d=await r.json();
+      if(!d.autorizado){
+        $('err-box').textContent=d.error||'Acesso não autorizado.';
+        $('err-box').style.display='block';
+        $('go').disabled=false;
+        $('go').textContent='INICIAR MAPEAMENTO';
+        return;
+      }
+      // Preenche nome automaticamente se o admin cadastrou
+      if(d.participante&&d.participante.nome&&!$('fn').value)$('fn').value=d.participante.nome;
+      G.ph='rank1_intro';R();
+    }catch(e){
+      $('err-box').textContent='Erro de conexão. Tente novamente.';
+      $('err-box').style.display='block';
+      $('go').disabled=false;
+      $('go').textContent='INICIAR MAPEAMENTO';
+    }
+  });
+  u();
 }
 
 function rIntro(etapa,tipo){
@@ -231,6 +272,7 @@ function rCalc(){
 // ═══ SAVE TO SUPABASE via Next.js API ═══
 function saveToSupabase(){
   const payload={
+    projetoId:G.projetoId,
     userData:G.ud,
     scores:G.sc,
     learnPrefs:G.learnPrefs,
@@ -411,11 +453,13 @@ async function generateReport(sc){
   btn.disabled=false;btn.innerHTML='<span style="font-size:18px">📄</span> BAIXAR RELATÓRIO PDF';
 }
 
-// Auto-skip if email in URL
+// Auto-skip se email e projeto vierem na URL
 (function(){
   var p=new URLSearchParams(window.location.search);
   var e=p.get('email')||'';
-  if(e){G.ud.email=e;G.ud.name=e.split('@')[0];G.ph='rank1_intro';}
+  var pid=p.get('projeto')||'';
+  if(pid) G.projetoId=pid;
+  if(e&&pid){G.ud.email=e;G.ud.name=e.split('@')[0];G.ph='rank1_intro';}
 })();
 
 R();

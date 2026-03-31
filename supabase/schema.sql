@@ -85,6 +85,7 @@ create table logs_execucao (
 -- Tabela 7: cis_assessments
 create table cis_assessments (
   id uuid primary key default gen_random_uuid(),
+  projeto_id uuid references projetos(id) on delete cascade,
   email text not null,
   nome text,
   genero text,
@@ -97,3 +98,16 @@ create table cis_assessments (
 
 -- Índice útil para buscar avaliações passadas rapidamente
 create index idx_cis_email on cis_assessments(email);
+
+-- Tabela 8: cis_participantes
+create table cis_participantes (
+  id uuid primary key default gen_random_uuid(),
+  projeto_id uuid references projetos(id) on delete cascade not null,
+  nome text not null,
+  email text not null,
+  cargo text,
+  liberado boolean default true,
+  respondido boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  unique (projeto_id, email)
+);

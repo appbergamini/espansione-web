@@ -29,6 +29,9 @@ export default async function handler(req, res) {
     
     // Obter checkpoints pendentes
     const pendingCheckpoints = await db.getPendingCheckpoints(id);
+    
+    // Obter participantes do CIS para este projeto
+    const cisParticipantes = await db.getCisParticipantes(id);
 
     return res.status(200).json({
       success: true,
@@ -37,7 +40,8 @@ export default async function handler(req, res) {
         intake,
         formularios,
         outputs,
-        pendingCheckpoints
+        pendingCheckpoints,
+        cisParticipantes
       }
     });
   } catch (err) {

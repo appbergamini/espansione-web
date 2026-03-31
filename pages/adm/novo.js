@@ -68,13 +68,9 @@ export default function Home() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: '2rem' }}>
                 <label>Empresa / Cliente</label>
                 <input className="form-input" name="nome_empresa" required placeholder="Ex: Acme Corp" />
-              </div>
-              <div className="form-group" style={{ marginBottom: '2rem' }}>
-                <label>Segmento de Mercado (Opcional)</label>
-                <input className="form-input" name="segmento" placeholder="Ex: Tecnologia Financeira" />
               </div>
 
               <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'center' }}>

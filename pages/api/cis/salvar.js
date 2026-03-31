@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userData, scores, rawRankings, learnPrefs } = req.body;
+    const { userData, scores, rawRankings, learnPrefs, projetoId } = req.body;
 
     if (!userData || !userData.email) {
       return res.status(400).json({ error: 'Faltam dados do usuário (email é obrigatório).' });
@@ -24,6 +24,7 @@ export default async function handler(req, res) {
     const emailTratado = userData.email.trim().toLowerCase();
 
     await db.saveCIS(
+      projetoId || null,
       emailTratado,
       userData.name || 'Desconhecido',
       userData.gender || '',

@@ -6,12 +6,11 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { nome_empresa, segmento } = req.body;
+    const { nome_empresa } = req.body;
     
     // Cria um registro de projeto apenas com a "casca"
     const projetoId = await db.createProject({
-      cliente: nome_empresa || "Novo Cliente",
-      segmento: segmento || ""
+      cliente: nome_empresa || "Novo Cliente"
     });
 
     return res.status(200).json({ success: true, projetoId });

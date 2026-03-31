@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Logo from '../../components/Logo';
 
 const AGENT_NAMES = [
@@ -29,6 +29,13 @@ export default function ProjetoDetalhes() {
   const [runningAgent, setRunningAgent] = useState(null); // agente atual
   const [engineError, setEngineError] = useState('');
   const [approving, setApproving] = useState(false);
+
+  // CIS Participantes
+  const [cisParticipantes, setCisParticipantes] = useState([]);
+  const [cisForm, setCisForm] = useState({ nome: '', email: '', cargo: '' });
+  const [cisAdding, setCisAdding] = useState(false);
+  const [cisMsg, setCisMsg] = useState({ tipo: '', texto: '' });
+  const [cisLinkCopiado, setCisLinkCopiado] = useState(false);
 
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
@@ -104,11 +111,47 @@ export default function ProjetoDetalhes() {
     alert('Link copiado para a área de transferência!');
   };
 
+  const handleAddCisParticipante = async (e) => {
+    e.preventDefault();
+    if (!cisForm.nome || !cisForm.email) {
+      setCisMsg({ tipo: 'erro', texto: 'Nome e e-mail são obrigatórios.' });
+      return;
+    }
+    setCisAdding(true);
+    setCisMsg({ tipo: '', texto: '' });
+    try {
+      const res = await fetch(`/api/cis/participantes?projeto_id=${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cisForm)
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setCisParticipantes(prev => [json.participante, ...prev]);
+      setCisForm({ nome: '', email: '', cargo: '' });
+      setCisMsg({ tipo: 'ok', texto: 'Participante adicionado com sucesso!' });
+    } catch (err) {
+      setCisMsg({ tipo: 'erro', texto: err.message || 'Erro ao adicionar.' });
+    } finally {
+      setCisAdding(false);
+    }
+  };
+
+  const copiarLinkCis = () => {
+    const link = `${window.location.origin}/cis.html?projeto=${id}`;
+    navigator.clipboard.writeText(link);
+    setCisLinkCopiado(true);
+    setTimeout(() => setCisLinkCopiado(false), 2500);
+  };
+
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#fff' }}>Carregando Painel de Controle...</div>;
   if (errorMsg) return <div style={{ color: 'var(--brand-red)', padding: '2rem' }}>{errorMsg}</div>;
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
 
-  const { projeto, outputs = [], formularios = [], intake } = data;
+  const { projeto, outputs = [], formularios = [], intake, cisParticipantes: cisParticipantesData = [] } = data;
+  
+  // Sincronizar participantes do carregamento inicial
+  useEffect(() => { setCisParticipantes(cisParticipantesData); }, [data]);
   
   // Calcular qual é o próximo agente baseado no último output gerado
   const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : -1;
@@ -144,8 +187,7 @@ export default function ProjetoDetalhes() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
             {/* Esquerda: Informações Gerais */}
             <div style={{ flex: '1 1 300px' }}>
-              <h1 style={{ marginBottom: '0.5rem', fontSize: '2rem' }}>{projeto.cliente}</h1>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Segmento: {projeto.segmento}</p>
+              <h1 style={{ marginBottom: '1rem', fontSize: '2rem' }}>{projeto.cliente}</h1>
 
               {/* Status de formulários (simples) */}
               <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
@@ -171,6 +213,86 @@ export default function ProjetoDetalhes() {
                     <button onClick={() => copyLink(`/form/colaboradores?projeto=${id}`)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer' }}>Copiar Link</button>
                   </li>
                 </ul>
+              </div>
+
+              {/* Card: Mapeamento Comportamental CIS */}
+              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1rem', color: 'var(--accent-purple)', margin: 0 }}>🧠 Mapeamento Comportamental</h3>
+                  <span style={{ fontSize: '0.8rem', background: 'rgba(167,139,250,0.1)', color: 'var(--accent-purple)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 600 }}>
+                    {cisParticipantes.filter(p => p.respondido).length}/{cisParticipantes.length} respondidos
+                  </span>
+                </div>
+
+                {/* Formulário para adicionar participante */}
+                <form onSubmit={handleAddCisParticipante} style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <input
+                      className="form-input"
+                      style={{ margin: 0, padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      placeholder="Nome"
+                      value={cisForm.nome}
+                      onChange={e => setCisForm(f => ({ ...f, nome: e.target.value }))}
+                      required
+                    />
+                    <input
+                      className="form-input"
+                      style={{ margin: 0, padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      placeholder="Cargo"
+                      value={cisForm.cargo}
+                      onChange={e => setCisForm(f => ({ ...f, cargo: e.target.value }))}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      className="form-input"
+                      style={{ margin: 0, padding: '0.5rem 0.75rem', fontSize: '0.85rem', flex: 1 }}
+                      placeholder="E-mail"
+                      type="email"
+                      value={cisForm.email}
+                      onChange={e => setCisForm(f => ({ ...f, email: e.target.value }))}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={cisAdding}
+                      style={{ background: 'var(--accent-purple)', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      {cisAdding ? '...' : '+ Adicionar'}
+                    </button>
+                  </div>
+                  {cisMsg.texto && (
+                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: cisMsg.tipo === 'ok' ? 'var(--success)' : 'var(--brand-red)' }}>
+                      {cisMsg.texto}
+                    </p>
+                  )}
+                </form>
+
+                {/* Lista de participantes */}
+                {cisParticipantes.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1rem', maxHeight: '200px', overflowY: 'auto' }}>
+                    {cisParticipantes.map(p => (
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '0.5rem 0.75rem', fontSize: '0.82rem' }}>
+                        <div>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.nome}</span>
+                          {p.cargo && <span style={{ color: 'var(--text-secondary)', marginLeft: '0.4rem' }}>• {p.cargo}</span>}
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>{p.email}</div>
+                        </div>
+                        <span style={{ fontSize: '1rem' }}>{p.respondido ? '✅' : '⏳'}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', textAlign: 'center' }}>Nenhum participante cadastrado.</p>
+                )}
+
+                {/* Link de acesso */}
+                <button
+                  onClick={copiarLinkCis}
+                  style={{ width: '100%', background: cisLinkCopiado ? 'rgba(16,185,129,0.15)' : 'rgba(167,139,250,0.1)', border: `1px solid ${cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)'}`, borderRadius: '8px', color: cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.3s' }}
+                >
+                  {cisLinkCopiado ? '✅ Link Copiado!' : '🔗 Copiar Link do Mapeamento'}
+                </button>
               </div>
               
               {/* Box de Ação Principal */}
