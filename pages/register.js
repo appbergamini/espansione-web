@@ -24,13 +24,16 @@ export default function Register() {
     setErrorMsg('');
 
     try {
-      // 1. Criar a conta no Supabase Auth
+      // 1. Criar a conta no Supabase Auth passando os metadados
+      // O gatilho (trigger) no Supabase cuidará de criar a empresa e o perfil automaticamente
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            full_name: formData.nomeCompleto
+            full_name: formData.nomeCompleto,
+            company_name: formData.empresaNome, // Isso diz ao gatilho para criar uma nova empresa
+            whatsapp: formData.whatsapp
           }
         }
       });
@@ -40,20 +43,14 @@ export default function Register() {
       const user = authData.user;
       if (!user) throw new Error("Erro ao criar usuário.");
 
-      // 2. Chamar a função RPC para configurar o Tenant (Empresa + Perfil Admin)
-      // Note: A função 'setup_new_tenant' deve ser criada no Supabase antes
-      const { error: rpcError } = await supabase.rpc('setup_new_tenant', {
-        user_id: user.id,
-        full_name: formData.nomeCompleto,
-        company_name: formData.empresaNome,
-        whatsapp_number: formData.whatsapp
-      });
-
-      if (rpcError) throw rpcError;
-
-      // 3. Sucesso! Redirecionar para o dashboard ou avisar para checar e-mail
-      alert("Conta criada com sucesso! Redirecionando...");
-      router.push('/dashboard');
+      // Se o email não foi confirmado ainda (se habilitado no Supabase), avisar
+      if (authData.session) {
+        alert("Conta criada com sucesso!");
+        router.push('/dashboard');
+      } else {
+        alert("Conta pré-cadastrada! Se o e-mail de confirmação estiver ativado, por favor verifique sua caixa de entrada.");
+        router.push('/login');
+      }
 
     } catch (err) {
       setErrorMsg(err.message || 'Ocorreu um erro no registro.');
@@ -147,9 +144,9 @@ export default function Register() {
             <button
               disabled={loading}
               type="submit"
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-wait text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40"
+              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40"
             >
-              {loading ? 'Criando ambiente...' : 'Criar Conta e Empresa'}
+              {loading ? 'Sincronizando...' : 'Criar Conta e Empresa'}
             </button>
           </form>
 
