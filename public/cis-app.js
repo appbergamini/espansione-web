@@ -120,7 +120,7 @@ function rOnb(){
 
   app.innerHTML=`
   <div style="min-height:100vh;display:flex;flex-direction:column;position:relative;background:#000;overflow:hidden">
-    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:url('img/cis-hero.png') center/cover no-repeat;opacity:0.6;z-index:1"></div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:url('img/cis-hero.jpg') center/cover no-repeat;opacity:0.6;z-index:1"></div>
     <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom, transparent 40%, #000 100%);z-index:2"></div>
     
     <div style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:40px 24px;text-align:center">
