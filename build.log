@@ -1,0 +1,37 @@
+
+> web@0.1.0 build
+> next build
+
+ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\GAS\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\GAS\espansione\web\package-lock.json
+
+Ôû▓ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+  Running TypeScript ...
+  Finished TypeScript in 110ms ...
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./espansione/web/pages/adm/novo.js:4:1
+Module not found: Can't resolve '../components/Logo'
+  2 | import { useState } from 'react';
+  3 | import { useRouter } from 'next/router';
+> 4 | import Logo from '../components/Logo';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | export default function Home() {
+  7 |   const [loading, setLoading] = useState(false);
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./espansione/web/pages/adm/novo.js:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
