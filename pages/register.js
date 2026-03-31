@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase'; // Certifique-se de que este caminho está correto
+import { supabase } from '../lib/supabaseClient';
 import Logo from '../components/Logo';
 
 export default function Register() {

@@ -1,133 +1,102 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import Logo from '../components/Logo';
 import { supabase } from '../lib/supabaseClient';
+import Logo from '../components/Logo';
+import Link from 'next/link';
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [pin, setPin] = useState('');
-  const [step, setStep] = useState(1); // 1 = Email, 2 = PIN
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const requestOTP = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
-    
-    // Supabase signInWithOtp enviará o Magic Link e o PIN (Token 6-digitos)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false // O recomendado é que o email já exista no Supabase ou aceite nativamente
-      }
-    });
-
-    if (error) {
-      if (error.message.includes('Signups not allowed')) {
-          setErrorMsg('Cadastro não habilitado. Apenas e-mails autorizados.');
-      } else {
-          setErrorMsg(error.message);
-      }
-    } else {
-      setStep(2);
-    }
-    setLoading(false);
-  };
-
-  const verifyOTP = async (e) => {
+  async function handleLogin(e) {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token: pin,
-      type: 'email'
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setErrorMsg('PIN incorreto ou expirado. Tente novamente.');
+      if (error) throw error;
+
+      router.push('/dashboard');
+    } catch (err) {
+      setErrorMsg(err.message || 'Erro ao realizar login.');
+    } finally {
       setLoading(false);
-    } else {
-      // Sessão ativada (O Cookie é setado automaticamente pelo SSR client)
-      router.push('/adm');
     }
-  };
+  }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#040812] text-white flex flex-col justify-center items-center p-6">
       <Head>
-        <title>Espansione | Login</title>
+        <title>Login | Espansione</title>
       </Head>
-      <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', paddingTop: '0' }}>
-        <div className="container" style={{ maxWidth: '450px', width: '100%', margin: '0 auto' }}>
-          
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <Logo size="lg" />
-            <h1 style={{ marginTop: '1.5rem', marginBottom: '0.5rem', fontSize: '1.5rem' }}>Acesso Restrito</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Painel de Controle Espansione</p>
-          </div>
 
-          <div className="glass-card animate-fade-in" style={{ padding: '2.5rem 2rem' }}>
-            
+      <div className="w-full max-w-md">
+        <div className="flex justify-center mb-8">
+          <Logo size="lg" center />
+        </div>
+
+        <div className="glass-card p-8 animate-fade-in">
+          <h1 className="text-2xl font-bold mb-2 text-center">Boas-vindas de volta</h1>
+          <p className="text-slate-400 text-center mb-8 text-sm">Acesse seu ambiente estratégico.</p>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">E-mail Corporativo</label>
+              <input
+                required
+                type="email"
+                placeholder="Ex: joao@empresa.com"
+                className="w-full bg-[#0a1122] border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">Senha</label>
+                <Link href="#" className="text-xs text-blue-400 hover:underline">Esqueceu a senha?</Link>
+              </div>
+              <input
+                required
+                type="password"
+                placeholder="••••••••"
+                className="w-full bg-[#0a1122] border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
             {errorMsg && (
-              <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--brand-red)', borderRadius: '6px', color: 'var(--brand-red)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-lg text-xs text-center">
                 {errorMsg}
               </div>
             )}
 
-            {step === 1 ? (
-              <form onSubmit={requestOTP}>
-                <div className="form-group">
-                  <label>E-mail Corporativo</label>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)} 
-                    placeholder="voce@espansione.com" 
-                    required 
-                    autoComplete="email"
-                  />
-                </div>
-                <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', marginTop: '1rem' }}>
-                  {loading ? 'Enviando...' : 'Receber Código de Acesso'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={verifyOTP}>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', textAlign: 'center' }}>
-                  Enviamos um código de acesso para o e-mail: <strong style={{color: '#fff'}}>{email}</strong>
-                </p>
-                <div className="form-group">
-                  <label>Código PIN Numérico</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={pin} 
-                    onChange={e => setPin(e.target.value)} 
-                    placeholder="00000000"
-                    style={{ textAlign: 'center', letterSpacing: '0.2rem', fontSize: '1.5rem' }}
-                    required 
-                    autoComplete="one-time-code"
-                  />
-                </div>
-                <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', marginTop: '1rem', marginBottom: '1rem' }}>
-                  {loading ? 'Verificando...' : 'Acessar Painel'}
-                </button>
-                <div style={{ textAlign: 'center' }}>
-                  <button type="button" onClick={() => setStep(1)} style={{ background: 'transparent', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.9rem' }}>
-                    &larr; Usar outro e-mail
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+            <button
+              disabled={loading}
+              type="submit"
+              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40"
+            >
+              {loading ? 'Autenticando...' : 'Entrar no Painel'}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-slate-500">
+            Ainda não tem conta?{' '}
+            <Link href="/register" className="text-blue-400 hover:underline font-medium">Criar conta e empresa</Link>
+          </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
