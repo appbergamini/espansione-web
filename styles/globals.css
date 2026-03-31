@@ -13,7 +13,7 @@
   --font-body: "Andada Pro", "Andada", serif;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&family=Nunito:wght@800;900&display=swap');
 
 :root {
   /* Globais Premium Legados (utilizados por componentes JS antigos) */
@@ -29,16 +29,23 @@
   --glass-blur: blur(16px);
   --radius-lg: 20px;
   
-  /* Brand specific colors and fonts for legacy components */
-  --brand-blue: #003366;
-  --brand-white: #FEFEFE;
-  --font-logo: "Montserrat", sans-serif;
-  --font-heading: "Cabin", sans-serif;
-  --font-body: "Andada Pro", serif;
+  /* Brand specific colors and fonts - Espansione Brand Book */
+  --brand-blue: #00326D;      /* Azul marinho primário #00326D */
+  --brand-blue-2: #004198;    /* Azul secundário #004198 */
+  --brand-blue-light: #6BA3FF;/* Azul claro #6BA3FF */
+  --brand-white: #FEFEFE;     /* Branco #FEFEFE */
+  --brand-gray: #F0F0F0;      /* Cinza claro #F0F0F0 */
   
-  /* Cores de Status e Acentuação */
-  --brand-red: #d21e28;
-  --brand-red-glow: rgba(210, 30, 40, 0.15);
+  /* Fontes - Brand Book */
+  --font-logo: "Nunito", "Cabin", sans-serif;     /* Rebrand Dis Bold → fallback web */
+  --font-heading: "Cabin", sans-serif;            /* Texto e Tagline */
+  --font-body: "Andada Pro", "Andada", serif;     /* Texto de Apoio */
+  
+  /* Cores de destaque - Brand Book */
+  --brand-red: #Da3144;                           /* Vermelho principal #Da3144 */
+  --brand-red-dark: #C72437;                      /* Vermelho escuro #C72437 */
+  --brand-red-light: #EE969D;                     /* Rosa #EE969D */
+  --brand-red-glow: rgba(218, 49, 68, 0.15);
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;

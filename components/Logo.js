@@ -1,63 +1,94 @@
 import Link from 'next/link';
 
+/**
+ * Logo Espansione — Brand Book v1
+ * Fonte:     Rebrand Dis Bold (fallback: Nunito 900)
+ * Cores:     Azul #00326D | Vermelho #Da3144
+ * Tagline:   Cabin uppercase
+ */
 export default function Logo({ showTagline = false, size = 'md', center = false }) {
-  // Size classes
-  const sizes = {
-    sm: { e: '2rem', text: '1.25rem', tagline: '0.65rem', mb: '-5px' },
-    md: { e: '3rem', text: '1.75rem', tagline: '0.8rem', mb: '-8px' },
-    lg: { e: '4.5rem', text: '2.5rem', tagline: '1rem', mb: '-12px' }
+  const cfg = {
+    sm: { symbol: 36,  text: '1.2rem',  tagline: '0.55rem', gap: 4  },
+    md: { symbol: 56,  text: '1.85rem', tagline: '0.7rem',  gap: 6  },
+    lg: { symbol: 88,  text: '2.9rem',  tagline: '1rem',    gap: 10 },
   };
-  
-  const current = sizes[size] || sizes.md;
+  const c = cfg[size] || cfg.md;
 
   return (
     <Link href="/" style={{ textDecoration: 'none' }}>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: center ? 'center' : 'flex-start',
         cursor: 'pointer',
-        fontFamily: 'var(--font-logo)',
-        gap: '0.2rem'
+        gap: `${c.gap}px`,
       }}>
-        {/* The Espansione Swirl Icon */}
-        <div style={{
-          width: current.e,
-          height: current.e,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: size === 'lg' ? '-0.5rem' : '-0.2rem'
-        }}>
-          <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', fill: 'var(--brand-red)' }}>
-            <path d="M50 10C27.9 10 10 27.9 10 50s17.9 40 40 40 40-17.9 40-40c0-11-4.5-21-11.7-28.3L66.6 33.4C71.3 38.1 74 44.5 74 51.3c0 13.9-11.3 25.2-25.2 25.2S23.6 65.2 23.6 51.3c0-13.9 11.3-25.2 25.2-25.2 4.1 0 7.9 1 11.2 2.7l6.8-10.4C61.4 15.1 53.6 13.4 45.4 13.4 25.9 13.4 10 29.3 10 48.8s15.9 35.4 35.4 35.4 35.4-15.9 35.4-35.4c0-10.9-4.9-20.7-12.7-27.2l8.5-4.2C85.5 25.5 90 37.2 90 50c0 22.1-17.9 40-40 40S10 72.1 10 50 27.9 10 50 10z" style={{ display: 'none' }} />
-            {/* A more accurate swirl path approximating the image */}
-            <path d="M50,15 C69.33,15 85,30.67 85,50 C85,69.33 69.33,85 50,85 C30.67,85 15,69.33 15,50 C15,36.5 22.6,24.8 33.8,19 L38,26 C30.5,30 25,38 25,48 C25,62.8 34.2,74.7 46,78 L46,65 C39.5,62 35,55.5 35,48 C35,36.4 44.4,27 56,27 C64.3,27 71.4,31.8 74.8,38.8 L82,32 C76,21.8 65,15 52.5,15 L50,15 Z" />
-          </svg>
-        </div>
-        
-        {/* The espansione text */}
+
+        {/* ── Símbolo "e" em espiral – idêntico ao brand book ── */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 100 100"
+          width={c.symbol}
+          height={c.symbol}
+          aria-hidden="true"
+        >
+          {/*
+            O símbolo é um "e" cursivo que se enrola sobre si mesmo,
+            formando um caracol (swirl). A forma começa na abertura
+            à direita e se fecha em espiral para o centro.
+          */}
+          <path
+            fill="#Da3144"
+            d="
+              M 82,38
+              C 78,18 60,8 44,10
+              C 20,13 6,32 8,54
+              C 10,76 30,92 54,90
+              C 66,89 76,83 82,74
+              L 74,68
+              C 69,75 61,80 52,81
+              C 34,83 18,71 16,54
+              C 14,37 26,22 44,19
+              C 58,17 72,24 77,36
+              C 79,41 78,47 74,51
+              C 70,55 63,56 56,53
+              C 46,49 42,40 45,32
+              C 47,27 53,25 59,27
+              C 63,29 65,34 63,38
+              L 71,40
+              C 72,32 67,23 59,20
+              C 48,16 37,23 33,34
+              C 29,46 34,60 46,66
+              C 55,70 66,68 74,62
+              C 80,57 83,49 82,42
+              Z
+            "
+          />
+        </svg>
+
+        {/* ── Texto "espansione" ── */}
         <span style={{
-          color: 'var(--brand-blue)',
-          fontSize: current.text,
-          fontWeight: 800,
-          letterSpacing: '-0.02em',
+          fontFamily: '"Nunito", "Cabin", sans-serif',
+          fontWeight: 900,
+          fontSize: c.text,
+          color: '#00326D',
+          letterSpacing: '-0.01em',
           lineHeight: 1,
-          fontFamily: 'var(--font-logo)'
+          marginTop: `-${c.gap * 0.5}px`,
         }}>
           espansione
         </span>
 
-        {/* Tagline optional */}
+        {/* ── Tagline (opcional) ── */}
         {showTagline && (
           <span style={{
-            color: 'var(--brand-white)',
-            fontSize: current.tagline,
+            fontFamily: '"Cabin", sans-serif',
             fontWeight: 600,
+            fontSize: c.tagline,
+            color: '#004198',
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            marginTop: '0.5rem',
-            fontFamily: 'var(--font-heading)'
+            letterSpacing: '0.12em',
+            lineHeight: 1,
           }}>
             Construindo marcas, conectando propósitos
           </span>
