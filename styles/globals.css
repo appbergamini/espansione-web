@@ -13,7 +13,7 @@
   --font-body: "Andada Pro", "Andada", serif;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap');
 
 :root {
   /* Globais Premium Legados (utilizados por componentes JS antigos) */
@@ -30,15 +30,15 @@
   --radius-lg: 20px;
   
   /* Brand specific colors and fonts for legacy components */
-  --brand-blue: #6BA3FF;
+  --brand-blue: #003366;
   --brand-white: #FEFEFE;
-  --font-logo: "Andada Pro", "Cabin", sans-serif;
+  --font-logo: "Montserrat", sans-serif;
   --font-heading: "Cabin", sans-serif;
   --font-body: "Andada Pro", serif;
   
   /* Cores de Status e Acentuação */
-  --brand-red: #Da3144;
-  --brand-red-glow: rgba(218, 49, 68, 0.15);
+  --brand-red: #d21e28;
+  --brand-red-glow: rgba(210, 30, 40, 0.15);
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
