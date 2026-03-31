@@ -1,228 +1,183 @@
+@import "tailwindcss";
+
+/* 1. Cores e Fontes da Espansione (Modo v4) */
+@theme {
+  --color-brand-dark: #0f172a;
+  --color-brand-card: #1e293b;
+  --color-brand-accent: #38bdf8;
+  --color-brand-purple: #a78bfa;
+  --color-brand-coral: #f43f5e;
+  
+  --font-logo: "Rebrand Dis", "Cabin", sans-serif;
+  --font-heading: "Cabin", sans-serif;
+  --font-body: "Andada Pro", "Andada", serif;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Colors */
-  --brand-dark-blue: #00326D;
-  --brand-blue: #004198;
-  --brand-light-blue: #6BA3FF;
-  
-  --brand-dark-red: #C72437;
-  --brand-red: #Da3144;
-  --brand-light-red: #EE969D;
-  
-  --brand-light-gray: #F0F0F0;
-  --brand-white: #FEFEFE;
-
-  /* Premium Dark Theme Core Palette adapted for brand */
-  --bg-primary: #040812; /* Very dark blueish black */
+  /* Globais Premium Legados (utilizados por componentes JS antigos) */
+  --bg-primary: #040812;
   --bg-secondary: #0a1122;
   --bg-tertiary: #111a30;
-  
-  --text-primary: var(--brand-white);
+  --text-primary: #FEFEFE;
   --text-secondary: #a3b0c6;
-  --text-tertiary: #6b7a99;
-
-  /* Accent Colors */
-  --accent-blue: var(--brand-light-blue);
-  --accent-purple: var(--brand-red); /* Swapped purple for brand red in glows/accents */
-  --accent-indigo: var(--brand-blue);
-  --accent-glow: rgba(107, 163, 255, 0.2); /* Light blue glow */
-  --brand-red-glow: rgba(218, 49, 68, 0.25);
-
-  /* Status Colors */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: var(--brand-red);
-
-  /* Glassmorphism */
+  --accent-blue: #6BA3FF;
+  --accent-purple: #a78bfa;
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(107, 163, 255, 0.1);
-  --glass-glow: rgba(0, 65, 152, 0.15);
   --glass-blur: blur(16px);
-
-  /* Layout */
-  --nav-height: 72px;
-  --max-width: 1200px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
   --radius-lg: 20px;
   
-  /* Typography */
-  --font-logo: 'Rebrand Dis', 'Cabin', sans-serif;
-  --font-heading: 'Cabin', sans-serif;
-  --font-body: 'Andada Pro', 'Andada', serif;
+  /* Brand specific colors and fonts for legacy components */
+  --brand-blue: #6BA3FF;
+  --brand-white: #FEFEFE;
+  --font-logo: "Cabin", sans-serif;
+  --font-heading: "Cabin", sans-serif;
+  --font-body: "Andada Pro", serif;
+  
+  /* Cores de Status e Acentuação */
+  --brand-red: #ff4b4b;
+  --brand-red-glow: rgba(255, 75, 75, 0.15);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* Base Styles */
+@layer base {
+  * { box-sizing: border-box; padding: 0; margin: 0; }
+  html, body {
+    @apply bg-[#040812] text-white;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
-html, body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-/* Base Elements */
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-input, textarea, select {
-  font-family: var(--font-body);
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  font-family: var(--font-body);
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
-}
-
-/* Utility Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Premium Layout Container */
-.container {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-.page-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding-top: var(--nav-height);
-}
-
-/* Glass Card */
+/* Glass Card Style Helper */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: 2rem;
-  box-shadow: 0 8px 32px 0 var(--glass-glow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 65, 152, 0.15);
+  transition: all 0.3s ease;
 }
 
 .glass-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px 0 var(--accent-glow);
+  box-shadow: 0 12px 40px 0 rgba(107, 163, 255, 0.2);
+}
+
+.outline-glow {
+  border-width: 1px;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+}
+
+/* Layout & Containers */
+.page-container {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background: var(--bg-primary);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Typography Helpers */
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
-  color: white;
+  background: var(--accent-blue);
+  color: #000;
+  border: none;
+  border-radius: 8px;
   padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
 }
 
 .btn-primary:hover {
+  background: #8ab4ff;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.5);
+  box-shadow: 0 4px 12px rgba(107, 163, 255, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secondary {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   border: 1px solid var(--glass-border);
+  border-radius: 8px;
   padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
   font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: var(--glass-bg);
+  background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Inputs */
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Form Styles */
 .form-group {
+  margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .form-group label {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .form-input {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
   color: var(--text-primary);
-  padding: 0.875rem 1rem;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
 }
 
 .form-input:focus {
+  outline: none;
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 2px var(--accent-glow);
-}
-
-/* Grid Layouts */
-.grid-2 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  background: rgba(255, 255, 255, 0.05);
 }
