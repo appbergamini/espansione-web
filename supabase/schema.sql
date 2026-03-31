@@ -81,3 +81,19 @@ create table logs_execucao (
   error_msg text,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
+
+-- Tabela 7: cis_assessments
+create table cis_assessments (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  nome text,
+  genero text,
+  perfil_label text,
+  scores_json jsonb not null default '{}'::jsonb,
+  raw_rankings_json jsonb not null default '{}'::jsonb,
+  learn_prefs_json jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- Índice útil para buscar avaliações passadas rapidamente
+create index idx_cis_email on cis_assessments(email);
