@@ -39,7 +39,7 @@ export default function Logo({ showTagline = false, size = 'md', center = false 
           color: 'var(--brand-blue)',
           fontSize: current.text,
           fontWeight: 800,
-          letterSpacing: '-0.06em',
+          letterSpacing: '0.02em',
           lineHeight: 1
         }}>
           espansione
