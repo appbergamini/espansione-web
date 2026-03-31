@@ -5,6 +5,7 @@ export async function middleware(request) {
   const { supabaseResponse, user } = await updateSession(request)
   const pathname = request.nextUrl.pathname
 
+  /* [TEMPORÁRIO] Removendo senha de acesso das rotas /adm e /api/adm a pedido
   // Protege rotas /adm
   if (pathname.startsWith('/adm')) {
     if (!user) {
@@ -24,6 +25,7 @@ export async function middleware(request) {
       })
     }
   }
+  */
 
   return supabaseResponse
 }
