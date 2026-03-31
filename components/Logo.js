@@ -8,9 +8,9 @@ import Link from 'next/link';
 export default function Logo({ showTagline = false, size = 'md', center = false }) {
   // Alturas da imagem do logo por tamanho
   const heights = {
-    sm: 32,
-    md: 54,
-    lg: 90,
+    sm: 40,
+    md: 75,
+    lg: 130,
   };
   const height = heights[size] || heights.md;
 

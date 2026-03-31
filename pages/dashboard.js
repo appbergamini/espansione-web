@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useState } from 'react';
 import Link from 'next/link';
+import Logo from '../components/Logo';
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -28,9 +29,8 @@ export default function Dashboard() {
 
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} bg-[#0a1122] border-r border-slate-800/50 flex flex-col`}>
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-rose-600 flex-shrink-0 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 text-xl italic">E</div>
-          {sidebarOpen && <span className="font-bold text-xl tracking-tight text-white italic">ESPANSIONE</span>}
+        <div className="p-6 flex items-center gap-3 overflow-hidden">
+          <Logo size="sm" />
         </div>
 
         <nav className="flex-1 mt-6 px-4 space-y-2">
