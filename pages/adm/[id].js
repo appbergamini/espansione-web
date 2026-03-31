@@ -35,7 +35,7 @@ export default function ProjetoDetalhes() {
     if (!id) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/consultor/${id}`);
+      const res = await fetch(`/api/adm/${id}`);
       const json = await res.json();
       if (json.success) {
         setData(json.data);
@@ -104,7 +104,7 @@ export default function ProjetoDetalhes() {
     alert('Link copiado para a área de transferência!');
   };
 
-  if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#fff' }}>Carregando Misson Control...</div>;
+  if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#fff' }}>Carregando Painel de Controle...</div>;
   if (errorMsg) return <div style={{ color: 'var(--brand-red)', padding: '2rem' }}>{errorMsg}</div>;
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
 
@@ -128,12 +128,12 @@ export default function ProjetoDetalhes() {
   return (
     <>
       <Head>
-        <title>Espansione | Mission Control</title>
+        <title>Espansione | Painel de Controle</title>
       </Head>
       <div className="page-container">
         <main className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <Link href="/consultor">
+            <Link href="/adm">
               <span style={{ color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.9rem' }}>
                 &larr; Voltar ao Painel Gerencial
               </span>
@@ -153,11 +153,11 @@ export default function ProjetoDetalhes() {
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem' }}>
                   <li style={{ paddingBottom: '0.75rem', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 500 }}>{intake && Object.keys(intake).length > 2 ? '✅' : '⏳'} Form. Cliente (Intake)</span>
+                      <span style={{ fontWeight: 500 }}>{intake && Object.keys(intake).length > 2 ? '✅' : '⏳'} Formulário Inicial</span>
                     </div>
                     {(!intake || Object.keys(intake).length <= 2) && (
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-start' }}>
-                        <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=express`)} style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>Copiar Link (Express)</button>
+                        <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=resumida`)} style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>Copiar Link (Resumido)</button>
                         <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=completa`)} style={{ background: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: '#000', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Copiar Link (Completo)</button>
                       </div>
                     )}

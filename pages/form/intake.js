@@ -61,7 +61,7 @@ export default function IntakeForm() {
   return (
     <>
       <Head>
-        <title>Diagnóstico Espansione | {isCompleta ? 'Completo' : 'Express'}</title>
+        <title>Diagnóstico Espansione | {isCompleta ? 'Completo' : 'Resumido'}</title>
       </Head>
       <div className="page-container" style={{ paddingTop: '2rem', minHeight: '100vh', paddingBottom: '4rem' }}>
         <main className="container" style={{ maxWidth: '800px' }}>
@@ -73,10 +73,10 @@ export default function IntakeForm() {
           {!success && (
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
               <h1 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '2rem' }}>
-                Questionário de Intake
+                Questionário Inicial
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-                {isCompleta ? 'Projeto de Branding (Etapa 1) - ~20 minutos' : 'Diagnóstico Express - ~10 minutos'}
+                {isCompleta ? 'Projeto de Branding (Etapa 1) - ~20 minutos' : 'Questionário Inicial (Versão Resumida) - ~10 minutos'}
               </p>
             </div>
           )}

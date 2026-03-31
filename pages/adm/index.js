@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 
-export default function ConsultorPanel() {
+export default function AdminPanel() {
   const router = useRouter();
   const [projetos, setProjetos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +12,7 @@ export default function ConsultorPanel() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/consultor/projetos');
+        const res = await fetch('/api/adm/projetos');
         const data = await res.json();
         if (data.success) {
           setProjetos(data.projetos || []);
@@ -31,7 +31,7 @@ export default function ConsultorPanel() {
   return (
     <>
       <Head>
-        <title>Espansione | Consultor</title>
+        <title>Espansione | Administrador</title>
       </Head>
       <div className="page-container">
         <main className="container">
@@ -41,9 +41,14 @@ export default function ConsultorPanel() {
               <div style={{ height: '32px', width: '1px', background: 'var(--glass-border)' }}></div>
               <h1 className="animate-fade-in" style={{ fontSize: '1.5rem' }}>Painel Gerencial</h1>
             </div>
-            <span style={{ padding: '0.35rem 0.85rem', background: 'var(--brand-red-glow)', color: 'var(--brand-red)', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
-              Visão de Consultor
-            </span>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <span style={{ padding: '0.35rem 0.85rem', background: 'var(--brand-red-glow)', color: 'var(--brand-red)', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
+                Visão de Administrador
+              </span>
+              <button className="btn-primary" onClick={() => router.push('/adm/novo')} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                + Novo Projeto
+              </button>
+            </div>
           </div>
           
           <div className="glass-card animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -100,7 +105,7 @@ export default function ConsultorPanel() {
                           </div>
                         </td>
                         <td style={{ padding: '1.25rem 0' }}>
-                          <button className="btn-secondary" onClick={() => router.push(`/consultor/${proj.id}`)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.875rem' }}>Ver Detalhes</button>
+                          <button className="btn-secondary" onClick={() => router.push(`/adm/${proj.id}`)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.875rem' }}>Ver Detalhes</button>
                         </td>
                       </tr>
                     ))}

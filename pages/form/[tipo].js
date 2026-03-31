@@ -77,7 +77,7 @@ export default function FormDinamico() {
             {success ? (
               <div style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '12px', textAlign: 'center' }}>
                 <h3 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>Respostas submetidas com sucesso!</h3>
-                <p>O Consultor de IA foi notificado.</p>
+                <p>A equipe foi notificada.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
