@@ -152,13 +152,14 @@ function rRank(){
   app.innerHTML=`<div class="vi">${prg(`${label} — Rankings`)}
   <div class="sg"><p class="tag">${label}</p><p class="hd" style="margin:2px 0 6px">Grupo ${String(gi+1).padStart(2,'0')}</p></div>
   <div class="sg dots">${Array.from({length:8},(_,i)=>`<div class="dot ${i<gi?'done':i===gi?'now':''}"></div>`).join('')}</div>
-  <div class="sg" style="display:flex;justify-content:space-between;font-size:8px;font-weight:700;color:var(--muted);margin-bottom:6px"><span>👍 MAIS PARECIDO</span><span>MENOS PARECIDO 👎</span></div>
+  <div class="sg" style="text-align:center;font-size:12px;font-weight:800;color:var(--teal);letter-spacing:1px;margin-bottom:8px">👍 MAIS PARECIDO</div>
   ${it.map((x,i)=>`<div class="sg rc" data-i="${i}" draggable="true"><div class="rc-n">${i+1}</div><div class="rc-l">${x.l}</div><div style="display:flex;gap:3px"><button class="arr" data-a="u" data-i="${i}"${i===0?' disabled':''}>▲</button><button class="arr" data-a="d" data-i="${i}"${i===it.length-1?' disabled':''}>▼</button></div></div>`).join('')}
+  <div class="sg" style="text-align:center;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:1px;margin-top:4px;margin-bottom:8px">MENOS PARECIDO 👎</div>
   <div class="sg"><button class="btn btn-p" id="nx" style="margin-top:6px">${gi<7?'AVANÇAR':'PRÓXIMO →'}</button></div></div>`;
   document.querySelectorAll('.arr').forEach(b=>b.addEventListener('click',e=>{
     const i=+e.currentTarget.dataset.i,a=e.currentTarget.dataset.a;
-    if(a==='u'&&i>0){anim(i,i-1);setTimeout(()=>mv(i,i-1),120)}
-    if(a==='d'&&i<it.length-1){anim(i,i+1);setTimeout(()=>mv(i,i+1),120)}
+    if(a==='u'&&i>0) mv(i,i-1);
+    if(a==='d'&&i<it.length-1) mv(i,i+1);
   }));
   let di=null;document.querySelectorAll('.rc').forEach(c=>{
     c.addEventListener('dragstart',()=>{di=+c.dataset.i;c.classList.add('dragging')});
