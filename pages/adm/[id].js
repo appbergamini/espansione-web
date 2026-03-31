@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 
 const AGENT_NAMES = [
@@ -56,9 +56,34 @@ export default function ProjetoDetalhes() {
     }
   };
 
+  // Sincroniza participantes CIS toda vez que os dados carregam
+  useEffect(() => {
+    if (data?.cisParticipantes) {
+      setCisParticipantes(data.cisParticipantes);
+    }
+  }, [data]);
+
   useEffect(() => {
     loadData();
   }, [id]);
+
+  const [deletando, setDeletando] = useState(false);
+
+  const handleDeleteProjeto = async () => {
+    const confirmado = window.confirm(`Tem certeza que deseja excluir o projeto "${data?.projeto?.cliente}"?\n\nEsta ação é irreversível e apagará todos os dados relacionados.`);
+    if (!confirmado) return;
+    setDeletando(true);
+    try {
+      const res = await fetch(`/api/projetos/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      router.push('/adm');
+    } catch (err) {
+      alert('Erro ao excluir projeto: ' + err.message);
+    } finally {
+      setDeletando(false);
+    }
+  };
 
   const handleApproveCheckpoint = async (checkpointNum) => {
     setApproving(true);
@@ -148,10 +173,7 @@ export default function ProjetoDetalhes() {
   if (errorMsg) return <div style={{ color: 'var(--brand-red)', padding: '2rem' }}>{errorMsg}</div>;
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
 
-  const { projeto, outputs = [], formularios = [], intake, cisParticipantes: cisParticipantesData = [] } = data;
-  
-  // Sincronizar participantes do carregamento inicial
-  useEffect(() => { setCisParticipantes(cisParticipantesData); }, [data]);
+  const { projeto, outputs = [], formularios = [], intake } = data;
   
   // Calcular qual é o próximo agente baseado no último output gerado
   const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : -1;
@@ -181,7 +203,18 @@ export default function ProjetoDetalhes() {
                 &larr; Voltar ao Painel Gerencial
               </span>
             </Link>
-            <Logo size="sm" showTagline={false} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <button
+                onClick={handleDeleteProjeto}
+                disabled={deletando}
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: 'var(--brand-red)', fontSize: '0.82rem', fontWeight: 600, padding: '0.4rem 0.8rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.6)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+              >
+                {deletando ? 'Excluindo...' : '🗑 Excluir Projeto'}
+              </button>
+              <Logo size="sm" showTagline={false} />
+            </div>
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
