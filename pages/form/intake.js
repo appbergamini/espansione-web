@@ -100,15 +100,17 @@ export default function IntakeForm() {
                 
                 {/* BLOCO A */}
                 <div style={{ marginBottom: '3rem' }}>
-                  <h2 style={{ color: 'var(--accent-blue)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Bloco A — A Empresa e sua Marca</h2>
+                  <h2 style={{ color: 'var(--accent-blue)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+                    {isCompleta ? 'Bloco A — ' : ''}A Empresa e sua Marca
+                  </h2>
                   
                   <div className="form-group">
-                    <label>A1. O que vocês vendem e para quem?</label>
+                    <label>O que vocês vendem e para quem?</label>
                     <textarea className="form-input" name="a1_o_que_vendem" rows="3" onChange={handleInputChange} required></textarea>
                   </div>
                   
                   <div className="form-group">
-                    <label>A2. Quanto tempo tem sua empresa?</label>
+                    <label>Quanto tempo tem sua empresa?</label>
                     <select className="form-input" name="a2_tempo_mercado" onChange={handleInputChange} required defaultValue="">
                       <option value="" disabled>Selecione...</option>
                       <option value="Menos de 1 ano">Menos de 1 ano</option>
@@ -120,37 +122,37 @@ export default function IntakeForm() {
                   </div>
 
                   <div className="form-group">
-                    <label>A3. Se sua marca fosse uma pessoa, como você descreveria a personalidade dela?</label>
+                    <label>Se sua marca fosse uma pessoa, como você descreveria a personalidade dela?</label>
                     <textarea className="form-input" name="a3_personalidade" rows="2" onChange={handleInputChange} required></textarea>
                   </div>
 
                   <div className="form-group">
-                    <label>A4. Quais 3 palavras você GOSTARIA que as pessoas usassem para descrever sua empresa?</label>
+                    <label>Quais 3 palavras você GOSTARIA que as pessoas usassem para descrever sua empresa?</label>
                     <input className="form-input" style={{ marginBottom: '0.5rem' }} name="a4_gostaria_1" placeholder="Palavra 1" onChange={handleInputChange} required />
                     <input className="form-input" style={{ marginBottom: '0.5rem' }} name="a4_gostaria_2" placeholder="Palavra 2" onChange={handleInputChange} required />
                     <input className="form-input" name="a4_gostaria_3" placeholder="Palavra 3" onChange={handleInputChange} required />
                   </div>
 
                   <div className="form-group">
-                    <label>A5. Quais 3 palavras você acha que as pessoas REALMENTE usam para descrever sua empresa?</label>
+                    <label>Quais 3 palavras você acha que as pessoas REALMENTE usam para descrever sua empresa?</label>
                     <input className="form-input" style={{ marginBottom: '0.5rem' }} name="a5_usam_1" placeholder="Palavra 1" onChange={handleInputChange} required />
                     <input className="form-input" style={{ marginBottom: '0.5rem' }} name="a5_usam_2" placeholder="Palavra 2" onChange={handleInputChange} required />
                     <input className="form-input" name="a5_usam_3" placeholder="Palavra 3" onChange={handleInputChange} required />
                   </div>
 
                   <div className="form-group">
-                    <label>A6. O que diferencia sua empresa dos concorrentes?</label>
+                    <label>O que diferencia sua empresa dos concorrentes?</label>
                     <textarea className="form-input" name="a6_diferencial" rows="3" onChange={handleInputChange} required></textarea>
                   </div>
 
                   {isCompleta && (
                     <>
                       <div className="form-group">
-                        <label>A7. Como a empresa está organizada hoje? Quantos colaboradores, sócios, e qual o seu papel na empresa?</label>
+                        <label>Como a empresa está organizada hoje? Quantos colaboradores, sócios, e qual o seu papel na empresa?</label>
                         <textarea className="form-input" name="a7_organizacao" rows="3" onChange={handleInputChange} required></textarea>
                       </div>
                       <div className="form-group">
-                        <label>A8. Existe alguma marca (de qualquer segmento) que você admira? Qual e por quê?</label>
+                        <label>Existe alguma marca (de qualquer segmento) que você admira? Qual e por quê?</label>
                         <textarea className="form-input" name="a8_marca_admirada" rows="2" onChange={handleInputChange} required></textarea>
                       </div>
                     </>
@@ -163,32 +165,32 @@ export default function IntakeForm() {
                     <h2 style={{ color: 'var(--accent-purple)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Bloco B — Marca Empregadora e Cultura</h2>
 
                     <div className="form-group">
-                      <label>B1. Na sua percepção, como é o clima interno da sua empresa?</label>
+                      <label>Na sua percepção, como é o clima interno da sua empresa?</label>
                       <textarea className="form-input" name="b1_clima" rows="2" onChange={handleInputChange} required></textarea>
                     </div>
                     
                     <div className="form-group">
-                      <label>B2. Quais os maiores desafios de comunicação interna que você identifica?</label>
+                      <label>Quais os maiores desafios de comunicação interna que você identifica?</label>
                       <textarea className="form-input" name="b2_desafios_comunicacao" rows="2" onChange={handleInputChange} required></textarea>
                     </div>
                     
                     <div className="form-group">
-                      <label>B3. Quais seus maiores desafios em relação a liderança e gestão de pessoas?</label>
+                      <label>Quais seus maiores desafios em relação a liderança e gestão de pessoas?</label>
                       <textarea className="form-input" name="b3_desafios_lideranca" rows="2" onChange={handleInputChange} required></textarea>
                     </div>
                     
                     <div className="form-group">
-                      <label>B4. Me conte sobre sua proposta de valor ao colaborador. O que você oferece e por que acredita que é relevante?</label>
+                      <label>Me conte sobre sua proposta de valor ao colaborador. O que você oferece e por que acredita que é relevante?</label>
                       <textarea className="form-input" name="b4_evp" rows="3" onChange={handleInputChange} required></textarea>
                     </div>
                     
                     <div className="form-group">
-                      <label>B5. Na sua visão, quais são os valores inegociáveis da sua empresa?</label>
+                      <label>Na sua visão, quais são os valores inegociáveis da sua empresa?</label>
                       <textarea className="form-input" name="b5_valores" rows="2" onChange={handleInputChange} required></textarea>
                     </div>
 
-                    <div className="form-group" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px' }}>
-                      <label style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>B6. Radar de Marca Empregadora (Avalie de 0 a 10):</label>
+                    <div className="form-group" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <label style={{ fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--text-primary)', display: 'block' }}>Radar de Marca Empregadora (Avalie de 0 a 10):</label>
                       {[
                         { id: 'radar_proposito', label: 'Propósito Inspirador' },
                         { id: 'radar_cultura', label: 'Cultura Organizacional Viva' },
@@ -202,15 +204,15 @@ export default function IntakeForm() {
                         { id: 'radar_experiencia', label: 'Experiência do Colaborador' },
                         { id: 'radar_reputacao', label: 'Reputação e Imagem da Marca' }
                       ].map(item => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                           <span style={{ fontSize: '0.95rem' }}>{item.label}</span>
-                          <input type="number" min="0" max="10" className="form-input" name={item.id} style={{ width: '80px', textAlign: 'center', padding: '0.4rem' }} onChange={handleInputChange} required />
+                          <input type="number" min="0" max="10" placeholder="0-10" className="form-input" name={item.id} style={{ width: '80px', textAlign: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }} onChange={handleInputChange} required />
                         </div>
                       ))}
                     </div>
 
                     <div className="form-group">
-                      <label>B7. Qual dessas áreas áreas do radar você considera mais importante para chegar na sua visão de futuro e por quê?</label>
+                      <label>Qual dessas áreas do radar você considera mais importante para chegar na sua visão de futuro e por quê?</label>
                       <textarea className="form-input" name="b7_area_importante" rows="2" onChange={handleInputChange} required></textarea>
                     </div>
                   </div>
@@ -218,37 +220,39 @@ export default function IntakeForm() {
 
                 {/* BLOCO C */}
                 <div style={{ marginBottom: '3rem' }}>
-                  <h2 style={{ color: 'var(--accent-green)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Bloco C — Visão, Propósito e Futuro</h2>
+                  <h2 style={{ color: 'var(--accent-green)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+                    {isCompleta ? 'Bloco C — ' : 'Bloco Final — '}Visão, Propósito e Futuro
+                  </h2>
 
                   <div className="form-group">
-                    <label>C1. Conte um pouco sobre sua visão para esta marca: qual foi a motivação para criá-la, o que ela significa na vida das pessoas e como quer que ela seja percebida?</label>
+                    <label>Conte um pouco sobre sua visão para esta marca: qual foi a motivação para criá-la, o que ela significa na vida das pessoas e como quer que ela seja percebida?</label>
                     <textarea className="form-input" name="c1_visao" rows="4" onChange={handleInputChange} required></textarea>
                   </div>
                   
                   <div className="form-group">
-                    <label>C2. Onde você quer que sua empresa esteja em 5 anos?</label>
+                    <label>Onde você quer que sua empresa esteja em 5 anos?</label>
                     <textarea className="form-input" name="c2_5_anos" rows="3" onChange={handleInputChange} required></textarea>
                   </div>
                   
                   <div className="form-group">
-                    <label>C3. Na sua visão, qual o propósito da sua organização? Qual o papel ela tem ou quer ter no mundo?</label>
+                    <label>Na sua visão, qual o propósito da sua organização? Qual o papel ela tem ou quer ter no mundo?</label>
                     <textarea className="form-input" name="c3_proposito" rows="3" onChange={handleInputChange} required></textarea>
                   </div>
                   
                   <div className="form-group">
-                    <label>C4. Se pudesse mudar uma coisa na sua marca amanhã, o que seria?</label>
+                    <label>Se pudesse mudar uma coisa na sua marca amanhã, o que seria?</label>
                     <textarea className="form-input" name="c4_mudar_algo" rows="2" onChange={handleInputChange} required></textarea>
                   </div>
                   
                   <div className="form-group">
-                    <label>C5. Quais são seus maiores objetivos e desafios hoje enquanto empresário e líder?</label>
+                    <label>Quais são seus maiores objetivos e desafios hoje enquanto empresário e líder?</label>
                     <textarea className="form-input" name="c5_objetivos_lider" rows="3" onChange={handleInputChange} required></textarea>
                   </div>
 
                   {isCompleta && (
                     <>
-                      <div className="form-group" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px' }}>
-                        <label style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>C6. Aponte 3 impulsionadores, 3 detratores e 3 aceleradores da sua organização:</label>
+                      <div className="form-group">
+                        <label style={{ color: 'var(--text-primary)', marginBottom: '1rem', display: 'block' }}>Aponte 3 impulsionadores, 3 detratores e 3 aceleradores da sua organização:</label>
                         
                         <div style={{ marginBottom: '1.5rem' }}>
                           <strong style={{ color: 'var(--success)', display: 'block', marginBottom: '0.5rem' }}>⬆️ IMPULSIONADORES (Forças e Vantagens)</strong>
@@ -273,7 +277,7 @@ export default function IntakeForm() {
                       </div>
 
                       <div className="form-group">
-                        <label>C7. O que é necessário para chegar até lá? Com quem podemos aprender?</label>
+                        <label>O que é necessário para chegar até lá? Com quem podemos aprender?</label>
                         <textarea className="form-input" name="c7_como_chegar" rows="3" onChange={handleInputChange} required></textarea>
                       </div>
                     </>
