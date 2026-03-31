@@ -36,6 +36,8 @@ export default function ProjetoDetalhes() {
   const [cisAdding, setCisAdding] = useState(false);
   const [cisMsg, setCisMsg] = useState({ tipo: '', texto: '' });
   const [cisLinkCopiado, setCisLinkCopiado] = useState(false);
+  const [cisBulkMode, setCisBulkMode] = useState(false);
+  const [cisBulkText, setCisBulkText] = useState('');
 
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
@@ -162,6 +164,46 @@ export default function ProjetoDetalhes() {
     }
   };
 
+  const handleBulkImport = async () => {
+    if (!cisBulkText.trim()) return;
+    setCisAdding(true);
+    setCisMsg({ tipo: '', texto: '' });
+    
+    // Parser simples: Nome;Cargo;Email ou Nome;Email
+    const lines = cisBulkText.split('\n').filter(l => l.trim().includes('@'));
+    const rows = lines.map(line => {
+      const parts = line.split(/[;,]/).map(p => p.trim());
+      if (parts.length >= 3) return { nome: parts[0], cargo: parts[1], email: parts[2] };
+      if (parts.length === 2) return { nome: parts[0], email: parts[1], cargo: '' };
+      return null;
+    }).filter(Boolean);
+
+    if (rows.length === 0) {
+      setCisMsg({ tipo: 'erro', texto: 'Nenhum formato válido encontrado (use Nome;Cargo;Email)' });
+      setCisAdding(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/cis/participantes?projeto_id=${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rows)
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      
+      setCisParticipantes(prev => [...json.participantes, ...prev]);
+      setCisBulkText('');
+      setCisBulkMode(false);
+      setCisMsg({ tipo: 'ok', texto: `${rows.length} participantes importados!` });
+    } catch (err) {
+      setCisMsg({ tipo: 'erro', texto: err.message });
+    } finally {
+      setCisAdding(false);
+    }
+  };
+
   const copiarLinkCis = () => {
     const link = `${window.location.origin}/cis.html?projeto=${id}`;
     navigator.clipboard.writeText(link);
@@ -257,49 +299,50 @@ export default function ProjetoDetalhes() {
                   </span>
                 </div>
 
-                {/* Formulário para adicionar participante */}
-                <form onSubmit={handleAddCisParticipante} style={{ marginBottom: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <input
-                      className="form-input"
-                      style={{ margin: 0, padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
-                      placeholder="Nome"
-                      value={cisForm.nome}
-                      onChange={e => setCisForm(f => ({ ...f, nome: e.target.value }))}
-                      required
-                    />
-                    <input
-                      className="form-input"
-                      style={{ margin: 0, padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
-                      placeholder="Cargo"
-                      value={cisForm.cargo}
-                      onChange={e => setCisForm(f => ({ ...f, cargo: e.target.value }))}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input
-                      className="form-input"
-                      style={{ margin: 0, padding: '0.5rem 0.75rem', fontSize: '0.85rem', flex: 1 }}
-                      placeholder="E-mail"
-                      type="email"
-                      value={cisForm.email}
-                      onChange={e => setCisForm(f => ({ ...f, email: e.target.value }))}
-                      required
-                    />
-                    <button
-                      type="submit"
-                      disabled={cisAdding}
-                      style={{ background: 'var(--accent-purple)', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    >
-                      {cisAdding ? '...' : '+ Adicionar'}
+                {!cisBulkMode ? (
+                  <form onSubmit={handleAddCisParticipante} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                      <input className="form-input" style={{ flex: 1, padding: '0.4rem', margin: 0 }} placeholder="Nome" value={cisForm.nome} onChange={e => setCisForm({ ...cisForm, nome: e.target.value })} />
+                      <input className="form-input" style={{ flex: 1, padding: '0.4rem', margin: 0 }} placeholder="Cargo" value={cisForm.cargo} onChange={e => setCisForm({ ...cisForm, cargo: e.target.value })} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                      <input className="form-input" style={{ flex: 1, padding: '0.4rem', margin: 0 }} type="email" placeholder="E-mail" value={cisForm.email} onChange={e => setCisForm({ ...cisForm, email: e.target.value })} />
+                      <button className="btn-primary" style={{ padding: '0 1rem', flexShrink: 0, fontSize: '0.8rem', height: 'auto', background: 'var(--accent-purple)' }} disabled={cisAdding}>
+                        {cisAdding ? '...' : '+ Adicionar'}
+                      </button>
+                    </div>
+                    <button type="button" onClick={() => setCisBulkMode(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'left', textDecoration: 'underline', padding: 0 }}>
+                      ⚡ Importar vários de uma vez (Excel/Planilha)
                     </button>
+                    {cisMsg.texto && (
+                      <p style={{ fontSize: '0.75rem', color: cisMsg.tipo === 'erro' ? 'var(--brand-red)' : 'var(--success)', marginTop: '0.2rem' }}>
+                        {cisMsg.texto}
+                      </p>
+                    )}
+                  </form>
+                ) : (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Cole sua lista: <strong>Nome;Cargo;E-mail</strong> ou <strong>Nome;E-mail</strong></p>
+                    <textarea 
+                      className="form-input" 
+                      style={{ width: '100%', height: '100px', fontSize: '0.8rem', resize: 'none', marginBottom: '0.6rem', fontFamily: 'monospace', padding: '0.5rem' }}
+                      placeholder="Ex: João Silva;Gerente;joao@email.com"
+                      value={cisBulkText}
+                      onChange={e => setCisBulkText(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem', background: 'var(--accent-purple)' }} onClick={handleBulkImport} disabled={cisAdding}>
+                        {cisAdding ? 'Importando...' : 'Confirmar Importação'}
+                      </button>
+                      <button className="form-input" style={{ flexShrink: 1, padding: '0 0.8rem', margin: 0, fontSize: '0.75rem', cursor: 'pointer' }} onClick={() => setCisBulkMode(false)}>Cancelar</button>
+                    </div>
+                    {cisMsg.texto && (
+                      <p style={{ fontSize: '0.75rem', color: cisMsg.tipo === 'erro' ? 'var(--brand-red)' : 'var(--success)', marginTop: '0.5rem' }}>
+                        {cisMsg.texto}
+                      </p>
+                    )}
                   </div>
-                  {cisMsg.texto && (
-                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: cisMsg.tipo === 'ok' ? 'var(--success)' : 'var(--brand-red)' }}>
-                      {cisMsg.texto}
-                    </p>
-                  )}
-                </form>
+                )}
 
                 {/* Lista de participantes */}
                 {cisParticipantes.length > 0 ? (
