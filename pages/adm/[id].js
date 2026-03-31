@@ -38,6 +38,7 @@ export default function ProjetoDetalhes() {
   const [cisLinkCopiado, setCisLinkCopiado] = useState(false);
   const [cisBulkMode, setCisBulkMode] = useState(false);
   const [cisBulkText, setCisBulkText] = useState('');
+  const [editId, setEditId] = useState(null);
 
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
@@ -147,21 +148,47 @@ export default function ProjetoDetalhes() {
     setCisAdding(true);
     setCisMsg({ tipo: '', texto: '' });
     try {
+      const isUpdating = !!editId;
       const res = await fetch(`/api/cis/participantes?projeto_id=${id}`, {
-        method: 'POST',
+        method: isUpdating ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cisForm)
+        body: JSON.stringify(isUpdating ? { ...cisForm, id: editId } : cisForm)
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      setCisParticipantes(prev => [json.participante, ...prev]);
+      
+      if (isUpdating) {
+        setCisParticipantes(prev => prev.map(p => p.id === editId ? json.participante : p));
+        setEditId(null);
+        setCisMsg({ tipo: 'ok', texto: 'Participante atualizado!' });
+      } else {
+        setCisParticipantes(prev => [json.participante, ...prev]);
+        setCisMsg({ tipo: 'ok', texto: 'Participante adicionado!' });
+      }
       setCisForm({ nome: '', email: '', cargo: '' });
-      setCisMsg({ tipo: 'ok', texto: 'Participante adicionado com sucesso!' });
     } catch (err) {
-      setCisMsg({ tipo: 'erro', texto: err.message || 'Erro ao adicionar.' });
+      setCisMsg({ tipo: 'erro', texto: err.message || 'Erro ao processar.' });
     } finally {
       setCisAdding(false);
     }
+  };
+
+  const handleDeleteParticipante = async (pId, pNome) => {
+    if (!window.confirm(`Excluir participante "${pNome}"?`)) return;
+    try {
+      const res = await fetch(`/api/cis/participantes?projeto_id=${id}&id=${pId}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setCisParticipantes(prev => prev.filter(p => p.id !== pId));
+    } catch (err) {
+      alert('Erro ao excluir: ' + err.message);
+    }
+  };
+
+  const startEditParticipante = (p) => {
+    setEditId(p.id);
+    setCisForm({ nome: p.nome, email: p.email, cargo: p.cargo || '' });
+    setCisBulkMode(false);
   };
 
   const handleBulkImport = async () => {
@@ -307,10 +334,15 @@ export default function ProjetoDetalhes() {
                     </div>
                     <div style={{ display: 'flex', gap: '0.6rem' }}>
                       <input className="form-input" style={{ flex: 1, padding: '0.4rem', margin: 0 }} type="email" placeholder="E-mail" value={cisForm.email} onChange={e => setCisForm({ ...cisForm, email: e.target.value })} />
-                      <button className="btn-primary" style={{ padding: '0 1rem', flexShrink: 0, fontSize: '0.8rem', height: 'auto', background: 'var(--accent-purple)' }} disabled={cisAdding}>
-                        {cisAdding ? '...' : '+ Adicionar'}
+                      <button className="btn-primary" style={{ padding: '0 1rem', flexShrink: 0, fontSize: '0.8rem', height: 'auto', background: editId ? 'var(--accent-blue)' : 'var(--accent-purple)' }} disabled={cisAdding}>
+                        {cisAdding ? '...' : editId ? 'Salvar' : '+ Adicionar'}
                       </button>
                     </div>
+                    {editId && (
+                      <button type="button" onClick={() => { setEditId(null); setCisForm({ nome: '', email: '', cargo: '' }); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'left', textDecoration: 'underline', padding: 0 }}>
+                        Cancelar Edição
+                      </button>
+                    )}
                     <button type="button" onClick={() => setCisBulkMode(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'left', textDecoration: 'underline', padding: 0 }}>
                       ⚡ Importar vários de uma vez (Excel/Planilha)
                     </button>
@@ -354,7 +386,13 @@ export default function ProjetoDetalhes() {
                           {p.cargo && <span style={{ color: 'var(--text-secondary)', marginLeft: '0.4rem' }}>• {p.cargo}</span>}
                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>{p.email}</div>
                         </div>
-                        <span style={{ fontSize: '1rem' }}>{p.respondido ? '✅' : '⏳'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '1rem' }}>{p.respondido ? '✅' : '⏳'}</span>
+                          <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <button onClick={() => startEditParticipante(p)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0.2rem' }}>✏️</button>
+                            {!p.respondido && <button onClick={() => handleDeleteParticipante(p.id, p.nome)} title="Excluir" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0.2rem' }}>🗑️</button>}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

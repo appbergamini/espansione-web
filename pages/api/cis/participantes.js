@@ -11,26 +11,29 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const participantes = await db.getCisParticipantes(projeto_id);
       return res.status(200).json({ success: true, participantes });
-    } 
-    
+    }
+
     if (req.method === 'POST') {
       const body = req.body;
-      
-      // Se for um Array, faz inserção em massa
       if (Array.isArray(body)) {
-        if (body.length === 0) return res.status(400).json({ success: false, error: 'Lista vazia' });
         const data = await db.addCisParticipantesBatch(projeto_id, body);
         return res.status(200).json({ success: true, participantes: data });
       }
-
-      // Comportamento original: um por um
       const { nome, email, cargo } = body;
-      if (!nome || !email) {
-        return res.status(400).json({ success: false, error: 'Nome e email são obrigatórios' });
-      }
-      
       const p = await db.addCisParticipante(projeto_id, nome, email, cargo);
       return res.status(200).json({ success: true, participante: p });
+    }
+
+    if (req.method === 'PUT') {
+      const { id, nome, email, cargo, liberado } = req.body;
+      const p = await db.updateCisParticipante(id, { nome, email, cargo, liberado });
+      return res.status(200).json({ success: true, participante: p });
+    }
+
+    if (req.method === 'DELETE') {
+      const { id } = req.query;
+      await db.deleteCisParticipante(id);
+      return res.status(200).json({ success: true });
     }
 
     return res.status(405).json({ success: false, error: 'Method not allowed' });
