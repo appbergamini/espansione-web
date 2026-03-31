@@ -94,53 +94,60 @@ function pct(){
 function prg(label){const p=pct();return`<div class="prg"><div class="prg-h"><span>${label}</span><span>${Math.round(p)}%</span></div><div class="prg-t"><div class="prg-f" style="width:${p}%"></div></div></div>`}
 
 function R(){
-  const fns={onboard:rOnb,welcome:rWel,rank1_intro:()=>rIntro(1,'rank'),rank1:rRank,pair1_intro:()=>rIntro(1,'pair'),pair1:rPair,rank2_intro:()=>rIntro(2,'rank'),rank2:rRank,pair2_intro:()=>rIntro(2,'pair'),pair2:rPair,calc:rCalc,results:rRes};
+  const fns={onboard:rOnb,rank1_intro:()=>rIntro(1,'rank'),rank1:rRank,pair1_intro:()=>rIntro(1,'pair'),pair1:rPair,rank2_intro:()=>rIntro(2,'rank'),rank2:rRank,pair2_intro:()=>rIntro(2,'pair'),pair2:rPair,calc:rCalc,results:rRes};
   (fns[G.ph]||rOnb)();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function rOnb(){
   const urlParams=new URLSearchParams(window.location.search);
-  const pid=urlParams.get('projeto')||'';
+  const pid=urlParams.get('projeto')||G.projetoId||'';
   if(!pid){
-    app.innerHTML=`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px">
-    <div style="font-size:28px;font-family:var(--hd);margin-bottom:16px">${L}</div>
-    <div style="background:rgba(218,49,68,.08);border:1px solid rgba(218,49,68,.2);border-radius:var(--r);padding:24px;max-width:320px;width:100%">
-      <p style="font-size:22px;margin-bottom:8px">🔒</p>
-      <p style="font-family:var(--hd);font-size:18px;font-weight:900;color:var(--coral);margin-bottom:8px">Acesso Inválido</p>
-      <p style="font-size:13px;color:var(--off);line-height:1.6">Este link não contém um código de projeto válido.<br/>Solicite o link correto ao seu administrador.</p>
-    </div></div>`;
+    app.innerHTML=`<div class="vi" style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+      <div class="gl gl-g" style="padding:2.5rem;max-width:380px;border:1px solid rgba(218,49,68,.3)">
+        <p style="font-size:32px;margin-bottom:12px">🔒</p>
+        <p style="font-family:var(--hd);font-size:22px;color:var(--coral);margin-bottom:12px">Acesso Inválido</p>
+        <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.6">Este link não contém um código de projeto válido.<br/>Solicite o link correto ao seu administrador.</p>
+      </div></div>`;
     return;
   }
   G.projetoId=pid;
-  app.innerHTML=`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:40px 0">
-  <div class="onb-bg"></div>
-  <div class="onb-a" style="position:relative;z-index:1;font-size:28px;font-family:var(--hd)">${L}</div>
-  <p class="onb-b body" style="margin-top:10px;position:relative;z-index:1">Mapeamento de Perfil Comportamental</p>
-  <div class="onb-c" style="display:flex;gap:8px;margin-top:28px;width:100%;max-width:320px;position:relative;z-index:1">
-    ${[{i:'🧬',t:'Perfil DISC'},{i:'⚡',t:'Pares rápidos'},{i:'📊',t:'16 Competências'}].map(c=>`<div style="flex:1;background:var(--bg2);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:14px 6px;text-align:center"><div style="font-size:22px;margin-bottom:4px">${c.i}</div><div style="font-size:10px;font-weight:700;color:var(--off)">${c.t}</div></div>`).join('')}
-  </div>
-  <div class="onb-d" style="width:100%;max-width:320px;margin-top:24px;position:relative;z-index:1">
-    <button class="btn btn-p" onclick="G.ph='welcome';R()">COMEÇAR</button>
-    <p class="cap" style="margin-top:12px">~8 minutos • Sem respostas certas ou erradas</p>
-  </div></div>`;
-}
 
-function rWel(){
+  // Se o email vier na URL, tentamos pular direto se for possível, 
+  // mas aqui vamos sempre mostrar a tela de abertura conforme pedido.
   var urlEmail=new URLSearchParams(window.location.search).get('email')||'';
-  if(urlEmail&&!G.ud.email){G.ud.email=urlEmail;G.ud.name=urlEmail.split('@')[0];}
-  app.innerHTML=`<div class="vi"><div class="sg" style="text-align:center;padding:12px 0"><div style="font-size:24px;font-family:var(--hd)">${L}</div></div>
-  <div class="sg gl"><p class="tag" style="margin-bottom:8px">Seus dados</p>
-  <input class="fi" id="fn" placeholder="Nome completo" value="${G.ud.name}">
-  <input class="fi" id="fe" placeholder="E-mail" type="email" value="${G.ud.email}"></div>
-  <div class="sg gl gl-g"><p class="body"><strong style="color:var(--white)">2 etapas:</strong> como você é (natural) e como esperam que você seja (adaptado). Cada etapa tem <strong style="color:var(--white)">rankings + escolhas rápidas</strong>.</p></div>
-  <div class="sg" id="err-box" style="display:none;background:rgba(218,49,68,.1);border:1px solid rgba(218,49,68,.2);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--coral)"></div>
-  <div class="sg"><button class="btn btn-p" id="go">INICIAR MAPEAMENTO</button></div></div>`;
-  const u=()=>{G.ud.name=$('fn').value;G.ud.email=$('fe').value;$('go').disabled=!(G.ud.name&&G.ud.email)};
-  ['fn','fe'].forEach(id=>$(id).addEventListener('input',u));
+  if(urlEmail&&!G.ud.email) G.ud.email=urlEmail;
+
+  app.innerHTML=`
+  <div style="min-height:100vh;display:flex;flex-direction:column;position:relative;background:#000;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:url('img/cis-hero.jpg') center/cover no-repeat;opacity:0.6;z-index:1"></div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom, transparent 40%, #000 100%);z-index:2"></div>
+    
+    <div style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:40px 24px;text-align:center">
+      <div style="margin-bottom:auto;padding-top:40px">
+        <div style="font-size:28px;font-family:var(--hd);letter-spacing:2px;color:#fff">${L}</div>
+      </div>
+
+      <div style="width:100%;max-width:400px;margin-bottom:20px">
+        <h1 style="font-family:var(--hd);font-size:36px;margin-bottom:12px;line-height:1.1;color:#fff;text-shadow: 0 2px 10px rgba(0,0,0,0.5)">Mapeamento Comportamental</h1>
+        <p style="font-size:15px;color:rgba(255,255,255,0.8);margin-bottom:32px;line-height:1.5">Descubra seu perfil DISC e competências em apenas 8 minutos.</p>
+        
+        <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);padding:24px;border-radius:20px;border:1px solid rgba(255,255,255,0.1)">
+          <p style="font-size:12px;font-weight:700;color:var(--off2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:left">Inicie com seu e-mail autorizado</p>
+          <input class="fi" id="fe" placeholder="seu@email.com" type="email" value="${G.ud.email}" style="margin-bottom:16px;background:rgba(0,0,0,0.4);border-radius:12px;height:52px;font-size:16px;text-align:center">
+          <div id="err-box" style="display:none;background:rgba(218,49,68,.1);border:1px solid rgba(218,49,68,.2);border-radius:12px;padding:12px;font-size:12px;color:var(--coral);margin-bottom:16px;text-align:left"></div>
+          <button class="btn btn-p" id="go" style="height:52px;font-size:15px;letter-spacing:1px">INICIAR MAPEAMENTO</button>
+          <p class="cap" style="margin-top:16px;color:rgba(255,255,255,0.4)">Sem respostas certas ou erradas • ~8 minutos</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  const u=()=>{G.ud.email=$('fe').value;$('go').disabled=!G.ud.email};
+  $('fe').addEventListener('input',u);
   $('go').addEventListener('click',async()=>{
     u();
-    if(!G.ud.name||!G.ud.email) return;
+    if(!G.ud.email) return;
     $('go').disabled=true;
     $('go').textContent='Verificando...';
     $('err-box').style.display='none';
@@ -154,8 +161,7 @@ function rWel(){
         $('go').textContent='INICIAR MAPEAMENTO';
         return;
       }
-      // Preenche nome automaticamente se o admin cadastrou
-      if(d.participante&&d.participante.nome&&!$('fn').value)$('fn').value=d.participante.nome;
+      G.ud.name=d.participante?.nome || G.ud.email.split('@')[0];
       G.ph='rank1_intro';R();
     }catch(e){
       $('err-box').textContent='Erro de conexão. Tente novamente.';
@@ -165,6 +171,10 @@ function rWel(){
     }
   });
   u();
+}
+
+function rWel(){
+  // Desativada por unificação na rOnb
 }
 
 function rIntro(etapa,tipo){
