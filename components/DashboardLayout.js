@@ -56,7 +56,7 @@ export default function DashboardLayout({ children, title = 'Espansione' }) {
   const menuItems = [
     { label: 'Visão Geral', icon: '🏠', active: router.pathname === '/dashboard', href: '/dashboard' },
     { label: 'Meus Projetos', icon: '📁', active: router.pathname === '/dashboard/projetos', href: '/dashboard/projetos' },
-    { label: 'Equipe & Perfis', icon: '👥', active: false, href: '#' },
+    { label: 'Equipe & Perfis', icon: '👥', active: router.pathname === '/dashboard/equipe', href: '/dashboard/equipe' },
     { label: 'Configurações', icon: '⚙️', active: false, href: '#' },
   ];
 

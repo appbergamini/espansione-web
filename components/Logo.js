@@ -24,11 +24,19 @@ export default function Logo({ showTagline = false, size = 'md', center = false 
         gap: '0.3rem',
       }}>
         {/* Imagem PNG original do logo da Espansione */}
-        <img
-          src="/brand/logo.png"
-          alt="Espansione"
-          style={{ height: `${height}px`, width: 'auto' }}
-        />
+        <div style={{
+          background: '#ffffff',
+          borderRadius: size === 'sm' ? '6px' : '10px',
+          padding: size === 'sm' ? '4px 8px' : '8px 14px',
+          display: 'inline-flex',
+          alignItems: 'center',
+        }}>
+          <img
+            src="/brand/logo.png"
+            alt="Espansione"
+            style={{ height: `${height}px`, width: 'auto' }}
+          />
+        </div>
 
         {/* Tagline (opcional) usando a fonte Cabin do brand book */}
         {showTagline && (

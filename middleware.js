@@ -9,7 +9,6 @@ export async function middleware(request) {
   // Protege rotas /adm
   if (pathname.startsWith('/adm')) {
     if (!user) {
-      // Redireciona para o login se não estiver logado
       const loginUrl = new URL('/login', request.url)
       return NextResponse.redirect(loginUrl)
     }
@@ -18,7 +17,6 @@ export async function middleware(request) {
   // Protege rotas /api/adm
   if (pathname.startsWith('/api/adm')) {
     if (!user) {
-      // Retorna 401 Unauthorized se API chamada sem login
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'content-type': 'application/json' },
@@ -33,6 +31,8 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     '/adm/:path*',
-    '/api/adm/:path*'
+    '/api/adm/:path*',
+    '/dashboard/:path*',
+    '/auth/callback',
   ],
 }
