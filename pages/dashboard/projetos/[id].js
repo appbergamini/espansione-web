@@ -100,7 +100,7 @@ export default function ProjetoDashboard() {
 
   const { projeto, outputs = [], formularios = [], intake, cisParticipantes = [] } = data;
   const sc = STATUS_COLORS[projeto.status] || STATUS_COLORS.planejamento;
-  const progress = Math.min(100, ((projeto.etapa_atual || 0) / 10) * 100);
+  const progress = Math.min(100, ((projeto.etapa_atual || 0) / 13) * 100);
   const cisRespondidos = cisParticipantes.filter(p => p.respondido).length;
 
   const renderText = (text) => {

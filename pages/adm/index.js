@@ -161,9 +161,9 @@ export default function AdminPanel() {
                           <td style={{ padding: '1.25rem 1rem', minWidth: '150px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <div style={{ width: '100px', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${Math.min(100, ((proj.etapa_atual || 0) / 10) * 100)}%`, background: 'var(--accent-blue)' }} />
+                                <div style={{ height: '100%', width: `${Math.min(100, ((proj.etapa_atual || 0) / 13) * 100)}%`, background: 'var(--accent-blue)' }} />
                               </div>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Agent {proj.etapa_atual || 0}/10</span>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Agent {proj.etapa_atual || 0}/13</span>
                             </div>
                           </td>
                           <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>

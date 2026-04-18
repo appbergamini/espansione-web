@@ -123,7 +123,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projetos.map(proj => {
               const sc = STATUS_COLORS[proj.status] || STATUS_COLORS.planejamento;
-              const progress = Math.min(100, ((proj.etapa_atual || 0) / 10) * 100);
+              const progress = Math.min(100, ((proj.etapa_atual || 0) / 13) * 100);
               return (
                 <div
                   key={proj.id}

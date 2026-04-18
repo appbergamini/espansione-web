@@ -5,17 +5,20 @@ import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 import { supabase } from '../../lib/supabaseClient';
 const AGENT_NAMES = [
-  "00. Intake & Contexto",
-  "01. Visão Interna",
-  "02. Visão Externa",
-  "03. Visão de Mercado",
-  "04. Decodificação de Valores",
-  "05. Diretrizes Estratégicas",
-  "06. Plataforma de Branding",
-  "07. Identidade Verbal",
-  "08. Identidade Visual (Brief)",
-  "09. CX (Personas & Jornada)",
-  "10. Comunicação Tática"
+  null,
+  "01. Roteiros Internos",
+  "02. Contexto Interno",
+  "03. Roteiro Cliente",
+  "04. Contexto Externo",
+  "05. Pesquisa Web",
+  "06. Visão Geral",
+  "07. Decodificação de Valores",
+  "08. Diretrizes Estratégicas",
+  "09. Plataforma de Branding",
+  "10. Identidade Verbal",
+  "11. Identidade Visual (Brief)",
+  "12. CX (Personas & Jornada)",
+  "13. Comunicação Tática"
 ];
 
 export default function ProjetoDetalhes() {
@@ -313,8 +316,8 @@ export default function ProjetoDetalhes() {
   const { projeto, outputs = [], formularios = [], intake } = data;
   
   // Calcular qual é o próximo agente baseado no último output gerado
-  const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : -1;
-  const nextAgent = lastOutputNum < 10 ? lastOutputNum + 1 : null;
+  const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : 0;
+  const nextAgent = lastOutputNum < 13 ? lastOutputNum + 1 : null;
   
   const { pendingCheckpoints = [] } = data;
   const pendingCkpt = (pendingCheckpoints && pendingCheckpoints.length > 0) 
