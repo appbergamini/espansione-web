@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
-
+import { supabase } from '../../lib/supabaseClient';
 const AGENT_NAMES = [
   "00. Intake & Contexto",
   "01. Visão Interna",
@@ -21,14 +21,34 @@ const AGENT_NAMES = [
 export default function ProjetoDetalhes() {
   const router = useRouter();
   const { id } = router.query;
-  
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      if (!session) { router.push('/login'); return; }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      if (!active) return;
+      if (profile?.role !== 'master') { router.replace('/dashboard'); return; }
+    })();
+    return () => { active = false; };
+  }, [router]);
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   
-  const [runningAgent, setRunningAgent] = useState(null); // agente atual
+  const [runningAgent, setRunningAgent] = useState(null);
   const [engineError, setEngineError] = useState('');
   const [approving, setApproving] = useState(false);
+  const [showModelPicker, setShowModelPicker] = useState(false);
+  const [pendingAgentNum, setPendingAgentNum] = useState(null);
 
   // CIS Participantes
   const [cisParticipantes, setCisParticipantes] = useState([]);
@@ -39,6 +59,12 @@ export default function ProjetoDetalhes() {
   const [cisBulkMode, setCisBulkMode] = useState(false);
   const [cisBulkText, setCisBulkText] = useState('');
   const [editId, setEditId] = useState(null);
+
+  // Responsável do projeto (editável pelo master)
+  const [editingResp, setEditingResp] = useState(false);
+  const [respForm, setRespForm] = useState({ nome: '', email: '' });
+  const [savingResp, setSavingResp] = useState(false);
+  const [respMsg, setRespMsg] = useState('');
 
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
@@ -110,21 +136,36 @@ export default function ProjetoDetalhes() {
     }
   };
 
-  const handleRunNext = async (agentNum) => {
+  const AI_MODELS = [
+    { key: 'gemini-flash', label: 'Gemini Flash', desc: 'Rápido e econômico', provider: 'Google' },
+    { key: 'gemini-pro', label: 'Gemini Pro', desc: 'Mais completo', provider: 'Google' },
+    { key: 'claude-sonnet', label: 'Claude Sonnet', desc: 'Equilibrado', provider: 'Anthropic' },
+    { key: 'claude-haiku', label: 'Claude Haiku', desc: 'Rápido e leve', provider: 'Anthropic' },
+    { key: 'gpt-4o', label: 'GPT-4o', desc: 'Alta capacidade', provider: 'OpenAI' },
+    { key: 'gpt-4o-mini', label: 'GPT-4o Mini', desc: 'Rápido e econômico', provider: 'OpenAI' },
+  ];
+
+  const handleRequestRun = (agentNum) => {
+    setPendingAgentNum(agentNum);
+    setShowModelPicker(true);
+    setEngineError('');
+  };
+
+  const handleRunWithModel = async (modelKey) => {
+    setShowModelPicker(false);
+    const agentNum = pendingAgentNum;
     setRunningAgent(agentNum);
     setEngineError('');
     try {
       const res = await fetch('/api/engine/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projetoId: id, agentNum })
+        body: JSON.stringify({ projetoId: id, agentNum, modelKey })
       });
       const json = await res.json();
-      
       if (!json.success) {
         setEngineError(json.error || 'Falha desconhecida no Engine.');
       } else {
-        // Recarregar os dados na tela (incluindo o novo output)
         await loadData();
       }
     } catch (err) {
@@ -231,8 +272,35 @@ export default function ProjetoDetalhes() {
     }
   };
 
+  const handleDownloadPdf = async (email, nome) => {
+    try {
+      const btn = document.activeElement;
+      if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+      const res = await fetch(`/api/relatorio/gerar?projeto_id=${id}&email=${encodeURIComponent(email)}`);
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Erro ao gerar PDF');
+        if (btn) { btn.textContent = '📄'; btn.disabled = false; }
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Espansione_Perfil_${nome.replace(/\s+/g, '_')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      if (btn) { btn.textContent = '📄'; btn.disabled = false; }
+    } catch (err) {
+      alert('Erro: ' + err.message);
+    }
+  };
+
   const copiarLinkCis = () => {
-    const link = `${window.location.origin}/cis.html?projeto=${id}`;
+    const link = `${window.location.origin}/mapeamento.html?projeto=${id}`;
     navigator.clipboard.writeText(link);
     setCisLinkCopiado(true);
     setTimeout(() => setCisLinkCopiado(false), 2500);
@@ -290,6 +358,95 @@ export default function ProjetoDetalhes() {
             {/* Esquerda: Informações Gerais */}
             <div style={{ flex: '1 1 300px' }}>
               <h1 style={{ marginBottom: '1rem', fontSize: '2rem' }}>{projeto.cliente}</h1>
+
+              {/* Card: Responsável do Projeto */}
+              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: editingResp ? '1rem' : 0 }}>
+                  <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>Responsavel do Projeto</h3>
+                  {!editingResp && (
+                    <button
+                      onClick={() => {
+                        setRespForm({ nome: projeto.responsavel_nome || '', email: projeto.responsavel_email || '' });
+                        setEditingResp(true);
+                        setRespMsg('');
+                      }}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      Editar
+                    </button>
+                  )}
+                </div>
+
+                {editingResp ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <input
+                      className="form-input"
+                      style={{ padding: '0.5rem', margin: 0, fontSize: '0.85rem' }}
+                      placeholder="Nome do responsavel"
+                      value={respForm.nome}
+                      onChange={e => setRespForm({ ...respForm, nome: e.target.value })}
+                    />
+                    <input
+                      className="form-input"
+                      style={{ padding: '0.5rem', margin: 0, fontSize: '0.85rem' }}
+                      type="email"
+                      placeholder="E-mail do responsavel"
+                      value={respForm.email}
+                      onChange={e => setRespForm({ ...respForm, email: e.target.value })}
+                    />
+                    {respMsg && (
+                      <p style={{ fontSize: '0.75rem', color: respMsg.includes('Erro') ? 'var(--brand-red)' : 'var(--success)', margin: 0 }}>{respMsg}</p>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        className="btn-primary"
+                        disabled={savingResp}
+                        onClick={async () => {
+                          setSavingResp(true);
+                          setRespMsg('');
+                          try {
+                            const res = await fetch(`/api/projetos/${id}/responsavel`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(respForm),
+                            });
+                            const json = await res.json();
+                            if (!res.ok) throw new Error(json.error);
+                            setRespMsg('Salvo!');
+                            setEditingResp(false);
+                            loadData();
+                          } catch (err) {
+                            setRespMsg('Erro: ' + err.message);
+                          } finally {
+                            setSavingResp(false);
+                          }
+                        }}
+                        style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
+                      >
+                        {savingResp ? 'Salvando...' : 'Salvar'}
+                      </button>
+                      <button
+                        onClick={() => { setEditingResp(false); setRespMsg(''); }}
+                        style={{ background: 'none', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.85rem' }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    {projeto.responsavel_nome ? (
+                      <div>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{projeto.responsavel_nome}</span>
+                        <br />
+                        <span style={{ color: 'var(--accent-blue)', fontSize: '0.85rem' }}>{projeto.responsavel_email}</span>
+                      </div>
+                    ) : (
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>Nenhum responsavel atribuido</span>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Status de formulários (simples) */}
               <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
@@ -389,6 +546,7 @@ export default function ProjetoDetalhes() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span style={{ fontSize: '1rem' }}>{p.respondido ? '✅' : '⏳'}</span>
                           <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            {p.respondido && <button onClick={() => handleDownloadPdf(p.email, p.nome)} title="Baixar PDF" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--accent-purple)', padding: '0.2rem' }}>📄</button>}
                             <button onClick={() => startEditParticipante(p)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0.2rem' }}>✏️</button>
                             {!p.respondido && <button onClick={() => handleDeleteParticipante(p.id, p.nome)} title="Excluir" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0.2rem' }}>🗑️</button>}
                           </div>
@@ -446,13 +604,13 @@ export default function ProjetoDetalhes() {
                         {engineError.includes('Missing fields') ? '⚠️ Faltam dados na base (ex: formulário de clima) antes de rodar este agente.' : '🚨 Erro: ' + engineError}
                       </div>
                     )}
-                    <button 
-                      className="btn-primary" 
+                    <button
+                      className="btn-primary"
                       style={{ width: '100%', padding: '0.85rem' }}
                       disabled={runningAgent !== null}
-                      onClick={() => handleRunNext(nextAgent)}
+                      onClick={() => handleRequestRun(nextAgent)}
                     >
-                      {runningAgent === nextAgent ? 'Processando (aguarde 15s~30s)...' : `Executar Agente ${nextAgent}`}
+                      {runningAgent !== null ? 'Processando (aguarde 15s~30s)...' : `Executar Agente ${nextAgent}`}
                     </button>
                   </>
                 )}
@@ -511,6 +669,49 @@ export default function ProjetoDetalhes() {
             </div>
           </div>
         </main>
+
+        {/* Modal: Seleção de Modelo de IA */}
+        {showModelPicker && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={() => setShowModelPicker(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
+            <div style={{ position: 'relative', background: 'var(--bg-secondary, #0a1122)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '2rem', maxWidth: '440px', width: '90%', maxHeight: '80vh', overflowY: 'auto' }}>
+              <h3 style={{ color: 'var(--accent-blue)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Escolha o modelo de IA</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
+                Agente {pendingAgentNum} — {AGENT_NAMES[pendingAgentNum]}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {AI_MODELS.map(m => (
+                  <button
+                    key={m.key}
+                    onClick={() => handleRunWithModel(m.key)}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '10px', padding: '0.85rem 1rem', cursor: 'pointer',
+                      transition: 'all 0.15s', textAlign: 'left', color: 'inherit',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(107,163,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(107,163,255,0.3)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff', marginBottom: '2px' }}>{m.label}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{m.desc}</div>
+                    </div>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.5rem', borderRadius: '6px', letterSpacing: '0.5px' }}>
+                      {m.provider}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowModelPicker(false)}
+                style={{ marginTop: '1rem', width: '100%', padding: '0.6rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

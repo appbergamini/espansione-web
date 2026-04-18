@@ -1,73 +1,115 @@
-import { db } from '../../../lib/db';
-import { createServerClient, serializeCookieHeader } from '@supabase/ssr';
+import crypto from 'crypto';
+import { getServerUser } from '../../../lib/getServerUser';
+import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  // 1. Criar o cliente do Supabase específico para o Servidor (API Route)
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return Object.keys(req.cookies).map((name) => ({ name, value: req.cookies[name] }));
-        },
-        setAll(cookiesToSet) {
-          res.setHeader('Set-Cookie', cookiesToSet.map(({ name, value, options }) => serializeCookieHeader(name, value, options)));
-        },
-      },
-    }
-  );
-  
   try {
-    const { nome_empresa } = req.body;
-
-    // 2. Tentar obter a sessão no Servidor através dos cookies
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (!session || sessionError) {
-      // Se não houver sessão no cookie, tentamos via Header de Autenticação (Bearer)
-      const authHeader = req.headers['authorization'];
-      if (authHeader) {
-        const token = authHeader.split(' ')[1];
-        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-        if (userError || !user) {
-          return res.status(401).json({ success: false, error: 'Token inválido ou expirado' });
-        }
-        // Se encontramos o usuário via token, procedemos
-        return handleCreateWithUser(user, nome_empresa, res);
-      }
-      return res.status(401).json({ success: false, error: 'Usuário não autenticado' });
+    const { user } = await getServerUser(req, res);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Não autenticado' });
     }
 
-    return handleCreateWithUser(session.user, nome_empresa, res);
+    const { nome_empresa, responsavel_nome, responsavel_email } = req.body;
+    const db = supabaseAdmin;
 
-  } catch (err) {
-    console.error("[API] Erro interno:", err);
-    return res.status(500).json({ success: false, error: err.message });
-  }
-
-  async function handleCreateWithUser(user, nome_empresa, res) {
-    // 3. Buscar perfil para encontrar o empresa_id
-    const { data: profile } = await supabase
+    const { data: profile } = await db
       .from('profiles')
-      .select('empresa_id')
+      .select('empresa_id, role')
       .eq('id', user.id)
       .single();
 
     if (!profile?.empresa_id) {
       return res.status(403).json({ success: false, error: 'Usuário não vinculado a uma empresa' });
     }
-    
-    // 4. Criar o projeto
-    const projetoId = await db.createProject({
-      empresa_id: profile.empresa_id,
-      cliente: nome_empresa || "Novo Cliente"
+
+    const empresaId = profile.empresa_id;
+    const nome = nome_empresa || 'Novo Cliente';
+
+    // Criar o projeto
+    const { data: projeto, error } = await db
+      .from('projetos')
+      .insert([{
+        empresa_id: empresaId,
+        nome: nome,
+        cliente: nome,
+        status: 'planejamento',
+        etapa_atual: 0,
+        responsavel_nome: responsavel_nome || null,
+        responsavel_email: responsavel_email || null,
+      }])
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    // Se tem responsável, garantir que ele tenha auth user + profile
+    if (responsavel_email) {
+      await ensureResponsavel(db, {
+        email: responsavel_email,
+        nome: responsavel_nome,
+        empresaId,
+        convidadoPor: user.id,
+      });
+    }
+
+    return res.status(200).json({ success: true, projetoId: projeto.id });
+  } catch (err) {
+    console.error("[API] Erro interno:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+async function ensureResponsavel(db, { email, nome, empresaId, convidadoPor }) {
+  // 1. Verificar/criar auth user
+  let authUserId = null;
+
+  const { data: { users } } = await db.auth.admin.listUsers();
+  const existingUser = users?.find(u => u.email === email);
+
+  if (existingUser) {
+    authUserId = existingUser.id;
+  } else {
+    const tempPassword = crypto.randomUUID() + '!Aa1';
+    const { data: newUser, error: createErr } = await db.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { full_name: nome },
     });
 
-    return res.status(200).json({ success: true, projetoId });
+    if (createErr) {
+      console.error('Erro ao criar auth user:', createErr.message);
+      return;
+    }
+    authUserId = newUser.user.id;
   }
+
+  // 2. Verificar/criar profile
+  const { data: existingProfile } = await db
+    .from('profiles')
+    .select('id')
+    .eq('id', authUserId)
+    .single();
+
+  if (!existingProfile) {
+    await db.from('profiles').insert({
+      id: authUserId,
+      empresa_id: empresaId,
+      nome_completo: nome || email.split('@')[0],
+      role: 'admin',
+    });
+  }
+
+  // 3. Criar convite (para registro)
+  await db.from('convites').upsert({
+    email,
+    empresa_id: empresaId,
+    convidado_por: convidadoPor,
+    role: 'admin',
+    status: 'aceito',
+  }, { onConflict: 'empresa_id,email' });
 }

@@ -2,7 +2,6 @@ import Head from 'next/head';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Logo from '../../components/Logo';
-import { supabase } from '../../lib/supabaseClient';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -18,24 +17,16 @@ export default function Home() {
     const campos = Object.fromEntries(formData.entries());
 
     try {
-      // 1. Obter token de acesso para garantir autenticação no servidor
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
       const res = await fetch('/api/projetos/create', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(campos)
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro na API');
-      
+
       if (data.success && data.projetoId) {
-        // Redireciona diretamente para o Painel de Controle daquele projeto
         router.push(`/adm/${data.projetoId}`);
       } else {
         setErrorMsg(data.error || "Erro desconhecido ao processar.");
@@ -50,13 +41,13 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Espansione | Nova Estratégia</title>
+        <title>Espansione | Nova Estrategia</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      
+
       <div className="page-container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <main className="container" style={{ maxWidth: '450px', width: '100%', margin: '0 auto', paddingTop: '0' }}>
-          
+        <main className="container" style={{ maxWidth: '480px', width: '100%', margin: '0 auto', paddingTop: '0' }}>
+
           <div style={{ textAlign: 'center', marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div className="animate-fade-in" style={{ marginBottom: '1.5rem' }}>
               <Logo size="lg" showTagline={true} center={true} />
@@ -66,9 +57,9 @@ export default function Home() {
           <div className="glass-card animate-fade-in" style={{ animationDelay: '0.1s', padding: '2.5rem 2rem' }}>
             <h2 style={{ marginBottom: '0.5rem', color: 'var(--accent-blue)', textAlign: 'center' }}>Novo Projeto</h2>
             <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '2rem', fontSize: '0.95rem' }}>
-              Crie a célula do cliente para acessar o Painel de Controle.
+              Crie a celula do cliente e atribua um responsavel.
             </p>
-            
+
             {errorMsg && (
               <div style={{ background: 'var(--error)', color: '#fff', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.9rem', textAlign: 'center' }}>
                 {errorMsg}
@@ -76,15 +67,32 @@ export default function Home() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div className="form-group" style={{ marginBottom: '2rem' }}>
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label>Empresa / Cliente</label>
                 <input className="form-input" name="nome_empresa" required placeholder="Ex: Acme Corp" />
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Responsavel pelo Projeto
+                </p>
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label>Nome</label>
+                  <input className="form-input" name="responsavel_nome" required placeholder="Ex: Maria Silva" />
+                </div>
+                <div className="form-group" style={{ marginBottom: '0' }}>
+                  <label>E-mail</label>
+                  <input className="form-input" name="responsavel_email" required type="email" placeholder="Ex: maria@empresa.com" />
+                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.5rem', opacity: 0.7 }}>
+                  Este e-mail recebera acesso como administrador do projeto.
+                </p>
               </div>
 
               <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'center' }}>
                 {loading ? (
                   <>
-                    <span className="spinner"></span> <span>Abrindo Célula...</span>
+                    <span className="spinner"></span> <span>Criando Projeto...</span>
                   </>
                 ) : (
                   "Criar Painel de Controle"
