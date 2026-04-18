@@ -78,9 +78,8 @@ security definer  -- executa com permissões elevadas (ignora RLS)
 set search_path = public
 as $$
 declare
-  invite_record record;
+  invite_record convites%rowtype;
 begin
-  -- Procura um convite pendente para o e-mail do novo usuário
   select * into invite_record
   from convites
   where email = new.email
@@ -88,9 +87,7 @@ begin
   order by created_at desc
   limit 1;
 
-  -- Se encontrou convite pendente, cria o profile vinculado à empresa
-  if invite_record is not null then
-    -- Cria o profile com empresa_id e role do convite
+  if found then
     insert into profiles (id, email, nome_completo, empresa_id, role)
     values (
       new.id,
@@ -103,19 +100,9 @@ begin
       empresa_id = invite_record.empresa_id,
       role = invite_record.role;
 
-    -- Marca o convite como aceito
     update convites
     set status = 'aceito'
     where id = invite_record.id;
-
-  else
-    -- Sem convite: verifica se é um registro normal (com company_name nos metadados)
-    -- Isso mantém compatibilidade com o fluxo de registro existente
-    if new.raw_user_meta_data->>'company_name' is not null then
-      -- O trigger existente de registro já cuida desse caso
-      -- Não faz nada aqui para não conflitar
-      null;
-    end if;
   end if;
 
   return new;
