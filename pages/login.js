@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 import Logo from '../components/Logo';
-import Link from 'next/link';
 
 export default function Login() {
   const router = useRouter();
@@ -18,16 +18,18 @@ export default function Login() {
     setErrorMsg('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      router.push('/dashboard');
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      router.push(profile?.role === 'master' ? '/adm' : '/dashboard');
     } catch (err) {
-      setErrorMsg(err.message || 'Erro ao realizar login.');
+      setErrorMsg(err.message || 'Erro ao entrar.');
     } finally {
       setLoading(false);
     }
@@ -45,16 +47,16 @@ export default function Login() {
         </div>
 
         <div className="glass-card p-8 animate-fade-in">
-          <h1 className="text-2xl font-bold mb-2 text-center">Boas-vindas de volta</h1>
-          <p className="text-slate-400 text-center mb-8 text-sm">Acesse seu ambiente estratégico.</p>
+          <h1 className="text-2xl font-bold mb-2 text-center">Acessar conta</h1>
+          <p className="text-slate-400 text-center mb-8 text-sm">Entre com seu e-mail e senha.</p>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">E-mail Corporativo</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">E-mail</label>
               <input
                 required
                 type="email"
-                placeholder="Ex: joao@empresa.com"
+                placeholder="nome@empresa.com"
                 className="w-full bg-[#0a1122] border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -62,10 +64,7 @@ export default function Login() {
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">Senha</label>
-                <Link href="#" className="text-xs text-blue-400 hover:underline">Esqueceu a senha?</Link>
-              </div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Senha</label>
               <input
                 required
                 type="password"
@@ -87,13 +86,13 @@ export default function Login() {
               type="submit"
               className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40"
             >
-              {loading ? 'Autenticando...' : 'Entrar no Painel'}
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-500">
             Ainda não tem conta?{' '}
-            <Link href="/register" className="text-blue-400 hover:underline font-medium">Criar conta e empresa</Link>
+            <Link href="/register" className="text-blue-400 hover:underline font-medium">Criar conta</Link>
           </p>
         </div>
       </div>
