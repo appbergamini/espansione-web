@@ -78,31 +78,34 @@ security definer  -- executa com permissões elevadas (ignora RLS)
 set search_path = public
 as $$
 declare
-  invite_record convites%rowtype;
+  v_invite_id uuid;
+  v_empresa_id uuid;
+  v_role text;
 begin
-  select * into invite_record
+  select id, empresa_id, role
+    into v_invite_id, v_empresa_id, v_role
   from convites
   where email = new.email
     and status = 'pendente'
   order by created_at desc
   limit 1;
 
-  if found then
+  if v_invite_id is not null then
     insert into profiles (id, email, nome_completo, empresa_id, role)
     values (
       new.id,
       new.email,
       coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
-      invite_record.empresa_id,
-      invite_record.role
+      v_empresa_id,
+      v_role
     )
     on conflict (id) do update set
-      empresa_id = invite_record.empresa_id,
-      role = invite_record.role;
+      empresa_id = v_empresa_id,
+      role = v_role;
 
     update convites
     set status = 'aceito'
-    where id = invite_record.id;
+    where id = v_invite_id;
   end if;
 
   return new;
