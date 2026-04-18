@@ -402,7 +402,7 @@ DADOS: Nome: ${G.ud.name}, Perfil: ${sc.profile}, DISC Natural: D=${sc.disc.D} I
 Gere APENAS este JSON (sem markdown):
 {"profile_desc":"2-3 parágrafos descrevendo o perfil.","strengths":"2 parágrafos sobre forças.","development":"2 parágrafos sobre desenvolvimento.","leadership":"2 parágrafos sobre liderança.","communication":"2 parágrafos sobre comunicação.","conflict":"2 parágrafos sobre conflitos.","tips":"4 dicas práticas numeradas."}`;
   try{
-    const r=await fetch('/api/generate-narratives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const r=await fetch('/api/generate-narratives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,projetoId:G.projetoId,email:G.ud.email})});
     const d=await r.json();
     if(d.success&&d.narratives)return d.narratives;
     return fallbackNar(sc);
