@@ -69,6 +69,12 @@ export default function ProjetoDetalhes() {
   const [savingResp, setSavingResp] = useState(false);
   const [respMsg, setRespMsg] = useState('');
 
+  // Modal de transcrição de entrevista
+  const [transcritModal, setTranscritModal] = useState(null);
+  const [transcritText, setTranscritText] = useState('');
+  const [transcritNome, setTranscritNome] = useState('');
+  const [transcritSaving, setTranscritSaving] = useState(false);
+
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
     if (!id) return;
@@ -181,6 +187,36 @@ export default function ProjetoDetalhes() {
   const copyLink = (path) => {
     navigator.clipboard.writeText(`${window.location.origin}${path}`);
     alert('Link copiado para a área de transferência!');
+  };
+
+  const openTranscritModal = (tipo) => {
+    setTranscritModal(tipo);
+    setTranscritText('');
+    setTranscritNome('');
+  };
+
+  const saveTranscrit = async () => {
+    if (!transcritText.trim()) return;
+    setTranscritSaving(true);
+    try {
+      const res = await fetch('/api/formularios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projetoId: id,
+          tipo: transcritModal,
+          respostas: { respondente: transcritNome || 'anônimo', transcricao: transcritText },
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Erro ao salvar');
+      setTranscritModal(null);
+      await loadData();
+    } catch (err) {
+      alert('Erro ao salvar transcrição: ' + err.message);
+    } finally {
+      setTranscritSaving(false);
+    }
   };
 
   const handleAddCisParticipante = async (e) => {
@@ -451,29 +487,39 @@ export default function ProjetoDetalhes() {
                 )}
               </div>
 
-              {/* Status de formulários (simples) */}
+              {/* Diagnósticos Essenciais — Formulários + Entrevistas */}
               <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Diagnósticos Essenciais</h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem' }}>
-                  <li style={{ paddingBottom: '0.75rem', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 500 }}>{intake && Object.keys(intake).length > 2 ? '✅' : '⏳'} Formulário Inicial</span>
-                    </div>
-                    {(!intake || Object.keys(intake).length <= 2) && (
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-start' }}>
-                        <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=resumida`)} style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>Copiar Link (Resumido)</button>
-                        <button onClick={() => copyLink(`/form/intake?projeto=${id}&versao=completa`)} style={{ background: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', borderRadius: '4px', padding: '0.3rem 0.6rem', color: '#000', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Copiar Link (Completo)</button>
-                      </div>
-                    )}
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  {[
+                    { tipo: 'intake_socios', label: 'Formulário Sócios', path: `/form/socios?projeto=${id}` },
+                    { tipo: 'intake_colaboradores', label: 'Formulário Colaboradores', path: `/form/colaboradores?projeto=${id}` },
+                    { tipo: 'intake_clientes', label: 'Formulário Clientes', path: `/form/clientes?projeto=${id}` },
+                  ].map(f => {
+                    const respondido = formularios.some(x => x.tipo === f.tipo);
+                    return (
+                      <li key={f.tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{respondido ? '✅' : '⏳'} {f.label}</span>
+                        <button onClick={() => copyLink(f.path)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.85rem' }}>Copiar Link</button>
+                      </li>
+                    );
+                  })}
+                  <li style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Entrevistas (transcrições)
                   </li>
-                  <li style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{formularios.some(f => f.tipo === 'proposito') ? '✅' : '⏳'} Form. Liderança (Propósito)</span>
-                    <button onClick={() => copyLink(`/form/proposito?projeto=${id}`)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer' }}>Copiar Link</button>
-                  </li>
-                  <li style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{formularios.some(f => f.tipo === 'pesquisa_colaboradores') ? '✅' : '⏳'} Form. Equipe (Clima)</span>
-                    <button onClick={() => copyLink(`/form/colaboradores?projeto=${id}`)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer' }}>Copiar Link</button>
-                  </li>
+                  {[
+                    { tipo: 'entrevista_socios', label: 'Entrevista Sócios' },
+                    { tipo: 'entrevista_colaboradores', label: 'Entrevista Colaboradores' },
+                    { tipo: 'entrevista_cliente', label: 'Entrevista Cliente' },
+                  ].map(e => {
+                    const count = formularios.filter(x => x.tipo === e.tipo).length;
+                    return (
+                      <li key={e.tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{count > 0 ? `✅ ${count}` : '⏳'} {e.label}</span>
+                        <button onClick={() => openTranscritModal(e.tipo)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.85rem' }}>+ Adicionar transcrição</button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 
@@ -712,6 +758,34 @@ export default function ProjetoDetalhes() {
               >
                 Cancelar
               </button>
+            </div>
+          </div>
+        )}
+
+        {transcritModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }} onClick={() => !transcritSaving && setTranscritModal(null)}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#0a1122', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.5rem', maxWidth: '640px', width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <h3 style={{ margin: 0, color: '#fff' }}>Adicionar transcrição — {transcritModal.replace('entrevista_', '').replace('_', ' ')}</h3>
+              <input
+                className="form-input"
+                placeholder="Nome do entrevistado (opcional)"
+                value={transcritNome}
+                onChange={e => setTranscritNome(e.target.value)}
+                style={{ padding: '0.6rem', margin: 0 }}
+              />
+              <textarea
+                className="form-input"
+                placeholder="Cole aqui a transcrição da entrevista..."
+                value={transcritText}
+                onChange={e => setTranscritText(e.target.value)}
+                style={{ width: '100%', minHeight: '280px', resize: 'vertical', fontFamily: 'monospace', fontSize: '0.85rem', padding: '0.75rem' }}
+              />
+              <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+                <button onClick={() => setTranscritModal(null)} disabled={transcritSaving} style={{ padding: '0.5rem 1rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+                <button onClick={saveTranscrit} disabled={transcritSaving || !transcritText.trim()} className="btn-primary" style={{ padding: '0.5rem 1rem' }}>
+                  {transcritSaving ? 'Salvando...' : 'Salvar Transcrição'}
+                </button>
+              </div>
             </div>
           </div>
         )}
