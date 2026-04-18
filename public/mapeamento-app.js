@@ -119,21 +119,26 @@ function rOnb(){
   if(urlEmail&&!G.ud.email) G.ud.email=urlEmail;
 
   app.innerHTML=`
-  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center">
-    <div style="margin-bottom:40px">${L}</div>
+  <div style="min-height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background:url('/img/cis-hero.jpg') center/cover no-repeat;opacity:0.5;z-index:1"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(4,8,18,0.3) 0%, rgba(4,8,18,0.95) 70%);z-index:2"></div>
 
-    <div style="width:100%;max-width:400px">
-      <h1 style="font-family:var(--hd);font-size:28px;margin-bottom:10px;line-height:1.15;color:#fff">Mapeamento Comportamental</h1>
-      <p style="font-size:14px;color:var(--ml);margin-bottom:32px;line-height:1.6">Descubra seu perfil DISC e competencias em apenas 8 minutos.</p>
+    <div style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:40px 20px;text-align:center">
+      <div style="margin-bottom:auto;padding-top:48px">${L}</div>
 
-      <div class="gl gl-g" style="padding:24px;border-radius:16px">
-        <p style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;text-align:left">Seu e-mail autorizado</p>
-        <input class="fi" id="fe" placeholder="seu@email.com" type="email" value="${G.ud.email}" style="border-radius:12px;height:48px;font-size:15px;text-align:center;margin-bottom:14px">
-        <div id="err-box" style="display:none;background:rgba(218,49,68,.08);border:1px solid rgba(218,49,68,.15);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--coral);margin-bottom:14px;text-align:left"></div>
-        <button class="btn btn-p" id="go" style="height:48px;font-size:14px;letter-spacing:.5px;border-radius:12px">INICIAR MAPEAMENTO</button>
+      <div style="width:100%;max-width:400px;margin-bottom:24px">
+        <h1 style="font-family:var(--hd);font-size:30px;margin-bottom:10px;line-height:1.15;color:#fff">Mapeamento Comportamental</h1>
+        <p style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:32px;line-height:1.6">Descubra seu perfil DISC e competencias em apenas 8 minutos.</p>
+
+        <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(12px);padding:24px;border-radius:20px;border:1px solid rgba(255,255,255,0.08)">
+          <p style="font-size:11px;font-weight:700;color:var(--off);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;text-align:left">Seu e-mail autorizado</p>
+          <input class="fi" id="fe" placeholder="seu@email.com" type="email" value="${G.ud.email}" style="border-radius:12px;height:48px;font-size:15px;text-align:center;margin-bottom:14px;background:rgba(0,0,0,0.3)">
+          <div id="err-box" style="display:none;background:rgba(218,49,68,.08);border:1px solid rgba(218,49,68,.15);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--coral);margin-bottom:14px;text-align:left"></div>
+          <button class="btn btn-p" id="go" style="height:48px;font-size:14px;letter-spacing:.5px;border-radius:12px">INICIAR MAPEAMENTO</button>
+        </div>
+
+        <p class="cap" style="margin-top:20px;color:rgba(255,255,255,0.35)">Sem respostas certas ou erradas • ~8 minutos</p>
       </div>
-
-      <p class="cap" style="margin-top:20px;color:var(--muted)">Sem respostas certas ou erradas • ~8 minutos</p>
     </div>
   </div>`;
 
@@ -324,7 +329,7 @@ function rRes(){
   <div class="sg gl"><p class="tag" style="margin-bottom:8px;font-size:12px">Liderança</p>${Object.entries(s.lead).map(([k,v])=>bar(k,v,'var(--teal)',50)).join('')}</div>
   ${compG.map(g=>`<div class="sg gl"><p class="tag" style="color:${g.c};margin-bottom:8px;font-size:12px">Competências — ${g.t}</p>${g.k.map(k=>bar(k,s.comp[k],g.c,100)).join('')}</div>`).join('')}
 
-  <div class="sg" style="margin-top:14px"><button class="btn btn-p" id="genPdf" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">📄</span> BAIXAR RELATÓRIO PDF</button><p class="cap" style="margin-top:6px;text-align:center">Relatório completo personalizado</p></div>
+  <div class="sg" style="margin-top:14px"><button class="btn btn-p" id="genPdf" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">📧</span> RECEBER RELATORIO POR E-MAIL</button><p class="cap" style="margin-top:6px;text-align:center">O relatorio completo sera enviado para ${G.ud.email}</p></div>
   <div class="sg footer">Espansione © 2026 — Mapeamento Comportamental</div></div>`;
 
   // Radar chart
@@ -342,11 +347,48 @@ function rRes(){
     });
   },100);
 
-  // PDF button
-  setTimeout(()=>{const btn=$('genPdf');if(btn)btn.addEventListener('click',()=>generateReport(s))},200);
+  // Botão de solicitar relatório por e-mail
+  setTimeout(()=>{const btn=$('genPdf');if(btn)btn.addEventListener('click',()=>requestReport(s))},200);
 }
 
-// ═══ PDF REPORT ═══
+// ═══ REQUEST REPORT VIA API ═══
+async function requestReport(sc){
+  const btn=$('genPdf');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Solicitando...';
+
+  try{
+    await fetch('/api/relatorio/solicitar',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        projetoId:G.projetoId,
+        email:G.ud.email,
+        nome:G.ud.name,
+        scores:sc,
+        rawRankings:{
+          r1:G.raw.r1.map(g=>g.map(i=>({label:i.l,disc:i.d}))),
+          r2:G.raw.r2.map(g=>g.map(i=>({label:i.l,disc:i.d}))),
+          p1:G.raw.p1,p2:G.raw.p2
+        }
+      })
+    });
+  }catch(e){
+    console.error('Erro ao solicitar relatorio:',e);
+  }
+
+  // Mostra confirmação imediata independente do resultado
+  btn.innerHTML='<span style="font-size:18px">✅</span> Solicitacao enviada!';
+  btn.style.background='rgba(16,185,129,0.15)';
+  btn.style.color='var(--green)';
+  btn.style.border='1px solid rgba(16,185,129,0.3)';
+
+  // Atualiza o texto abaixo
+  const cap=btn.parentElement.querySelector('.cap');
+  if(cap) cap.textContent='Voce recebera o relatorio completo no e-mail '+G.ud.email;
+}
+
+// ═══ PDF REPORT (mantido para geração server-side) ═══
 const DISC_INTRO=`O DISC é um modelo de perfil comportamental criado pelo psicólogo William Moulton Marston na década de 1920. Ele descreve quatro estilos de comportamento que todas as pessoas apresentam em diferentes graus.\n\nD — Dominância: Foco em resultados e ação direta.\nI — Influência: Foco em pessoas e comunicação.\nS — Estabilidade: Foco em harmonia e consistência.\nC — Conformidade: Foco em qualidade e precisão.`;
 const NAT_ADP=`Perfil Natural: Como você realmente é — seu jeito espontâneo de agir.\n\nPerfil Adaptado: Como o seu ambiente espera que você seja.`;
 
