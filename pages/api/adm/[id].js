@@ -36,14 +36,7 @@ export default async function handler(req, res) {
 
     const isMaster = profile?.role === 'master';
 
-    // Buscar email do usuário
-    let userEmail = user.email;
-    if (!userEmail) {
-      const { data: { users } } = await db.auth.admin.listUsers();
-      userEmail = users?.find(u => u.id === user.id)?.email;
-    }
-
-    const isResponsavel = projeto.responsavel_email && projeto.responsavel_email === userEmail;
+    const isResponsavel = projeto.responsavel_email && projeto.responsavel_email === user.email;
     const sameEmpresa = profile?.empresa_id === projeto.empresa_id;
 
     if (!profile || (!isMaster && !isResponsavel && !sameEmpresa)) {
