@@ -27,7 +27,8 @@ export default function Login() {
         .eq('id', data.user.id)
         .single();
 
-      router.push(profile?.role === 'master' ? '/adm' : '/dashboard');
+      const adminRoles = ['master', 'admin'];
+      router.push(adminRoles.includes(profile?.role) ? '/adm' : '/dashboard');
     } catch (err) {
       setErrorMsg(err.message || 'Erro ao entrar.');
     } finally {

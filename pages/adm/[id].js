@@ -35,7 +35,7 @@ export default function ProjetoDetalhes() {
         .eq('id', session.user.id)
         .single();
       if (!active) return;
-      if (profile?.role !== 'master') { router.replace('/dashboard'); return; }
+      if (profile?.role !== 'master' && profile?.role !== 'admin') { router.replace('/dashboard'); return; }
     })();
     return () => { active = false; };
   }, [router]);

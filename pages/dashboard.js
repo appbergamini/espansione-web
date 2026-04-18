@@ -26,7 +26,7 @@ export default function Dashboard() {
       if (!active) return;
 
       setUserName(profile?.nome_completo || session.user.email?.split('@')[0] || '');
-      if (profile?.role === 'master') { router.replace('/adm'); return; }
+      if (profile?.role === 'master' || profile?.role === 'admin') { router.replace('/adm'); return; }
 
       loadProjetos();
     })();

@@ -9,6 +9,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [isMaster, setIsMaster] = useState(false);
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -23,7 +24,7 @@ export default function AdminPanel() {
         .eq('id', session.user.id)
         .single();
       if (!active) return;
-      if (profile?.role !== 'master') { router.replace('/dashboard'); return; }
+      if (profile?.role !== 'master' && profile?.role !== 'admin') { router.replace('/dashboard'); return; }
     })();
     return () => { active = false; };
   }, [router]);
@@ -36,6 +37,7 @@ export default function AdminPanel() {
         if (data.success) {
           setProjetos(data.projetos || []);
           setIsMaster(data.isMaster || false);
+          setUserRole(data.userRole || '');
         } else {
           setErrorMsg(data.error);
         }
@@ -83,7 +85,7 @@ export default function AdminPanel() {
               }}>
                 {isMaster ? 'Visao Master' : 'Meus Projetos'}
               </span>
-              {isMaster && (
+              {(isMaster || userRole === 'admin') && (
                 <button className="btn-primary" onClick={() => router.push('/adm/novo')} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
                   + Novo Projeto
                 </button>
