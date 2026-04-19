@@ -12,7 +12,7 @@ const AGENT_NAMES = [
   "01. Roteiros VI — Entrevistas Internas",
   "02. Consolidado da Visão Interna (VI)",
   "03. Roteiros VE — Entrevistas Cliente",
-  "04. Contexto Externo (VE)",
+  "04. Consolidado da Visão Externa (VE)",
   "05. Pesquisa de Mercado (VM)",
   "06. Decodificação de Valor e DE-PARA",
   "07. Valores e Atributos",
