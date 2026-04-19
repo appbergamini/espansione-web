@@ -7,19 +7,19 @@ import RespondentesManager from '../../components/RespondentesManager';
 import { supabase } from '../../lib/supabaseClient';
 const AGENT_NAMES = [
   null,
-  "01. Roteiros Internos",
-  "02. Contexto Interno",
-  "03. Roteiro Cliente",
-  "04. Contexto Externo",
-  "05. Pesquisa Web",
-  "06. Visão Geral",
-  "07. Decodificação de Valores",
+  "01. Roteiros VI — Entrevistas Internas",
+  "02. Contexto Interno (VI)",
+  "03. Roteiros VE — Entrevistas Cliente",
+  "04. Contexto Externo (VE)",
+  "05. Pesquisa de Mercado (VM)",
+  "06. Decodificação de Valor e DE-PARA",
+  "07. Valores e Atributos",
   "08. Diretrizes Estratégicas",
   "09. Plataforma de Branding",
-  "10. Identidade Verbal",
-  "11. Identidade Visual (Brief)",
-  "12. CX (Personas & Jornada)",
-  "13. Comunicação Tática"
+  "10. Identidade Verbal (UVV)",
+  "11. One Page de Personalidade",
+  "12. One Page de Experiência",
+  "13. Plano de Comunicação"
 ];
 
 export default function ProjetoDetalhes() {
