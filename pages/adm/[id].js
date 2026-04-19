@@ -234,6 +234,39 @@ export default function ProjetoDetalhes() {
     setInviteMsg('');
   };
 
+  const [cisSending, setCisSending] = useState(false);
+
+  const sendCisInvite = async (participante) => {
+    try {
+      const res = await fetch('/api/convites/form-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projetoId: id, tipo: 'mapeamento_cis', email: participante.email, nome: participante.nome }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  };
+
+  const sendCisBatch = async () => {
+    const pendentes = cisParticipantes.filter(p => !p.respondido);
+    if (pendentes.length === 0) { alert('Nenhum participante pendente.'); return; }
+    if (!confirm(`Enviar convite do DISC pra ${pendentes.length} participantes pendentes?`)) return;
+    setCisSending(true);
+    let ok = 0, fail = 0;
+    let firstErr = '';
+    for (const p of pendentes) {
+      const r = await sendCisInvite(p);
+      if (r.ok) ok++;
+      else { fail++; if (!firstErr) firstErr = `${p.email}: ${r.error}`; }
+    }
+    setCisSending(false);
+    alert(fail === 0 ? `${ok} convite(s) enviado(s)` : `Enviados ${ok} | Falhas ${fail}${firstErr ? ` — ${firstErr}` : ''}`);
+  };
+
   const sendInvite = async () => {
     if (!inviteEmail.trim()) return;
     setInviteSending(true);
@@ -645,6 +678,7 @@ export default function ProjetoDetalhes() {
                           <span style={{ fontSize: '1rem' }}>{p.respondido ? '✅' : '⏳'}</span>
                           <div style={{ display: 'flex', gap: '0.3rem' }}>
                             {p.respondido && <button onClick={() => handleDownloadPdf(p.email, p.nome)} title="Baixar PDF" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--accent-purple)', padding: '0.2rem' }}>📄</button>}
+                            {!p.respondido && <button onClick={async () => { const r = await sendCisInvite(p); alert(r.ok ? `Convite enviado pra ${p.email}` : `Erro: ${r.error}`); }} title="Enviar convite por email" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--accent-blue)', padding: '0.2rem' }}>✉️</button>}
                             <button onClick={() => startEditParticipante(p)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0.2rem' }}>✏️</button>
                             {!p.respondido && <button onClick={() => handleDeleteParticipante(p.id, p.nome)} title="Excluir" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0.2rem' }}>🗑️</button>}
                           </div>
@@ -656,13 +690,21 @@ export default function ProjetoDetalhes() {
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', textAlign: 'center' }}>Nenhum participante cadastrado.</p>
                 )}
 
-                {/* Link de acesso */}
-                <button
-                  onClick={copiarLinkCis}
-                  style={{ width: '100%', background: cisLinkCopiado ? 'rgba(16,185,129,0.15)' : 'rgba(167,139,250,0.1)', border: `1px solid ${cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)'}`, borderRadius: '8px', color: cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.3s' }}
-                >
-                  {cisLinkCopiado ? '✅ Link Copiado!' : '🔗 Copiar Link do Mapeamento'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <button
+                    onClick={copiarLinkCis}
+                    style={{ flex: 1, background: cisLinkCopiado ? 'rgba(16,185,129,0.15)' : 'rgba(167,139,250,0.1)', border: `1px solid ${cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)'}`, borderRadius: '8px', color: cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.3s' }}
+                  >
+                    {cisLinkCopiado ? '✅ Link Copiado!' : '🔗 Copiar Link'}
+                  </button>
+                  <button
+                    onClick={sendCisBatch}
+                    disabled={cisSending || cisParticipantes.filter(p => !p.respondido).length === 0}
+                    style={{ flex: 1, background: 'rgba(167,139,250,0.2)', border: '1px solid var(--accent-purple)', borderRadius: '8px', color: 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', opacity: cisSending ? 0.6 : 1 }}
+                  >
+                    {cisSending ? 'Enviando...' : `✉️ Enviar para pendentes (${cisParticipantes.filter(p => !p.respondido).length})`}
+                  </button>
+                </div>
               </div>
               
               {/* Box de Ação Principal */}
