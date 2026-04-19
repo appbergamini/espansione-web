@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 import RespondentesManager from '../../components/RespondentesManager';
+import PosicionamentoResults from '../../components/PosicionamentoResults';
 import { supabase } from '../../lib/supabaseClient';
 const AGENT_NAMES = [
   null,
@@ -68,6 +69,9 @@ export default function ProjetoDetalhes() {
   const [respForm, setRespForm] = useState({ nome: '', email: '' });
   const [savingResp, setSavingResp] = useState(false);
   const [respMsg, setRespMsg] = useState('');
+
+  // Modal do resultado do posicionamento
+  const [posModalOpen, setPosModalOpen] = useState(false);
 
   // Modal de transcrição de entrevista
   const [transcritModal, setTranscritModal] = useState(null);
@@ -817,6 +821,9 @@ export default function ProjetoDetalhes() {
                           <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
                             {socios.length === 0 ? 'sem sócios' : `${respPosicionamento}/${socios.length} respondidos`}
                           </span>
+                          {respPosicionamento > 0 && (
+                            <button onClick={() => setPosModalOpen(true)} title="Ver resultados" style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)', color: 'var(--accent-blue)', borderRadius: '6px', padding: '0.15rem 0.5rem', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>📊 Ver resultados</button>
+                          )}
                           <a href={`/form/posicionamento?projeto=${id}`} target="_blank" rel="noopener noreferrer" title="Visualizar teste" style={{ fontSize: '0.85rem', color: 'var(--accent-blue)', textDecoration: 'none' }}>👁</a>
                         </div>
                       </li>
@@ -1101,6 +1108,14 @@ export default function ProjetoDetalhes() {
               </button>
             </div>
           </div>
+        )}
+
+        {posModalOpen && (
+          <PosicionamentoResults
+            respostas={formularios}
+            projetoNome={data?.projeto?.cliente || data?.projeto?.nome || ''}
+            onClose={() => setPosModalOpen(false)}
+          />
         )}
 
         {transcritModal && (
