@@ -14,7 +14,7 @@ const AGENT_NAMES = [
   "03. Roteiros VE — Entrevistas Cliente",
   "04. Consolidado da Visão Externa (VE)",
   "05. Visão de Mercado (VM)",
-  "06. Decodificação de Valor e DE-PARA",
+  "06. Decodificação e Direcionamento Estratégico",
   "07. Valores e Atributos",
   "08. Diretrizes Estratégicas",
   "09. Plataforma de Branding",
