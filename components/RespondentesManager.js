@@ -215,7 +215,13 @@ export default function RespondentesManager({ projetoId }) {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      showMsg('ok', `Enviados ${json.enviados} | Falhas: ${json.falhas}`);
+      if (json.falhas > 0) {
+        const firstErr = (json.detalhes || []).find(d => !d.ok);
+        const msgExtra = firstErr ? ` — ${firstErr.email}: ${firstErr.error}` : '';
+        showMsg('erro', `Enviados ${json.enviados} | Falhas ${json.falhas}${msgExtra}`, 15000);
+      } else {
+        showMsg('ok', `${json.enviados} convite(s) enviado(s)`);
+      }
       load();
     } catch (err) {
       showMsg('erro', err.message);
