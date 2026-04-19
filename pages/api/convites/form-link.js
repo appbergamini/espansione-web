@@ -42,8 +42,35 @@ export default async function handler(req, res) {
   }
 
   const origin = req.headers.origin || process.env.NEXT_PUBLIC_SITE_URL || '';
-  const link = `${origin}${path}?projeto=${projetoId}`;
   const projetoNome = projeto.cliente || projeto.nome || '';
+  let token = null;
+
+  // Mapeamento CIS: busca token do participante pelo email
+  if (tipo === 'mapeamento_cis') {
+    const { data: p } = await db
+      .from('cis_participantes')
+      .select('token, nome')
+      .eq('projeto_id', projetoId)
+      .eq('email', String(email).trim().toLowerCase())
+      .maybeSingle();
+    if (!p) return res.status(404).json({ success: false, error: 'Participante DISC não encontrado. Cadastre o email antes.' });
+    token = p.token;
+  } else {
+    // Forms: busca token em respondentes pelo email+papel
+    const papel = tipo.replace('intake_', '');
+    const { data: r } = await db
+      .from('respondentes')
+      .select('token')
+      .eq('projeto_id', projetoId)
+      .eq('email', String(email).trim().toLowerCase())
+      .eq('papel', papel)
+      .maybeSingle();
+    if (r?.token) token = r.token;
+  }
+
+  const link = token
+    ? `${origin}${path}?t=${token}`
+    : `${origin}${path}?projeto=${projetoId}`;
 
   try {
     const result = await sendFormInvite({ to: email, nome, link, tipo, projetoNome });

@@ -99,9 +99,44 @@ function R(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function rOnb(){
+async function rOnb(){
   const urlParams=new URLSearchParams(window.location.search);
-  const pid=urlParams.get('projeto')||G.projetoId||'';
+  const token=urlParams.get('t')||'';
+  let pid=urlParams.get('projeto')||G.projetoId||'';
+
+  // Fluxo com token: autoriza direto pelo DB, pula a tela de email
+  if(token){
+    try{
+      const r=await fetch('/api/cis/by-token?token='+encodeURIComponent(token));
+      const d=await r.json();
+      if(!d.success){
+        app.innerHTML=`<div class="vi" style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+          <div class="gl gl-g" style="padding:2.5rem;max-width:380px;border:1px solid rgba(218,49,68,.3)">
+            <p style="font-size:32px;margin-bottom:12px">🔒</p>
+            <p style="font-family:var(--hd);font-size:22px;color:var(--coral);margin-bottom:12px">Link inválido</p>
+            <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.6">${d.error||'Token não reconhecido.'}</p>
+          </div></div>`;
+        return;
+      }
+      if(d.participante.respondido){
+        app.innerHTML=`<div class="vi" style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+          <div class="gl gl-g" style="padding:2.5rem;max-width:380px">
+            <p style="font-size:32px;margin-bottom:12px">✅</p>
+            <p style="font-family:var(--hd);font-size:22px;color:var(--off);margin-bottom:12px">Mapeamento já respondido</p>
+            <p style="font-size:14px;color:rgba(255,255,255,0.7)">${d.participante.nome}, você já completou este mapeamento.</p>
+          </div></div>`;
+        return;
+      }
+      G.projetoId=d.participante.projeto_id;
+      G.ud.email=d.participante.email;
+      G.ud.name=d.participante.nome;
+      G.ph='rank1_intro';R();
+      return;
+    }catch(e){
+      console.error(e);
+    }
+  }
+
   if(!pid){
     app.innerHTML=`<div class="vi" style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
       <div class="gl gl-g" style="padding:2.5rem;max-width:380px;border:1px solid rgba(218,49,68,.3)">
@@ -113,8 +148,7 @@ function rOnb(){
   }
   G.projetoId=pid;
 
-  // Se o email vier na URL, tentamos pular direto se for possível, 
-  // mas aqui vamos sempre mostrar a tela de abertura conforme pedido.
+  // Fallback legacy: email na URL
   var urlEmail=new URLSearchParams(window.location.search).get('email')||'';
   if(urlEmail&&!G.ud.email) G.ud.email=urlEmail;
 
