@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
+import RespondentesManager from '../../components/RespondentesManager';
 import { supabase } from '../../lib/supabaseClient';
 const AGENT_NAMES = [
   null,
@@ -560,6 +561,8 @@ export default function ProjetoDetalhes() {
                   })}
                 </ul>
               </div>
+
+              <RespondentesManager projetoId={id} />
 
               {/* Card: Mapeamento Comportamental CIS */}
               <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>
