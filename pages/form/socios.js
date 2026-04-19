@@ -419,17 +419,18 @@ export default function FormSocios() {
                   </p>
 
                   {DIAG360.map((bloco, bi) => (
-                    <div key={bloco.g} style={{ marginBottom: '1.25rem', border: `1px solid ${DIAG360_COLORS[bloco.g]}33`, borderRadius: '10px', padding: '1rem' }}>
-                      <h3 style={{ color: DIAG360_COLORS[bloco.g], margin: '0 0 0.75rem', fontSize: '0.95rem' }}>{bloco.g}</h3>
+                    <div key={bloco.g} style={{ marginBottom: '2rem', border: `1px solid ${DIAG360_COLORS[bloco.g]}33`, borderRadius: '10px', padding: '1.25rem 1.5rem' }}>
+                      <h3 style={{ color: DIAG360_COLORS[bloco.g], margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 700 }}>{bloco.g}</h3>
                       {bloco.items.map((q, i) => {
                         const idx = bi * 4 + i + 1;
                         const name = `p6_q${idx}`;
+                        const isLast = i === bloco.items.length - 1;
                         return (
-                          <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                            <div style={{ fontSize: '0.88rem', marginBottom: '0.3rem' }}>{idx}. {q}</div>
-                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          <div key={idx} style={{ marginBottom: isLast ? 0 : '1.5rem', paddingBottom: isLast ? 0 : '1.25rem', borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ fontSize: '0.92rem', marginBottom: '0.75rem', lineHeight: 1.5 }}>{idx}. {q}</div>
+                            <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
                               {DIAG_SCALE.map(s => (
-                                <label key={s.v} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.82rem', cursor: 'pointer' }}>
+                                <label key={s.v} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer', padding: '0.2rem 0' }}>
                                   <input type="radio" name={name} value={s.v} checked={String(r[name]) === String(s.v)} onChange={onChange} required />
                                   <span>{s.v} — {s.label}</span>
                                 </label>
