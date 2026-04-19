@@ -30,7 +30,10 @@ export default async function handler(req, res) {
       if (!r) return res.status(403).json({ error: 'Token inválido' });
       respondenteRow = r;
       projetoId = r.projeto_id;
-      tipo = FORM_TIPO_BY_PAPEL[r.papel] || tipo;
+      // Só usa o mapa papel→tipo quando o cliente NÃO enviou tipo explícito.
+      // Assim sub-formulários como posicionamento_estrategico, entrevista_X etc
+      // mantêm seu próprio tipo em vez de virar intake_*.
+      if (!tipo) tipo = FORM_TIPO_BY_PAPEL[r.papel] || null;
     }
 
     if (!projetoId || !tipo) {
