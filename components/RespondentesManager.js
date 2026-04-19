@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
+import RichTextEditor from './RichTextEditor';
 
 const PAPEIS = [
   { key: 'socios', label: 'Sócios', color: '#60a5fa' },
@@ -11,7 +12,7 @@ const PLACEHOLDERS = ['{{nome}}', '{{papel}}', '{{projeto}}', '{{link}}'];
 
 const DEFAULT_TEMPLATE = {
   assunto: 'Convite para {{projeto}} — {{papel}}',
-  corpo: 'Olá {{nome}},\n\nVocê foi convidado como {{papel}} para participar do diagnóstico do projeto {{projeto}}.\n\nSuas respostas vão alimentar a construção estratégica da marca. Deve levar cerca de 10–15 minutos.',
+  corpo: '<p>Olá <strong>{{nome}}</strong>,</p><p>Você foi convidado como <strong>{{papel}}</strong> para participar do diagnóstico do projeto <strong>{{projeto}}</strong>.</p><p>Suas respostas vão alimentar a construção estratégica da marca. Deve levar cerca de <em>10–15 minutos</em>.</p>',
 };
 
 function normalizeRow(raw) {
@@ -187,16 +188,7 @@ export default function RespondentesManager({ projetoId }) {
   };
 
   const insertPlaceholder = (ph) => {
-    const el = corpoRef.current;
-    if (!el) {
-      setTemplateDraft(d => ({ ...d, corpo: (d.corpo || '') + ph }));
-      return;
-    }
-    const start = el.selectionStart || 0;
-    const end = el.selectionEnd || 0;
-    const next = (templateDraft.corpo || '').slice(0, start) + ph + (templateDraft.corpo || '').slice(end);
-    setTemplateDraft(d => ({ ...d, corpo: next }));
-    setTimeout(() => { el.focus(); el.setSelectionRange(start + ph.length, start + ph.length); }, 0);
+    corpoRef.current?.insertText(ph);
   };
 
   const enviarBatch = async (papel) => {
@@ -332,7 +324,7 @@ export default function RespondentesManager({ projetoId }) {
             </div>
             <div>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>Corpo</label>
-              <textarea ref={corpoRef} className="form-input" style={{ padding: '0.6rem', margin: 0, minHeight: '200px', fontFamily: 'monospace', fontSize: '0.85rem', resize: 'vertical', width: '100%' }} value={templateDraft.corpo} onChange={e => setTemplateDraft(d => ({ ...d, corpo: e.target.value }))} />
+              <RichTextEditor ref={corpoRef} value={templateDraft.corpo} onChange={html => setTemplateDraft(d => ({ ...d, corpo: html }))} placeholder="Escreva o corpo do e-mail..." height={240} />
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
               <button onClick={() => setActiveTemplatePapel(null)} style={{ padding: '0.5rem 1rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>

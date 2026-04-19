@@ -385,7 +385,15 @@ export default function ProjetoDetalhes() {
   if (errorMsg) return <div style={{ color: 'var(--brand-red)', padding: '2rem' }}>{errorMsg}</div>;
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
 
-  const { projeto, outputs = [], formularios = [], intake } = data;
+  const { projeto, outputs = [], formularios = [], intake, respondentes = [] } = data;
+
+  const PAPEL_FROM_TIPO = {
+    entrevista_socios: 'socios',
+    entrevista_colaboradores: 'colaboradores',
+    entrevista_cliente: 'clientes',
+  };
+  const transcritPapel = transcritModal ? PAPEL_FROM_TIPO[transcritModal] : null;
+  const transcritRespondentes = transcritPapel ? respondentes.filter(r => r.papel === transcritPapel) : [];
   
   // Calcular qual é o próximo agente baseado no último output gerado
   const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : 0;
@@ -839,9 +847,26 @@ export default function ProjetoDetalhes() {
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }} onClick={() => !transcritSaving && setTranscritModal(null)}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#0a1122', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.5rem', maxWidth: '640px', width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <h3 style={{ margin: 0, color: '#fff' }}>Adicionar transcrição — {transcritModal.replace('entrevista_', '').replace('_', ' ')}</h3>
+              {transcritRespondentes.length > 0 ? (
+                <select
+                  className="form-input"
+                  value={transcritNome}
+                  onChange={e => setTranscritNome(e.target.value)}
+                  style={{ padding: '0.6rem', margin: 0 }}
+                >
+                  <option value="">Selecione o entrevistado...</option>
+                  {transcritRespondentes.map(r => (
+                    <option key={r.id} value={r.nome}>{r.nome}{r.email ? ` — ${r.email}` : ''}</option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
+                  ⚠ Nenhum respondente cadastrado pra {transcritPapel}. Adicione na seção "Respondentes" antes de salvar a transcrição, ou digite o nome abaixo.
+                </div>
+              )}
               <input
                 className="form-input"
-                placeholder="Nome do entrevistado (opcional)"
+                placeholder={transcritRespondentes.length > 0 ? 'Ou digite outro nome (opcional)' : 'Nome do entrevistado'}
                 value={transcritNome}
                 onChange={e => setTranscritNome(e.target.value)}
                 style={{ padding: '0.6rem', margin: 0 }}
