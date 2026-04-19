@@ -297,6 +297,13 @@ export default function RespondentesManager({ projetoId }) {
                         color: r.status_convite === 'respondido' ? '#10b981' : r.status_convite === 'enviado' ? '#60a5fa' : '#94a3b8' }}>
                         {r.status_convite}
                       </span>
+                      <a
+                        href={`${p.key === 'socios' ? '/form/socios' : p.key === 'colaboradores' ? '/form/colaboradores' : '/form/clientes'}?t=${r.token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Visualizar formulário como este respondente"
+                        style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none' }}
+                      >👁</a>
                       <button onClick={() => {
                         const path = p.key === 'socios' ? '/form/socios' : p.key === 'colaboradores' ? '/form/colaboradores' : '/form/clientes';
                         const url = `${window.location.origin}${path}?t=${r.token}`;

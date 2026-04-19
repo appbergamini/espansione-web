@@ -523,9 +523,9 @@ export default function ProjetoDetalhes() {
                 <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Diagnósticos Essenciais</h3>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {[
-                    { tipo: 'intake_socios', papel: 'socios', label: 'Formulário Sócios' },
-                    { tipo: 'intake_colaboradores', papel: 'colaboradores', label: 'Formulário Colaboradores' },
-                    { tipo: 'intake_clientes', papel: 'clientes', label: 'Formulário Clientes' },
+                    { tipo: 'intake_socios', papel: 'socios', label: 'Formulário Sócios', path: '/form/socios' },
+                    { tipo: 'intake_colaboradores', papel: 'colaboradores', label: 'Formulário Colaboradores', path: '/form/colaboradores' },
+                    { tipo: 'intake_clientes', papel: 'clientes', label: 'Formulário Clientes', path: '/form/clientes' },
                   ].map(f => {
                     const lista = respondentes.filter(x => x.papel === f.papel);
                     const respondidos = lista.filter(x => x.status_convite === 'respondido').length;
@@ -534,9 +534,12 @@ export default function ProjetoDetalhes() {
                     return (
                       <li key={f.tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                         <span>{icone} {f.label}</span>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                          {total === 0 ? 'nenhum cadastrado' : `${respondidos}/${total} respondidos`}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                            {total === 0 ? 'nenhum cadastrado' : `${respondidos}/${total} respondidos`}
+                          </span>
+                          <a href={`${f.path}?projeto=${id}`} target="_blank" rel="noopener noreferrer" title="Visualizar formulário" style={{ fontSize: '0.85rem', color: 'var(--accent-blue)', textDecoration: 'none' }}>👁</a>
+                        </div>
                       </li>
                     );
                   })}
