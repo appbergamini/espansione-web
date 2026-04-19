@@ -2,6 +2,9 @@ import { Pipeline } from '../../../lib/ai/pipeline';
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
+export const maxDuration = 120;
+export const config = { maxDuration: 120 };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
