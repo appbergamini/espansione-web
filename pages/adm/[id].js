@@ -527,6 +527,27 @@ export default function ProjetoDetalhes() {
     }
   };
 
+  const [deletingOutput, setDeletingOutput] = useState(null);
+  const handleDeleteOutput = async (agentNum) => {
+    const nome = AGENT_NAMES[agentNum] || `Agente ${agentNum}`;
+    if (!window.confirm(`Excluir o relatório do ${nome}?\n\nEsta ação apaga o output e libera o agente para ser rodado de novo. Checkpoints e logs relacionados também são limpos.`)) return;
+    setDeletingOutput(agentNum);
+    try {
+      const res = await fetch('/api/outputs/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projetoId: id, agentNum }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Falha ao excluir');
+      await loadData();
+    } catch (err) {
+      alert('Erro ao excluir relatório: ' + err.message);
+    } finally {
+      setDeletingOutput(null);
+    }
+  };
+
   const handleDownloadPdf = async (email, nome) => {
     try {
       const btn = document.activeElement;
@@ -984,6 +1005,38 @@ export default function ProjetoDetalhes() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Danger Zone — exclusão de relatórios individuais */}
+          <div className="glass-card" style={{ padding: '2rem', marginTop: '2.5rem', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.3rem' }}>⚠️</span>
+              <h2 style={{ margin: 0, color: 'var(--brand-red)', fontSize: '1.15rem' }}>Danger Zone — Exclusão de Relatórios</h2>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              Excluir um relatório apaga o output, limpa logs e checkpoints relacionados e libera o agente para ser rodado novamente. Os agentes posteriores que dependem deste podem precisar ser re-executados.
+            </p>
+            {outputs.length === 0 ? (
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: 0 }}>Nenhum relatório gerado.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {outputs.sort((a, b) => a.agent_num - b.agent_num).map((out) => (
+                  <div key={out.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '8px', padding: '0.6rem 1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: 700, minWidth: '2.5rem' }}>A{out.agent_num}</span>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{AGENT_NAMES[out.agent_num]?.split('. ')[1] || `Agente ${out.agent_num}`}</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteOutput(out.agent_num)}
+                      disabled={deletingOutput !== null}
+                      style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '6px', color: 'var(--brand-red)', fontSize: '0.78rem', fontWeight: 600, padding: '0.35rem 0.75rem', cursor: deletingOutput !== null ? 'not-allowed' : 'pointer', opacity: deletingOutput !== null && deletingOutput !== out.agent_num ? 0.4 : 1 }}
+                    >
+                      {deletingOutput === out.agent_num ? 'Excluindo…' : '🗑 Excluir relatório'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </main>
 
