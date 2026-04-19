@@ -218,6 +218,91 @@ export default function ProjetoDetalhes() {
 
   const [cisSending, setCisSending] = useState(false);
 
+  const downloadOutputPdf = async (out) => {
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const marginX = 56;
+    const marginTop = 60;
+    const marginBottom = 60;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxWidth = pageWidth - marginX * 2;
+    let y = marginTop;
+
+    const stripTags = (t) => String(t || '').replace(/<\/?[^>]+>/g, '').replace(/\r/g, '');
+    const newPageIfNeeded = (h) => {
+      if (y + h > pageHeight - marginBottom) {
+        doc.addPage();
+        y = marginTop;
+      }
+    };
+    const writeHeading = (text, size = 14) => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(size);
+      newPageIfNeeded(size + 6);
+      doc.text(text, marginX, y);
+      y += size + 6;
+    };
+    const writeParagraph = (text, size = 10, color = [40, 40, 40]) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(size);
+      doc.setTextColor(color[0], color[1], color[2]);
+      const lines = doc.splitTextToSize(stripTags(text), maxWidth);
+      for (const line of lines) {
+        newPageIfNeeded(size + 3);
+        doc.text(line, marginX, y);
+        y += size + 3;
+      }
+      doc.setTextColor(0, 0, 0);
+    };
+
+    // Cabeçalho
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(0, 65, 152);
+    doc.text('Espansione', marginX, y);
+    y += 22;
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    const projetoNome = data?.projeto?.cliente || data?.projeto?.nome || '';
+    const agentName = AGENT_NAMES[out.agent_num]?.replace(/^\d+\.\s*/, '') || `Agente ${out.agent_num}`;
+    doc.text(`${projetoNome}  •  Agente ${String(out.agent_num).padStart(2, '0')} — ${agentName}`, marginX, y);
+    y += 14;
+    doc.setFontSize(9);
+    doc.setTextColor(150, 150, 150);
+    const when = out.created_at ? new Date(out.created_at).toLocaleString('pt-BR') : '';
+    const conf = out.confianca ? `Confiança: ${out.confianca}` : '';
+    doc.text([when, conf].filter(Boolean).join('  •  '), marginX, y);
+    y += 18;
+    doc.setDrawColor(220, 220, 220);
+    doc.line(marginX, y, pageWidth - marginX, y);
+    y += 16;
+    doc.setTextColor(0, 0, 0);
+
+    if (out.resumo_executivo) {
+      writeHeading('Resumo Executivo');
+      writeParagraph(out.resumo_executivo);
+      y += 8;
+    }
+    if (out.conteudo) {
+      writeHeading('Conteúdo');
+      writeParagraph(out.conteudo);
+      y += 8;
+    }
+    if (out.conclusoes) {
+      writeHeading('Conclusões');
+      writeParagraph(out.conclusoes);
+      y += 8;
+    }
+    if (out.fontes) {
+      writeHeading('Fontes');
+      writeParagraph(out.fontes, 9, [90, 90, 90]);
+    }
+
+    const filename = `${projetoNome}_Agente${String(out.agent_num).padStart(2, '0')}_${(agentName || '').replace(/[^A-Za-z0-9À-ÿ]+/g, '_')}.pdf`;
+    doc.save(filename);
+  };
+
   const sendCisInvite = async (participante) => {
     try {
       const res = await fetch('/api/convites/form-link', {
@@ -728,7 +813,16 @@ export default function ProjetoDetalhes() {
                             <span style={{ color: 'var(--accent-blue)', marginRight: '0.5rem' }}>A{out.agent_num}</span> 
                             {AGENT_NAMES[out.agent_num]?.split('.')[1] || `Agente ${out.agent_num}`}
                           </h3>
-                          <span style={{ fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.2rem 0.6rem', borderRadius: '12px' }}>Concluído</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <button
+                              onClick={() => downloadOutputPdf(out)}
+                              title="Baixar em PDF"
+                              style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.3)', color: 'var(--accent-blue)', borderRadius: '8px', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                            >
+                              📄 PDF
+                            </button>
+                            <span style={{ fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.2rem 0.6rem', borderRadius: '12px' }}>Concluído</span>
+                          </div>
                         </div>
                         <div style={{ padding: '1.5rem', fontSize: '0.95rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
                           {out.resumo_executivo ? (
