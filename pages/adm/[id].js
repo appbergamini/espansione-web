@@ -805,6 +805,23 @@ export default function ProjetoDetalhes() {
                       </li>
                     );
                   })}
+                  {/* Teste de Posicionamento Estratégico — só para sócios */}
+                  {(() => {
+                    const socios = respondentes.filter(x => x.papel === 'socios');
+                    const respPosicionamento = formularios.filter(x => x.tipo === 'posicionamento_estrategico').length;
+                    const icone = socios.length === 0 ? '⏳' : respPosicionamento >= socios.length ? '✅' : respPosicionamento > 0 ? '🟡' : '⏳';
+                    return (
+                      <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', paddingTop: '0.4rem', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                        <span>{icone} Teste de Posicionamento Estratégico <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>(só sócios)</span></span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                            {socios.length === 0 ? 'sem sócios' : `${respPosicionamento}/${socios.length} respondidos`}
+                          </span>
+                          <a href={`/form/posicionamento?projeto=${id}`} target="_blank" rel="noopener noreferrer" title="Visualizar teste" style={{ fontSize: '0.85rem', color: 'var(--accent-blue)', textDecoration: 'none' }}>👁</a>
+                        </div>
+                      </li>
+                    );
+                  })()}
                   <li style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Entrevistas (transcrições)
                   </li>

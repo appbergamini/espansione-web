@@ -72,8 +72,17 @@ export default async function handler(req, res) {
     ? `${origin}${path}?t=${token}`
     : `${origin}${path}?projeto=${projetoId}`;
 
+  const extraLinks = [];
+  if (tipo === 'intake_socios' && token) {
+    extraLinks.push({
+      intro: 'Junto, o Teste de Posicionamento Estratégico — 27 afirmações rápidas que identificam o posicionamento dominante da empresa (Excelência Operacional / Intimidade com Cliente / Liderança em Produto).',
+      cta: 'Fazer teste de posicionamento',
+      href: `${origin}/form/posicionamento?t=${token}`,
+    });
+  }
+
   try {
-    const result = await sendFormInvite({ to: email, nome, link, tipo, projetoNome });
+    const result = await sendFormInvite({ to: email, nome, link, tipo, projetoNome, extraLinks });
     return res.status(200).json({ success: true, id: result?.id });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });

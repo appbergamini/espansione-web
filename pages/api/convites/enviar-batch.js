@@ -76,6 +76,16 @@ export default async function handler(req, res) {
     const customSubject = applyPlaceholders(tpl?.assunto, vars);
     const customBody = applyPlaceholders(tpl?.corpo, vars);
 
+    // Sócios recebem um link adicional pro teste de Posicionamento Estratégico
+    const extraLinks = [];
+    if (papel === 'socios' && r.token) {
+      extraLinks.push({
+        intro: 'Junto, enviamos o Teste de Posicionamento Estratégico — 27 afirmações rápidas que identificam o posicionamento dominante da empresa (Excelência Operacional / Intimidade com Cliente / Liderança em Produto).',
+        cta: 'Fazer teste de posicionamento',
+        href: `${origin}/form/posicionamento?t=${r.token}`,
+      });
+    }
+
     try {
       await sendFormInvite({
         to: r.email,
@@ -85,6 +95,7 @@ export default async function handler(req, res) {
         projetoNome,
         subjectOverride: customSubject || undefined,
         bodyOverride: customBody || undefined,
+        extraLinks,
       });
       await db
         .from('respondentes')
