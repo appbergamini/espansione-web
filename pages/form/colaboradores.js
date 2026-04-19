@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 
 const AREAS = [
@@ -54,14 +54,27 @@ function ScaleRow({ name, value, onChange, min, max, minLabel, maxLabel }) {
 
 export default function FormColaboradores() {
   const router = useRouter();
-  const { projeto } = router.query;
+  const { projeto, t: token } = router.query;
   const [respostas, setRespostas] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [tokenProjeto, setTokenProjeto] = useState(null);
+  const [tokenError, setTokenError] = useState('');
 
   const set = (name, value) => setRespostas(prev => ({ ...prev, [name]: value }));
   const onChange = (e) => set(e.target.name, e.target.value);
+
+  useEffect(() => {
+    if (!router.isReady || !token) return;
+    fetch(`/api/respondentes/by-token?token=${encodeURIComponent(token)}`)
+      .then(r => r.json())
+      .then(json => {
+        if (!json.success) { setTokenError(json.error || 'Link inválido'); return; }
+        setTokenProjeto(json.respondente.projeto_id);
+      })
+      .catch(err => setTokenError(err.message));
+  }, [router.isReady, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,8 +85,9 @@ export default function FormColaboradores() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projetoId: projeto,
+          projetoId: tokenProjeto || projeto,
           tipo: 'intake_colaboradores',
+          token: token || undefined,
           respostas: { ...respostas, respondente: 'Colaborador anônimo' },
         }),
       });
@@ -89,7 +103,15 @@ export default function FormColaboradores() {
   };
 
   if (!router.isReady) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
-  if (!projeto) {
+  if (tokenError) {
+    return (
+      <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+        <h2 style={{ color: 'var(--brand-red)' }}>Link Inválido</h2>
+        <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{tokenError}</p>
+      </div>
+    );
+  }
+  if (!projeto && !tokenProjeto) {
     return (
       <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
         <h2 style={{ color: 'var(--brand-red)' }}>Link Inválido</h2>

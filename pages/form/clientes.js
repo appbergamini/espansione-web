@@ -1,21 +1,38 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 
 export default function FormClientes() {
   const router = useRouter();
-  const { projeto } = router.query;
+  const { projeto, t: token } = router.query;
 
   const [respostas, setRespostas] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [tokenData, setTokenData] = useState(null);
+  const [tokenLoading, setTokenLoading] = useState(false);
+  const [tokenError, setTokenError] = useState('');
 
   const onChange = (e) => {
     const { name, value } = e.target;
     setRespostas(prev => ({ ...prev, [name]: value }));
   };
+
+  useEffect(() => {
+    if (!router.isReady || !token) return;
+    setTokenLoading(true);
+    fetch(`/api/respondentes/by-token?token=${encodeURIComponent(token)}`)
+      .then(r => r.json())
+      .then(json => {
+        if (!json.success) { setTokenError(json.error || 'Link inválido'); return; }
+        setTokenData(json.respondente);
+        setRespostas(prev => ({ ...prev, nome_respondente: json.respondente.nome }));
+      })
+      .catch(err => setTokenError(err.message))
+      .finally(() => setTokenLoading(false));
+  }, [router.isReady, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,9 +43,10 @@ export default function FormClientes() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projetoId: projeto,
+          projetoId: tokenData?.projeto_id || projeto,
           tipo: 'intake_clientes',
-          respostas: { ...respostas, respondente: respostas.nome_respondente || 'Cliente' },
+          token: token || undefined,
+          respostas: { ...respostas, respondente: tokenData?.nome || respostas.nome_respondente || 'Cliente' },
         }),
       });
       const data = await res.json();
@@ -41,8 +59,16 @@ export default function FormClientes() {
     }
   };
 
-  if (!router.isReady) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
-  if (!projeto) {
+  if (!router.isReady || tokenLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
+  if (tokenError) {
+    return (
+      <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+        <h2 style={{ color: 'var(--brand-red)' }}>Link Inválido</h2>
+        <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{tokenError}</p>
+      </div>
+    );
+  }
+  if (!projeto && !tokenData) {
     return (
       <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
         <h2 style={{ color: 'var(--brand-red)' }}>Link Inválido</h2>
@@ -76,10 +102,18 @@ export default function FormClientes() {
               <form onSubmit={handleSubmit}>
                 {errorMsg && <div style={{ background: 'var(--error)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', color: '#fff' }}>{errorMsg}</div>}
 
-                <div className="form-group">
-                  <label>Seu nome</label>
-                  <input className="form-input" name="nome_respondente" onChange={onChange} required />
-                </div>
+                {tokenData ? (
+                  <div className="form-group" style={{ background: 'rgba(96,165,250,0.08)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(96,165,250,0.2)' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Respondendo como</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{tokenData.nome}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{tokenData.email}</div>
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label>Seu nome</label>
+                    <input className="form-input" name="nome_respondente" onChange={onChange} required />
+                  </div>
+                )}
                 <div className="form-group">
                   <label>Há quanto tempo você é cliente?</label>
                   <select className="form-input" name="tempo_cliente" onChange={onChange} required defaultValue="">

@@ -297,6 +297,12 @@ export default function RespondentesManager({ projetoId }) {
                         color: r.status_convite === 'respondido' ? '#10b981' : r.status_convite === 'enviado' ? '#60a5fa' : '#94a3b8' }}>
                         {r.status_convite}
                       </span>
+                      <button onClick={() => {
+                        const path = p.key === 'socios' ? '/form/socios' : p.key === 'colaboradores' ? '/form/colaboradores' : '/form/clientes';
+                        const url = `${window.location.origin}${path}?t=${r.token}`;
+                        navigator.clipboard.writeText(url);
+                        showMsg('ok', `Link de ${r.nome} copiado`);
+                      }} title="Copiar link único" style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}>🔗</button>
                       <button onClick={() => handleEdit(r)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.8rem' }}>✏️</button>
                       <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', color: 'var(--brand-red)', cursor: 'pointer', fontSize: '0.8rem' }}>🗑</button>
                     </div>

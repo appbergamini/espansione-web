@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 
 const TEMPO_EMPRESA = ['Menos de 1 ano', '1 a 3 anos', '3 a 7 anos', '7 a 15 anos', 'Mais de 15 anos'];
@@ -105,14 +105,31 @@ function ScaleRow({ name, value, onChange, min, max, minLabel, maxLabel }) {
 
 export default function FormSocios() {
   const router = useRouter();
-  const { projeto } = router.query;
+  const { projeto, t: token } = router.query;
   const [r, setR] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [tokenData, setTokenData] = useState(null);
+  const [tokenLoading, setTokenLoading] = useState(false);
+  const [tokenError, setTokenError] = useState('');
 
   const set = (name, value) => setR(prev => ({ ...prev, [name]: value }));
   const onChange = (e) => set(e.target.name, e.target.value);
+
+  useEffect(() => {
+    if (!router.isReady || !token) return;
+    setTokenLoading(true);
+    fetch(`/api/respondentes/by-token?token=${encodeURIComponent(token)}`)
+      .then(res => res.json())
+      .then(json => {
+        if (!json.success) { setTokenError(json.error || 'Link inválido'); return; }
+        setTokenData(json.respondente);
+        setR(prev => ({ ...prev, nome_respondente: json.respondente.nome }));
+      })
+      .catch(err => setTokenError(err.message))
+      .finally(() => setTokenLoading(false));
+  }, [router.isReady, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -123,9 +140,10 @@ export default function FormSocios() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projetoId: projeto,
+          projetoId: tokenData?.projeto_id || projeto,
           tipo: 'intake_socios',
-          respostas: { ...r, respondente: r.nome_respondente || 'Sócio' },
+          token: token || undefined,
+          respostas: { ...r, respondente: tokenData?.nome || r.nome_respondente || 'Sócio' },
         }),
       });
       const data = await res.json();
@@ -139,8 +157,16 @@ export default function FormSocios() {
     }
   };
 
-  if (!router.isReady) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
-  if (!projeto) {
+  if (!router.isReady || tokenLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
+  if (tokenError) {
+    return (
+      <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+        <h2 style={{ color: 'var(--brand-red)' }}>Link Inválido</h2>
+        <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{tokenError}</p>
+      </div>
+    );
+  }
+  if (!projeto && !tokenData) {
     return (
       <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
         <h2 style={{ color: 'var(--brand-red)' }}>Link Inválido</h2>
@@ -180,7 +206,15 @@ export default function FormSocios() {
 
                   {/* Identificação */}
                   <h2 style={sectionColor('var(--text-primary)')}>Identificação</h2>
-                  <div className="form-group"><label>Seu nome</label><input className="form-input" name="nome_respondente" onChange={onChange} required /></div>
+                  {tokenData ? (
+                    <div className="form-group" style={{ background: 'rgba(96,165,250,0.08)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(96,165,250,0.2)' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Respondendo como</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{tokenData.nome}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{tokenData.email}</div>
+                    </div>
+                  ) : (
+                    <div className="form-group"><label>Seu nome</label><input className="form-input" name="nome_respondente" onChange={onChange} required /></div>
+                  )}
                   <div className="form-group"><label>Cargo / Função</label><input className="form-input" name="cargo" onChange={onChange} required /></div>
                   <div className="form-group"><label>Nome fantasia / razão social</label><input className="form-input" name="nome_empresa" onChange={onChange} required /></div>
                   <div className="form-group"><label>Ano de fundação</label><input className="form-input" name="ano_fundacao" onChange={onChange} required /></div>

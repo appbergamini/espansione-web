@@ -69,7 +69,9 @@ export default async function handler(req, res) {
 
   const results = [];
   for (const r of respondentes) {
-    const link = `${origin}${PATH_BY_PAPEL[papel]}?projeto=${projetoId}`;
+    const link = r.token
+      ? `${origin}${PATH_BY_PAPEL[papel]}?t=${r.token}`
+      : `${origin}${PATH_BY_PAPEL[papel]}?projeto=${projetoId}`;
     const vars = { nome: r.nome, papel, link, projeto: projetoNome };
     const customSubject = applyPlaceholders(tpl?.assunto, vars);
     const customBody = applyPlaceholders(tpl?.corpo, vars);
