@@ -59,7 +59,6 @@ export default function ProjetoDetalhes() {
   const [cisForm, setCisForm] = useState({ nome: '', email: '', cargo: '' });
   const [cisAdding, setCisAdding] = useState(false);
   const [cisMsg, setCisMsg] = useState({ tipo: '', texto: '' });
-  const [cisLinkCopiado, setCisLinkCopiado] = useState(false);
   const [cisBulkMode, setCisBulkMode] = useState(false);
   const [cisBulkText, setCisBulkText] = useState('');
   const [editId, setEditId] = useState(null);
@@ -407,13 +406,6 @@ export default function ProjetoDetalhes() {
     }
   };
 
-  const copiarLinkCis = () => {
-    const link = `${window.location.origin}/mapeamento.html?projeto=${id}`;
-    navigator.clipboard.writeText(link);
-    setCisLinkCopiado(true);
-    setTimeout(() => setCisLinkCopiado(false), 2500);
-  };
-
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#fff' }}>Carregando Painel de Controle...</div>;
   if (errorMsg) return <div style={{ color: 'var(--brand-red)', padding: '2rem' }}>{errorMsg}</div>;
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
@@ -691,21 +683,13 @@ export default function ProjetoDetalhes() {
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', textAlign: 'center' }}>Nenhum participante cadastrado.</p>
                 )}
 
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                  <button
-                    onClick={copiarLinkCis}
-                    style={{ flex: 1, background: cisLinkCopiado ? 'rgba(16,185,129,0.15)' : 'rgba(167,139,250,0.1)', border: `1px solid ${cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)'}`, borderRadius: '8px', color: cisLinkCopiado ? 'var(--success)' : 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.3s' }}
-                  >
-                    {cisLinkCopiado ? '✅ Link Copiado!' : '🔗 Copiar Link'}
-                  </button>
-                  <button
-                    onClick={sendCisBatch}
-                    disabled={cisSending || cisParticipantes.filter(p => !p.respondido).length === 0}
-                    style={{ flex: 1, background: 'rgba(167,139,250,0.2)', border: '1px solid var(--accent-purple)', borderRadius: '8px', color: 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', opacity: cisSending ? 0.6 : 1 }}
-                  >
-                    {cisSending ? 'Enviando...' : `✉️ Enviar para pendentes (${cisParticipantes.filter(p => !p.respondido).length})`}
-                  </button>
-                </div>
+                <button
+                  onClick={sendCisBatch}
+                  disabled={cisSending || cisParticipantes.filter(p => !p.respondido).length === 0}
+                  style={{ width: '100%', background: 'rgba(167,139,250,0.2)', border: '1px solid var(--accent-purple)', borderRadius: '8px', color: 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: cisSending ? 'wait' : 'pointer', fontSize: '0.85rem', opacity: cisSending ? 0.6 : 1 }}
+                >
+                  {cisSending ? 'Enviando...' : `✉️ Enviar para pendentes (${cisParticipantes.filter(p => !p.respondido).length})`}
+                </button>
               </div>
               
               {/* Box de Ação Principal */}
