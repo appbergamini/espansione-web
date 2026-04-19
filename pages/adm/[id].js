@@ -75,6 +75,13 @@ export default function ProjetoDetalhes() {
   const [transcritNome, setTranscritNome] = useState('');
   const [transcritSaving, setTranscritSaving] = useState(false);
 
+  // Modal de envio de link por email
+  const [inviteModal, setInviteModal] = useState(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteNome, setInviteNome] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
+
   // Busca todos os dados do BD via nossa rota central
   const loadData = async () => {
     if (!id) return;
@@ -216,6 +223,34 @@ export default function ProjetoDetalhes() {
       alert('Erro ao salvar transcrição: ' + err.message);
     } finally {
       setTranscritSaving(false);
+    }
+  };
+
+  const openInviteModal = (tipo) => {
+    setInviteModal(tipo);
+    setInviteEmail('');
+    setInviteNome('');
+    setInviteMsg('');
+  };
+
+  const sendInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviteSending(true);
+    setInviteMsg('');
+    try {
+      const res = await fetch('/api/convites/form-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projetoId: id, tipo: inviteModal, email: inviteEmail.trim(), nome: inviteNome.trim() }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Erro ao enviar');
+      setInviteMsg('✅ Enviado com sucesso!');
+      setTimeout(() => setInviteModal(null), 1500);
+    } catch (err) {
+      setInviteMsg('❌ ' + err.message);
+    } finally {
+      setInviteSending(false);
     }
   };
 
@@ -498,9 +533,12 @@ export default function ProjetoDetalhes() {
                   ].map(f => {
                     const respondido = formularios.some(x => x.tipo === f.tipo);
                     return (
-                      <li key={f.tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <li key={f.tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                         <span>{respondido ? '✅' : '⏳'} {f.label}</span>
-                        <button onClick={() => copyLink(f.path)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.85rem' }}>Copiar Link</button>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button onClick={() => copyLink(f.path)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.85rem' }}>Copiar Link</button>
+                          <button onClick={() => openInviteModal(f.tipo)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.85rem' }}>✉️ Enviar</button>
+                        </div>
                       </li>
                     );
                   })}
@@ -758,6 +796,38 @@ export default function ProjetoDetalhes() {
               >
                 Cancelar
               </button>
+            </div>
+          </div>
+        )}
+
+        {inviteModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }} onClick={() => !inviteSending && setInviteModal(null)}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#0a1122', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.5rem', maxWidth: '460px', width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <h3 style={{ margin: 0, color: '#fff' }}>Enviar link por e-mail</h3>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{inviteModal.replace('intake_', '').replace('_', ' ')}</p>
+              <input
+                className="form-input"
+                placeholder="Nome (opcional)"
+                value={inviteNome}
+                onChange={e => setInviteNome(e.target.value)}
+                style={{ padding: '0.6rem', margin: 0 }}
+              />
+              <input
+                className="form-input"
+                type="email"
+                placeholder="E-mail do destinatário"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                style={{ padding: '0.6rem', margin: 0 }}
+                autoFocus
+              />
+              {inviteMsg && <p style={{ margin: 0, fontSize: '0.85rem', color: inviteMsg.startsWith('✅') ? 'var(--success)' : 'var(--brand-red)' }}>{inviteMsg}</p>}
+              <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+                <button onClick={() => setInviteModal(null)} disabled={inviteSending} style={{ padding: '0.5rem 1rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+                <button onClick={sendInvite} disabled={inviteSending || !inviteEmail.trim()} className="btn-primary" style={{ padding: '0.5rem 1rem' }}>
+                  {inviteSending ? 'Enviando...' : 'Enviar'}
+                </button>
+              </div>
             </div>
           </div>
         )}
