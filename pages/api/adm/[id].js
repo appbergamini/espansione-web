@@ -43,13 +43,14 @@ export default async function handler(req, res) {
       return res.status(403).json({ success: false, error: 'Acesso negado a este projeto' });
     }
 
-    const [intakeRes, formRes, outputsRes, checkpointsRes, cisRes, respRes] = await Promise.all([
+    const [intakeRes, formRes, outputsRes, checkpointsRes, cisRes, respRes, cisAssessRes] = await Promise.all([
       db.from('intake_data').select('campo, valor').eq('projeto_id', id),
       db.from('formularios').select('*').eq('projeto_id', id).order('created_at', { ascending: true }),
       db.from('outputs').select('*').eq('projeto_id', id).order('agent_num', { ascending: true }),
       db.from('checkpoints').select('*').eq('projeto_id', id).eq('status', 'pendente'),
       db.from('cis_participantes').select('*').eq('projeto_id', id).order('created_at', { ascending: false }),
       db.from('respondentes').select('*').eq('projeto_id', id).order('created_at', { ascending: true }),
+      db.from('cis_assessments').select('*').eq('projeto_id', id).order('created_at', { ascending: true }),
     ]);
 
     const intake = {};
@@ -66,6 +67,7 @@ export default async function handler(req, res) {
         outputs: outputsRes.data || [],
         pendingCheckpoints: checkpointsRes.data || [],
         cisParticipantes: cisRes.data || [],
+        cisAssessments: cisAssessRes.data || [],
         respondentes: respRes.data || [],
       }
     });

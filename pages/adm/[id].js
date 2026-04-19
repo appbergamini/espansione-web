@@ -218,6 +218,183 @@ export default function ProjetoDetalhes() {
 
   const [cisSending, setCisSending] = useState(false);
 
+  const downloadDiscReport = async () => {
+    const assessments = data?.cisAssessments || [];
+    if (assessments.length === 0) {
+      alert('Nenhum mapeamento DISC respondido ainda.');
+      return;
+    }
+
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const marginX = 56;
+    const marginTop = 56;
+    const marginBottom = 56;
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const maxW = pageW - marginX * 2;
+    let y = marginTop;
+
+    const nl = (h = 12) => { y += h; if (y > pageH - marginBottom) { doc.addPage(); y = marginTop; } };
+    const needSpace = (h) => { if (y + h > pageH - marginBottom) { doc.addPage(); y = marginTop; } };
+    const heading = (text, size = 14, color = [0, 65, 152]) => {
+      nl(6); needSpace(size + 8);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(size);
+      doc.setTextColor(...color);
+      doc.text(text, marginX, y); y += size + 6;
+      doc.setTextColor(0, 0, 0);
+    };
+    const paragraph = (text, size = 10, color = [40, 40, 40]) => {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(size);
+      doc.setTextColor(...color);
+      const lines = doc.splitTextToSize(String(text || ''), maxW);
+      for (const line of lines) { needSpace(size + 3); doc.text(line, marginX, y); y += size + 3; }
+      doc.setTextColor(0, 0, 0);
+    };
+    const barRow = (label, value, max = 100, color = [56, 189, 248]) => {
+      needSpace(22);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(40, 40, 40);
+      doc.text(label, marginX, y);
+      const pct = Math.max(0, Math.min(1, value / max));
+      const barX = marginX + 140;
+      const barW = maxW - 180;
+      doc.setFillColor(230, 230, 230); doc.rect(barX, y - 8, barW, 8, 'F');
+      doc.setFillColor(...color); doc.rect(barX, y - 8, barW * pct, 8, 'F');
+      doc.setFontSize(9); doc.text(String(Math.round(value)), barX + barW + 8, y);
+      y += 14;
+    };
+    const drawLine = () => { doc.setDrawColor(220, 220, 220); doc.line(marginX, y, pageW - marginX, y); y += 14; };
+
+    // ==== Agregações ====
+    const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+
+    const disc = { D: [], I: [], S: [], C: [] };
+    const discA = { D: [], I: [], S: [], C: [] };
+    const leadership = { visionaria: [], executora: [], relacional: [], analitica: [] };
+    const comps = {};
+    const perfilCount = {};
+
+    for (const a of assessments) {
+      const s = a.scores_json || {};
+      ['D', 'I', 'S', 'C'].forEach(k => {
+        if (s.disc?.[k] != null) disc[k].push(Number(s.disc[k]));
+        if (s.discA?.[k] != null) discA[k].push(Number(s.discA[k]));
+      });
+      ['visionaria', 'executora', 'relacional', 'analitica'].forEach(k => {
+        if (s.leadership?.[k] != null) leadership[k].push(Number(s.leadership[k]));
+      });
+      if (s.competencies) {
+        for (const [k, v] of Object.entries(s.competencies)) {
+          if (!comps[k]) comps[k] = [];
+          comps[k].push(Number(v));
+        }
+      }
+      const label = s.profileLabel || s.profile || '—';
+      perfilCount[label] = (perfilCount[label] || 0) + 1;
+    }
+
+    const discMed = Object.fromEntries(['D','I','S','C'].map(k => [k, avg(disc[k])]));
+    const discAMed = Object.fromEntries(['D','I','S','C'].map(k => [k, avg(discA[k])]));
+    const leadMed = Object.fromEntries(['visionaria','executora','relacional','analitica'].map(k => [k, avg(leadership[k])]));
+    const compMed = Object.entries(comps).map(([k, arr]) => ({ nome: k, media: avg(arr) })).sort((a, b) => b.media - a.media);
+
+    // ==== Capa ====
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(24); doc.setTextColor(0, 65, 152);
+    doc.text('Espansione', marginX, y); y += 28;
+    doc.setFontSize(16); doc.setTextColor(40, 40, 40);
+    doc.text('Relatório Comportamental — Perfil do Time', marginX, y); y += 22;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(12); doc.setTextColor(100, 100, 100);
+    const projetoNome = data?.projeto?.cliente || data?.projeto?.nome || '';
+    doc.text(projetoNome, marginX, y); y += 16;
+    doc.setFontSize(10); doc.setTextColor(150, 150, 150);
+    doc.text(`${assessments.length} respondente(s)  •  ${new Date().toLocaleDateString('pt-BR')}`, marginX, y);
+    y += 20; drawLine();
+
+    // ==== Sumário Executivo ====
+    heading('Sumário Executivo');
+    const dimDom = Object.entries(discMed).sort((a, b) => b[1] - a[1])[0];
+    const dimBaixa = Object.entries(discMed).sort((a, b) => a[1] - b[1])[0];
+    const topComp = compMed[0];
+    const bottomComp = compMed[compMed.length - 1];
+    const perfisPredom = Object.entries(perfilCount).sort((a, b) => b[1] - a[1])[0];
+    paragraph(
+      `O time de ${assessments.length} respondente(s) apresenta predominância em ${dimDom[0]} (${Math.round(dimDom[1])}) ` +
+      `e pontuação mais baixa em ${dimBaixa[0]} (${Math.round(dimBaixa[1])}) no DISC natural agregado. ` +
+      `O perfil mais representado é "${perfisPredom[0]}" (${perfisPredom[1]}/${assessments.length}). ` +
+      `A competência com maior maturidade média é "${topComp.nome}" (${topComp.media.toFixed(1)}) e a mais frágil é "${bottomComp.nome}" (${bottomComp.media.toFixed(1)}).`
+    );
+
+    // ==== DISC Natural Agregado ====
+    heading('DISC Natural (médias do time)');
+    barRow('Dominância (D)', discMed.D, 100, [220, 38, 38]);
+    barRow('Influência (I)', discMed.I, 100, [245, 158, 11]);
+    barRow('Estabilidade (S)', discMed.S, 100, [16, 185, 129]);
+    barRow('Conformidade (C)', discMed.C, 100, [56, 189, 248]);
+
+    heading('DISC Adaptado (como o time se ajusta em contexto de trabalho)');
+    barRow('Dominância (D)', discAMed.D, 100, [220, 38, 38]);
+    barRow('Influência (I)', discAMed.I, 100, [245, 158, 11]);
+    barRow('Estabilidade (S)', discAMed.S, 100, [16, 185, 129]);
+    barRow('Conformidade (C)', discAMed.C, 100, [56, 189, 248]);
+
+    // ==== Matriz de Liderança ====
+    heading('Matriz de Estilos de Liderança (médias)');
+    barRow('Visionária', leadMed.visionaria, 100, [167, 139, 250]);
+    barRow('Executora', leadMed.executora, 100, [244, 63, 94]);
+    barRow('Relacional', leadMed.relacional, 100, [236, 72, 153]);
+    barRow('Analítica', leadMed.analitica, 100, [56, 189, 248]);
+
+    // ==== Competências ====
+    heading('Competências — Top 5 e Bottom 5');
+    paragraph('Forças do time (top 5):', 10, [40, 40, 40]);
+    compMed.slice(0, 5).forEach(c => barRow(c.nome, c.media, 10, [16, 185, 129]));
+    nl(4);
+    paragraph('Áreas de desenvolvimento (bottom 5):', 10, [40, 40, 40]);
+    compMed.slice(-5).reverse().forEach(c => barRow(c.nome, c.media, 10, [244, 63, 94]));
+
+    // ==== Distribuição de Perfis ====
+    heading('Distribuição de Perfis');
+    Object.entries(perfilCount).sort((a, b) => b[1] - a[1]).forEach(([label, count]) => {
+      paragraph(`• ${label} — ${count} respondente(s)`, 10);
+    });
+
+    // ==== Perfil Individual ====
+    heading('Perfis Individuais');
+    assessments.forEach(a => {
+      const s = a.scores_json || {};
+      const nome = a.nome || a.email || '—';
+      const perfil = s.profileLabel || s.profile || '—';
+      const d = s.disc || {};
+      needSpace(40);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+      doc.text(nome, marginX, y); y += 12;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+      doc.text(perfil, marginX, y); y += 11;
+      doc.setFontSize(9); doc.setTextColor(40, 40, 40);
+      doc.text(`DISC: D=${d.D ?? '—'}  I=${d.I ?? '—'}  S=${d.S ?? '—'}  C=${d.C ?? '—'}`, marginX, y);
+      y += 16;
+    });
+
+    // ==== Insights ====
+    heading('Leitura Estratégica');
+    const gaps = [];
+    if (discMed.S < 50) gaps.push('Baixa estabilidade (S) agregada — time pode ter dificuldade em processos longos e consistência operacional.');
+    if (discMed.D > 65) gaps.push('Alta dominância (D) agregada — risco de conflitos entre múltiplos protagonistas, cuidado com alinhamento.');
+    if (discMed.C < 50) gaps.push('Baixa conformidade (C) agregada — atenção com rigor analítico e aderência a processos.');
+    if (discMed.I < 45) gaps.push('Baixa influência (I) agregada — time mais técnico que relacional, possível lacuna em comunicação externa.');
+    const leadOrdered = Object.entries(leadMed).sort((a, b) => b[1] - a[1]);
+    gaps.push(`Estilo de liderança predominante: ${leadOrdered[0][0]} (${Math.round(leadOrdered[0][1])}). Menor presença em ${leadOrdered[3][0]} (${Math.round(leadOrdered[3][1])}).`);
+    gaps.forEach(t => paragraph(`• ${t}`));
+
+    nl(20);
+    doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+    doc.text('Gerado automaticamente por Espansione • Metodologia DISC + 16 competências + 4 estilos de liderança', marginX, y);
+
+    const filename = `${projetoNome}_Relatorio_Comportamental.pdf`;
+    doc.save(filename);
+  };
+
   const downloadOutputPdf = async (out) => {
     const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -735,13 +912,23 @@ export default function ProjetoDetalhes() {
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', textAlign: 'center' }}>Nenhum participante cadastrado.</p>
                 )}
 
-                <button
-                  onClick={sendCisBatch}
-                  disabled={cisSending || cisParticipantes.filter(p => !p.respondido).length === 0}
-                  style={{ width: '100%', background: 'rgba(167,139,250,0.2)', border: '1px solid var(--accent-purple)', borderRadius: '8px', color: 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: cisSending ? 'wait' : 'pointer', fontSize: '0.85rem', opacity: cisSending ? 0.6 : 1 }}
-                >
-                  {cisSending ? 'Enviando...' : `✉️ Enviar para pendentes (${cisParticipantes.filter(p => !p.respondido).length})`}
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={sendCisBatch}
+                    disabled={cisSending || cisParticipantes.filter(p => !p.respondido).length === 0}
+                    style={{ flex: 1, background: 'rgba(167,139,250,0.2)', border: '1px solid var(--accent-purple)', borderRadius: '8px', color: 'var(--accent-purple)', fontWeight: 700, padding: '0.6rem', cursor: cisSending ? 'wait' : 'pointer', fontSize: '0.85rem', opacity: cisSending ? 0.6 : 1 }}
+                  >
+                    {cisSending ? 'Enviando...' : `✉️ Enviar para pendentes (${cisParticipantes.filter(p => !p.respondido).length})`}
+                  </button>
+                  <button
+                    onClick={downloadDiscReport}
+                    disabled={!(data?.cisAssessments?.length > 0)}
+                    title="Baixar relatório comportamental consolidado (PDF)"
+                    style={{ flex: 1, background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', borderRadius: '8px', color: 'var(--accent-blue)', fontWeight: 700, padding: '0.6rem', cursor: (data?.cisAssessments?.length > 0) ? 'pointer' : 'not-allowed', fontSize: '0.85rem', opacity: (data?.cisAssessments?.length > 0) ? 1 : 0.5 }}
+                  >
+                    📄 Relatório Comportamental ({data?.cisAssessments?.length || 0})
+                  </button>
+                </div>
               </div>
               
               {/* Box de Ação Principal */}
