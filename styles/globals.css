@@ -1,107 +1,141 @@
 @import "tailwindcss";
 
-/* 1. Cores e Fontes da Espansione (Modo v4) */
-@theme {
-  --color-brand-dark: #0f172a;
-  --color-brand-card: #1e293b;
-  --color-brand-accent: #38bdf8;
-  --color-brand-purple: #a78bfa;
-  --color-brand-coral: #f43f5e;
-  
-  --font-logo: "Montserrat", "Cabin", sans-serif;
-  --font-heading: "Cabin", sans-serif;
-  --font-body: "Andada Pro", "Andada", serif;
-}
+/* ═══════════════════════════════════════════════════════════════
+   ESPANSIONE · Design Tokens — FONTE ÚNICA DA VERDADE
+   Alinhado com Brand Book (azul #00326D / vermelho #Da3144)
+   ═══════════════════════════════════════════════════════════════ */
 
-/* ─── Fontes locais: Família Rebrand ─── */
+/* ─── 1. Família Rebrand (proprietária) ─── */
+@font-face {
+  font-family: 'Rebrand Dis';
+  src: url('/fonts/Rebrand Dis Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
 @font-face {
   font-family: 'Rebrand Dis';
   src: url('/fonts/Rebrand Dis Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Rebrand Dis';
   src: url('/fonts/Rebrand Dis ExBold.ttf') format('truetype');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 800; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Rebrand Dis';
   src: url('/fonts/Rebrand Dis Heavy.ttf') format('truetype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Rebrand Dis';
-  src: url('/fonts/Rebrand Dis Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 900; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Rebrand Txt';
   src: url('/fonts/Rebrand Txt Bold it.ttf') format('truetype');
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
+  font-weight: 700; font-style: italic; font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap');
+/* ─── 2. Fontes web de apoio (Cabin + Andada Pro) ─── */
+@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&display=swap');
 
+/* ─── 3. Tailwind v4 theme: paleta OFICIAL do manual de marca ─── */
+/* 9 cores oficiais — Azul 3 tons · Vermelho 3 tons · Verde · Cinza · Branco */
+@theme {
+  /* Azuis (primários) */
+  --color-ink:        #00326D;   /* Azul 1 — primário */
+  --color-ink-2:      #004198;   /* Azul 2 — secundário */
+  --color-ink-soft:   #6BA3FF;   /* Azul 3 — claro */
+
+  /* Vermelhos (accent) */
+  --color-accent:     #Da3144;   /* Vermelho 1 — principal */
+  --color-accent-2:   #C72437;   /* Vermelho 2 — escuro */
+  --color-accent-soft:#EE969D;   /* Rosa — apoio */
+
+  /* Neutros (manual: preto azulado · cinza claro · branco) */
+  --color-noir:       #1A1A1A;   /* Preto — texto, rules */
+  --color-gray-100:   #F0F0F0;   /* Cinza claro */
+  --color-paper:      #FEFEFE;   /* Branco */
+
+  /* Fundos dark (backoffice interno apenas) */
+  --color-bg:         #040812;
+  --color-bg-2:       #0a1122;
+  --color-bg-3:       #111a30;
+
+  /* Tipografia — manual: Rebrand Dis Bold (logo) · Cabin (UI/tagline) · Andada (apoio) */
+  --font-logo:        'Rebrand Dis', 'Montserrat', sans-serif;
+  --font-heading:     'Rebrand Dis', 'Cabin', sans-serif;
+  --font-ui:          'Cabin', sans-serif;
+  --font-body:        'Andada Pro', Georgia, serif;
+}
+
+/* ─── 4. Variáveis CSS (compat com componentes inline/estilizados) ─── */
 :root {
-  /* Globais Premium Legados (utilizados por componentes JS antigos) */
-  --bg-primary: #040812;
-  --bg-secondary: #0a1122;
-  --bg-tertiary: #111a30;
-  --text-primary: #FEFEFE;
-  --text-secondary: #a3b0c6;
-  --accent-blue: #6BA3FF;
-  --accent-purple: #a78bfa;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(107, 163, 255, 0.1);
-  --glass-blur: blur(16px);
-  --radius-lg: 20px;
-  
-  /* Brand specific colors and fonts - Espansione Brand Book */
-  --brand-blue: #00326D;      /* Azul marinho primário #00326D */
-  --brand-blue-2: #004198;    /* Azul secundário #004198 */
-  --brand-blue-light: #6BA3FF;/* Azul claro #6BA3FF */
-  --brand-white: #FEFEFE;     /* Branco #FEFEFE */
-  --brand-gray: #F0F0F0;      /* Cinza claro #F0F0F0 */
-  
-  /* Fontes - Brand Book */
-  --font-logo: 'Montserrat', sans-serif;      /* Revertido para teste */
-  --font-heading: 'Cabin', sans-serif;                   /* Texto e Tagline */
-  --font-body: 'Andada Pro', 'Andada', serif;            /* Texto de Apoio */
-  
-  /* Cores de destaque - Brand Book */
-  --brand-red: #Da3144;                           /* Vermelho principal #Da3144 */
-  --brand-red-dark: #C72437;                      /* Vermelho escuro #C72437 */
-  --brand-red-light: #EE969D;                     /* Rosa #EE969D */
-  --brand-red-glow: rgba(218, 49, 68, 0.15);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
+  /* Marca — paleta oficial do manual (9 cores) */
+  --brand-blue:       #00326D;   /* Azul 1 · RGB 0 50 109   · CMYK 100 85 17 27 */
+  --brand-blue-2:     #004198;   /* Azul 2 · RGB 0 65 152   · CMYK 100 66 0 6 */
+  --brand-blue-light: #6BA3FF;   /* Azul 3 · RGB 148 167 212 · CMYK 10 31 0 0 */
+  --brand-red:        #Da3144;   /* Verm 1 · RGB 195 21 47  · CMYK 15 100 99 5 */
+  --brand-red-dark:   #C72437;   /* Verm 2 · RGB 155 19 31  · CMYK 27 96 93 26 */
+  --brand-red-light:  #EE969D;   /* Rosa   · RGB 230 127 124 · CMYK 7 58 43 0 */
+  --brand-noir:       #1A1A1A;   /* Preto · texto e régua */
+  --brand-red-glow:   rgba(218, 49, 68, 0.15);
+  --brand-white:      #FEFEFE;   /* RGB 255 255 255 · CMYK 0 0 0 0 */
+  --brand-gray:       #F0F0F0;   /* RGB 240 240 240 · CMYK 0 0 0 10 */
+
+  /* Fundos */
+  --bg-primary:       #040812;
+  --bg-secondary:     #0a1122;
+  --bg-tertiary:      #111a30;
+
+  /* Texto */
+  --text-primary:     #FEFEFE;
+  --text-secondary:   #a3b0c6;
+
+  /* ALIASES ÚNICOS para "accent/action"  ← ponto central da unificação */
+  --accent-blue:      #6BA3FF;   /* era #38bdf8 — azul elétrico aposentado */
+  --accent:           #Da3144;   /* cor de ação primária */
+  --action-ink:       #00326D;   /* ação sobre fundo claro */
+
+  /* Glass */
+  --glass-bg:         rgba(255, 255, 255, 0.03);
+  --glass-border:     rgba(107, 163, 255, 0.12);
+  --glass-blur:       blur(16px);
+
+  /* Tipografia */
+  --font-logo:        'Rebrand Dis', 'Montserrat', sans-serif;
+  --font-heading:     'Rebrand Dis', 'Cabin', sans-serif;
+  --font-ui:          'Cabin', sans-serif;
+  --font-body:        'Andada Pro', Georgia, serif;
+
+  /* Radius */
+  --radius-sm:        8px;
+  --radius-md:        12px;
+  --radius-lg:        20px;
+
+  /* Semânticos — paleta é só azul + vermelho + neutros, sem verde.
+     Sucesso usa o azul 3 (claro); alerta/erro usam o vermelho principal. */
+  --success: #6BA3FF;
+  --warning: #Da3144;
+  --error:   #Da3144;
 }
 
-/* Base Styles */
+/* ─── 5. Base ─── */
 @layer base {
   * { box-sizing: border-box; padding: 0; margin: 0; }
   html, body {
     @apply bg-[#040812] text-white;
-    font-family: var(--font-heading);
+    font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
 }
 
-/* Glass Card Style Helper */
+/* ─── 6. Glass card ─── */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -111,136 +145,88 @@
   box-shadow: 0 8px 32px 0 rgba(0, 65, 152, 0.15);
   transition: all 0.3s ease;
 }
-
 .glass-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px 0 rgba(107, 163, 255, 0.2);
+  border-color: rgba(107, 163, 255, 0.25);
+  box-shadow: 0 12px 40px 0 rgba(0, 50, 109, 0.25);
 }
 
-.outline-glow {
-  border-width: 1px;
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
-}
+/* ─── 7. Layout ─── */
+.page-container { min-height: 100vh; padding: 2rem 1rem; background: var(--bg-primary); }
+.container      { max-width: 1200px; margin: 0 auto; width: 100%; }
 
-/* Layout & Containers */
-.page-container {
-  min-height: 100vh;
-  padding: 2rem 1rem;
-  background: var(--bg-primary);
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Typography Helpers */
-h1, h2, h3 {
-  font-family: var(--font-logo);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-/* Buttons */
+/* ─── 8. Botões (UNIFICADOS — ink primary, accent destructive) ─── */
 .btn-primary {
-  background: var(--accent-blue);
-  color: #000;
+  background: var(--brand-blue);      /* era --accent-blue azul elétrico */
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 0.75rem 1.5rem;
-  font-weight: 600;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
 }
-
 .btn-primary:hover {
-  background: #8ab4ff;
+  background: var(--brand-blue-2);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(107, 163, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 50, 109, 0.4);
 }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.btn-accent {
+  background: var(--brand-red);
+  color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 0.75rem 1.5rem; font-family: var(--font-ui); font-weight: 700;
+  cursor: pointer; transition: all 0.2s ease;
 }
+.btn-accent:hover { background: var(--brand-red-dark); }
 
 .btn-secondary {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.5rem; font-family: var(--font-ui); font-weight: 500;
+  cursor: pointer; transition: all 0.2s ease;
 }
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--brand-blue-light); }
 
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-}
+/* ─── 9. Animations ─── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.5s ease forwards; }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-/* Form Styles */
-.form-group {
-  margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
+/* ─── 10. Forms ─── */
+.form-group { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .form-group label {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-family: var(--font-ui);
+  font-size: 0.8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em;
   color: var(--text-secondary);
 }
-
 .form-input {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
   color: var(--text-primary);
-  font-family: inherit;
+  font-family: var(--font-ui);
   transition: border-color 0.2s;
   color-scheme: dark;
 }
-
 .form-input:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--brand-blue-light);
+  background: rgba(107, 163, 255, 0.06);
 }
 
 /* Native <select> dropdown popup — readable in dark theme */
-select.form-input,
-select {
-  color-scheme: dark;
+select.form-input, select { color-scheme: dark; }
+select.form-input option, select option {
+  background-color: var(--bg-secondary); color: var(--text-primary);
 }
-
-select.form-input option,
-select option {
-  background-color: #0a1122;
-  color: var(--text-primary);
-}
-
-select.form-input option:checked,
-select option:checked {
-  background-color: rgba(96, 165, 250, 0.2);
-  color: #fff;
+select.form-input option:checked, select option:checked {
+  background-color: rgba(107, 163, 255, 0.2); color: #fff;
 }

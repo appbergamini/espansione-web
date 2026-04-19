@@ -1,9 +1,15 @@
+// patches/components/DashboardLayout.v2.js
+// Variação GOVERNANTE: sidebar sólida azul marinho #00326D ocupando o território
+// da marca. Selo vermelho indica projeto ativo. Eyebrow usa "Cliente · Protocolo".
+// Substitua o import do DashboardLayout pelo atual de components/DashboardLayout.js.
+
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 import Logo from './Logo';
+import Icon from './Icon';
 
 export default function DashboardLayout({ children, title = 'Espansione' }) {
   const router = useRouter();
@@ -15,27 +21,15 @@ export default function DashboardLayout({ children, title = 'Espansione' }) {
   useEffect(() => {
     async function loadData() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-
+      if (!session) { router.push('/login'); return; }
       try {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*, empresas(*)')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        setProfile(profileData);
-        setEmpresa(profileData.empresas);
-      } catch (err) {
-        console.error("Erro no layout:", err);
-      } finally {
-        setLoading(false);
-      }
+        const { data: p, error } = await supabase
+          .from('profiles').select('*, empresas(*)')
+          .eq('id', session.user.id).single();
+        if (error) throw error;
+        setProfile(p); setEmpresa(p.empresas);
+      } catch (err) { console.error('Erro no layout:', err); }
+      finally { setLoading(false); }
     }
     loadData();
   }, [router]);
@@ -47,65 +41,146 @@ export default function DashboardLayout({ children, title = 'Espansione' }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#040812] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-[#F0F0F0] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00326D]"></div>
       </div>
     );
   }
 
   const menuItems = [
-    { label: 'Visão Geral', icon: '🏠', active: router.pathname === '/dashboard', href: '/dashboard' },
-    { label: 'Meus Projetos', icon: '📁', active: router.pathname === '/dashboard/projetos', href: '/dashboard/projetos' },
-    { label: 'Equipe & Perfis', icon: '👥', active: router.pathname === '/dashboard/equipe', href: '/dashboard/equipe' },
-    { label: 'Configurações', icon: '⚙️', active: false, href: '#' },
+    { label: 'Visão Geral',     icon: 'home',     href: '/dashboard',          active: router.pathname === '/dashboard' },
+    { label: 'Protocolos',      icon: 'folder',   href: '/dashboard/projetos', active: router.pathname === '/dashboard/projetos' },
+    { label: 'Equipe & Perfis', icon: 'users',    href: '/dashboard/equipe',   active: router.pathname === '/dashboard/equipe' },
+    { label: 'Configurações',   icon: 'settings', href: '#',                   active: false },
   ];
 
   return (
-    <div className="min-h-screen bg-[#040812] text-slate-200 font-sans selection:bg-blue-500/30">
-      <Head>
-        <title>{title} | {empresa?.nome || 'Espansione'}</title>
-      </Head>
+    <div className="min-h-screen bg-[#F5F3EE] text-[#1A1A1A] font-sans selection:bg-[#00326D]/15">
+      <Head><title>{title} | {empresa?.nome || 'Espansione'}</title></Head>
 
-      {/* Sidebar Reutilizável */}
-      <aside className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} bg-[#0a1122] border-r border-slate-800/50 flex flex-col shadow-2xl`}>
-        <div className="p-6 flex items-center gap-3 overflow-hidden">
-          <Logo size="sm" />
+      {/* ─── SIDEBAR · Azul marinho sólido (Governante) ─── */}
+      <aside
+        className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 flex flex-col ${sidebarOpen ? 'w-64' : 'w-20'}`}
+        style={{ background: '#00326D', color: '#FEFEFE' }}
+      >
+        {/* topo: logo + linha de corte vermelha */}
+        <div className="relative">
+          <div className="p-6 flex items-center gap-3 overflow-hidden">
+            <Logo size="sm" variant="light" />
+          </div>
+          <div className="h-[3px] w-10 ml-6" style={{ background: '#Da3144' }} />
         </div>
 
-        <nav className="flex-1 mt-6 px-4 space-y-2">
+        {/* identificador institucional */}
+        {sidebarOpen && (
+          <div className="px-6 pt-6 pb-4">
+            <p className="text-[10px] font-bold tracking-[0.24em] uppercase" style={{ color: '#EE969D', fontFamily: 'var(--font-ui)' }}>
+              Protocolo · 2026
+            </p>
+            <p className="text-[11px] mt-1 leading-tight" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)' }}>
+              Método Espansione de diagnóstico e estruturação de marca.
+            </p>
+          </div>
+        )}
+
+        <nav className="flex-1 mt-2 px-3 space-y-1">
           {menuItems.map((item) => (
-            <Link key={item.label} href={item.href} className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${item.active ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(37,99,235,0.1)]' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}>
-              <span className="text-xl">{item.icon}</span>
-              {sidebarOpen && <span className="font-medium text-sm">{item.label}</span>}
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`relative flex items-center gap-4 px-4 py-3 rounded-md transition-colors ${
+                item.active
+                  ? 'text-white'
+                  : 'text-white/65 hover:text-white hover:bg-white/5'
+              }`}
+              style={item.active ? { background: 'rgba(255,255,255,0.08)' } : undefined}
+            >
+              {/* selo vermelho no ativo */}
+              {item.active && (
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r"
+                  style={{ background: '#Da3144' }}
+                />
+              )}
+              <Icon name={item.icon} size={18} aria-label={item.label} />
+              {sidebarOpen && (
+                <span className="text-[13px] tracking-wide" style={{ fontFamily: 'var(--font-ui)', fontWeight: item.active ? 700 : 500 }}>
+                  {item.label}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800/50 space-y-2">
-          <button onClick={handleLogout} className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 transition-all">
-            <span className="text-xl">🚪</span>
-            {sidebarOpen && <span className="font-medium text-sm font-bold">Sair</span>}
+        {/* rodapé: assinatura institucional */}
+        {sidebarOpen && (
+          <div className="px-6 py-4 border-t border-white/10">
+            <p className="text-[9px] tracking-[0.22em] uppercase font-bold" style={{ color: '#EE969D', fontFamily: 'var(--font-ui)' }}>
+              Em operação
+            </p>
+            <p className="text-[11px] mt-1 leading-snug" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-body)' }}>
+              {profile?.nome_completo || 'Usuário'}
+              <br />
+              <span style={{ color: 'rgba(255,255,255,0.45)' }}>{empresa?.nome || '—'}</span>
+            </p>
+          </div>
+        )}
+
+        <div className="p-3 border-t border-white/10 space-y-1">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-md transition-colors text-white/70 hover:text-white hover:bg-[#Da3144]/30"
+            aria-label="Sair"
+          >
+            <Icon name="logout" size={18} />
+            {sidebarOpen && <span className="text-[13px] font-bold tracking-wide" style={{ fontFamily: 'var(--font-ui)' }}>Encerrar sessão</span>}
           </button>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="w-full flex items-center justify-center p-2 rounded-lg bg-slate-800/30 hover:bg-slate-800/60 transition-colors">
-             <span className="text-xs text-slate-500 font-bold tracking-widest uppercase">{sidebarOpen ? 'Recolher' : '≫'}</span>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-full flex items-center justify-center p-2 rounded bg-white/5 hover:bg-white/10 transition-colors"
+            aria-label={sidebarOpen ? 'Recolher' : 'Expandir'}
+          >
+            <Icon name="chevronRight" size={12} style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none', color: '#FEFEFE' }} />
           </button>
         </div>
       </aside>
 
-      {/* Área de Conteúdo Principal */}
-      <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'} p-8`}>
-        <header className="flex justify-between items-start mb-10">
-          <div>
-            <p className="text-blue-400 font-bold text-xs uppercase tracking-[0.2em] mb-1">{empresa?.nome}</p>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{title}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
-              {profile?.nome_completo?.charAt(0) || 'U'}
+      {/* ─── MAIN · papel claro com hierarquia institucional ─── */}
+      <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'} p-10`} style={{ background: '#F5F3EE', minHeight: '100vh' }}>
+        <header className="pb-6 mb-10" style={{ borderBottom: '1px solid #1A1A1A' }}>
+          <div className="flex justify-between items-end gap-6">
+            <div>
+              <p
+                className="text-[10px] font-bold uppercase mb-2"
+                style={{ color: '#Da3144', letterSpacing: '0.24em', fontFamily: 'var(--font-ui)' }}
+              >
+                {empresa?.nome || 'Cliente'} · Protocolo ativo
+              </p>
+              <h1
+                className="text-[34px] leading-[1.05] tracking-tight"
+                style={{ fontFamily: 'var(--font-heading)', fontWeight: 900, color: '#00326D' }}
+              >
+                {title}
+              </h1>
+            </div>
+            <div className="flex items-center gap-4">
+              {/* selo de data/versão */}
+              <div className="text-right" style={{ fontFamily: 'var(--font-ui)' }}>
+                <p className="text-[9px] font-bold tracking-[0.22em] uppercase" style={{ color: '#6E7480' }}>Hoje</p>
+                <p className="text-[13px] font-bold" style={{ color: '#1A1A1A' }}>
+                  {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white"
+                style={{ background: '#00326D', fontFamily: 'var(--font-ui)' }}
+              >
+                {profile?.nome_completo?.charAt(0) || 'U'}
+              </div>
             </div>
           </div>
         </header>
-
         {children}
       </main>
     </div>
