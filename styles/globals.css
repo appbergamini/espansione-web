@@ -248,3 +248,128 @@ select.form-input option, select option {
 select.form-input option:checked, select option:checked {
   background-color: rgba(107, 163, 255, 0.2); color: #fff;
 }
+
+/* ─── 11. Tipografia editorial (Bloco D · TASK 4.2) ──────────────
+   Aplicada dentro de .output-prose — usada pelo renderer da página
+   de output para transformar Markdown em prosa editorial legível
+   sobre o fundo claro da "ilha" (var(--viz-card-bg)).  */
+
+.output-prose {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--viz-card-text);
+}
+
+.output-prose h1,
+.output-prose h2,
+.output-prose h3,
+.output-prose h4 {
+  font-family: var(--font-heading);
+  color: var(--viz-card-text);
+  letter-spacing: -0.01em;
+}
+
+.output-prose h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 3rem 0 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.output-prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 2.5rem 0 1rem;
+  line-height: 1.3;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--viz-card-border);
+}
+.output-prose h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 2rem 0 0.75rem;
+}
+.output-prose h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.output-prose p {
+  margin-bottom: 1rem;
+}
+.output-prose p:last-child { margin-bottom: 0; }
+
+.output-prose ul, .output-prose ol {
+  padding-left: 1.5rem;
+  margin: 0 0 1rem;
+}
+.output-prose li { margin-bottom: 0.4rem; line-height: 1.6; }
+.output-prose li > ul, .output-prose li > ol { margin-top: 0.4rem; }
+
+.output-prose strong { font-weight: 700; color: var(--viz-card-text); }
+.output-prose em     { font-style: italic; }
+
+.output-prose a {
+  color: var(--action-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.output-prose a:hover { color: var(--brand-blue-2); }
+
+.output-prose blockquote {
+  border-left: 3px solid var(--accent-blue);
+  padding: 0.25rem 0 0.25rem 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: var(--viz-card-text-muted);
+}
+
+.output-prose hr {
+  border: 0;
+  border-top: 1px solid var(--viz-card-border);
+  margin: 2.5rem 0;
+}
+
+.output-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+}
+.output-prose th {
+  background-color: #F9FAFB;
+  font-weight: 700;
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 2px solid var(--viz-card-border);
+  color: var(--viz-card-text);
+}
+.output-prose td {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--viz-card-border);
+  vertical-align: top;
+}
+.output-prose tr:last-child td { border-bottom: none; }
+
+.output-prose code {
+  background-color: #F3F4F6;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.output-prose pre {
+  background-color: #F3F4F6;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-size: 0.88rem;
+}
+.output-prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
