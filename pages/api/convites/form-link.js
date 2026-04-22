@@ -1,6 +1,7 @@
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { sendFormInvite } from '../../../lib/emails/sendFormInvite';
+import { tokenValido, renovarExpiracao } from '../../../lib/tokens/respondenteToken';
 
 const PATH_BY_TIPO = {
   intake_socios: '/form/socios',
@@ -46,6 +47,8 @@ export default async function handler(req, res) {
   let token = null;
 
   // Mapeamento CIS: busca token do participante pelo email
+  // (cis_participantes tem seu próprio sistema de token — fora do escopo
+  // da FIX.1 que trata só de `respondentes`.)
   if (tipo === 'mapeamento_cis') {
     const { data: p } = await db
       .from('cis_participantes')
@@ -56,16 +59,29 @@ export default async function handler(req, res) {
     if (!p) return res.status(404).json({ success: false, error: 'Participante DISC não encontrado. Cadastre o email antes.' });
     token = p.token;
   } else {
-    // Forms: busca token em respondentes pelo email+papel
+    // Forms: busca token em respondentes pelo email+papel e, se a
+    // expiração passou, renova (mesma lógica de enviar-batch — envio
+    // explícito de convite é intenção clara do admin, e preservar
+    // respostas parciais é o comportamento certo).
     const papel = tipo.replace('intake_', '');
     const { data: r } = await db
       .from('respondentes')
-      .select('token')
+      .select('id, token, token_expira_em')
       .eq('projeto_id', projetoId)
       .eq('email', String(email).trim().toLowerCase())
       .eq('papel', papel)
       .maybeSingle();
-    if (r?.token) token = r.token;
+
+    if (r?.token) {
+      if (!tokenValido(r.token_expira_em)) {
+        const { token_expira_em: novaExp } = renovarExpiracao();
+        await db
+          .from('respondentes')
+          .update({ token_expira_em: novaExp })
+          .eq('id', r.id);
+      }
+      token = r.token;
+    }
   }
 
   const link = token

@@ -16,7 +16,10 @@ export default function FormSociosPage() {
     if (!router.isReady) return;
     if (!token) {
       setLoading(false);
-      setErro({ tipo: 'sem_token', mensagem: 'Link inválido — token ausente na URL.' });
+      setErro({
+        tipo: 'TOKEN_AUSENTE',
+        mensagem: 'Link inválido — token ausente na URL. Solicite um novo convite ao administrador do projeto.',
+      });
       return;
     }
     let active = true;
@@ -25,7 +28,18 @@ export default function FormSociosPage() {
         const res = await fetch(`/api/respondentes/by-token?token=${encodeURIComponent(token)}`);
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Token inválido');
+          // Distingue ausente / inexistente / expirado pelo status HTTP
+          // (400 / 404 / 410) e pelo codigo no body (TASK FIX.1).
+          const tipo =
+            res.status === 410 ? 'TOKEN_EXPIRADO' :
+            res.status === 404 ? 'TOKEN_NAO_EXISTE' :
+            'TOKEN_NAO_EXISTE';
+          if (!active) return;
+          setErro({
+            tipo: err.codigo || tipo,
+            mensagem: err.mensagem || err.error || 'Link inválido. Solicite um novo convite.',
+          });
+          return;
         }
         const json = await res.json();
         if (!active) return;

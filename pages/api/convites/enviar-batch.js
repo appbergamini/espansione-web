@@ -1,6 +1,7 @@
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { sendFormInvite } from '../../../lib/emails/sendFormInvite';
+import { tokenValido, renovarExpiracao } from '../../../lib/tokens/respondenteToken';
 
 const PATH_BY_PAPEL = {
   socios: '/form/socios',
@@ -69,6 +70,18 @@ export default async function handler(req, res) {
 
   const results = [];
   for (const r of respondentes) {
+    // Se o token expirou, renovar automaticamente — é intenção clara do
+    // admin reenviar (TASK FIX.1). Mesmo token, nova janela de 30 dias,
+    // respostas parciais preservadas.
+    if (r.token && !tokenValido(r.token_expira_em)) {
+      const { token_expira_em: novaExp } = renovarExpiracao();
+      await db
+        .from('respondentes')
+        .update({ token_expira_em: novaExp })
+        .eq('id', r.id);
+      r.token_expira_em = novaExp;
+    }
+
     const link = r.token
       ? `${origin}${PATH_BY_PAPEL[papel]}?t=${r.token}`
       : `${origin}${PATH_BY_PAPEL[papel]}?projeto=${projetoId}`;
