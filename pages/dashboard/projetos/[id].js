@@ -8,6 +8,10 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Logo from '../../../components/Logo';
 import Icon from '../../../components/Icon';
+import {
+  TOTAL_AGENTES_NAO_MODULARES,
+  formatarRotuloDocumento,
+} from '../../../lib/agents/catalog';
 import { supabase } from '../../../lib/supabaseClient';
 
 // ─── StatusIcon: inline, sem emoji ─────────────────────────────────────────
@@ -123,7 +127,12 @@ export default function ProjetoDashboard() {
   const { projeto, outputs = [], formularios = [], intake, cisParticipantes = [] } = data;
   const sc = STATUS_MAP[projeto.status] || STATUS_MAP.planejamento;
   const etapaAtual = projeto.etapa_atual || 0;
-  const progress = Math.min(100, (etapaAtual / 13) * 100);
+  // FIX.3 — denominador vem do catálogo (14 não-modulares). Se o
+  // projeto contratou EVP e já gerou output 14, o catálogo poderia
+  // usar 15; mas o `etapa_atual` ainda representa a esteira canônica,
+  // então ficamos com o denominador não-modular.
+  const totalEsteira = TOTAL_AGENTES_NAO_MODULARES;
+  const progress = Math.min(100, (etapaAtual / totalEsteira) * 100);
   const cisRespondidos = cisParticipantes.filter(p => p.respondido).length;
 
   return (
@@ -180,7 +189,7 @@ export default function ProjetoDashboard() {
                 {sc.label}
               </span>
               <span style={{ fontSize: '12px', color: '#6E7480', fontFamily: 'var(--font-ui)' }}>
-                Etapa {etapaAtual} / 13 · {Math.round(progress)}% concluído
+                Etapa {etapaAtual} / {totalEsteira} · {Math.round(progress)}% concluído
               </span>
             </div>
           </div>
@@ -282,7 +291,7 @@ export default function ProjetoDashboard() {
                         borderBottom: '1px solid rgba(0,0,0,0.06)',
                       }}>
                         <h3 style={{ fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: '13px', color: '#00326D' }}>
-                          Documento nº {String(out.agent_num + 1).padStart(2, '0')}
+                          {formatarRotuloDocumento(out.agent_num)}
                         </h3>
                         <span style={{
                           padding: '2px 8px', fontSize: '9px', fontWeight: 700,
