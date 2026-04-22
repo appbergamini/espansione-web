@@ -126,9 +126,14 @@ export default async function handler(req, res) {
       message: err?.message,
       stack: err?.stack?.slice(0, 1200),
     });
+    // DIAGNÓSTICO: devolve stack completa no body (cliente + stderr).
+    // Remover quando estabilizar.
     return res.status(500).json({
       error: 'Falha ao gerar PDF',
-      detalhes: err?.message || 'unknown',
+      name: err?.name || null,
+      message: err?.message || 'unknown',
+      stack: err?.stack || null,
+      cause: err?.cause ? String(err.cause) : null,
     });
   }
 }
