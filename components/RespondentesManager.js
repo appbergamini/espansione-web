@@ -292,10 +292,14 @@ export default function RespondentesManager({ projetoId }) {
                       <span style={{ flex: 1, fontWeight: 600 }}>{r.nome}</span>
                       <span style={{ flex: 1.5, color: 'var(--text-secondary)' }}>{r.email}</span>
                       <span style={{ flex: 1, color: 'var(--text-secondary)' }}>{r.whatsapp || '—'}</span>
-                      <span style={{ fontSize: '0.7rem', padding: '0.12rem 0.4rem', borderRadius: '8px',
-                        background: r.status_convite === 'respondido' ? 'rgba(16,185,129,0.15)' : r.status_convite === 'enviado' ? 'rgba(96,165,250,0.15)' : 'rgba(148,163,184,0.15)',
-                        color: r.status_convite === 'respondido' ? '#10b981' : r.status_convite === 'enviado' ? '#60a5fa' : '#94a3b8' }}>
-                        {r.status_convite}
+                      <span
+                        title={r.respondido_em ? `Respondido em ${new Date(r.respondido_em).toLocaleString('pt-BR')}` : undefined}
+                        style={{ fontSize: '0.7rem', padding: '0.12rem 0.4rem', borderRadius: '8px',
+                          background: r.status_convite === 'respondido' ? 'rgba(16,185,129,0.15)' : r.status_convite === 'enviado' ? 'rgba(96,165,250,0.15)' : 'rgba(148,163,184,0.15)',
+                          color: r.status_convite === 'respondido' ? '#10b981' : r.status_convite === 'enviado' ? '#60a5fa' : '#94a3b8' }}>
+                        {r.status_convite === 'respondido' && r.respondido_em
+                          ? `respondido · ${new Date(r.respondido_em).toLocaleDateString('pt-BR')}`
+                          : r.status_convite}
                       </span>
                       <a
                         href={`${p.key === 'socios' ? '/form/socios' : p.key === 'colaboradores' ? '/form/colaboradores' : '/form/clientes'}?t=${r.token}`}
