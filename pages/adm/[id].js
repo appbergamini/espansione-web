@@ -524,19 +524,45 @@ export default function ProjetoDetalhes() {
     }
   };
 
+  // FIX.4 — exclusão com preview de cascata + confirmação forte
+  // quando há 3+ outputs afetados. Passos:
+  //   1. GET /api/outputs/delete?projetoId&agentNum → preview
+  //   2. Abre modal com lista de dependentes + confirmação
+  //   3. POST /api/outputs/delete com confirmar_cascata=true
   const [deletingOutput, setDeletingOutput] = useState(null);
-  const handleDeleteOutput = async (agentNum) => {
-    const nome = nomeAgente(agentNum);
-    if (!window.confirm(`Excluir o relatório do ${nome}?\n\nEsta ação apaga o output e libera o agente para ser rodado de novo. Checkpoints e logs relacionados também são limpos.`)) return;
+  const [cascadePreview, setCascadePreview] = useState(null);
+  const [cascadeConfirmText, setCascadeConfirmText] = useState('');
+
+  const abrirCascatePreview = async (agentNum) => {
+    try {
+      const res = await fetch(`/api/outputs/delete?projetoId=${id}&agentNum=${agentNum}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Falha ao analisar cascata');
+      setCascadeConfirmText('');
+      setCascadePreview({ agentNum, ...json });
+    } catch (err) {
+      alert('Erro ao analisar exclusão: ' + err.message);
+    }
+  };
+
+  const confirmarExclusao = async () => {
+    if (!cascadePreview) return;
+    const { agentNum, cascata } = cascadePreview;
     setDeletingOutput(agentNum);
     try {
       const res = await fetch('/api/outputs/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projetoId: id, agentNum }),
+        body: JSON.stringify({
+          projetoId: id,
+          agentNum,
+          confirmar_cascata: cascata?.tem_cascata === true,
+        }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Falha ao excluir');
+      setCascadePreview(null);
+      setCascadeConfirmText('');
       await loadData();
     } catch (err) {
       alert('Erro ao excluir relatório: ' + err.message);
@@ -544,6 +570,8 @@ export default function ProjetoDetalhes() {
       setDeletingOutput(null);
     }
   };
+
+  const handleDeleteOutput = (agentNum) => abrirCascatePreview(agentNum);
 
   const handleDownloadPdf = async (email, nome) => {
     try {
@@ -1058,6 +1086,95 @@ export default function ProjetoDetalhes() {
             )}
           </div>
         </main>
+
+        {/* FIX.4 — Modal de confirmação de exclusão com preview de cascata */}
+        {cascadePreview && (() => {
+          const alvoNome = cascadePreview.alvo?.nome || `Agente ${cascadePreview.agentNum}`;
+          const deps = cascadePreview.cascata?.dependentes_detalhados || [];
+          const total = cascadePreview.cascata?.total_afetados || 1;
+          const forte = deps.length >= 3;
+          const confirmacaoOk = !forte || cascadeConfirmText.trim().toLowerCase() === 'confirmar';
+          const deletingAlvo = deletingOutput === cascadePreview.agentNum;
+          return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                onClick={() => !deletingAlvo && setCascadePreview(null)}
+                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+              />
+              <div style={{ position: 'relative', background: 'var(--bg-secondary, #0a1122)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '16px', padding: '1.75rem', maxWidth: '520px', width: '92%', maxHeight: '80vh', overflowY: 'auto' }}>
+                <h3 style={{ color: 'var(--brand-red)', fontSize: '1.1rem', marginBottom: '0.35rem' }}>
+                  🗑 Excluir {alvoNome}?
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 1rem 0', lineHeight: 1.45 }}>
+                  {cascadePreview.mensagem}
+                </p>
+
+                {deps.length > 0 && (
+                  <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', padding: '0.75rem 0.9rem', marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--brand-red)', fontWeight: 700, marginBottom: '0.5rem' }}>
+                      Também serão apagados ({deps.length})
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--text-primary)', fontSize: '0.88rem', lineHeight: 1.55 }}>
+                      {deps.map(d => (
+                        <li key={d.agent_num}>Agente {d.agent_num} · {d.nome}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', fontStyle: 'italic', marginBottom: '1rem' }}>
+                  Esta ação é irreversível. Os {total} output{total > 1 ? 's' : ''} precisarão ser reexecutados.
+                </p>
+
+                {forte && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label htmlFor="cascade-confirm" style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                      Digite <code style={{ color: 'var(--brand-red)', fontWeight: 700 }}>confirmar</code> para prosseguir:
+                    </label>
+                    <input
+                      id="cascade-confirm"
+                      type="text"
+                      autoFocus
+                      value={cascadeConfirmText}
+                      onChange={(e) => setCascadeConfirmText(e.target.value)}
+                      disabled={deletingAlvo}
+                      style={{ width: '100%', background: 'rgba(0,0,0,0.35)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.55rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.95rem' }}
+                    />
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setCascadePreview(null); setCascadeConfirmText(''); }}
+                    disabled={deletingAlvo}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 600, padding: '0.55rem 1rem', cursor: deletingAlvo ? 'not-allowed' : 'pointer' }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmarExclusao}
+                    disabled={!confirmacaoOk || deletingAlvo}
+                    style={{
+                      background: (!confirmacaoOk || deletingAlvo) ? 'rgba(239,68,68,0.25)' : 'var(--brand-red)',
+                      border: '1px solid var(--brand-red)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      padding: '0.55rem 1.1rem',
+                      cursor: (!confirmacaoOk || deletingAlvo) ? 'not-allowed' : 'pointer',
+                      opacity: (!confirmacaoOk || deletingAlvo) ? 0.6 : 1,
+                    }}
+                  >
+                    {deletingAlvo ? 'Excluindo…' : (deps.length > 0 ? `Excluir em cascata (${total})` : 'Excluir')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Modal: Seleção de Modelo de IA */}
         {showModelPicker && (
