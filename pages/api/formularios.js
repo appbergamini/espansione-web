@@ -150,6 +150,8 @@ export default async function handler(req, res) {
             contato: optInPayload.contato,
             area: optInPayload.area ?? respostas.area ?? null,
             tempo_casa: optInPayload.tempo_casa ?? respostas.tempo_casa ?? null,
+            canal_preferido: optInPayload.canal_preferido ?? null,
+            horario_preferido: optInPayload.horario_preferido ?? null,
             consentimento_texto: optInPayload.consentimento_texto ?? null,
           });
         if (errOptIn) {
