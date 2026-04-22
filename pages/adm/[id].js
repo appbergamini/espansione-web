@@ -8,22 +8,18 @@ import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import { supabase } from '../../lib/supabaseClient';
 import { generateOutputPdf } from '../../lib/pdf/outputPdf';
-const AGENT_NAMES = [
-  null,
-  "01. Roteiros VI — Entrevistas Internas",
-  "02. Consolidado da Visão Interna (VI)",
-  "03. Roteiros VE — Entrevistas Cliente",
-  "04. Consolidado da Visão Externa (VE)",
-  "05. Visão de Mercado (VM)",
-  "06. Decodificação e Direcionamento Estratégico",
-  "07. Valores e Atributos",
-  "08. Diretrizes Estratégicas",
-  "09. Plataforma de Branding",
-  "10. Identidade Verbal (UVV)",
-  "11. One Page de Personalidade",
-  "12. One Page de Experiência",
-  "13. Plano de Comunicação"
-];
+import {
+  CATALOGO_AGENTES,
+  TOTAL_AGENTES,
+  getAgenteByNum,
+  calcularProgresso,
+  formatarTituloAdmin,
+} from '../../lib/agents/catalog';
+
+// Formato "02. Consolidado da Visão Interna (VI)" — preserva layout
+// do painel admin que antes consumia um array AGENT_NAMES hardcoded
+// com 13 itens. Agora vem do catálogo (15 agentes, FIX.3).
+const nomeAgente = (n) => formatarTituloAdmin(n);
 
 export default function ProjetoDetalhes() {
   const router = useRouter();
@@ -530,7 +526,7 @@ export default function ProjetoDetalhes() {
 
   const [deletingOutput, setDeletingOutput] = useState(null);
   const handleDeleteOutput = async (agentNum) => {
-    const nome = AGENT_NAMES[agentNum] || `Agente ${agentNum}`;
+    const nome = nomeAgente(agentNum);
     if (!window.confirm(`Excluir o relatório do ${nome}?\n\nEsta ação apaga o output e libera o agente para ser rodado de novo. Checkpoints e logs relacionados também são limpos.`)) return;
     setDeletingOutput(agentNum);
     try {
@@ -590,9 +586,15 @@ export default function ProjetoDetalhes() {
   const transcritPapel = transcritModal ? PAPEL_FROM_TIPO[transcritModal] : null;
   const transcritRespondentes = transcritPapel ? respondentes.filter(r => r.papel === transcritPapel) : [];
   
-  // Calcular qual é o próximo agente baseado no último output gerado
-  const lastOutputNum = outputs.length > 0 ? Math.max(...outputs.map(o => o.agent_num)) : 0;
-  const nextAgent = lastOutputNum < 13 ? lastOutputNum + 1 : null;
+  // Próximo agente = primeiro faltante na ordem do catálogo (FIX.3).
+  // Antes: "maior output + 1" — pulava gaps (output 2, 4, 5 existia →
+  // sugeria 6 em vez de 3). Agora respeita a ordem sequencial.
+  // EVP (Agente 14, modular) só entra no denominador se o projeto já
+  // tem algum output 14 — proxy simples de "escopo EVP contratado".
+  const agentNumsCompletos = outputs.map(o => o.agent_num);
+  const projetoTemEvp = agentNumsCompletos.includes(14);
+  const progresso = calcularProgresso(agentNumsCompletos, projetoTemEvp);
+  const nextAgent = progresso.proximoAgente?.agent_num || null;
   
   const { pendingCheckpoints = [] } = data;
   const pendingCkpt = (pendingCheckpoints && pendingCheckpoints.length > 0) 
@@ -936,7 +938,7 @@ export default function ProjetoDetalhes() {
                       Próximo passo na esteira:
                     </p>
                     <p style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '1.5rem' }}>
-                      {AGENT_NAMES[nextAgent]}
+                      {nomeAgente(nextAgent)}
                     </p>
                     {engineError && (
                       <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--brand-red)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>
@@ -973,7 +975,7 @@ export default function ProjetoDetalhes() {
                         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem 1.5rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
                             <span style={{ color: 'var(--accent-blue)', marginRight: '0.5rem' }}>A{out.agent_num}</span> 
-                            {AGENT_NAMES[out.agent_num]?.split('.')[1] || `Agente ${out.agent_num}`}
+                            {getAgenteByNum(out.agent_num)?.nome_exibicao || `Agente ${out.agent_num}`}
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                             <Link
@@ -1041,7 +1043,7 @@ export default function ProjetoDetalhes() {
                   <div key={out.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '8px', padding: '0.6rem 1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: 700, minWidth: '2.5rem' }}>A{out.agent_num}</span>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{AGENT_NAMES[out.agent_num]?.split('. ')[1] || `Agente ${out.agent_num}`}</span>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{getAgenteByNum(out.agent_num)?.nome_exibicao || `Agente ${out.agent_num}`}</span>
                     </div>
                     <button
                       onClick={() => handleDeleteOutput(out.agent_num)}
@@ -1064,7 +1066,7 @@ export default function ProjetoDetalhes() {
             <div style={{ position: 'relative', background: 'var(--bg-secondary, #0a1122)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '2rem', maxWidth: '440px', width: '90%', maxHeight: '80vh', overflowY: 'auto' }}>
               <h3 style={{ color: 'var(--accent-blue)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Escolha o modelo de IA</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
-                Agente {pendingAgentNum} — {AGENT_NAMES[pendingAgentNum]}
+                Agente {pendingAgentNum} — {getAgenteByNum(pendingAgentNum)?.nome_exibicao || ''}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {AI_MODELS.map(m => (
