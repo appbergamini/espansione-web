@@ -114,6 +114,24 @@
   --success: #6BA3FF;
   --warning: #Da3144;
   --error:   #Da3144;
+
+  /* ─── Visualizações (Bloco D / TASK 4.1) ─────────────────────────
+     Paleta de scoring usada pelos componentes de CIS e Maturidade 360°.
+     Verde e âmbar não existem na paleta institucional — introduzidos
+     aqui apenas para comunicar gradientes de competência (sustenta /
+     em desenvolvimento / frágil). Vermelho reusa --brand-red. */
+  --viz-success:  #10B981;             /* score ≥ 70 (sustenta) */
+  --viz-warning:  #F59E0B;             /* score 40-69 (em desenvolvimento) */
+  --viz-critical: var(--brand-red);    /* score < 40 (frágil) — reusa marca */
+
+  /* Card editorial "ilha clara" — usado como wrapper de todos os gráficos.
+     Tema papel branco sobre painel dark, com border e sombra sutis. */
+  --viz-card-bg:          #FEFEFE;
+  --viz-card-text:        #111827;
+  --viz-card-text-muted:  #6B7280;
+  --viz-card-border:      #E5E7EB;
+  --viz-card-shadow:      0 1px 3px rgba(0, 0, 0, 0.04),
+                          0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 /* ─── 5. Base ─── */
