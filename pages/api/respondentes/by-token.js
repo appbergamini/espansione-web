@@ -20,9 +20,12 @@ export default async function handler(req, res) {
 
     const { data: projeto } = await db
       .from('projetos')
-      .select('cliente, nome')
+      .select('cliente, nome, tipo_negocio')
       .eq('id', resp.projeto_id)
       .single();
+
+    const nomeMarca = projeto?.cliente || projeto?.nome || '';
+    const tipoNegocio = projeto?.tipo_negocio || 'B2C';
 
     return res.status(200).json({
       success: true,
@@ -34,7 +37,14 @@ export default async function handler(req, res) {
         papel: resp.papel,
         status_convite: resp.status_convite,
         respondido_em: resp.respondido_em || null,
-        projeto_nome: projeto?.cliente || projeto?.nome || '',
+        projeto_nome: nomeMarca,
+      },
+      // Meta do projeto usada por formulários públicos
+      // (intake_clientes v2 lê daqui para placeholders e condicionais)
+      projeto: {
+        id: resp.projeto_id,
+        nome_marca: nomeMarca,
+        tipo_negocio: tipoNegocio,
       },
     });
   } catch (err) {
