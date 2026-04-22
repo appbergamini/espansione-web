@@ -27,6 +27,18 @@ export default async function handler(req, res) {
     const nomeMarca = projeto?.cliente || projeto?.nome || '';
     const tipoNegocio = projeto?.tipo_negocio || 'B2C';
 
+    // Count de colaboradores do projeto — usado pelo form de colaboradores v3
+    // para o aviso condicional de equipes pequenas (≤10). Não vaza identidades.
+    let totalColaboradores = null;
+    if (resp.papel === 'colaboradores') {
+      const { count } = await db
+        .from('respondentes')
+        .select('id', { count: 'exact', head: true })
+        .eq('projeto_id', resp.projeto_id)
+        .eq('papel', 'colaboradores');
+      if (typeof count === 'number') totalColaboradores = count;
+    }
+
     return res.status(200).json({
       success: true,
       respondente: {
@@ -45,6 +57,7 @@ export default async function handler(req, res) {
         id: resp.projeto_id,
         nome_marca: nomeMarca,
         tipo_negocio: tipoNegocio,
+        total_colaboradores: totalColaboradores,
       },
     });
   } catch (err) {
