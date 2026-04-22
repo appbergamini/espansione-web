@@ -449,3 +449,357 @@ select.form-input option:checked, select option:checked {
 .print-mode {
   background: #FEFEFE;
 }
+
+/* ─── 13. Entregável consolidado (Bloco D · TASK 4.4) ─────────────
+   Documento editorial de 30-60 páginas: capa + TOC + 8 partes.
+   Todas as seções rodam sobre fundo #FEFEFE (a "ilha clara"), com
+   tipografia premium e quebras de página controladas.            */
+
+.deliverable-root {
+  max-width: 210mm;                 /* largura A4 */
+  margin: 0 auto;
+  font-family: var(--font-body);
+  color: var(--viz-card-text);
+  background: var(--viz-card-bg);
+}
+
+.deliverable-print-mode {
+  background: #FEFEFE;
+  padding: 0;
+  max-width: 100%;
+}
+
+/* Classes utilitárias de quebra de página (usadas por componentes) */
+.page-break-before       { page-break-before: always; break-before: page; }
+.page-break-after        { page-break-after: always;  break-after: page; }
+.page-break-inside-avoid { page-break-inside: avoid;  break-inside: avoid; }
+
+/* ── Capa ───────────────────────────────────────────────────────── */
+.deliverable-cover {
+  min-height: 297mm;                /* altura A4 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 35mm 28mm;
+  background: linear-gradient(135deg, #FAFBFC 0%, #F0F4F8 100%);
+  color: var(--viz-card-text);
+}
+.deliverable-cover .cover-eyebrow {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--viz-card-text-muted);
+}
+.deliverable-cover .cover-title-block { margin: 8mm 0; }
+.deliverable-cover .cover-title {
+  font-family: var(--font-heading);
+  font-size: 4.2rem;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--brand-blue);
+  margin: 0 0 0.6rem 0;
+}
+.deliverable-cover .cover-sub {
+  font-size: 1rem;
+  color: var(--viz-card-text-muted);
+}
+.deliverable-cover .cover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 0.8rem;
+  color: var(--viz-card-text-muted);
+  opacity: 0.85;
+  padding-top: 8mm;
+  border-top: 1px solid var(--viz-card-border);
+}
+
+/* ── TOC ────────────────────────────────────────────────────────── */
+.deliverable-toc {
+  padding: 30mm 28mm;
+  min-height: 180mm;
+}
+.deliverable-toc .toc-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 2rem 0;
+  color: var(--viz-card-text);
+  letter-spacing: -0.02em;
+}
+.deliverable-toc .toc-list { list-style: none; padding: 0; margin: 0; }
+.deliverable-toc .toc-item { margin-bottom: 1.5rem; }
+.deliverable-toc .toc-line {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px solid var(--viz-card-border);
+  padding-bottom: 0.35rem;
+}
+.deliverable-toc .toc-num {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: var(--brand-blue);
+  font-size: 1.4rem;
+  min-width: 2rem;
+}
+.deliverable-toc .toc-title-txt {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+.deliverable-toc .toc-sublist {
+  list-style: none;
+  padding: 0.5rem 0 0 3rem;
+  margin: 0;
+}
+.deliverable-toc .toc-sub {
+  font-size: 0.95rem;
+  color: var(--viz-card-text-muted);
+  padding: 0.15rem 0;
+}
+
+/* ── Cabeçalho de Parte (pseudocapa de seção) ──────────────────── */
+.part-header {
+  padding: 35mm 28mm 18mm 28mm;
+  border-bottom: 1px solid var(--viz-card-border);
+  margin: 0 0 2rem 0;
+}
+.part-header .part-header-num {
+  font-family: var(--font-heading);
+  font-size: 6rem;
+  font-weight: 900;
+  color: var(--brand-blue);
+  opacity: 0.22;
+  line-height: 1;
+}
+.part-header .part-header-titulo {
+  font-family: var(--font-heading);
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.5rem 0;
+  letter-spacing: -0.02em;
+  color: var(--viz-card-text);
+}
+.part-header .part-header-subtitulo {
+  font-size: 1.05rem;
+  color: var(--viz-card-text-muted);
+  margin: 0;
+  font-style: italic;
+  max-width: 52ch;
+}
+
+/* ── Partes e subpartes ─────────────────────────────────────────── */
+.part {
+  padding: 0 28mm 10mm 28mm;
+}
+.subpart {
+  margin-bottom: 2.5rem;
+}
+.subpart-title {
+  font-family: var(--font-heading);
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem 0;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--viz-card-border);
+  color: var(--viz-card-text);
+}
+
+/* Modo compacto de OutputRenderer quando usado dentro do entregável */
+.output-compact .output-prose h1 { display: none; }   /* h1 do output é redundante — a Parte já tem title */
+.output-compact .output-prose h2 {
+  font-size: 1.15rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--viz-card-border);
+}
+.output-compact .output-prose h3 {
+  font-size: 1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
+}
+.output-compact .output-prose p  { margin-bottom: 0.7rem; line-height: 1.6; }
+.output-compact .output-prose ul,
+.output-compact .output-prose ol { margin-bottom: 0.7rem; }
+.output-compact .my-8 { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+
+/* ── Manifesto (tratamento editorial especial na Parte 3) ──────── */
+.manifesto-wrapper { padding: 0; }
+.manifesto-section {
+  padding: 25mm 22mm;
+  margin: 0 auto;
+  max-width: 140mm;
+  font-family: var(--font-body);
+  font-size: 1.3rem;
+  line-height: 1.75;
+  color: var(--viz-card-text);
+  text-align: left;
+}
+.manifesto-section .manifesto-label {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--viz-card-text-muted);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+.manifesto-section p { margin-bottom: 1.5rem; }
+.manifesto-section p:first-of-type::first-line {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* ── Empty-state fallback por parte ─────────────────────────────── */
+.empty-part-fallback {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--viz-card-text-muted);
+  font-style: italic;
+  border: 1px dashed var(--viz-card-border);
+  border-radius: 8px;
+  margin: 2rem 0;
+  background: #F9FAFB;
+}
+
+/* ── "Como lemos sua empresa" (Parte 0) ────────────────────────── */
+.como-lemos {
+  background: linear-gradient(135deg, #F8FAFC 0%, #F0F4F8 100%);
+  border-left: 4px solid var(--brand-blue);
+  padding: 2rem 2.25rem;
+  margin: 2rem 0;
+  border-radius: 4px;
+}
+.como-lemos-titulo {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.85rem 0;
+  color: var(--viz-card-text);
+}
+.como-lemos-texto {
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+}
+.como-lemos-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem 1.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem 0;
+}
+.como-lemos-stats li {
+  position: relative;
+  padding-left: 1.15rem;
+  font-size: 0.95rem;
+  color: var(--viz-card-text);
+}
+.como-lemos-stats li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--brand-blue);
+  font-weight: 700;
+}
+.como-lemos-nota {
+  margin: 1rem 0 0 0;
+  font-size: 0.88rem;
+  color: var(--viz-card-text-muted);
+  font-style: italic;
+}
+
+/* ── Parte 7 — Créditos ─────────────────────────────────────────── */
+.encerramento-convite p {
+  margin-bottom: 1rem;
+  line-height: 1.65;
+}
+.creditos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem 2rem;
+  margin-top: 1rem;
+}
+.creditos-label {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--viz-card-text-muted);
+  margin-bottom: 0.35rem;
+}
+.creditos-valor {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--viz-card-text);
+}
+.creditos-sub {
+  font-size: 0.85rem;
+  color: var(--viz-card-text-muted);
+  margin-top: 0.15rem;
+}
+.rodape-documento {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--viz-card-border);
+}
+.rodape-documento-txt {
+  font-size: 0.82rem;
+  color: var(--viz-card-text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Print-specific do entregável ───────────────────────────────── */
+@media print {
+  .deliverable-root {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  /* @page com numeração e footer editorial.
+     Não se aplica à capa (classe .deliverable-cover, page: cover).  */
+  @page {
+    size: A4;
+    margin: 18mm 18mm 22mm 18mm;
+
+    @bottom-right {
+      content: counter(page);
+      font-family: var(--font-ui);
+      font-size: 9pt;
+      color: #6B7280;
+    }
+    @bottom-left {
+      content: "Espansione · Método Ana Couto";
+      font-family: var(--font-ui);
+      font-size: 9pt;
+      color: #6B7280;
+    }
+  }
+
+  /* Capa sem numeração e sem footer */
+  .deliverable-cover { page: cover; }
+  @page cover {
+    @bottom-right { content: ""; }
+    @bottom-left  { content: ""; }
+    margin: 0;
+  }
+
+  /* Órfãos / viúvas — evita que parágrafos quebrem com 1 linha órfã */
+  p, li { orphans: 3; widows: 3; }
+
+  /* Modo compacto herda as mesmas regras de page-break das visualizações */
+  .subpart, .output-editorial section { break-inside: avoid-page; }
+  .part-header { page-break-before: always; }
+
+  /* Tipografia ligeiramente menor em print para adensar sem perder legibilidade */
+  .deliverable-root { font-size: 10.5pt; }
+  .part-header .part-header-num { font-size: 5rem; }
+  .part-header .part-header-titulo { font-size: 2.2rem; }
+  .manifesto-section { font-size: 1.1rem; }
+}

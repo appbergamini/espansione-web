@@ -6,6 +6,10 @@
     "pages/api/outputs/[projetoId]/[stage]/pdf.js": {
       "maxDuration": 60,
       "memory": 3009
+    },
+    "pages/api/outputs/[projetoId]/deliverable/pdf.js": {
+      "maxDuration": 60,
+      "memory": 3009
     }
   }
 }
