@@ -13,7 +13,7 @@ import Bloco8 from './Bloco8_OptIn';
 
 const COMPONENTES = { 1: Bloco1, 2: Bloco2, 3: Bloco3, 4: Bloco4, 5: Bloco5, 6: Bloco6, 7: Bloco7, 8: Bloco8 };
 
-export default function FormColaboradores({ token, projetoId, totalColaboradores }) {
+export default function FormColaboradores({ token, projetoId, totalColaboradores, modoPreview = false }) {
   const { dados, atualizar, inicializado, limparStorage } = useFormPersistence('colaboradores', token);
   const [blocoAtual, setBlocoAtual] = useState(1);
   const [enviando, setEnviando] = useState(false);
@@ -45,6 +45,8 @@ export default function FormColaboradores({ token, projetoId, totalColaboradores
   };
 
   async function submeter() {
+    if (modoPreview) return;
+
     setErroEnvio('');
     setEnviando(true);
     setErros({});
@@ -163,8 +165,15 @@ export default function FormColaboradores({ token, projetoId, totalColaboradores
           </button>
         )}
         {ehUltimo && (
-          <button type="button" onClick={submeter} disabled={enviando} className="btn-primary" style={{ padding: '0.7rem 1.4rem' }}>
-            {enviando ? 'Enviando…' : 'Enviar respostas'}
+          <button
+            type="button"
+            onClick={submeter}
+            disabled={enviando || modoPreview}
+            className="btn-primary"
+            style={{ padding: '0.7rem 1.4rem', opacity: modoPreview ? 0.55 : 1 }}
+            title={modoPreview ? 'Pré-visualização — envio desabilitado' : undefined}
+          >
+            {modoPreview ? 'Envio desabilitado (preview)' : (enviando ? 'Enviando…' : 'Enviar respostas')}
           </button>
         )}
       </div>

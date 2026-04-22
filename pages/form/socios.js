@@ -2,18 +2,67 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import FormSocios from '../../components/forms/FormSocios';
+import PreviewBanner from '../../components/forms/shared/PreviewBanner';
 
 export default function FormSociosPage() {
   const router = useRouter();
   // Aceita ?t= (convenção atual dos emails) e ?token= (convenção da spec v4)
   const token = router.query.t || router.query.token || '';
+  // Modo preview (TASK FIX.2): admin usa ?projeto={id}&preview=true
+  // pra inspeção visual; validação é por sessão, não por token.
+  const projetoQuery = router.query.projeto || '';
+  const modoPreview = router.query.preview === 'true' && !!projetoQuery;
 
   const [respondente, setRespondente] = useState(null);
+  const [projetoMeta, setProjetoMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
 
   useEffect(() => {
     if (!router.isReady) return;
+
+    // ─── Fluxo preview (admin autenticado) ─────────────────────────
+    if (modoPreview) {
+      let active = true;
+      (async () => {
+        try {
+          const res = await fetch(`/api/projetos/${encodeURIComponent(projetoQuery)}/preview-check`);
+          if (!res.ok) {
+            if (!active) return;
+            // Mensagem genérica — não revela a existência do modo
+            // preview pra quem não tem permissão.
+            setErro({
+              tipo: 'PREVIEW_NEGADO',
+              mensagem: 'Esta página não está disponível. Se você foi convidado a responder, use o link recebido por email.',
+            });
+            return;
+          }
+          const json = await res.json();
+          if (!active) return;
+          setProjetoMeta(json.projeto || null);
+          // Respondente sintético — só dados pra UI do formulário
+          // mostrar "Respondendo como: Pré-visualização".
+          setRespondente({
+            id: null,
+            projeto_id: projetoQuery,
+            nome: 'Pré-visualização',
+            email: 'preview@espansione.local',
+            papel: 'socios',
+            status_convite: 'pendente',
+            respondido_em: null,
+            projeto_nome: json.projeto?.nome_marca || '',
+          });
+        } catch (err) {
+          if (!active) return;
+          setErro({ tipo: 'PREVIEW_ERRO', mensagem: err.message });
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => { active = false; };
+    }
+
+    // ─── Fluxo normal (respondente com token) ──────────────────────
     if (!token) {
       setLoading(false);
       setErro({
@@ -64,7 +113,7 @@ export default function FormSociosPage() {
       }
     })();
     return () => { active = false; };
-  }, [router.isReady, token]);
+  }, [router.isReady, token, modoPreview, projetoQuery]);
 
   if (loading) {
     return (
@@ -111,9 +160,22 @@ export default function FormSociosPage() {
   return (
     <>
       <Head>
-        <title>Levantamento Inicial — {respondente?.projeto_nome || 'Espansione'}</title>
+        <title>
+          {modoPreview ? 'Pré-visualização — ' : ''}
+          Levantamento Inicial — {respondente?.projeto_nome || projetoMeta?.nome_marca || 'Espansione'}
+        </title>
       </Head>
-      <FormSocios token={token} respondente={respondente} />
+      {modoPreview && (
+        <PreviewBanner
+          tipo="sócios"
+          nomeMarca={projetoMeta?.nome_marca || respondente?.projeto_nome}
+        />
+      )}
+      <FormSocios
+        token={modoPreview ? '__preview__' : token}
+        respondente={respondente}
+        modoPreview={modoPreview}
+      />
     </>
   );
 }

@@ -2,10 +2,14 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import FormClientes from '../../components/forms/FormClientes';
+import PreviewBanner from '../../components/forms/shared/PreviewBanner';
 
 export default function FormClientesPage() {
   const router = useRouter();
   const token = router.query.t || router.query.token || '';
+  // Modo preview (TASK FIX.2): admin usa ?projeto={id}&preview=true
+  const projetoQuery = router.query.projeto || '';
+  const modoPreview = router.query.preview === 'true' && !!projetoQuery;
 
   const [respondente, setRespondente] = useState(null);
   const [projetoMeta, setProjetoMeta] = useState(null);
@@ -14,6 +18,45 @@ export default function FormClientesPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
+
+    // ─── Fluxo preview (admin autenticado) ─────────────────────────
+    if (modoPreview) {
+      let active = true;
+      (async () => {
+        try {
+          const res = await fetch(`/api/projetos/${encodeURIComponent(projetoQuery)}/preview-check`);
+          if (!res.ok) {
+            if (!active) return;
+            setErro({
+              tipo: 'PREVIEW_NEGADO',
+              mensagem: 'Esta página não está disponível. Se você foi convidado a responder, use o link recebido por email.',
+            });
+            return;
+          }
+          const json = await res.json();
+          if (!active) return;
+          setRespondente({
+            id: null,
+            projeto_id: projetoQuery,
+            nome: 'Pré-visualização',
+            email: 'preview@espansione.local',
+            papel: 'clientes',
+            status_convite: 'pendente',
+            respondido_em: null,
+            projeto_nome: json.projeto?.nome_marca || '',
+          });
+          setProjetoMeta(json.projeto || { nome_marca: 'nossa marca', tipo_negocio: 'B2C' });
+        } catch (err) {
+          if (!active) return;
+          setErro({ tipo: 'PREVIEW_ERRO', mensagem: err.message });
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => { active = false; };
+    }
+
+    // ─── Fluxo normal ──────────────────────────────────────────────
     if (!token) {
       setLoading(false);
       setErro({
@@ -63,7 +106,7 @@ export default function FormClientesPage() {
       }
     })();
     return () => { active = false; };
-  }, [router.isReady, token]);
+  }, [router.isReady, token, modoPreview, projetoQuery]);
 
   if (loading) {
     return (
@@ -107,9 +150,20 @@ export default function FormClientesPage() {
   return (
     <>
       <Head>
-        <title>Pesquisa de Percepção — {projetoMeta?.nome_marca || 'Espansione'}</title>
+        <title>
+          {modoPreview ? 'Pré-visualização — ' : ''}
+          Pesquisa de Percepção — {projetoMeta?.nome_marca || 'Espansione'}
+        </title>
       </Head>
-      <FormClientes token={token} respondente={respondente} projetoMeta={projetoMeta} />
+      {modoPreview && (
+        <PreviewBanner tipo="clientes" nomeMarca={projetoMeta?.nome_marca} />
+      )}
+      <FormClientes
+        token={modoPreview ? '__preview__' : token}
+        respondente={respondente}
+        projetoMeta={projetoMeta}
+        modoPreview={modoPreview}
+      />
     </>
   );
 }
