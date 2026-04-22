@@ -28,10 +28,15 @@ alter table respondentes
 
 -- 2. Backfill de linhas existentes — token novo e expiração contando
 --    a partir do momento do deploy da migration.
+--    Observação: condição cobre NULL em QUALQUER uma das colunas
+--    (não só `token`). Protege contra ambientes onde um hotfix
+--    anterior já populou `token` manualmente mas deixou
+--    `token_expira_em` em branco — detectado em produção no primeiro
+--    deploy da FIX.1.
 update respondentes
-   set token           = encode(gen_random_bytes(24), 'hex'),
-       token_expira_em = now() + interval '30 days'
- where token is null;
+   set token           = coalesce(token,           encode(gen_random_bytes(24), 'hex')),
+       token_expira_em = coalesce(token_expira_em, now() + interval '30 days')
+ where token is null or token_expira_em is null;
 
 -- 3. Agora que todos têm valor, NOT NULL.
 alter table respondentes
