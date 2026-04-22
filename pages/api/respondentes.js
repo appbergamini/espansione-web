@@ -1,5 +1,6 @@
 import { getServerUser } from '../../lib/getServerUser';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { gerarTokenRespondente } from '../../lib/tokens/respondenteToken';
 
 const VALID_PAPEIS = ['socios', 'colaboradores', 'clientes'];
 
@@ -60,12 +61,60 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Nenhum respondente válido (nome, email e papel obrigatórios)' });
       }
 
-      const { data, error } = await db
+      // Split incoming em novos vs existentes. Novos recebem token
+      // server-side; existentes NÃO têm token sobrescrito (imutabilidade
+      // preserva respostas parciais). Upsert não serve aqui porque
+      // reescreveria o token em conflito.
+      const { data: existentes } = await db
         .from('respondentes')
-        .upsert(rows, { onConflict: 'projeto_id,email,papel', ignoreDuplicates: false })
-        .select('*');
-      if (error) throw error;
-      return res.status(200).json({ success: true, respondentes: data, inserted: data.length });
+        .select('id, email, papel')
+        .eq('projeto_id', projeto_id)
+        .in('email', rows.map(r => r.email));
+      const chaveExistente = new Set(
+        (existentes || []).map(r => `${r.email}::${r.papel}`),
+      );
+
+      const toInsert = [];
+      const toUpdate = [];
+      for (const r of rows) {
+        if (chaveExistente.has(`${r.email}::${r.papel}`)) {
+          toUpdate.push(r);
+        } else {
+          toInsert.push({ ...r, ...gerarTokenRespondente() });
+        }
+      }
+
+      const resultado = [];
+
+      if (toInsert.length > 0) {
+        const { data, error } = await db
+          .from('respondentes')
+          .insert(toInsert)
+          .select('*');
+        if (error) throw error;
+        resultado.push(...(data || []));
+      }
+
+      for (const r of toUpdate) {
+        const patch = { nome: r.nome, whatsapp: r.whatsapp };
+        const { data, error } = await db
+          .from('respondentes')
+          .update(patch)
+          .eq('projeto_id', projeto_id)
+          .eq('email', r.email)
+          .eq('papel', r.papel)
+          .select('*')
+          .single();
+        if (error) throw error;
+        resultado.push(data);
+      }
+
+      return res.status(200).json({
+        success: true,
+        respondentes: resultado,
+        inserted: toInsert.length,
+        updated: toUpdate.length,
+      });
     }
 
     if (req.method === 'PUT') {

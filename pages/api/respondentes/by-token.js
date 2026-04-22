@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import { tokenValido, ERROS_TOKEN } from '../../../lib/tokens/respondenteToken';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,17 +7,31 @@ export default async function handler(req, res) {
   }
 
   const token = req.query.token;
-  if (!token) return res.status(400).json({ success: false, error: 'token obrigatório' });
+  if (!token) {
+    // 400 mantido (cliente enviou request malformada) — body carrega
+    // o código canônico para a UI montar mensagem amigável.
+    return res.status(400).json({ success: false, ...ERROS_TOKEN.AUSENTE });
+  }
 
   try {
     const db = supabaseAdmin;
     const { data: resp, error } = await db
       .from('respondentes')
-      .select('id, projeto_id, nome, email, papel, status_convite, respondido_em')
+      .select('id, projeto_id, nome, email, papel, status_convite, respondido_em, token_expira_em')
       .eq('token', String(token).trim())
       .maybeSingle();
     if (error) throw error;
-    if (!resp) return res.status(404).json({ success: false, error: 'Token inválido' });
+    if (!resp) {
+      return res.status(404).json({ success: false, ...ERROS_TOKEN.NAO_EXISTE });
+    }
+
+    // 410 Gone — recurso existiu mas não está mais disponível.
+    // Semanticamente correto pra token expirado; diferente de 404
+    // (nunca existiu) e 401 (auth). Browsers não cacheiam nem
+    // re-tentam automaticamente.
+    if (!tokenValido(resp.token_expira_em)) {
+      return res.status(410).json({ success: false, ...ERROS_TOKEN.EXPIRADO });
+    }
 
     const { data: projeto } = await db
       .from('projetos')
