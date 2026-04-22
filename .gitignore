@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+# scripts de sanidade locais (nao commitar)
+/scripts/test-*.js
+/scripts/test-*.mjs
