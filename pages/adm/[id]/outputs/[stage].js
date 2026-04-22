@@ -26,6 +26,7 @@ import OutputRenderer from '../../../../components/output/OutputRenderer';
 import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
 import { getServerUser } from '../../../../lib/getServerUser';
 import { resolveVizData } from '../../../../lib/output/resolveVizData';
+import { validarTokenPdf } from '../../../../lib/pdf/pdfToken';
 
 const AGENT_NAMES = [
   null,
@@ -50,7 +51,7 @@ function nomeAgente(num) {
   return AGENT_NAMES[n];
 }
 
-export async function getServerSideProps({ params, req, res }) {
+export async function getServerSideProps({ params, query, req, res }) {
   const projetoId = String(params.id || '');
   const agentNum = Number(params.stage);
 
@@ -58,24 +59,40 @@ export async function getServerSideProps({ params, req, res }) {
     return { notFound: true };
   }
 
-  // ─── Auth gate ────────────────────────────────────────────────────
-  const { user } = await getServerUser(req, res);
-  if (!user) {
-    return {
-      redirect: { destination: '/login', permanent: false },
-    };
+  // ─── Auth gate (dois caminhos) ───────────────────────────────────
+  // Caminho A: modo ?print=true — autenticado por token HMAC curto
+  //            (Playwright headless, sem cookies). Token gerado pela
+  //            API /api/outputs/.../pdf imediatamente antes da
+  //            navegação; vence em ~60s.
+  // Caminho B: sessão de usuário master/admin (cookies do Supabase).
+  //
+  // Qualquer um dos dois passando libera. No modo print, a página
+  // ainda busca dados normalmente — só o chrome muda no render.
+  const isPrintMode = query?.print === 'true';
+  let tokenValido = false;
+
+  if (isPrintMode) {
+    tokenValido = validarTokenPdf(String(query?.token || ''), {
+      projetoId,
+      stage: agentNum,
+    });
   }
 
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
+  if (!tokenValido) {
+    const { user } = await getServerUser(req, res);
+    if (!user) {
+      return { redirect: { destination: '/login', permanent: false } };
+    }
 
-  if (!profile || (profile.role !== 'master' && profile.role !== 'admin')) {
-    return {
-      redirect: { destination: '/dashboard', permanent: false },
-    };
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!profile || (profile.role !== 'master' && profile.role !== 'admin')) {
+      return { redirect: { destination: '/dashboard', permanent: false } };
+    }
   }
 
   // ─── Projeto ──────────────────────────────────────────────────────
@@ -142,6 +159,7 @@ export async function getServerSideProps({ params, req, res }) {
       nomeExibicao: nomeAgente(agentNum),
       todosOutputs,
       vizData,
+      isPrintMode,
     },
   };
 }
@@ -153,7 +171,35 @@ export default function OutputPage({
   nomeExibicao,
   todosOutputs,
   vizData,
+  isPrintMode,
 }) {
+  // ─── Modo print: só o conteúdo editorial, fundo branco, sem chrome
+  if (isPrintMode) {
+    return (
+      <>
+        <Head>
+          <title>{`${projeto.cliente} — ${nomeExibicao}`}</title>
+        </Head>
+        <div
+          className="print-mode"
+          style={{
+            background: 'var(--viz-card-bg)',
+            color: 'var(--viz-card-text)',
+            padding: '24px 28px',
+            minHeight: '100vh',
+          }}
+        >
+          <OutputRenderer
+            conteudo={output.conteudo}
+            resumoExecutivo={output.resumo_executivo}
+            conclusoes={output.conclusoes}
+            vizData={vizData}
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -162,6 +208,7 @@ export default function OutputPage({
       <div className="page-container">
         <main className="container">
           <div
+            className="screen-only"
             style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -177,20 +224,24 @@ export default function OutputPage({
             <Logo size="sm" showTagline={false} />
           </div>
 
-          <OutputHeader
-            projeto={{ id: projeto.id, nome: projeto.cliente, empresa_nome: projeto.cliente }}
-            output={output}
-            agentNum={agentNum}
-            nomeExibicao={nomeExibicao}
-          />
+          <div className="screen-only">
+            <OutputHeader
+              projeto={{ id: projeto.id, nome: projeto.cliente, empresa_nome: projeto.cliente }}
+              output={output}
+              agentNum={agentNum}
+              nomeExibicao={nomeExibicao}
+            />
+          </div>
 
           <div className="flex gap-6 mt-6 items-start">
-            <OutputSidebar
-              outputs={todosOutputs}
-              currentAgentNum={agentNum}
-              projetoId={projeto.id}
-              conteudo={output.conteudo}
-            />
+            <div className="screen-only">
+              <OutputSidebar
+                outputs={todosOutputs}
+                currentAgentNum={agentNum}
+                projetoId={projeto.id}
+                conteudo={output.conteudo}
+              />
+            </div>
 
             <section
               className="flex-1 min-w-0 p-6 md:p-10 rounded-xl"

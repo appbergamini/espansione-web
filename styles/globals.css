@@ -373,3 +373,79 @@ select.form-input option:checked, select option:checked {
   padding: 0;
   border-radius: 0;
 }
+
+/* ─── 12. Estilos de impressão / PDF export (Bloco D · TASK 4.3) ──
+   Ativados via page.emulateMedia({ media: 'print' }) no Playwright OU
+   pelo print-mode (?print=true) que aplica as classes diretamente.
+   O objetivo é um PDF editorial: fundo branco, sem chrome, quebras
+   de página limpas e visualizações não cortadas ao meio.           */
+
+/* Visibilidade: .screen-only some em modo print; .print-only aparece. */
+.print-only { display: none; }
+
+@media print {
+  .print-only    { display: block; }
+  .screen-only   { display: none !important; }
+
+  body, html {
+    background: #FEFEFE !important;
+    color: var(--viz-card-text) !important;
+  }
+
+  /* Remove chrome remanescente (sidebar global, headers fixos etc.) */
+  nav[data-global],
+  header[data-sidebar],
+  .glass-card {
+    display: none !important;
+  }
+
+  /* Papel A4 com margens típicas de documento editorial */
+  @page {
+    size: A4;
+    margin: 20mm 18mm;
+  }
+
+  /* Wrapper de conteúdo em modo print — fundo 100% branco */
+  .print-mode {
+    background: #FEFEFE !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Evitar cortes ruins entre páginas ---------------------------- */
+  .output-prose h1,
+  .output-prose h2,
+  .output-prose h3,
+  .output-prose h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .output-prose blockquote,
+  .output-prose table,
+  .output-prose figure,
+  .output-prose pre {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Cards editoriais (VizCard e wrappers de Resumo/Conclusões)   */
+  .output-editorial > section,
+  .output-editorial .my-8 {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Links — manter legíveis, sem sublinhar o mundo todo */
+  .output-prose a {
+    color: var(--action-ink) !important;
+    text-decoration: underline;
+  }
+}
+
+/* Modo print-mode (classe aplicada pelo próprio componente) — mesmo
+   sem @media print, queremos fundo editorial branco para que o
+   preview em tela já pareça o PDF final. */
+.print-mode {
+  background: #FEFEFE;
+}

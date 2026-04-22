@@ -77,19 +77,21 @@ export default function OutputHeader({ projeto, output, agentNum, nomeExibicao }
       </div>
 
       <div className="flex gap-2">
-        <button
-          disabled
-          className="px-4 py-2 rounded text-sm font-medium cursor-not-allowed"
-          title="Disponível após a TASK 4.3"
+        <a
+          href={`/api/outputs/${projeto?.id || ''}/${agentNum}/pdf`}
+          download
+          className="px-4 py-2 rounded text-sm font-medium inline-flex items-center gap-2"
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            color: 'var(--text-secondary)',
-            opacity: 0.55,
+            backgroundColor: 'var(--brand-blue)',
+            color: '#FFF',
+            border: '1px solid var(--brand-blue)',
+            textDecoration: 'none',
+            fontWeight: 600,
           }}
+          title="Baixar este output em PDF"
         >
-          Baixar PDF
-        </button>
+          📄 Baixar PDF
+        </a>
       </div>
     </header>
   );
