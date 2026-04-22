@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const db = supabaseAdmin;
     const { data: resp, error } = await db
       .from('respondentes')
-      .select('id, projeto_id, nome, email, papel, status_convite')
+      .select('id, projeto_id, nome, email, papel, status_convite, respondido_em')
       .eq('token', String(token).trim())
       .maybeSingle();
     if (error) throw error;
@@ -33,6 +33,7 @@ export default async function handler(req, res) {
         email: resp.email,
         papel: resp.papel,
         status_convite: resp.status_convite,
+        respondido_em: resp.respondido_em || null,
         projeto_nome: projeto?.cliente || projeto?.nome || '',
       },
     });
