@@ -969,6 +969,13 @@ export default function ProjetoDetalhes() {
                             {AGENT_NAMES[out.agent_num]?.split('.')[1] || `Agente ${out.agent_num}`}
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <Link
+                              href={`/adm/${id}/outputs/${out.agent_num}`}
+                              title="Abrir em página editorial"
+                              style={{ background: 'rgba(107,163,255,0.1)', border: '1px solid rgba(107,163,255,0.3)', color: 'var(--brand-blue-light)', borderRadius: '8px', padding: '0.3rem 0.7rem', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none' }}
+                            >
+                              📖 Abrir
+                            </Link>
                             <button
                               onClick={() => downloadOutputPdf(out)}
                               title="Baixar em PDF"
