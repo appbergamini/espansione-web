@@ -993,7 +993,7 @@ export default function ProjetoDetalhes() {
                 
                 {outputs.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                    Nenhum output gerado ainda. Execute o Agente 00 para começar.
+                    Nenhum output gerado ainda. Execute o Agente 01 para começar.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
