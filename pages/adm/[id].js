@@ -619,6 +619,13 @@ export default function ProjetoDetalhes() {
               </span>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <Link
+                href={`/adm/${id}/deliverable`}
+                title="Abrir o entregável final consolidado"
+                style={{ background: 'rgba(0,50,109,0.1)', border: '1px solid rgba(0,50,109,0.35)', borderRadius: '8px', color: 'var(--brand-blue-light)', fontSize: '0.82rem', fontWeight: 600, padding: '0.4rem 0.8rem', textDecoration: 'none' }}
+              >
+                📘 Entregável final
+              </Link>
               <button
                 onClick={handleDeleteProjeto}
                 disabled={deletando}

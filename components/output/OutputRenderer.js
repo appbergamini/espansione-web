@@ -32,17 +32,29 @@ import {
   vizMarkerKey,
 } from '../../lib/output/parseVizMarkers';
 
+/**
+ * @param {Object} props
+ * @param {string} props.conteudo
+ * @param {string} [props.resumoExecutivo]
+ * @param {string} [props.conclusoes]
+ * @param {Object} [props.vizData]
+ * @param {boolean} [props.compactMode]  Modo consolidado (TASK 4.4):
+ *   oculta boxes de Resumo Executivo e Conclusões (esses vão nas Partes
+ *   0 e 7 centralizados no entregável) e aperta margens. Titulação fica
+ *   a cargo do componente Parte que envolve este Renderer.
+ */
 export default function OutputRenderer({
   conteudo,
   resumoExecutivo,
   conclusoes,
   vizData = {},
+  compactMode = false,
 }) {
   const blocos = dividirEmBlocos(conteudo);
 
   return (
-    <article className="output-editorial">
-      {resumoExecutivo && (
+    <article className={`output-editorial ${compactMode ? 'output-compact' : ''}`}>
+      {!compactMode && resumoExecutivo && (
         <section
           className="mb-10 p-6 rounded-xl"
           style={{
@@ -68,13 +80,13 @@ export default function OutputRenderer({
         </section>
       )}
 
-      <div className="output-body space-y-6">
+      <div className={`output-body ${compactMode ? 'space-y-4' : 'space-y-6'}`}>
         {blocos.map((bloco, idx) => (
           <BlocoRenderer key={idx} bloco={bloco} vizData={vizData} />
         ))}
       </div>
 
-      {conclusoes && (
+      {!compactMode && conclusoes && (
         <section
           className="mt-12 p-6 rounded-xl"
           style={{
