@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { computeMaturidade360, agregateMaturidades } from '../../lib/maturidade/computeMaturidade360';
 
 const FORM_TIPO_BY_PAPEL = {
   socios: 'intake_socios',
@@ -99,6 +100,40 @@ export default async function handler(req, res) {
         .from('respondentes')
         .update({ status_convite: 'respondido', respondido_em: new Date().toISOString() })
         .eq('id', respondenteRow.id);
+    }
+
+    // Hook pós-gravação: intake_socios → computa maturidade_360 agregada.
+    // Agrega todos os intake_socios do projeto (opção b da spec): média por
+    // pilar + divergência entre sócios como metadado.
+    // Falha não aborta o request — o agregado é derivado.
+    if (tipo === 'intake_socios') {
+      try {
+        const { data: intakesSocios } = await db
+          .from('formularios')
+          .select('respostas_json')
+          .eq('projeto_id', projetoId)
+          .eq('tipo', 'intake_socios');
+
+        if (intakesSocios && intakesSocios.length > 0) {
+          const maturidades = intakesSocios
+            .map(i => computeMaturidade360(i.respostas_json))
+            .filter(m => m !== null && m.completude.respondidas > 0);
+
+          if (maturidades.length > 0) {
+            const agregado = agregateMaturidades(maturidades);
+            // intake_data: chave = `campo`, valor = `text` (JSON serializado)
+            const { error: errIntake } = await db
+              .from('intake_data')
+              .upsert(
+                { projeto_id: projetoId, campo: 'maturidade_360', valor: JSON.stringify(agregado) },
+                { onConflict: 'projeto_id,campo' }
+              );
+            if (errIntake) console.error('Erro ao upsert maturidade_360:', errIntake);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao computar maturidade_360:', err);
+      }
     }
 
     // Opt-in para entrevista em profundidade — tabela separada,
