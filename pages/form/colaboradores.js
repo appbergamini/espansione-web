@@ -2,10 +2,14 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import FormColaboradores from '../../components/forms/FormColaboradores';
+import PreviewBanner from '../../components/forms/shared/PreviewBanner';
 
 export default function FormColaboradoresPage() {
   const router = useRouter();
   const token = router.query.t || router.query.token || '';
+  // Modo preview (TASK FIX.2): admin usa ?projeto={id}&preview=true
+  const projetoQuery = router.query.projeto || '';
+  const modoPreview = router.query.preview === 'true' && !!projetoQuery;
 
   const [projetoId, setProjetoId] = useState(null);
   const [projetoNome, setProjetoNome] = useState('');
@@ -15,6 +19,39 @@ export default function FormColaboradoresPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
+
+    // ─── Fluxo preview (admin autenticado) ─────────────────────────
+    if (modoPreview) {
+      let active = true;
+      (async () => {
+        try {
+          const res = await fetch(`/api/projetos/${encodeURIComponent(projetoQuery)}/preview-check`);
+          if (!res.ok) {
+            if (!active) return;
+            setErro({
+              tipo: 'PREVIEW_NEGADO',
+              mensagem: 'Esta página não está disponível. Se você foi convidado a responder, use o link recebido por email.',
+            });
+            return;
+          }
+          const json = await res.json();
+          if (!active) return;
+          setProjetoId(projetoQuery);
+          setProjetoNome(json.projeto?.nome_marca || '');
+          if (typeof json.projeto?.total_colaboradores === 'number') {
+            setTotalColaboradores(json.projeto.total_colaboradores);
+          }
+        } catch (err) {
+          if (!active) return;
+          setErro({ tipo: 'PREVIEW_ERRO', mensagem: err.message });
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => { active = false; };
+    }
+
+    // ─── Fluxo normal ──────────────────────────────────────────────
     if (!token) {
       setLoading(false);
       setErro({
@@ -68,7 +105,7 @@ export default function FormColaboradoresPage() {
       }
     })();
     return () => { active = false; };
-  }, [router.isReady, token]);
+  }, [router.isReady, token, modoPreview, projetoQuery]);
 
   if (loading) {
     return (
@@ -111,9 +148,20 @@ export default function FormColaboradoresPage() {
   return (
     <>
       <Head>
-        <title>{projetoNome ? `Pesquisa Interna — ${projetoNome}` : 'Pesquisa Interna'}</title>
+        <title>
+          {modoPreview ? 'Pré-visualização — ' : ''}
+          {projetoNome ? `Pesquisa Interna — ${projetoNome}` : 'Pesquisa Interna'}
+        </title>
       </Head>
-      <FormColaboradores token={token} projetoId={projetoId} totalColaboradores={totalColaboradores} />
+      {modoPreview && (
+        <PreviewBanner tipo="colaboradores" nomeMarca={projetoNome} />
+      )}
+      <FormColaboradores
+        token={modoPreview ? '__preview__' : token}
+        projetoId={projetoId}
+        totalColaboradores={totalColaboradores}
+        modoPreview={modoPreview}
+      />
     </>
   );
 }

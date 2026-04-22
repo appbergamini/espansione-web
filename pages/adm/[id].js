@@ -753,7 +753,7 @@ export default function ProjetoDetalhes() {
                           <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
                             {total === 0 ? 'nenhum cadastrado' : `${respondidos}/${total} respondidos`}
                           </span>
-                          <a href={`${f.path}?projeto=${id}`} target="_blank" rel="noopener noreferrer" title="Visualizar formulário" style={{ fontSize: '0.85rem', color: 'var(--accent-blue)', textDecoration: 'none' }}>👁</a>
+                          <a href={`${f.path}?projeto=${id}&preview=true`} target="_blank" rel="noopener noreferrer" title="Pré-visualizar formulário (respostas não serão salvas)" style={{ fontSize: '0.85rem', color: 'var(--accent-blue)', textDecoration: 'none' }}>👁 preview</a>
                         </div>
                       </li>
                     );

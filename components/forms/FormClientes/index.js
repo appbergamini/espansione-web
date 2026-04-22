@@ -12,7 +12,7 @@ import Secao7 from './Secao7_OptInEntrevista';
 
 const COMPONENTES = { 1: Secao1, 2: Secao2, 3: Secao3, 4: Secao4, 5: Secao5, 6: Secao6, 7: Secao7 };
 
-export default function FormClientes({ token, respondente, projetoMeta }) {
+export default function FormClientes({ token, respondente, projetoMeta, modoPreview = false }) {
   const { dados, atualizar, inicializado, limparStorage } = useFormPersistence('clientes', token);
   const [secaoAtual, setSecaoAtual] = useState(1);
   const [enviando, setEnviando] = useState(false);
@@ -55,6 +55,8 @@ export default function FormClientes({ token, respondente, projetoMeta }) {
   };
 
   async function submeter() {
+    if (modoPreview) return;
+
     setErroEnvio('');
     setEnviando(true);
     setErros({});
@@ -155,8 +157,15 @@ export default function FormClientes({ token, respondente, projetoMeta }) {
           </button>
         )}
         {ehUltima && (
-          <button type="button" onClick={submeter} disabled={enviando} className="btn-primary" style={{ padding: '0.7rem 1.4rem' }}>
-            {enviando ? 'Enviando…' : 'Enviar respostas'}
+          <button
+            type="button"
+            onClick={submeter}
+            disabled={enviando || modoPreview}
+            className="btn-primary"
+            style={{ padding: '0.7rem 1.4rem', opacity: modoPreview ? 0.55 : 1 }}
+            title={modoPreview ? 'Pré-visualização — envio desabilitado' : undefined}
+          >
+            {modoPreview ? 'Envio desabilitado (preview)' : (enviando ? 'Enviando…' : 'Enviar respostas')}
           </button>
         )}
       </div>
