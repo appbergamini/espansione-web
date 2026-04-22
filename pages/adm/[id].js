@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 import RespondentesManager from '../../components/RespondentesManager';
+import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import { supabase } from '../../lib/supabaseClient';
 import { generateOutputPdf } from '../../lib/pdf/outputPdf';
@@ -790,6 +791,8 @@ export default function ProjetoDetalhes() {
               </div>
 
               <RespondentesManager projetoId={id} />
+
+              <OptInEntrevistasManager projetoId={id} />
 
               {/* Card: Mapeamento Comportamental CIS */}
               <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>
