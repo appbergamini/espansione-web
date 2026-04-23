@@ -49,6 +49,7 @@ export default function ProjetoDetalhes() {
   
   const [runningAgent, setRunningAgent] = useState(null);
   const [engineError, setEngineError] = useState('');
+  const [engineStage, setEngineStage] = useState('');
   const [approving, setApproving] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [pendingAgentNum, setPendingAgentNum] = useState(null);
@@ -164,30 +165,55 @@ export default function ProjetoDetalhes() {
     setEngineError('');
   };
 
+  // Agentes que têm enrichContext pesado e precisam rodar em 2 etapas
+  // pra não estourar o cap de 300s do serverless (Vercel Fluid Compute).
+  // Por enquanto só o Agente 5 (deep research via Claude web_search).
+  const AGENTES_COM_ENRICH_PESADO = new Set([5]);
+
+  const parseApiError = (res, raw, json) => (
+    json?.error
+      || (res.status === 504 ? 'Timeout (504). Agente demorou demais — tente de novo ou escolha outro modelo.'
+      : res.status === 413 ? 'Payload grande demais (413).'
+      : res.status >= 500 ? `Erro ${res.status} no servidor.${raw ? ' ' + raw.slice(0, 200) : ''}`
+      : `HTTP ${res.status}: ${raw.slice(0, 200) || 'sem corpo'}`)
+  );
+
+  const fetchEngine = async (endpoint, body) => {
+    const res = await fetch(`/api/engine/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const raw = await res.text();
+    let json = null;
+    try { json = JSON.parse(raw); } catch {}
+    return { res, raw, json };
+  };
+
   const handleRunWithModel = async (modelKey) => {
     setShowModelPicker(false);
     const agentNum = pendingAgentNum;
     setRunningAgent(agentNum);
     setEngineError('');
     try {
-      const res = await fetch('/api/engine/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projetoId: id, agentNum, modelKey })
+      let precomputedEnrichment;
+      if (AGENTES_COM_ENRICH_PESADO.has(agentNum)) {
+        // Etapa 1/2: pesquisa (deep research + Tavily)
+        setEngineStage('Etapa 1/2: pesquisando mercado…');
+        const r1 = await fetchEngine('enrich', { projetoId: id, agentNum });
+        if (!r1.res.ok || !r1.json?.success) {
+          setEngineError(parseApiError(r1.res, r1.raw, r1.json));
+          return;
+        }
+        precomputedEnrichment = r1.json.enrichment;
+        setEngineStage('Etapa 2/2: gerando análise…');
+      }
+      const r2 = await fetchEngine('run', {
+        projetoId: id, agentNum, modelKey,
+        ...(precomputedEnrichment ? { precomputedEnrichment } : {}),
       });
-      // Captura texto primeiro — se a função atingir timeout, Vercel
-      // devolve HTML/text plain em vez de JSON, e res.json() estoura
-      // deixando o usuário sem pista do erro real.
-      const raw = await res.text();
-      let json = null;
-      try { json = JSON.parse(raw); } catch {}
-      if (!res.ok || !json?.success) {
-        const msg = json?.error
-          || (res.status === 504 ? `Timeout (504). Agente demorou demais — tente de novo ou escolha outro modelo.`
-          : res.status === 413 ? 'Payload grande demais (413).'
-          : res.status >= 500 ? `Erro ${res.status} no servidor.${raw ? ' ' + raw.slice(0, 200) : ''}`
-          : `HTTP ${res.status}: ${raw.slice(0, 200) || 'sem corpo'}`);
-        setEngineError(msg);
+      if (!r2.res.ok || !r2.json?.success) {
+        setEngineError(parseApiError(r2.res, r2.raw, r2.json));
       } else {
         await loadData();
       }
@@ -195,6 +221,7 @@ export default function ProjetoDetalhes() {
       setEngineError(`Falha de rede: ${err.message || err}`);
     } finally {
       setRunningAgent(null);
+      setEngineStage('');
     }
   };
 
@@ -989,7 +1016,7 @@ export default function ProjetoDetalhes() {
                       disabled={runningAgent !== null}
                       onClick={() => handleRequestRun(nextAgent)}
                     >
-                      {runningAgent !== null ? 'Processando (aguarde 15s~30s)...' : `Executar Agente ${nextAgent}`}
+                      {runningAgent !== null ? (engineStage || 'Processando (aguarde 15s~30s)...') : `Executar Agente ${nextAgent}`}
                     </button>
                   </>
                 )}

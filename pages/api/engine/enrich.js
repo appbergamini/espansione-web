@@ -1,10 +1,19 @@
+// pages/api/engine/enrich.js
+//
+// Etapa 1 do split de agentes caros (p.ex. Agente 5 com deep research):
+// roda APENAS o enrichContext do agent e devolve o payload JSON pro
+// frontend. Na etapa 2, o frontend chama /api/engine/run passando
+// `precomputedEnrichment` no body, pulando a pesquisa cara.
+//
+// Motivação: Vercel serverless tem cap de 300s. Agent 5 sozinho estoura
+// esse limite quando deep research + síntese rodam sequencial na mesma
+// função. Split em 2 chamadas resolve sem precisar de infra nova
+// (queues, workers, etc.).
+
 import { Pipeline } from '../../../lib/ai/pipeline';
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
-// 300s é o default Fluid Compute e o teto do Pro plan. Plans Hobby
-// têm teto menor (60s); se estiver em Hobby, o pipeline quebra em
-// agentes longos e é hora de subir de plano.
 export const maxDuration = 300;
 export const config = { maxDuration: 300 };
 
@@ -16,7 +25,7 @@ export default async function handler(req, res) {
   const { user } = await getServerUser(req, res);
   if (!user) return res.status(401).json({ success: false, error: 'Não autenticado' });
 
-  const { projetoId, agentNum, modelKey, precomputedEnrichment } = req.body;
+  const { projetoId, agentNum } = req.body;
   if (!projetoId || agentNum === undefined) {
     return res.status(400).json({ success: false, error: 'Faltando projetoId ou agentNum' });
   }
@@ -38,10 +47,10 @@ export default async function handler(req, res) {
 
   try {
     const parsedAgentNum = parseInt(agentNum, 10);
-    const result = await Pipeline.runAgent(projetoId, parsedAgentNum, modelKey, precomputedEnrichment);
-    return res.status(200).json({ success: true, agentNum: parsedAgentNum, output: result });
+    const enrichment = await Pipeline.enrichOnly(projetoId, parsedAgentNum);
+    return res.status(200).json({ success: true, agentNum: parsedAgentNum, enrichment });
   } catch (err) {
-    console.error(`[API Engine] Erro ao rodar agente ${agentNum}:`, err);
+    console.error(`[API Enrich] Erro no agente ${agentNum}:`, err);
     return res.status(500).json({ success: false, error: err.message });
   }
 }
