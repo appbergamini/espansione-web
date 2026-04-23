@@ -154,8 +154,8 @@ export default function ProjetoDetalhes() {
     { key: 'gemini-pro', label: 'Gemini Pro', desc: 'Mais completo', provider: 'Google' },
     { key: 'claude-sonnet', label: 'Claude Sonnet', desc: 'Equilibrado', provider: 'Anthropic' },
     { key: 'claude-haiku', label: 'Claude Haiku', desc: 'Rápido e leve', provider: 'Anthropic' },
-    { key: 'gpt-4o', label: 'GPT-4o', desc: 'Alta capacidade', provider: 'OpenAI' },
-    { key: 'gpt-4o-mini', label: 'GPT-4o Mini', desc: 'Rápido e econômico', provider: 'OpenAI' },
+    { key: 'gpt-5.4', label: 'GPT-5.4', desc: 'Alta capacidade', provider: 'OpenAI' },
+    { key: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', desc: 'Rápido e econômico', provider: 'OpenAI' },
   ];
 
   const handleRequestRun = (agentNum) => {
