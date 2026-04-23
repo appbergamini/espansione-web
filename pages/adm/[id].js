@@ -183,7 +183,7 @@ export default function ProjetoDetalhes() {
       try { json = JSON.parse(raw); } catch {}
       if (!res.ok || !json?.success) {
         const msg = json?.error
-          || (res.status === 504 ? `Timeout (504) após ${300}s. Agente demorou demais — tente de novo ou escolha outro modelo.`
+          || (res.status === 504 ? `Timeout (504). Agente demorou demais — tente de novo ou escolha outro modelo.`
           : res.status === 413 ? 'Payload grande demais (413).'
           : res.status >= 500 ? `Erro ${res.status} no servidor.${raw ? ' ' + raw.slice(0, 200) : ''}`
           : `HTTP ${res.status}: ${raw.slice(0, 200) || 'sem corpo'}`);

@@ -12,7 +12,7 @@
       "memory": 3009
     },
     "pages/api/engine/run.js": {
-      "maxDuration": 300
+      "maxDuration": 800
     }
   }
 }
