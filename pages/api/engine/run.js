@@ -2,8 +2,13 @@ import { Pipeline } from '../../../lib/ai/pipeline';
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
-export const maxDuration = 120;
-export const config = { maxDuration: 120 };
+// Agent 5 v2 faz deep research (até 18 buscas web_search nativas do Claude)
+// + Tavily Extract em 5 URLs + síntese pelo Opus 4.7. Cenário pior
+// observado ~180-240s. 120s cortava a função e o frontend mostrava
+// "Falha ao comunicar com o servidor". 300s é o default Fluid Compute
+// e cobre com folga.
+export const maxDuration = 300;
+export const config = { maxDuration: 300 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

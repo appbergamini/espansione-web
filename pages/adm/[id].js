@@ -175,14 +175,24 @@ export default function ProjetoDetalhes() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projetoId: id, agentNum, modelKey })
       });
-      const json = await res.json();
-      if (!json.success) {
-        setEngineError(json.error || 'Falha desconhecida no Engine.');
+      // Captura texto primeiro — se a função atingir timeout, Vercel
+      // devolve HTML/text plain em vez de JSON, e res.json() estoura
+      // deixando o usuário sem pista do erro real.
+      const raw = await res.text();
+      let json = null;
+      try { json = JSON.parse(raw); } catch {}
+      if (!res.ok || !json?.success) {
+        const msg = json?.error
+          || (res.status === 504 ? `Timeout (504) após ${300}s. Agente demorou demais — tente de novo ou escolha outro modelo.`
+          : res.status === 413 ? 'Payload grande demais (413).'
+          : res.status >= 500 ? `Erro ${res.status} no servidor.${raw ? ' ' + raw.slice(0, 200) : ''}`
+          : `HTTP ${res.status}: ${raw.slice(0, 200) || 'sem corpo'}`);
+        setEngineError(msg);
       } else {
         await loadData();
       }
     } catch (err) {
-      setEngineError('Falha ao comunicar com o servidor.');
+      setEngineError(`Falha de rede: ${err.message || err}`);
     } finally {
       setRunningAgent(null);
     }
