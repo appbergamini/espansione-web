@@ -193,6 +193,7 @@ export default function OutputPage({
             conteudo={output.conteudo}
             resumoExecutivo={output.resumo_executivo}
             conclusoes={output.conclusoes}
+            fontes={output.fontes}
             vizData={vizData}
           />
         </div>

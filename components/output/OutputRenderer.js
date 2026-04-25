@@ -37,6 +37,12 @@ import {
  * @param {string} props.conteudo
  * @param {string} [props.resumoExecutivo]
  * @param {string} [props.conclusoes]
+ * @param {string} [props.fontes]  FIX.23 — bloco "Fontes Consultadas".
+ *   Quando presente, renderiza como ÚLTIMA seção, depois das Conclusões.
+ *   Antes só aparecia no PDF jsPDF (lib/pdf/outputPdf.js); na visualização
+ *   admin e no PDF gerado por Playwright (que captura esta página) o
+ *   campo era ignorado e algumas agentes (ex.: Agent 5) acabavam jogando
+ *   "## FONTES CONSULTADAS" dentro do <conteudo>, no meio do documento.
  * @param {Object} [props.vizData]
  * @param {boolean} [props.compactMode]  Modo consolidado (TASK 4.4):
  *   oculta boxes de Resumo Executivo e Conclusões (esses vão nas Partes
@@ -47,6 +53,7 @@ export default function OutputRenderer({
   conteudo,
   resumoExecutivo,
   conclusoes,
+  fontes,
   vizData = {},
   compactMode = false,
 }) {
@@ -110,6 +117,33 @@ export default function OutputRenderer({
           >
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {conclusoes}
+            </ReactMarkdown>
+          </div>
+        </section>
+      )}
+
+      {/* FIX.23 — Fontes Consultadas SEMPRE como última seção. */}
+      {!compactMode && fontes && String(fontes).trim() && (
+        <section
+          className="mt-8 p-6 rounded-xl"
+          style={{
+            backgroundColor: 'var(--viz-card-bg)',
+            border: '1px solid var(--viz-card-border)',
+            boxShadow: 'var(--viz-card-shadow)',
+          }}
+        >
+          <h2
+            className="text-xs uppercase tracking-wider font-semibold mb-3"
+            style={{ color: 'var(--viz-card-text-muted)' }}
+          >
+            Fontes Consultadas
+          </h2>
+          <div
+            className="output-prose"
+            style={{ color: 'var(--viz-card-text)', fontSize: '0.85rem' }}
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {fontes}
             </ReactMarkdown>
           </div>
         </section>
