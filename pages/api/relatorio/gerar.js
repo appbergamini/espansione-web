@@ -2,6 +2,7 @@ import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { generateNarratives } from '../../../lib/relatorio/narrativeGenerator';
 import { generatePdfBuffer } from '../../../lib/relatorio/pdfGenerator';
+import { normalizeScoresLegacy } from '../../../lib/relatorio/normalizeScores';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -52,12 +53,18 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Mapeamento não encontrado para este e-mail.' });
     }
 
-    const scores = assessment.scores_json;
+    const rawScores = assessment.scores_json;
     const nome = assessment.nome || email.split('@')[0];
 
-    if (!scores || !scores.disc) {
+    if (!rawScores || !rawScores.disc) {
       return res.status(400).json({ error: 'Dados de scores incompletos no assessment.' });
     }
+
+    // FIX.17 — banco tem dois formatos de scores_json (legado vs novo).
+    // RelatorioDisc + narrativeGenerator esperam o legado (comp/dA/lead).
+    // Normalizar antes de passar adiante para que assessments do formato
+    // novo não quebrem com Object.entries(undefined).
+    const scores = normalizeScoresLegacy(rawScores);
 
     const narratives = await generateNarratives(nome, scores);
     const pdfBuffer = await generatePdfBuffer({ nome, email, scores, narratives });
