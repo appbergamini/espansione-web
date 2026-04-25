@@ -154,6 +154,12 @@ export default function RelatorioDisc({ nome, email, scores, narratives, logoDat
     nar[k] = Array.isArray(v) ? v.join('\n') : String(v || '');
   }
 
+  // FIX.20 — flags pra esconder seções vazias (instrumento atual não
+  // mede DISC Adaptado nem matriz de Liderança 4 scores).
+  const dAHasData = ['D', 'I', 'S', 'C'].some(k => Number.isFinite(sc?.dA?.[k]) && sc.dA[k] > 0);
+  const leadHasData = Object.values(sc?.lead || {}).some(v => Number.isFinite(v) && v > 0);
+  const estiloString = (typeof sc?.estilo_lideranca === 'string' && sc.estilo_lideranca.trim()) ? sc.estilo_lideranca : null;
+
   const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const sorted = Object.entries(sc.comp || {}).sort((a, b) => b[1] - a[1]);
@@ -239,11 +245,15 @@ export default function RelatorioDisc({ nome, email, scores, narratives, logoDat
         {['D', 'I', 'S', 'C'].map(k => (
           <Bar key={`nat-${k}`} label={DN[k]} value={sc.disc[k]} max={100} color={COLORS[k]} />
         ))}
-        <View style={{ marginTop: 8 }} />
-        <Section title="DISC Adaptado" />
-        {['D', 'I', 'S', 'C'].map(k => (
-          <Bar key={`adp-${k}`} label={DN[k]} value={sc.dA[k]} max={100} color={COLORS[k]} />
-        ))}
+        {dAHasData && (
+          <>
+            <View style={{ marginTop: 8 }} />
+            <Section title="DISC Adaptado" />
+            {['D', 'I', 'S', 'C'].map(k => (
+              <Bar key={`adp-${k}`} label={DN[k]} value={sc.dA[k]} max={100} color={COLORS[k]} />
+            ))}
+          </>
+        )}
         <Footer />
       </Page>
 
@@ -265,10 +275,18 @@ export default function RelatorioDisc({ nome, email, scores, narratives, logoDat
         <BodyParagraphs text={nar.development} />
         <View style={{ marginTop: 12 }} />
         <Section title="Estilo de Liderança" />
-        <Bar label="Executivo" value={sc.lead?.Executivo || 0} max={50} color={COLORS.D} />
-        <Bar label="Motivador" value={sc.lead?.Motivador || 0} max={50} color={COLORS.I} />
-        <Bar label="Metódico" value={sc.lead?.['Metódico'] || sc.lead?.Metodico || 0} max={50} color={COLORS.S} />
-        <Bar label="Sistemático" value={sc.lead?.['Sistemático'] || sc.lead?.Sistematico || 0} max={50} color={COLORS.C} />
+        {leadHasData ? (
+          <>
+            <Bar label="Executivo" value={sc.lead?.Executivo || 0} max={50} color={COLORS.D} />
+            <Bar label="Motivador" value={sc.lead?.Motivador || 0} max={50} color={COLORS.I} />
+            <Bar label="Metódico" value={sc.lead?.['Metódico'] || sc.lead?.Metodico || 0} max={50} color={COLORS.S} />
+            <Bar label="Sistemático" value={sc.lead?.['Sistemático'] || sc.lead?.Sistematico || 0} max={50} color={COLORS.C} />
+          </>
+        ) : estiloString ? (
+          <Text style={[s.bodyText, { marginBottom: 4 }]}>
+            Estilo dominante: <Text style={{ fontWeight: 700, color: COLORS.teal }}>{estiloString}</Text>
+          </Text>
+        ) : null}
         <View style={{ marginTop: 8 }} />
         <BodyParagraphs text={nar.leadership} />
         <Footer />
