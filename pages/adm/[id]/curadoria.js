@@ -25,7 +25,7 @@ import {
   STATUS_COR,
   getEffectiveField,
 } from '../../../lib/curadoria/labels';
-import { getAgenteByNum } from '../../../lib/agents/catalog';
+import { getAgenteByNum, CATALOGO_AGENTES } from '../../../lib/agents/catalog';
 
 export default function CuradoriaPage() {
   const router = useRouter();
@@ -38,6 +38,7 @@ export default function CuradoriaPage() {
   const [erro, setErro] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [filtroAgente, setFiltroAgente] = useState('');
   const [busca, setBusca] = useState('');
   const [showFinalModal, setShowFinalModal] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
@@ -63,6 +64,7 @@ export default function CuradoriaPage() {
     const params = new URLSearchParams({ projeto_id: id });
     if (filtroStatus)    params.set('status', filtroStatus);
     if (filtroCategoria) params.set('categoria', filtroCategoria);
+    if (filtroAgente)    params.set('agent_num', filtroAgente);
     if (busca.trim())    params.set('q', busca.trim());
     const res = await fetch(`/api/analysis-blocks?${params}`);
     return res.json();
@@ -105,7 +107,7 @@ export default function CuradoriaPage() {
     const t = setTimeout(refreshBlocks, 200);
     return () => clearTimeout(t);
     /* eslint-disable-next-line */
-  }, [filtroStatus, filtroCategoria, busca]);
+  }, [filtroStatus, filtroCategoria, filtroAgente, busca]);
 
   const totalIncluidos = counts.incluidos || 0;
   const totalPendentes = counts.pendente_revisao || 0;
@@ -200,6 +202,14 @@ export default function CuradoriaPage() {
                 className="form-input"
                 style={{ flex: '1 1 220px', minWidth: '220px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}
               />
+              <select className="form-input" value={filtroAgente} onChange={e => setFiltroAgente(e.target.value)} style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}>
+                <option value="">Todos os agentes</option>
+                {CATALOGO_AGENTES.map(a => (
+                  <option key={a.agent_num} value={a.agent_num}>
+                    A{String(a.agent_num).padStart(2, '0')} — {a.nome_exibicao}
+                  </option>
+                ))}
+              </select>
               <select className="form-input" value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}>
                 <option value="">Todos os status</option>
                 {STATUS_LISTA.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
@@ -315,7 +325,15 @@ function AgenteSection({ agentNum, items, onChange }) {
           </div>
         </div>
       </header>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {/* FIX.27 — grid de 2 colunas por agente. Recolhe pra 1 coluna em telas pequenas. */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))',
+          gap: '0.75rem',
+          alignItems: 'start',
+        }}
+      >
         {items.map(b => (
           <BlockRow key={b.id} block={b} onChange={onChange} />
         ))}

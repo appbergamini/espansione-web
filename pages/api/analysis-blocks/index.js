@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ success: false, error: 'Apenas master/admin' });
   }
 
-  const { projeto_id, status, categoria, q } = req.query || {};
+  const { projeto_id, status, categoria, q, agent_num } = req.query || {};
   if (!projeto_id) {
     return res.status(400).json({ success: false, error: 'projeto_id obrigatório' });
   }
@@ -48,6 +48,9 @@ export default async function handler(req, res) {
 
   if (status)    query = query.eq('status', status);
   if (categoria) query = query.eq('categoria', categoria);
+  if (agent_num !== undefined && agent_num !== '' && Number.isFinite(Number(agent_num))) {
+    query = query.eq('agent_num', Number(agent_num));
+  }
   if (q && q.trim()) {
     const term = `%${q.trim()}%`;
     query = query.or(`titulo.ilike.${term},edited_titulo.ilike.${term},ai_evidencia.ilike.${term},ai_interpretacao.ilike.${term},ai_recomendacao.ilike.${term}`);
