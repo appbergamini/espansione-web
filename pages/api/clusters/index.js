@@ -8,7 +8,8 @@ import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 // FIX.30 — meta_json agora aceito; permite o agente Lean Clusters
 // gravar campos ricos (nivel_confianca, base_analise, mensagem_chave,
 // provas_necessarias, canais_prioritarios, evidencias, etc.).
-const CAMPOS_PERMITIDOS = ['nome', 'descricao', 'afinidades', 'motivacoes', 'objetivo_negocio', 'mensagem_ancora', 'ordem', 'meta_json'];
+// FIX.33 — `ativo` controla se o cluster entra no input do Agente 13.
+const CAMPOS_PERMITIDOS = ['nome', 'descricao', 'afinidades', 'motivacoes', 'objetivo_negocio', 'mensagem_ancora', 'ordem', 'meta_json', 'ativo'];
 
 export default async function handler(req, res) {
   const { user } = await getServerUser(req, res);

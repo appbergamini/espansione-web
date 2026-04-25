@@ -127,11 +127,11 @@ export default function ClustersCard({ projetoId }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.6rem' }}>
         <div>
           <h3 style={{ fontSize: '0.95rem', color: 'var(--accent-purple, #a78bfa)', margin: 0 }}>
-            Clusters de Comunicação ({clusters.length})
+            Clusters de Comunicação ({clusters.filter(c => c.ativo !== false).length}/{clusters.length} selecionados)
           </h3>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
             Lente de público pra comunicação (Módulo 2 Ana Couto). Personas continuam separadas — são pra experiência.
-            Defina aqui antes de rodar o Agente 13.
+            Marque os clusters que vão alimentar o Agente 13.
           </p>
         </div>
         {!editing && (
@@ -171,7 +171,7 @@ export default function ClustersCard({ projetoId }) {
       {!editing && clusters.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {clusters.map(c => (
-            <ClusterRow key={c.id} cluster={c} onEdit={() => startEdit(c)} onDelete={() => excluir(c)} />
+            <ClusterRow key={c.id} cluster={c} onEdit={() => startEdit(c)} onDelete={() => excluir(c)} onChange={load} />
           ))}
         </div>
       )}
@@ -239,18 +239,62 @@ export default function ClustersCard({ projetoId }) {
 
 // FIX.30 — Render rico do cluster: campos top-level + meta_json
 // (quando vier do agente Lean) com badges de confiança e base de análise.
-function ClusterRow({ cluster: c, onEdit, onDelete }) {
+// FIX.33 — checkbox "usar no Agente 13". Default ativo (compat com
+// clusters criados antes do fix). Quando desmarcado, cluster fica
+// guardado no banco mas não entra no input do agente.
+function ClusterRow({ cluster: c, onEdit, onDelete, onChange }) {
   const [aberto, setAberto] = useState(false);
+  const [togglingAtivo, setTogglingAtivo] = useState(false);
   const meta = c.meta_json || null;
   const conf = meta?.nivel_confianca || null;
   const base = meta?.base_analise || null;
   const tipo = meta?.tipo_publico || null;
+  const ativo = c.ativo !== false; // null/undefined também conta como ativo (compat)
 
   const corConfianca = conf === 'alto' ? '#10b981' : conf === 'baixo' ? '#ef4444' : '#f59e0b';
 
+  const toggleAtivo = async (e) => {
+    e.stopPropagation();
+    setTogglingAtivo(true);
+    try {
+      const r = await fetch(`/api/clusters/${c.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ativo: !ativo }),
+      });
+      const j = await r.json();
+      if (!j.success) throw new Error(j.error);
+      if (onChange) await onChange();
+    } catch (err) {
+      alert('Erro ao alternar: ' + err.message);
+    } finally {
+      setTogglingAtivo(false);
+    }
+  };
+
   return (
-    <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${meta ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.06)'}`, borderRadius: '8px', padding: '0.7rem 0.85rem' }}>
+    <div style={{
+      background: ativo ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)',
+      border: `1px solid ${ativo ? (meta ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.06)') : 'rgba(255,255,255,0.04)'}`,
+      borderRadius: '8px',
+      padding: '0.7rem 0.85rem',
+      opacity: ativo ? 1 : 0.55,
+      transition: 'opacity 0.15s, border-color 0.15s',
+    }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.3rem' }}>
+        <label
+          onClick={e => e.stopPropagation()}
+          title={ativo ? 'Desmarcar pra excluir do Agente 13' : 'Marcar pra usar no Agente 13'}
+          style={{ display: 'flex', alignItems: 'center', cursor: togglingAtivo ? 'wait' : 'pointer', marginRight: '0.2rem', marginTop: '0.1rem' }}
+        >
+          <input
+            type="checkbox"
+            checked={ativo}
+            disabled={togglingAtivo}
+            onChange={toggleAtivo}
+            style={{ width: '18px', height: '18px', cursor: togglingAtivo ? 'wait' : 'pointer', accentColor: '#10b981' }}
+          />
+        </label>
         <div style={{ flex: 1, minWidth: 0 }}>
           <strong style={{ color: '#fff', fontSize: '0.92rem' }}>{c.nome}</strong>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
@@ -258,6 +302,7 @@ function ClusterRow({ cluster: c, onEdit, onDelete }) {
             {tipo && <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{tipo.replace(/_/g, ' ')}</span>}
             {conf && <span style={{ fontSize: '0.65rem', color: corConfianca, border: `1px solid ${corConfianca}55`, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Confiança {conf}</span>}
             {base && <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>· {base.replace(/_/g, ' ')}</span>}
+            {!ativo && <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#94a3b8', background: 'rgba(148,163,184,0.12)', padding: '0.1rem 0.4rem', borderRadius: '4px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>fora do agente</span>}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.3rem' }}>

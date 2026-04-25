@@ -4,7 +4,8 @@ import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 // FIX.30 — meta_json agora aceito.
-const CAMPOS_PERMITIDOS = ['nome', 'descricao', 'afinidades', 'motivacoes', 'objetivo_negocio', 'mensagem_ancora', 'ordem', 'meta_json'];
+// FIX.33 — `ativo` controla se o cluster entra no input do Agente 13.
+const CAMPOS_PERMITIDOS = ['nome', 'descricao', 'afinidades', 'motivacoes', 'objetivo_negocio', 'mensagem_ancora', 'ordem', 'meta_json', 'ativo'];
 
 export default async function handler(req, res) {
   const { id } = req.query;
