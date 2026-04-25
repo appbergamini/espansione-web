@@ -25,6 +25,7 @@ import {
   STATUS_COR,
   getEffectiveField,
 } from '../../../lib/curadoria/labels';
+import { getAgenteByNum } from '../../../lib/agents/catalog';
 
 export default function CuradoriaPage() {
   const router = useRouter();
@@ -220,11 +221,11 @@ export default function CuradoriaPage() {
             </div>
           )}
 
-          {/* Lista linear de cards */}
+          {/* Lista agrupada por agente */}
           {blocks.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {blocks.map(b => (
-                <BlockRow key={b.id} block={b} onChange={refreshBlocks} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+              {agruparPorAgente(blocks).map(({ agentNum, items }) => (
+                <AgenteSection key={agentNum} agentNum={agentNum} items={items} onChange={refreshBlocks} />
               ))}
             </div>
           ) : (counts.total || 0) > 0 ? (
@@ -250,6 +251,79 @@ export default function CuradoriaPage() {
 }
 
 // ───────────────────────────── Subcomponentes ─────────────────────────────
+
+// FIX.26 — agrupa por agent_num preservando a ordem do backend.
+function agruparPorAgente(blocks) {
+  const mapa = new Map();
+  for (const b of blocks) {
+    const k = Number(b.agent_num);
+    if (!mapa.has(k)) mapa.set(k, []);
+    mapa.get(k).push(b);
+  }
+  return [...mapa.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([agentNum, items]) => ({ agentNum, items }));
+}
+
+function AgenteSection({ agentNum, items, onChange }) {
+  const meta = getAgenteByNum(agentNum);
+  const aprovados = items.filter(b => b.status === 'aprovado').length;
+  const pendentes = items.filter(b => b.status === 'pendente_revisao').length;
+  const incluidos = items.filter(b => b.incluir_no_relatorio).length;
+
+  return (
+    <section>
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          padding: '0.75rem 1rem',
+          background: 'rgba(107,163,255,0.06)',
+          border: '1px solid rgba(107,163,255,0.18)',
+          borderRadius: '10px',
+          marginBottom: '0.75rem',
+        }}
+      >
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            background: 'rgba(107,163,255,0.15)',
+            color: 'var(--accent-blue)',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            letterSpacing: '0.04em',
+            flexShrink: 0,
+          }}
+        >
+          A{String(agentNum).padStart(2, '0')}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', lineHeight: 1.25 }}>
+            {meta?.nome_exibicao || `Agente ${agentNum}`}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+            {items.length} {items.length === 1 ? 'bloco' : 'blocos'}
+            {pendentes > 0 && <> · <span style={{ color: STATUS_COR.pendente_revisao.fg }}>{pendentes} aguardando</span></>}
+            {aprovados > 0 && <> · <span style={{ color: STATUS_COR.aprovado.fg }}>{aprovados} aprovados</span></>}
+            {incluidos > 0 && <> · <span style={{ color: '#10b981' }}>📌 {incluidos} no relatório</span></>}
+          </div>
+        </div>
+      </header>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {items.map(b => (
+          <BlockRow key={b.id} block={b} onChange={onChange} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 
 function Metric({ label, value, cor }) {
   const fg = cor?.fg || 'var(--text-primary)';
