@@ -3,7 +3,8 @@
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
-const CAMPOS_PERMITIDOS = ['nome', 'descricao', 'afinidades', 'motivacoes', 'objetivo_negocio', 'mensagem_ancora', 'ordem'];
+// FIX.30 — meta_json agora aceito.
+const CAMPOS_PERMITIDOS = ['nome', 'descricao', 'afinidades', 'motivacoes', 'objetivo_negocio', 'mensagem_ancora', 'ordem', 'meta_json'];
 
 export default async function handler(req, res) {
   const { id } = req.query;

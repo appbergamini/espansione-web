@@ -1,4 +1,97 @@
-import { Campo, LegendSection, TextArea, TextAreaLongo, TabelaParalela } from './_ui';
+import { Campo, LegendSection, TextArea, TextAreaLongo, TabelaParalela, CheckboxGrid, ListaCurta } from './_ui';
+
+// FIX.30 — opções do Mapa Lean de Públicos Externos. Alimentam o agente
+// de Clusters Externos Lean (Fase C). Linguagem simples, opções típicas
+// pra PMEs brasileiras. Sem termos como "cluster" no formulário —
+// tradução fica do lado do consultor / IA.
+
+const OPCOES_DECISORES = [
+  'Dono / sócio',
+  'CEO / presidente',
+  'Diretor financeiro',
+  'Diretor de marketing / comunicação',
+  'Diretor comercial',
+  'Diretor de RH',
+  'Compras / suprimentos',
+  'Área técnica',
+  'Usuário final',
+  'Influenciador interno (sem decidir formalmente)',
+  'Indicação externa',
+];
+
+const OPCOES_MOMENTO_BUSCA = [
+  'Quando tem um problema urgente',
+  'Quando quer crescer',
+  'Quando quer melhorar imagem / reputação',
+  'Quando precisa substituir fornecedor',
+  'Quando recebeu indicação',
+  'Quando está comparando preços',
+  'Quando passa por mudança estratégica',
+  'Quando precisa profissionalizar algo',
+  'Quando viu algum conteúdo / case',
+  'Quando está insatisfeito com solução atual',
+];
+
+const OPCOES_OBJECOES_PRE_COMPRA = [
+  'Preço',
+  'Prazo',
+  'Medo de não dar resultado',
+  'Falta de clareza sobre o que será entregue',
+  'Comparação com concorrentes',
+  'Preferência por fornecedor conhecido',
+  'Dúvida sobre capacidade técnica',
+  'Dúvida sobre ROI',
+  'Falta de urgência',
+  'Processo decisório lento',
+  'Cliente acha que consegue fazer internamente',
+];
+
+const OPCOES_PERDA_PARA_QUEM = [
+  'Concorrente direto',
+  'Freelancer / profissional independente',
+  'Solução interna do cliente',
+  'Empresa mais barata',
+  'Empresa mais conhecida',
+  'Empresa mais rápida',
+  'Empresa mais digital / moderna',
+  'Cliente desistiu de comprar',
+  'Cliente adiou decisão',
+  'Cliente não percebeu valor suficiente',
+];
+
+const OPCOES_PROVAS_CONFIANCA = [
+  'Depoimentos',
+  'Avaliações Google',
+  'Cases',
+  'Portfólio',
+  'Antes e depois',
+  'Números / resultados',
+  'Certificações',
+  'Tempo de mercado',
+  'Reputação dos sócios',
+  'Indicação de cliente conhecido',
+  'Demonstração / amostra',
+  'Diagnóstico inicial',
+  'Proposta bem estruturada',
+  'Conteúdo técnico',
+  'Visita / reunião presencial',
+];
+
+const OPCOES_CANAIS_ORIGEM = [
+  'Indicação',
+  'Google (busca)',
+  'Instagram',
+  'LinkedIn',
+  'WhatsApp',
+  'Site',
+  'Eventos',
+  'Prospecção ativa (outbound)',
+  'Parcerias',
+  'Tráfego pago',
+  'Clientes antigos (recorrência)',
+  'Networking dos sócios',
+  'Vendedores / representantes',
+];
 
 export default function Parte5_VisaoFuturo({ dados, atualizar }) {
   return (
@@ -178,6 +271,132 @@ export default function Parte5_VisaoFuturo({ dados, atualizar }) {
         </Campo>
       </LegendSection>
 
+      {/* FIX.30 — Mapa Lean de Públicos Externos. Insumo do agente de
+          Clusters Externos Lean (Fase C) — gera 3-5 clusters acionáveis
+          a partir de poucos dados. Linguagem simples; sem termos como
+          "cluster". Tradução fica do lado da IA. Todos os campos são
+          opcionais — agente trabalha com o que tem e declara confiança. */}
+      <LegendSection titulo="5.7 Públicos externos: mapa lean">
+        <div style={{
+          background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.20)',
+          borderRadius: 8, padding: '0.75rem 0.95rem', marginBottom: '1rem',
+          fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.55,
+        }}>
+          Agora vamos entender melhor os públicos externos da empresa.
+          As respostas abaixo ajudam a IA a sugerir grupos prioritários
+          de comunicação, mensagens, provas de confiança e canais.
+          Não precisa ser uma pesquisa formal — responda com base na
+          experiência prática de venda e relacionamento com clientes.
+          Todos os campos são opcionais.
+        </div>
+
+        <Campo id="p7_clientes_atuais_tipos" label="22. Quais são os principais TIPOS de clientes que compram de vocês HOJE?"
+          hint="Liste por perfil, não por nome. Ex.: 'Diretores de marketing de empresas B2B grandes', 'Gestoras de patrimônio familiar', 'Equipes técnicas de operação'.">
+          <TextArea id="p7_clientes_atuais_tipos" value={dados.p7_clientes_atuais_tipos} onChange={v => atualizar('p7_clientes_atuais_tipos', v)} rows={3} />
+        </Campo>
+
+        <Campo label="23. Quais tipos de clientes vocês mais querem ATRAIR nos próximos 12 meses?"
+          hint="Até 3 perfis prioritários.">
+          <ListaCurta value={dados.p7_clientes_desejados} onChange={v => atualizar('p7_clientes_desejados', v)} max={3} placeholder="Perfil de cliente desejado" />
+        </Campo>
+
+        <Campo label="24. Quais tipos de clientes vocês querem ATRAIR MENOS ou EVITAR?"
+          hint="Até 3 perfis a evitar — pode ser por margem ruim, mau encaixe cultural, perfil tóxico, etc.">
+          <ListaCurta value={dados.p7_clientes_evitar} onChange={v => atualizar('p7_clientes_evitar', v)} max={3} placeholder="Perfil a evitar" />
+        </Campo>
+
+        <Campo label="25. Quem normalmente DECIDE a compra do lado do cliente?"
+          hint="Marque os papéis típicos.">
+          <CheckboxGrid
+            value={dados.p7_decisores}
+            onChange={v => atualizar('p7_decisores', v)}
+            opcoes={OPCOES_DECISORES}
+          />
+        </Campo>
+
+        <Campo id="p7_influenciadores" label="26. Quem influencia ou bloqueia essa decisão, mesmo sem decidir formalmente?"
+          hint="Ex.: 'a equipe técnica que avalia se a solução é boa', 'o sócio mais conservador que freia investimentos', 'um consultor externo do cliente'.">
+          <TextArea id="p7_influenciadores" value={dados.p7_influenciadores} onChange={v => atualizar('p7_influenciadores', v)} rows={2} />
+        </Campo>
+
+        <Campo label="27. Em que momento o cliente costuma procurar vocês?"
+          hint="Marque os gatilhos típicos.">
+          <CheckboxGrid
+            value={dados.p7_momento_busca}
+            onChange={v => atualizar('p7_momento_busca', v)}
+            opcoes={OPCOES_MOMENTO_BUSCA}
+          />
+        </Campo>
+
+        <Campo label="28. Quando vocês perdem uma venda, costumam perder para quem ou para o quê?"
+          hint="Marque os mais frequentes.">
+          <CheckboxGrid
+            value={dados.p7_perda_para_quem}
+            onChange={v => atualizar('p7_perda_para_quem', v)}
+            opcoes={OPCOES_PERDA_PARA_QUEM}
+          />
+        </Campo>
+
+        <Campo label="29. Quais objeções aparecem ANTES da compra?"
+          hint="Marque até 5 — as mais frequentes.">
+          <CheckboxGrid
+            value={dados.p7_objecoes_pre_compra}
+            onChange={v => atualizar('p7_objecoes_pre_compra', v)}
+            opcoes={OPCOES_OBJECOES_PRE_COMPRA}
+            max={5}
+          />
+        </Campo>
+
+        <Campo id="p7_objecoes_pre_compra_exemplo" label="30. Conte uma objeção REAL que vocês escutam (palavras do cliente).">
+          <TextArea id="p7_objecoes_pre_compra_exemplo" value={dados.p7_objecoes_pre_compra_exemplo} onChange={v => atualizar('p7_objecoes_pre_compra_exemplo', v)} rows={2}
+            placeholder='Ex.: "Adorei a proposta, mas como sei que vai dar certo?"' />
+        </Campo>
+
+        <Campo label="31. Que provas fazem o cliente CONFIAR em vocês?"
+          hint="Marque as que importam mais nas decisões reais.">
+          <CheckboxGrid
+            value={dados.p7_provas_confianca}
+            onChange={v => atualizar('p7_provas_confianca', v)}
+            opcoes={OPCOES_PROVAS_CONFIANCA}
+          />
+        </Campo>
+
+        <Campo label="32. Dessas provas, quais vocês JÁ TÊM bem estruturadas e quais ainda FALTAM?">
+          <TabelaParalela
+            colunas={[
+              { header: 'Já temos bem estruturadas', children: <TextArea id="p7_provas_existentes" value={dados.p7_provas_existentes} onChange={v => atualizar('p7_provas_existentes', v)} rows={3} /> },
+              { header: 'Faltam criar ou melhorar', children: <TextArea id="p7_provas_faltantes" value={dados.p7_provas_faltantes} onChange={v => atualizar('p7_provas_faltantes', v)} rows={3} /> },
+            ]}
+          />
+        </Campo>
+
+        <Campo label="33. De onde vêm os MELHORES clientes hoje?"
+          hint="Canais que mais trazem cliente bom (não necessariamente o canal com mais volume).">
+          <CheckboxGrid
+            value={dados.p7_canais_origem}
+            onChange={v => atualizar('p7_canais_origem', v)}
+            opcoes={OPCOES_CANAIS_ORIGEM}
+          />
+        </Campo>
+
+        <Campo id="p7_mensagens_funcionam" label="34. Quais mensagens ou argumentos MAIS FUNCIONAM na venda?">
+          <TextArea id="p7_mensagens_funcionam" value={dados.p7_mensagens_funcionam} onChange={v => atualizar('p7_mensagens_funcionam', v)} rows={2}
+            placeholder='Ex.: "somos especialistas em X", "evitamos dor de cabeça", "temos método", "entregamos no prazo".' />
+        </Campo>
+
+        <Campo id="p7_mensagens_desconfianca" label="35. Quais mensagens NÃO funcionam ou geram desconfiança?">
+          <TextArea id="p7_mensagens_desconfianca" value={dados.p7_mensagens_desconfianca} onChange={v => atualizar('p7_mensagens_desconfianca', v)} rows={2}
+            placeholder='Ex.: "líderes de mercado", "sustentável", "humanizado" — quando não vem com prova.' />
+        </Campo>
+
+        <Campo label="36. Liste até 3 clientes REAIS que representam o perfil ideal."
+          hint="Pode descrever sem nomear se houver questão de privacidade. Para cada cliente, preencha os 4 campos abaixo.">
+          {[1, 2, 3].map(n => (
+            <ClienteIdealBlock key={n} numero={n} dados={dados} atualizar={atualizar} />
+          ))}
+        </Campo>
+      </LegendSection>
+
       {/* FIX.29 (Fase A) — Comunicação atual e investimento. Insumo
           direto do Agente 13 (Plano de Comunicação) pra calibrar
           plano de conexões e share de budget por Onda com a realidade
@@ -250,5 +469,56 @@ export default function Parte5_VisaoFuturo({ dados, atualizar }) {
         </Campo>
       </LegendSection>
     </section>
+  );
+}
+
+// FIX.30 — bloco repetido pra cada um dos 3 clientes ideais.
+// Salva em respostas_json como p7_cliente_ideal_<n>_<campo>.
+function ClienteIdealBlock({ numero, dados, atualizar }) {
+  const k = (sufixo) => `p7_cliente_ideal_${numero}_${sufixo}`;
+  return (
+    <div style={{
+      border: '1px solid var(--glass-border)', borderRadius: 8,
+      padding: '0.85rem 1rem', marginBottom: '0.7rem',
+      background: 'rgba(255,255,255,0.015)',
+    }}>
+      <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--accent-blue, #6BA3FF)', marginBottom: '0.5rem', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+        Cliente ideal {numero}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <input
+          type="text"
+          className="form-input"
+          placeholder="Nome ou descrição (ex.: 'Indústria farmacêutica de médio porte do interior')"
+          value={dados[k('descricao')] || ''}
+          onChange={e => atualizar(k('descricao'), e.target.value)}
+          style={{ fontSize: '0.88rem' }}
+        />
+        <input
+          type="text"
+          className="form-input"
+          placeholder="Por que ele é ideal?"
+          value={dados[k('por_que_ideal')] || ''}
+          onChange={e => atualizar(k('por_que_ideal'), e.target.value)}
+          style={{ fontSize: '0.88rem' }}
+        />
+        <input
+          type="text"
+          className="form-input"
+          placeholder="O que ele valoriza?"
+          value={dados[k('valoriza')] || ''}
+          onChange={e => atualizar(k('valoriza'), e.target.value)}
+          style={{ fontSize: '0.88rem' }}
+        />
+        <input
+          type="text"
+          className="form-input"
+          placeholder="Como chegou até vocês?"
+          value={dados[k('como_chegou')] || ''}
+          onChange={e => atualizar(k('como_chegou'), e.target.value)}
+          style={{ fontSize: '0.88rem' }}
+        />
+      </div>
+    </div>
   );
 }
