@@ -70,18 +70,33 @@ export default async function handler(req, res) {
     }
 
     // Chama o modelo
+    // FIX.32 — maxTokens subido pra 16000 porque 5 clusters principais
+    // + 3 secundários com todos os campos detalhados (mensagem, provas,
+    // canais, evidências, validação, etc.) facilmente passam de 8k.
+    // Reasoning models (gpt-5/o1) consomem ainda mais por dentro.
     const result = await AIRouter.callModel(
       buildSystemPrompt(),
       [{ role: 'user', content: buildUserPrompt(context) }],
-      { modelKey, maxTokens: 8192, temperature: 0.5 },
+      { modelKey, maxTokens: 16000, temperature: 0.5 },
     );
 
-    const json = tryParseJson(result?.text);
+    const rawText = String(result?.text || '');
+    const json = tryParseJson(rawText);
     if (!json || !Array.isArray(json.clusters)) {
-      console.error('[gerar-lean] resposta sem clusters[]:', String(result?.text || '').slice(0, 600));
+      console.error('[gerar-lean] resposta sem clusters[] — modelo:', modelKey, '— raw preview:', rawText.slice(0, 800));
+      // FIX.32 — expõe preview do raw na resposta pra o user conseguir
+      // diagnosticar pelo alert e mandar pra mim. Limitado a 600 chars
+      // (suficiente pra ver se foi truncado vs prosa vs JSON malformado).
+      const preview = rawText.slice(0, 600);
       return res.status(502).json({
         success: false,
         error: 'Modelo retornou resposta sem JSON válido com clusters[]. Tente outro modelo.',
+        debug: {
+          modelo: AIRouter.MODELS[modelKey].id,
+          raw_length: rawText.length,
+          raw_preview: preview,
+          parse_falhou_em: !json ? 'JSON.parse rejected' : 'json.clusters não é array',
+        },
       });
     }
 

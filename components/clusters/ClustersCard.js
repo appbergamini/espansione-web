@@ -104,7 +104,15 @@ export default function ClustersCard({ projetoId }) {
         body: JSON.stringify({ projeto_id: projetoId, modelKey }),
       });
       const j = await r.json();
-      if (!j.success) throw new Error(j.error || 'Falha na geração');
+      if (!j.success) {
+        // FIX.32 — quando o modelo retorna sem JSON, mostra preview no
+        // console e oferece o raw num alert pra debug rápido.
+        if (j.debug) {
+          console.error('[gerar-lean debug]', j.debug);
+          throw new Error(`${j.error}\n\nModelo: ${j.debug.modelo}\nResposta: ${j.debug.raw_length} chars\nPrefixo:\n${j.debug.raw_preview?.slice(0, 200)}…`);
+        }
+        throw new Error(j.error || 'Falha na geração');
+      }
       alert(`✓ ${j.criados || 0} cluster(s) criado(s) pela IA. Confidência: ${j.nivel_confianca_geral || '—'}.`);
       await load();
     } catch (e) {
