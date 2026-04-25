@@ -1,17 +1,21 @@
-// FIX.24 — Curadoria Estratégica do Relatório.
-// Tela master/admin que materializa cada output dos 15 agentes em
-// "achados curáveis" (analysis_blocks). Cada bloco separa Fato /
-// Interpretação / Recomendação e tem fluxo editorial completo: aprovar,
-// editar, excluir do relatório, marcar pra discussão, comentar,
-// solicitar reanálise, restaurar versão IA.
+// FIX.24 / FIX.25 — Curadoria Estratégica do Relatório.
+// FIX.25: simplificação da UX. Removido o painel lateral grande;
+// tudo inline na lista. Cada card mostra título + status + categoria
+// + checkbox "Incluir no relatório" + botão Aprovar + botão Editar.
+// Click no card expande pra ver as 3 camadas (Fato/Interpretação/
+// Recomendação) em texto read-only. Click em Editar troca cada camada
+// por textarea inline. Ações secundárias (comentar, reanalisar,
+// restaurar IA, histórico) ficam num "Mais opções" colapsado.
 //
 // Filosofia: "A IA organiza, acelera e sugere. A Espansione valida,
 // interpreta e decide o que vira direcionamento estratégico."
 
 import Head from 'next/head';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { supabase } from '../../../lib/supabaseClient';
 import {
   CATEGORIA_LABEL,
@@ -21,7 +25,6 @@ import {
   STATUS_COR,
   getEffectiveField,
 } from '../../../lib/curadoria/labels';
-import { getAgenteByNum } from '../../../lib/agents/catalog';
 
 export default function CuradoriaPage() {
   const router = useRouter();
@@ -35,7 +38,6 @@ export default function CuradoriaPage() {
   const [filtroStatus, setFiltroStatus] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [busca, setBusca] = useState('');
-  const [selecionado, setSelecionado] = useState(null); // bloco aberto no painel lateral
   const [showFinalModal, setShowFinalModal] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
 
@@ -55,6 +57,15 @@ export default function CuradoriaPage() {
     })();
     return () => { active = false; };
   }, [router]);
+
+  const fetchBlocks = async () => {
+    const params = new URLSearchParams({ projeto_id: id });
+    if (filtroStatus)    params.set('status', filtroStatus);
+    if (filtroCategoria) params.set('categoria', filtroCategoria);
+    if (busca.trim())    params.set('q', busca.trim());
+    const res = await fetch(`/api/analysis-blocks?${params}`);
+    return res.json();
+  };
 
   const loadAll = async () => {
     if (!id) return;
@@ -79,25 +90,18 @@ export default function CuradoriaPage() {
     }
   };
 
-  const fetchBlocks = async () => {
-    const params = new URLSearchParams({ projeto_id: id });
-    if (filtroStatus)    params.set('status', filtroStatus);
-    if (filtroCategoria) params.set('categoria', filtroCategoria);
-    if (busca.trim())    params.set('q', busca.trim());
-    const res = await fetch(`/api/analysis-blocks?${params}`);
-    return res.json();
+  const refreshBlocks = async () => {
+    const bl = await fetchBlocks();
+    if (bl?.success) {
+      setBlocks(bl.blocks || []);
+      setCounts(bl.counts || {});
+    }
   };
 
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [id]);
   useEffect(() => {
     if (!id) return;
-    const t = setTimeout(async () => {
-      const bl = await fetchBlocks();
-      if (bl?.success) {
-        setBlocks(bl.blocks || []);
-        setCounts(bl.counts || {});
-      }
-    }, 200);
+    const t = setTimeout(refreshBlocks, 200);
     return () => clearTimeout(t);
     /* eslint-disable-next-line */
   }, [filtroStatus, filtroCategoria, busca]);
@@ -148,7 +152,6 @@ export default function CuradoriaPage() {
             </button>
           </div>
 
-          {/* Título + projeto */}
           <div style={{ marginBottom: '1.5rem' }}>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>
               Curadoria Estratégica · {projeto?.cliente || projeto?.nome || ''}
@@ -196,47 +199,32 @@ export default function CuradoriaPage() {
                 className="form-input"
                 style={{ flex: '1 1 220px', minWidth: '220px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}
               />
-              <select
-                className="form-input"
-                value={filtroStatus}
-                onChange={e => setFiltroStatus(e.target.value)}
-                style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}
-              >
+              <select className="form-input" value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}>
                 <option value="">Todos os status</option>
                 {STATUS_LISTA.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
               </select>
-              <select
-                className="form-input"
-                value={filtroCategoria}
-                onChange={e => setFiltroCategoria(e.target.value)}
-                style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}
-              >
+              <select className="form-input" value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)} style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', margin: 0 }}>
                 <option value="">Todas as categorias</option>
                 {CATEGORIAS_LISTA.map(c => <option key={c} value={c}>{CATEGORIA_LABEL[c]}</option>)}
               </select>
-              <button
-                onClick={handleBackfill}
-                disabled={backfilling}
-                title="Re-executa o parser sobre outputs existentes (idempotente)"
-                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', padding: '0.45rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
-              >
+              <button onClick={handleBackfill} disabled={backfilling} title="Re-executa o parser sobre outputs existentes (idempotente)"
+                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', padding: '0.45rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}>
                 {backfilling ? 'Sincronizando…' : '↻ Sincronizar'}
               </button>
             </div>
           )}
 
-          {/* Erro */}
           {erro && (
             <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--brand-red)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem' }}>
               {erro}
             </div>
           )}
 
-          {/* Lista de cards */}
+          {/* Lista linear de cards */}
           {blocks.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {blocks.map(b => (
-                <BlockCard key={b.id} block={b} onClick={() => setSelecionado(b)} />
+                <BlockRow key={b.id} block={b} onChange={refreshBlocks} />
               ))}
             </div>
           ) : (counts.total || 0) > 0 ? (
@@ -247,24 +235,6 @@ export default function CuradoriaPage() {
         </main>
       </div>
 
-      {/* Painel de edição */}
-      {selecionado && (
-        <BlockEditor
-          block={selecionado}
-          onClose={() => setSelecionado(null)}
-          onChange={async () => {
-            const bl = await fetchBlocks();
-            if (bl?.success) {
-              setBlocks(bl.blocks || []);
-              setCounts(bl.counts || {});
-              const novo = (bl.blocks || []).find(x => x.id === selecionado.id);
-              if (novo) setSelecionado(novo);
-            }
-          }}
-        />
-      )}
-
-      {/* Modal Gerar Relatório Final */}
       {showFinalModal && (
         <FinalModal
           counts={counts}
@@ -279,7 +249,7 @@ export default function CuradoriaPage() {
   );
 }
 
-// ────────────── Subcomponentes ──────────────
+// ───────────────────────────── Subcomponentes ─────────────────────────────
 
 function Metric({ label, value, cor }) {
   const fg = cor?.fg || 'var(--text-primary)';
@@ -312,78 +282,31 @@ function ConfiancaPill({ confianca }) {
   );
 }
 
-function BlockCard({ block, onClick }) {
-  const titulo = getEffectiveField(block, 'titulo');
-  const evidencia = getEffectiveField(block, 'evidencia');
-  const meta = getAgenteByNum(block.agent_num);
+// ─────────────────────── Card linha (expandível inline) ───────────────────────
 
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        textAlign: 'left',
-        background: 'var(--bg-tertiary)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: '12px',
-        padding: '1rem',
-        cursor: 'pointer',
-        color: 'inherit',
-        transition: 'all 0.15s',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(107,163,255,0.4)'; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <StatusBadge status={block.status} />
-        {block.incluir_no_relatorio && (
-          <span title="Incluído no relatório final" style={{ fontSize: '0.85rem' }}>📌</span>
-        )}
-      </div>
-      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
-        {CATEGORIA_LABEL[block.categoria] || block.categoria} · A{String(block.agent_num).padStart(2,'0')}{meta?.nome_curto ? '' : ''}
-      </div>
-      <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem', lineHeight: 1.3 }}>
-        {titulo}
-      </div>
-      {evidencia && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {evidencia}
-        </div>
-      )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-        <ConfiancaPill confianca={block.ai_confianca} />
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Abrir →</span>
-      </div>
-    </button>
-  );
-}
+function BlockRow({ block, onChange }) {
+  const [expandido, setExpandido] = useState(false);
+  const [editando, setEditando] = useState(false);
 
-// ────────────── Painel de edição (modal lateral) ──────────────
-function BlockEditor({ block, onClose, onChange }) {
-  const [titulo, setTitulo] = useState(getEffectiveField(block, 'titulo') || '');
-  const [evidencia, setEvidencia] = useState(getEffectiveField(block, 'evidencia') || '');
-  const [interpretacao, setInterpretacao] = useState(getEffectiveField(block, 'interpretacao') || '');
-  const [recomendacao, setRecomendacao] = useState(getEffectiveField(block, 'recomendacao') || '');
-  const [notasInternas, setNotasInternas] = useState(block.notas_internas || '');
-  const [novoComentario, setNovoComentario] = useState('');
-  const [comentarios, setComentarios] = useState([]);
-  const [versoes, setVersoes] = useState([]);
+  // Estado de edição local — só usado quando editando=true
+  const [titulo, setTitulo] = useState('');
+  const [evidencia, setEvidencia] = useState('');
+  const [interpretacao, setInterpretacao] = useState('');
+  const [recomendacao, setRecomendacao] = useState('');
   const [salvando, setSalvando] = useState(false);
-  const [acaoAtiva, setAcaoAtiva] = useState('');
 
+  // Reset estado de edição quando o bloco muda
   useEffect(() => {
     setTitulo(getEffectiveField(block, 'titulo') || '');
     setEvidencia(getEffectiveField(block, 'evidencia') || '');
     setInterpretacao(getEffectiveField(block, 'interpretacao') || '');
     setRecomendacao(getEffectiveField(block, 'recomendacao') || '');
-    setNotasInternas(block.notas_internas || '');
-    fetch(`/api/analysis-blocks/${block.id}`).then(r => r.json()).then(json => {
-      if (json?.success) {
-        setComentarios(json.comentarios || []);
-        setVersoes(json.versoes || []);
-      }
-    });
-  }, [block.id]);
+  }, [block.id, block.updated_at]);
+
+  const tituloEfetivo = getEffectiveField(block, 'titulo');
+  const evidenciaEfetiva = getEffectiveField(block, 'evidencia');
+  const interpretacaoEfetiva = getEffectiveField(block, 'interpretacao');
+  const recomendacaoEfetiva = getEffectiveField(block, 'recomendacao');
 
   const patch = async (body) => {
     const res = await fetch(`/api/analysis-blocks/${block.id}`, {
@@ -396,7 +319,29 @@ function BlockEditor({ block, onClose, onChange }) {
     return json.block;
   };
 
-  const salvarEdicao = async () => {
+  const handleAprovar = async (e) => {
+    e.stopPropagation();
+    try {
+      await patch({ status: 'aprovado', incluir_no_relatorio: true });
+      await onChange();
+    } catch (err) { alert('Erro: ' + err.message); }
+  };
+
+  const handleToggleIncluir = async (e) => {
+    e.stopPropagation();
+    try {
+      await patch({ incluir_no_relatorio: !block.incluir_no_relatorio });
+      await onChange();
+    } catch (err) { alert('Erro: ' + err.message); }
+  };
+
+  const handleEditarClick = (e) => {
+    e.stopPropagation();
+    setExpandido(true);
+    setEditando(true);
+  };
+
+  const handleSalvar = async () => {
     setSalvando(true);
     try {
       await patch({
@@ -404,45 +349,256 @@ function BlockEditor({ block, onClose, onChange }) {
         edited_evidencia: evidencia,
         edited_interpretacao: interpretacao,
         edited_recomendacao: recomendacao,
-        notas_internas: notasInternas,
       });
+      setEditando(false);
       await onChange();
-    } catch (e) {
-      alert('Erro: ' + e.message);
+    } catch (err) {
+      alert('Erro: ' + err.message);
     } finally {
       setSalvando(false);
     }
   };
 
+  const handleCancelarEdicao = () => {
+    setTitulo(getEffectiveField(block, 'titulo') || '');
+    setEvidencia(getEffectiveField(block, 'evidencia') || '');
+    setInterpretacao(getEffectiveField(block, 'interpretacao') || '');
+    setRecomendacao(getEffectiveField(block, 'recomendacao') || '');
+    setEditando(false);
+  };
+
+  return (
+    <div
+      style={{
+        background: 'var(--bg-tertiary)',
+        border: `1px solid ${block.incluir_no_relatorio ? 'rgba(16,185,129,0.35)' : 'var(--glass-border)'}`,
+        borderRadius: '12px',
+        overflow: 'hidden',
+      }}
+    >
+      {/* HEADER (sempre visível, click expande) */}
+      <div
+        onClick={() => setExpandido(v => !v)}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr auto',
+          gap: '1rem',
+          alignItems: 'center',
+          padding: '1rem 1.1rem',
+          cursor: 'pointer',
+        }}
+      >
+        {/* Checkbox "Incluir no relatório" */}
+        <label
+          onClick={e => e.stopPropagation()}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', userSelect: 'none' }}
+          title="Incluir este bloco no relatório final"
+        >
+          <input
+            type="checkbox"
+            checked={!!block.incluir_no_relatorio}
+            onChange={handleToggleIncluir}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+        </label>
+
+        {/* Título + meta */}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+            {CATEGORIA_LABEL[block.categoria] || block.categoria} · A{String(block.agent_num).padStart(2, '0')}
+          </div>
+          <div style={{ fontSize: '1rem', fontWeight: 600, color: '#fff', lineHeight: 1.3, marginBottom: '0.35rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {tituloEfetivo}
+          </div>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <StatusBadge status={block.status} />
+            <ConfiancaPill confianca={block.ai_confianca} />
+            {block.incluir_no_relatorio && (
+              <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 700 }}>📌 NO RELATÓRIO</span>
+            )}
+          </div>
+        </div>
+
+        {/* Ações rápidas */}
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <button
+            onClick={handleAprovar}
+            disabled={block.status === 'aprovado'}
+            title="Aprovar e incluir no relatório"
+            style={{
+              background: block.status === 'aprovado' ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.1)',
+              border: '1px solid rgba(16,185,129,0.4)',
+              color: '#10b981',
+              borderRadius: '8px',
+              padding: '0.45rem 0.85rem',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: block.status === 'aprovado' ? 'default' : 'pointer',
+            }}
+          >
+            ✓ {block.status === 'aprovado' ? 'Aprovado' : 'Aprovar'}
+          </button>
+          <button
+            onClick={handleEditarClick}
+            title="Editar este bloco"
+            style={{
+              background: 'rgba(107,163,255,0.1)',
+              border: '1px solid rgba(107,163,255,0.4)',
+              color: '#6BA3FF',
+              borderRadius: '8px',
+              padding: '0.45rem 0.85rem',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            ✏ Editar
+          </button>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', minWidth: '14px' }}>
+            {expandido ? '▾' : '▸'}
+          </span>
+        </div>
+      </div>
+
+      {/* CORPO EXPANDIDO */}
+      {expandido && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '1rem 1.1rem 1.1rem', background: 'rgba(0,0,0,0.15)' }}>
+          {!editando ? (
+            <>
+              <CamadaLeitura label="Fato / Evidência" subtitle="O que se observa nos dados — citação literal, número, padrão repetido." texto={evidenciaEfetiva} editado={!!block.edited_evidencia} />
+              <CamadaLeitura label="Interpretação sugerida" subtitle="O que esse fato sugere estrategicamente. Hipótese, não verdade." texto={interpretacaoEfetiva} editado={!!block.edited_interpretacao} />
+              <CamadaLeitura label="Recomendação sugerida" subtitle="Ação concreta que o achado pede." texto={recomendacaoEfetiva} editado={!!block.edited_recomendacao} />
+
+              <AcoesSecundarias block={block} onChange={onChange} />
+            </>
+          ) : (
+            <>
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>Título</label>
+                <input value={titulo} onChange={e => setTitulo(e.target.value)} className="form-input" style={{ marginTop: '0.35rem', fontSize: '0.95rem' }} />
+              </div>
+              <CamadaEdit label="Fato / Evidência" subtitle="O que se observa nos dados — citação literal, número, padrão repetido." value={evidencia} onChange={setEvidencia} />
+              <CamadaEdit label="Interpretação sugerida" subtitle="O que esse fato sugere estrategicamente. Hipótese, não verdade." value={interpretacao} onChange={setInterpretacao} />
+              <CamadaEdit label="Recomendação sugerida" subtitle="Ação concreta que o achado pede." value={recomendacao} onChange={setRecomendacao} />
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button onClick={handleSalvar} disabled={salvando} className="btn-primary" style={{ padding: '0.5rem 1rem' }}>
+                  {salvando ? 'Salvando…' : 'Salvar edição'}
+                </button>
+                <button onClick={handleCancelarEdicao} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', padding: '0.5rem 0.9rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CamadaLeitura({ label, subtitle, texto, editado }) {
+  return (
+    <div style={{ marginBottom: '0.9rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.15rem' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{label}</label>
+        {editado && <span style={{ fontSize: '0.65rem', color: 'var(--accent-blue)' }}>editado</span>}
+      </div>
+      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem' }}>{subtitle}</p>
+      {texto ? (
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.55, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', padding: '0.6rem 0.8rem' }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{texto}</ReactMarkdown>
+        </div>
+      ) : (
+        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>— vazio —</div>
+      )}
+    </div>
+  );
+}
+
+function CamadaEdit({ label, subtitle, value, onChange }) {
+  return (
+    <div style={{ marginBottom: '0.9rem' }}>
+      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{label}</label>
+      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0.4rem' }}>{subtitle}</p>
+      <textarea value={value || ''} onChange={e => onChange(e.target.value)} rows={4} className="form-input" style={{ fontSize: '0.85rem' }} />
+    </div>
+  );
+}
+
+// ─────────────── Ações secundárias (mais opções, comentários, histórico) ───────────────
+
+function AcoesSecundarias({ block, onChange }) {
+  const [aberto, setAberto] = useState(false);
+  const [notasInternas, setNotasInternas] = useState(block.notas_internas || '');
+  const [novoComentario, setNovoComentario] = useState('');
+  const [comentarios, setComentarios] = useState([]);
+  const [versoes, setVersoes] = useState([]);
+  const [loadingDetalhes, setLoadingDetalhes] = useState(false);
+
+  useEffect(() => {
+    setNotasInternas(block.notas_internas || '');
+  }, [block.id, block.notas_internas]);
+
+  const carregarDetalhes = async () => {
+    setLoadingDetalhes(true);
+    try {
+      const res = await fetch(`/api/analysis-blocks/${block.id}`);
+      const json = await res.json();
+      if (json?.success) {
+        setComentarios(json.comentarios || []);
+        setVersoes(json.versoes || []);
+      }
+    } finally {
+      setLoadingDetalhes(false);
+    }
+  };
+
+  const toggleAberto = async () => {
+    if (!aberto && comentarios.length === 0 && versoes.length === 0) {
+      await carregarDetalhes();
+    }
+    setAberto(v => !v);
+  };
+
+  const patch = async (body) => {
+    const res = await fetch(`/api/analysis-blocks/${block.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.block;
+  };
+
   const mudarStatus = async (status, incluir = null) => {
-    setAcaoAtiva(status);
     try {
       const body = { status };
       if (incluir !== null) body.incluir_no_relatorio = incluir;
       await patch(body);
       await onChange();
-    } catch (e) {
-      alert('Erro: ' + e.message);
-    } finally {
-      setAcaoAtiva('');
-    }
+    } catch (e) { alert('Erro: ' + e.message); }
+  };
+
+  const salvarNotas = async () => {
+    try {
+      await patch({ notas_internas: notasInternas });
+      await onChange();
+    } catch (e) { alert('Erro: ' + e.message); }
   };
 
   const enviarComentario = async () => {
     if (!novoComentario.trim()) return;
     try {
       const res = await fetch(`/api/analysis-blocks/${block.id}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ comentario: novoComentario.trim() }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       setComentarios([...comentarios, json.comentario]);
       setNovoComentario('');
-    } catch (e) {
-      alert('Erro: ' + e.message);
-    }
+    } catch (e) { alert('Erro: ' + e.message); }
   };
 
   const restaurar = async () => {
@@ -452,9 +608,8 @@ function BlockEditor({ block, onClose, onChange }) {
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       await onChange();
-    } catch (e) {
-      alert('Erro: ' + e.message);
-    }
+      await carregarDetalhes();
+    } catch (e) { alert('Erro: ' + e.message); }
   };
 
   const reanalisar = async () => {
@@ -464,182 +619,112 @@ function BlockEditor({ block, onClose, onChange }) {
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       await onChange();
-    } catch (e) {
-      alert('Erro: ' + e.message);
-    }
+      await carregarDetalhes();
+    } catch (e) { alert('Erro: ' + e.message); }
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', justifyContent: 'flex-end' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} />
-      <aside style={{ position: 'relative', width: '760px', maxWidth: '95vw', height: '100vh', overflowY: 'auto', background: 'var(--bg-secondary, #0a1122)', borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '1.75rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        {/* Topo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
-              {CATEGORIA_LABEL[block.categoria]} · A{String(block.agent_num).padStart(2,'0')}
-            </p>
-            <input
-              value={titulo}
-              onChange={e => setTitulo(e.target.value)}
-              placeholder="Título do achado"
-              className="form-input"
-              style={{ marginTop: '0.4rem', fontSize: '1.1rem', fontWeight: 600 }}
-            />
-          </div>
-          <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', padding: '0.4rem 0.7rem', cursor: 'pointer', fontSize: '0.85rem' }}>Fechar</button>
-        </div>
+    <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.6rem' }}>
+      <button
+        onClick={toggleAberto}
+        style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '0.78rem', cursor: 'pointer', padding: 0 }}
+      >
+        {aberto ? '▾ Fechar opções avançadas' : '▸ Mais opções (status, notas, comentários, histórico)'}
+      </button>
 
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <StatusBadge status={block.status} />
-          <ConfiancaPill confianca={block.ai_confianca} />
-          {block.incluir_no_relatorio && <span style={{ fontSize: '0.7rem', color: 'var(--accent-blue)' }}>📌 No relatório</span>}
-        </div>
-
-        {/* Camadas separadas: Fato | Interpretação | Recomendação */}
-        <CamadaEdit
-          label="Fato / Evidência"
-          subtitle="O que se observa nos dados — citação literal, número, padrão repetido. Sem interpretar aqui."
-          value={evidencia}
-          onChange={setEvidencia}
-          aiOriginal={block.ai_evidencia}
-        />
-        <CamadaEdit
-          label="Interpretação sugerida"
-          subtitle="O que esse fato sugere estrategicamente. Hipótese, não verdade."
-          value={interpretacao}
-          onChange={setInterpretacao}
-          aiOriginal={block.ai_interpretacao}
-        />
-        <CamadaEdit
-          label="Recomendação sugerida"
-          subtitle="Ação concreta que o achado pede."
-          value={recomendacao}
-          onChange={setRecomendacao}
-          aiOriginal={block.ai_recomendacao}
-        />
-
-        {/* Notas internas */}
-        <div>
-          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>Notas internas (bastidor)</label>
-          <textarea
-            value={notasInternas}
-            onChange={e => setNotasInternas(e.target.value)}
-            rows={2}
-            className="form-input"
-            style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}
-            placeholder="Visível só pra equipe Espansione, nunca aparece no relatório."
-          />
-        </div>
-
-        {/* Salvar */}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button onClick={salvarEdicao} disabled={salvando} className="btn-primary" style={{ padding: '0.55rem 1rem' }}>
-            {salvando ? 'Salvando…' : 'Salvar edição'}
-          </button>
-          <button onClick={restaurar} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', padding: '0.5rem 0.9rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-            ↺ Restaurar IA
-          </button>
-        </div>
-
-        {/* Ações editoriais */}
-        <div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.5rem' }}>Status editorial</p>
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            <AcaoBtn ativo={block.status === 'aprovado'} onClick={() => mudarStatus('aprovado', true)} corFg="#10b981">✓ Aprovar</AcaoBtn>
-            <AcaoBtn ativo={block.status === 'levar_discussao'} onClick={() => mudarStatus('levar_discussao')} corFg="#ec4899">💬 Levar pra discussão</AcaoBtn>
-            <AcaoBtn ativo={block.status === 'somente_bastidor'} onClick={() => mudarStatus('somente_bastidor', false)} corFg="#a78bfa">Somente bastidor</AcaoBtn>
-            <AcaoBtn ativo={block.status === 'excluido'} onClick={() => mudarStatus('excluido', false)} corFg="#94a3b8">✗ Excluir do relatório</AcaoBtn>
-            <AcaoBtn ativo={block.status === 'validado_cliente'} onClick={() => mudarStatus('validado_cliente', true)} corFg="#22c55e">Validado com cliente</AcaoBtn>
-            <AcaoBtn ativo={block.status === 'reanalise_solicitada'} onClick={reanalisar} corFg="#fb7185">⟳ Solicitar reanálise</AcaoBtn>
-          </div>
-        </div>
-
-        {/* Comentários */}
-        <div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.5rem' }}>Comentários ({comentarios.length})</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            {comentarios.map(c => (
-              <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '0.5rem 0.75rem' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  {c.autor_tipo === 'consultor' ? 'Consultor' : 'Cliente'} · {new Date(c.created_at).toLocaleString('pt-BR')}
-                </div>
-                <div style={{ fontSize: '0.85rem', color: '#fff', whiteSpace: 'pre-wrap' }}>{c.comentario}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              value={novoComentario}
-              onChange={e => setNovoComentario(e.target.value)}
-              placeholder="Comentário interno…"
-              className="form-input"
-              style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem 0.75rem' }}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarComentario(); } }}
-            />
-            <button onClick={enviarComentario} className="btn-primary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>Comentar</button>
-          </div>
-        </div>
-
-        {/* Histórico de versões */}
-        {versoes.length > 0 && (
-          <details>
-            <summary style={{ cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Histórico de versões ({versoes.length})</summary>
-            <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              {versoes.map(v => (
-                <div key={v.id}>
-                  <strong>{v.tipo}</strong> · {new Date(v.created_at).toLocaleString('pt-BR')}
-                </div>
-              ))}
+      {aberto && (
+        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          {/* Status alternativos */}
+          <div>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.4rem' }}>Status alternativos</p>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <BtnAcao ativo={block.status === 'levar_discussao'} onClick={() => mudarStatus('levar_discussao')} cor="#ec4899">💬 Levar pra discussão</BtnAcao>
+              <BtnAcao ativo={block.status === 'somente_bastidor'} onClick={() => mudarStatus('somente_bastidor', false)} cor="#a78bfa">Somente bastidor</BtnAcao>
+              <BtnAcao ativo={block.status === 'excluido'} onClick={() => mudarStatus('excluido', false)} cor="#94a3b8">✗ Excluir</BtnAcao>
+              <BtnAcao ativo={block.status === 'validado_cliente'} onClick={() => mudarStatus('validado_cliente', true)} cor="#22c55e">Validado com cliente</BtnAcao>
+              <BtnAcao ativo={block.status === 'reanalise_solicitada'} onClick={reanalisar} cor="#fb7185">⟳ Reanálise</BtnAcao>
+              <BtnAcao onClick={restaurar} cor="#94a3b8">↺ Restaurar IA</BtnAcao>
             </div>
-          </details>
-        )}
-      </aside>
+          </div>
+
+          {/* Notas internas */}
+          <div>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.3rem' }}>Notas internas (bastidor)</p>
+            <textarea
+              value={notasInternas}
+              onChange={e => setNotasInternas(e.target.value)}
+              onBlur={salvarNotas}
+              rows={2}
+              className="form-input"
+              style={{ fontSize: '0.85rem' }}
+              placeholder="Visível só pra equipe Espansione, nunca aparece no relatório."
+            />
+          </div>
+
+          {/* Comentários */}
+          <div>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.3rem' }}>
+              Comentários ({comentarios.length})
+            </p>
+            {loadingDetalhes && <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>carregando…</p>}
+            {comentarios.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                {comentarios.map(c => (
+                  <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '0.45rem 0.7rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+                      {c.autor_tipo === 'consultor' ? 'Consultor' : 'Cliente'} · {new Date(c.created_at).toLocaleString('pt-BR')}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#fff', whiteSpace: 'pre-wrap' }}>{c.comentario}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <input
+                value={novoComentario}
+                onChange={e => setNovoComentario(e.target.value)}
+                placeholder="Comentário interno…"
+                className="form-input"
+                style={{ flex: 1, fontSize: '0.85rem', padding: '0.45rem 0.75rem' }}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarComentario(); } }}
+              />
+              <button onClick={enviarComentario} className="btn-primary" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}>Comentar</button>
+            </div>
+          </div>
+
+          {/* Histórico */}
+          {versoes.length > 0 && (
+            <details>
+              <summary style={{ cursor: 'pointer', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Histórico de versões ({versoes.length})</summary>
+              <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                {versoes.map(v => (
+                  <div key={v.id}><strong>{v.tipo}</strong> · {new Date(v.created_at).toLocaleString('pt-BR')}</div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function CamadaEdit({ label, subtitle, value, onChange, aiOriginal }) {
-  const editado = aiOriginal && value && aiOriginal !== value;
+function BtnAcao({ children, onClick, ativo, cor }) {
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{label}</label>
-        {editado && <span style={{ fontSize: '0.65rem', color: 'var(--accent-blue)' }}>editado</span>}
-      </div>
-      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0.4rem' }}>{subtitle}</p>
-      <textarea
-        value={value || ''}
-        onChange={e => onChange(e.target.value)}
-        rows={3}
-        className="form-input"
-        style={{ fontSize: '0.85rem' }}
-      />
-    </div>
-  );
-}
-
-function AcaoBtn({ children, onClick, ativo, corFg }) {
-  return (
-    <button
-      onClick={onClick}
+    <button onClick={onClick}
       style={{
-        background: ativo ? `${corFg}22` : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${ativo ? corFg : 'rgba(255,255,255,0.08)'}`,
-        color: ativo ? corFg : 'var(--text-secondary)',
-        borderRadius: '8px',
-        padding: '0.45rem 0.85rem',
-        fontSize: '0.8rem',
-        cursor: 'pointer',
-        fontWeight: 600,
-      }}
-    >
+        background: ativo ? `${cor}22` : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${ativo ? cor : 'rgba(255,255,255,0.08)'}`,
+        color: ativo ? cor : 'var(--text-secondary)',
+        borderRadius: '8px', padding: '0.4rem 0.75rem', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
+      }}>
       {children}
     </button>
   );
 }
 
-// ────────────── Modal "Gerar Relatório Final" ──────────────
+// ─────────────── Modal "Gerar Relatório Final" ───────────────
+
 function FinalModal({ counts, onCancel, onConfirm }) {
   const aprovados = counts.aprovado || 0;
   const validados = counts.validado_cliente || 0;
