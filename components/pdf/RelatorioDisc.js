@@ -104,12 +104,16 @@ function Section({ title }) {
 }
 
 function Bar({ label, value, max, color }) {
-  const pct = Math.min(100, Math.max(1, (value / max) * 100));
+  // FIX.18 — defender de value undefined/NaN/null. react-pdf joga
+  // "Invalid value NaN% for setWidth" se chegar NaN%.
+  const v = (typeof value === 'number' && Number.isFinite(value)) ? value : 0;
+  const m = (typeof max === 'number' && Number.isFinite(max) && max > 0) ? max : 100;
+  const pct = Math.min(100, Math.max(1, (v / m) * 100));
   return (
     <View style={s.barRow}>
       <View style={s.barHeader}>
         <Text style={s.barLabel}>{label}</Text>
-        <Text style={[s.barValue, { color }]}>{value}</Text>
+        <Text style={[s.barValue, { color }]}>{v}</Text>
       </View>
       <View style={s.barTrack}>
         <View style={[s.barFill, { width: `${pct}%`, backgroundColor: color }]} />
@@ -119,12 +123,13 @@ function Bar({ label, value, max, color }) {
 }
 
 function DiscBoxes({ disc }) {
+  const safe = disc || {};
   return (
     <View style={s.discRow}>
       {[['D', 'Dominância', COLORS.D], ['I', 'Influência', COLORS.I], ['S', 'Estabilidade', COLORS.S], ['C', 'Conformidade', COLORS.C]].map(([key, label, color]) => (
         <View key={key} style={[s.discBox, { borderColor: color }]}>
           <Text style={[s.discLetter, { color }]}>{key}</Text>
-          <Text style={s.discValue}>{disc[key]}</Text>
+          <Text style={s.discValue}>{Number.isFinite(safe[key]) ? safe[key] : 0}</Text>
           <Text style={s.discLabel}>{label}</Text>
         </View>
       ))}
