@@ -54,6 +54,9 @@ export default function ProjetoDetalhes() {
   const [approving, setApproving] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [pendingAgentNum, setPendingAgentNum] = useState(null);
+  // FIX.22 — picker reusado entre execução de agente e geração do
+  // relatório consolidado. Mode decide o destino do modelKey escolhido.
+  const [pickerMode, setPickerMode] = useState('agent'); // 'agent' | 'team-report'
 
   // CIS Participantes
   const [cisParticipantes, setCisParticipantes] = useState([]);
@@ -164,9 +167,20 @@ export default function ProjetoDetalhes() {
   ];
 
   const handleRequestRun = (agentNum) => {
+    setPickerMode('agent');
     setPendingAgentNum(agentNum);
     setShowModelPicker(true);
     setEngineError('');
+  };
+
+  // FIX.22 — abre o mesmo picker em modo "team-report" (não tem agentNum
+  // associado). Quando o user escolhe modelo, handleRunWithModel
+  // dispatcha pra runTeamReport(modelKey).
+  const handleRequestTeamReport = () => {
+    if (!(data?.cisAssessments?.length > 0)) return;
+    setPickerMode('team-report');
+    setPendingAgentNum(null);
+    setShowModelPicker(true);
   };
 
   // Agentes que têm enrichContext pesado e precisam rodar em 2 etapas
@@ -196,6 +210,11 @@ export default function ProjetoDetalhes() {
 
   const handleRunWithModel = async (modelKey) => {
     setShowModelPicker(false);
+    // FIX.22 — picker reusado: dispatcha por mode.
+    if (pickerMode === 'team-report') {
+      await downloadDiscReport(modelKey);
+      return;
+    }
     const agentNum = pendingAgentNum;
     setRunningAgent(agentNum);
     setEngineError('');
@@ -262,10 +281,17 @@ export default function ProjetoDetalhes() {
   const [cisSending, setCisSending] = useState(false);
   const [generatingTeamReport, setGeneratingTeamReport] = useState(false);
 
-  const downloadDiscReport = async () => {
+  const downloadDiscReport = async (modelKey) => {
     const assessments = data?.cisAssessments || [];
     if (assessments.length === 0) {
       alert('Nenhum mapeamento DISC respondido ainda.');
+      return;
+    }
+    if (!modelKey) {
+      // FIX.22 — fluxo correto agora é via picker (handleRequestTeamReport
+      // → handleRunWithModel → downloadDiscReport(modelKey)). Se chamado
+      // direto sem key, abre o picker.
+      handleRequestTeamReport();
       return;
     }
 
@@ -376,6 +402,7 @@ export default function ProjetoDetalhes() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            modelKey,
             projeto_nome: projetoNomeReq,
             n_respondentes: assessments.length,
             disc_natural: discMed,
@@ -1129,7 +1156,7 @@ export default function ProjetoDetalhes() {
                     {cisSending ? 'Enviando...' : `✉️ Enviar para pendentes (${cisParticipantes.filter(p => !p.respondido).length})`}
                   </button>
                   <button
-                    onClick={downloadDiscReport}
+                    onClick={handleRequestTeamReport}
                     disabled={!(data?.cisAssessments?.length > 0) || generatingTeamReport}
                     title="Baixar relatório comportamental consolidado (PDF)"
                     style={{ flex: 1, background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', borderRadius: '8px', color: 'var(--accent-blue)', fontWeight: 700, padding: '0.6rem', cursor: generatingTeamReport ? 'wait' : ((data?.cisAssessments?.length > 0) ? 'pointer' : 'not-allowed'), fontSize: '0.85rem', opacity: (generatingTeamReport || !(data?.cisAssessments?.length > 0)) ? 0.6 : 1 }}
@@ -1388,7 +1415,9 @@ export default function ProjetoDetalhes() {
             <div style={{ position: 'relative', background: 'var(--bg-secondary, #0a1122)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '2rem', maxWidth: '440px', width: '90%', maxHeight: '80vh', overflowY: 'auto' }}>
               <h3 style={{ color: 'var(--accent-blue)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Escolha o modelo de IA</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
-                Agente {pendingAgentNum} — {getAgenteByNum(pendingAgentNum)?.nome_exibicao || ''}
+                {pickerMode === 'team-report'
+                  ? `Relatório Comportamental Consolidado — ${data?.cisAssessments?.length || 0} respondente(s)`
+                  : `Agente ${pendingAgentNum} — ${getAgenteByNum(pendingAgentNum)?.nome_exibicao || ''}`}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {AI_MODELS.map(m => (
