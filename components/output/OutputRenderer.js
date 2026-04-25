@@ -27,10 +27,49 @@ import {
   BadgeEstiloLideranca,
 } from '../visualizations/cis';
 import { RadarMaturidade360 } from '../visualizations/maturidade';
+import PaletaCores from '../visualizations/identidade/PaletaCores';
+import Tipografia from '../visualizations/identidade/Tipografia';
 import {
   parseVizMarkers,
   vizMarkerKey,
 } from '../../lib/output/parseVizMarkers';
+
+// FIX.34 — fenced code blocks com `language` reservado viram visualizações.
+// Lista de languages que o renderer reconhece; demais blocos ficam como
+// código normal (compat com markdown padrão).
+const LANGS_VIZ = new Set(['paleta-cores', 'tipografia']);
+
+function tryParseFencedJson(content) {
+  try {
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+function MarkdownCustomCode({ inline, className, children, ...props }) {
+  if (inline) return <code className={className} {...props}>{children}</code>;
+  const lang = (className || '').replace(/^language-/, '').trim();
+  if (!LANGS_VIZ.has(lang)) {
+    return <code className={className} {...props}>{children}</code>;
+  }
+  const raw = String(children || '').trim();
+  const data = tryParseFencedJson(raw);
+  if (!data) {
+    // JSON inválido — fallback pra bloco de código padrão pra o user
+    // ver o erro de parse e arrumar.
+    return <code className={className} {...props}>{children}</code>;
+  }
+  if (lang === 'paleta-cores') {
+    return <div className="my-6"><PaletaCores cores={data} /></div>;
+  }
+  if (lang === 'tipografia') {
+    return <div className="my-6"><Tipografia tipografia={data} /></div>;
+  }
+  return null;
+}
+
+const MARKDOWN_COMPONENTS = { code: MarkdownCustomCode };
 
 /**
  * @param {Object} props
@@ -80,7 +119,7 @@ export default function OutputRenderer({
             className="output-prose"
             style={{ color: 'var(--viz-card-text)' }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
               {resumoExecutivo}
             </ReactMarkdown>
           </div>
@@ -115,7 +154,7 @@ export default function OutputRenderer({
             className="output-prose"
             style={{ color: 'var(--viz-card-text)' }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
               {conclusoes}
             </ReactMarkdown>
           </div>
@@ -142,7 +181,7 @@ export default function OutputRenderer({
             className="output-prose"
             style={{ color: 'var(--viz-card-text)', fontSize: '0.85rem' }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
               {fontes}
             </ReactMarkdown>
           </div>
@@ -192,7 +231,7 @@ function BlocoRenderer({ bloco, vizData }) {
         className="output-prose"
         style={{ color: 'var(--viz-card-text)' }}
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
           {bloco.conteudo}
         </ReactMarkdown>
       </div>
