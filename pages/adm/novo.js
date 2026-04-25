@@ -89,6 +89,21 @@ export default function Home() {
                 </p>
               </div>
 
+              {/* FIX.15 — escopo opcional de Marca Empregadora (Agente 14). */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: 'pointer' }}>
+                  <input type="checkbox" name="tem_evp" style={{ marginTop: '0.2rem' }} />
+                  <span>
+                    <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>
+                      Contratou escopo de Marca Empregadora (EVP)
+                    </span>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                      Habilita o Agente 14 (EVP) na esteira. Pode ser alterado depois nas configurações do projeto.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
               <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'center' }}>
                 {loading ? (
                   <>

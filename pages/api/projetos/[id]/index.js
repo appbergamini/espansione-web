@@ -48,5 +48,34 @@ export default async function handler(req, res) {
     }
   }
 
+  // FIX.15 — PATCH para alternar tem_evp (e futuras flags do projeto).
+  // Whitelist explícita; nada além dos campos abaixo é gravado.
+  if (req.method === 'PATCH') {
+    try {
+      const allowed = ['tem_evp'];
+      const update = {};
+      for (const k of allowed) {
+        if (k in (req.body || {})) update[k] = req.body[k];
+      }
+      if (Object.keys(update).length === 0) {
+        return res.status(400).json({ success: false, error: 'Nenhum campo válido para atualizar' });
+      }
+
+      const { data: projeto, error } = await db
+        .from('projetos')
+        .update(update)
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (error) throw new Error(error.message);
+
+      return res.status(200).json({ success: true, projeto });
+    } catch (err) {
+      console.error('[API PATCH projeto]', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
   return res.status(405).json({ success: false, error: 'Method not allowed' });
 }

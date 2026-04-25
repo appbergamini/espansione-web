@@ -69,6 +69,9 @@ export default function ProjetoDetalhes() {
   const [savingResp, setSavingResp] = useState(false);
   const [respMsg, setRespMsg] = useState('');
 
+  // FIX.15 — toggle de escopo EVP (Agente 14)
+  const [togglingEvp, setTogglingEvp] = useState(false);
+
   // Modal do resultado do posicionamento
   const [posModalOpen, setPosModalOpen] = useState(false);
 
@@ -654,10 +657,11 @@ export default function ProjetoDetalhes() {
   // Próximo agente = primeiro faltante na ordem do catálogo (FIX.3).
   // Antes: "maior output + 1" — pulava gaps (output 2, 4, 5 existia →
   // sugeria 6 em vez de 3). Agora respeita a ordem sequencial.
-  // EVP (Agente 14, modular) só entra no denominador se o projeto já
-  // tem algum output 14 — proxy simples de "escopo EVP contratado".
+  // FIX.15 — EVP (Agente 14, modular) entra no denominador via flag
+  // explícita projetos.tem_evp (antes era proxy galinha-e-ovo:
+  // includes(14), que escondia o agente até ele já ter rodado).
   const agentNumsCompletos = outputs.map(o => o.agent_num);
-  const projetoTemEvp = agentNumsCompletos.includes(14);
+  const projetoTemEvp = !!data?.projeto?.tem_evp;
   const progresso = calcularProgresso(agentNumsCompletos, projetoTemEvp);
   const nextAgent = progresso.proximoAgente?.agent_num || null;
   
@@ -798,6 +802,47 @@ export default function ProjetoDetalhes() {
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* FIX.15 — Card: Escopo do Projeto (toggle EVP) */}
+              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, marginBottom: '0.75rem' }}>Escopo do Projeto</h3>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: togglingEvp ? 'wait' : 'pointer', opacity: togglingEvp ? 0.6 : 1 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!projeto.tem_evp}
+                    disabled={togglingEvp}
+                    onChange={async (e) => {
+                      const novoValor = e.target.checked;
+                      setTogglingEvp(true);
+                      try {
+                        const res = await fetch(`/api/projetos/${id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ tem_evp: novoValor }),
+                        });
+                        const json = await res.json();
+                        if (!res.ok || !json.success) throw new Error(json.error || 'Falha ao salvar');
+                        await loadData();
+                      } catch (err) {
+                        alert('Erro ao alternar escopo EVP: ' + err.message);
+                      } finally {
+                        setTogglingEvp(false);
+                      }
+                    }}
+                    style={{ marginTop: '0.2rem' }}
+                  />
+                  <span>
+                    <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                      Marca Empregadora (EVP) — Agente 14
+                    </span>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                      {projeto.tem_evp
+                        ? 'Habilitado: o Agente 14 entra na esteira após a Plataforma (9).'
+                        : 'Desabilitado: pipeline pula direto do 13 para o 15.'}
+                    </span>
+                  </span>
+                </label>
               </div>
 
               {/* Diagnósticos Essenciais — Formulários + Entrevistas */}

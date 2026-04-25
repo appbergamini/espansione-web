@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, error: 'Não autenticado' });
     }
 
-    const { nome_empresa, responsavel_nome, responsavel_email } = req.body;
+    const { nome_empresa, responsavel_nome, responsavel_email, tem_evp } = req.body;
     const db = supabaseAdmin;
 
     const { data: profile } = await db
@@ -40,6 +40,8 @@ export default async function handler(req, res) {
         etapa_atual: 0,
         responsavel_nome: responsavel_nome || null,
         responsavel_email: responsavel_email || null,
+        // FIX.15 — escopo EVP marcado na criação. UI envia "true"/"on" do checkbox.
+        tem_evp: tem_evp === true || tem_evp === 'true' || tem_evp === 'on',
       }])
       .select('id')
       .single();
