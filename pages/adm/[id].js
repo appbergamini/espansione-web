@@ -6,6 +6,7 @@ import Logo from '../../components/Logo';
 import RespondentesManager from '../../components/RespondentesManager';
 import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
+import ClustersCard from '../../components/clusters/ClustersCard';
 import { supabase } from '../../lib/supabaseClient';
 import { generateOutputPdf } from '../../lib/pdf/outputPdf';
 import {
@@ -951,6 +952,9 @@ export default function ProjetoDetalhes() {
                   </div>
                 )}
               </div>
+
+              {/* FIX.29 (Fase B) — Card: Clusters de Comunicação (insumo do Agente 13) */}
+              <ClustersCard projetoId={id} />
 
               {/* FIX.24 — Card: Curadoria Estratégica */}
               <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.05)' }}>
