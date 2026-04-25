@@ -260,6 +260,7 @@ export default function ProjetoDetalhes() {
   };
 
   const [cisSending, setCisSending] = useState(false);
+  const [generatingTeamReport, setGeneratingTeamReport] = useState(false);
 
   const downloadDiscReport = async () => {
     const assessments = data?.cisAssessments || [];
@@ -275,6 +276,7 @@ export default function ProjetoDetalhes() {
     // template do sumário. Agora delega ao helper canônico getCisParsed
     // (mesmo usado pelos resolvers de viz e pelo Agente 2) e protege
     // todos os pontos onde uma agregação pode estar vazia.
+    setGeneratingTeamReport(true);
     try {
       const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -329,6 +331,7 @@ export default function ProjetoDetalhes() {
       const compsAcc = {};
       const estiloCount = {};
       const perfilCount = {};
+      const jungCount = {};
 
       for (const { raw, p } of parsed) {
         for (const k of ['D', 'I', 'S', 'C']) {
@@ -345,6 +348,9 @@ export default function ProjetoDetalhes() {
         if (p.estilo_lideranca) {
           estiloCount[p.estilo_lideranca] = (estiloCount[p.estilo_lideranca] || 0) + 1;
         }
+        if (p.jung?.tipo) {
+          jungCount[p.jung.tipo] = (jungCount[p.jung.tipo] || 0) + 1;
+        }
         const label = p.perfil_label || raw?.scores_json?.profileLabel || raw?.scores_json?.profile || '—';
         perfilCount[label] = (perfilCount[label] || 0) + 1;
       }
@@ -355,44 +361,90 @@ export default function ProjetoDetalhes() {
         .map(([k, arr]) => ({ nome: k, media: avg(arr) }))
         .sort((a, b) => b.media - a.media);
 
+      // FIX.21 — flag pra esconder DISC Adaptado quando o instrumento
+      // não mediu (todas as 4 chaves zeradas após avg de array vazio).
+      const dAHasData = discA.D.length + discA.I.length + discA.S.length + discA.C.length > 0;
+
+      // FIX.21 — gerar narrativas executivas via Gemini ANTES de montar
+      // o PDF. Se a chamada falhar (rede, quota, 5xx), o PDF é gerado
+      // com fallback determinístico (Sumário curto + Leitura Estratégica
+      // de bullets condicionais) — sem bloquear o download.
+      const projetoNomeReq = data?.projeto?.cliente || data?.projeto?.nome || '';
+      let narratives = null;
+      try {
+        const narrRes = await fetch('/api/relatorio/team-narratives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projeto_nome: projetoNomeReq,
+            n_respondentes: assessments.length,
+            disc_natural: discMed,
+            disc_adaptado: dAHasData ? discAMed : null,
+            competencias_top: compMed.slice(0, 5),
+            competencias_gap: compMed.slice(-5).reverse(),
+            perfis_distribuicao: Object.entries(perfilCount).sort((a, b) => b[1] - a[1]),
+            estilos_distribuicao: Object.entries(estiloCount).sort((a, b) => b[1] - a[1]),
+            jung_distribuicao: Object.entries(jungCount).sort((a, b) => b[1] - a[1]),
+            individuos_resumo: parsed.map(({ raw, p }) => ({
+              nome: raw.nome || raw.email || '—',
+              perfil: p.perfil_label || raw?.scores_json?.profileLabel || raw?.scores_json?.profile || '—',
+              disc_dominante: p.disc?.dominante || null,
+              jung: p.jung?.tipo || null,
+            })),
+          }),
+        });
+        const narrJson = await narrRes.json();
+        if (narrJson?.success && narrJson.narratives) {
+          narratives = narrJson.narratives;
+        } else {
+          console.warn('[downloadDiscReport] narrativas falharam:', narrJson?.error);
+        }
+      } catch (narrErr) {
+        console.warn('[downloadDiscReport] narrativas falharam:', narrErr);
+      }
+
       // ==== Capa ====
       doc.setFont('helvetica', 'bold'); doc.setFontSize(24); doc.setTextColor(0, 65, 152);
       doc.text('Espansione', marginX, y); y += 28;
       doc.setFontSize(16); doc.setTextColor(40, 40, 40);
       doc.text('Relatório Comportamental — Perfil do Time', marginX, y); y += 22;
       doc.setFont('helvetica', 'normal'); doc.setFontSize(12); doc.setTextColor(100, 100, 100);
-      const projetoNome = data?.projeto?.cliente || data?.projeto?.nome || '';
+      const projetoNome = projetoNomeReq;
       doc.text(projetoNome, marginX, y); y += 16;
       doc.setFontSize(10); doc.setTextColor(150, 150, 150);
       doc.text(`${assessments.length} respondente(s)  •  ${new Date().toLocaleDateString('pt-BR')}`, marginX, y);
       y += 20; drawLine();
 
-      // ==== Sumário Executivo ====
-      heading('Sumário Executivo');
-      const dimDomEntry = Object.entries(discMed).sort((a, b) => b[1] - a[1])[0];
-      const dimBaixaEntry = Object.entries(discMed).sort((a, b) => a[1] - b[1])[0];
-      const perfisEntry = Object.entries(perfilCount).sort((a, b) => b[1] - a[1])[0];
-      const partes = [`O time de ${assessments.length} respondente(s) foi analisado.`];
-      if (dimDomEntry && dimBaixaEntry && Number.isFinite(dimDomEntry[1])) {
-        partes.push(
-          `Apresenta predominância em ${dimDomEntry[0]} (${Math.round(dimDomEntry[1])}) ` +
-          `e pontuação mais baixa em ${dimBaixaEntry[0]} (${Math.round(dimBaixaEntry[1])}) no DISC natural agregado.`,
-        );
-      }
-      if (perfisEntry) {
-        partes.push(`O perfil mais representado é "${perfisEntry[0]}" (${perfisEntry[1]}/${assessments.length}).`);
-      }
-      if (compMed.length > 0) {
-        const topComp = compMed[0];
-        const bottomComp = compMed[compMed.length - 1];
-        partes.push(
-          `A competência com maior maturidade média é "${topComp.nome}" (${topComp.media.toFixed(1)}) ` +
-          `e a mais frágil é "${bottomComp.nome}" (${bottomComp.media.toFixed(1)}).`,
-        );
+      // ==== Panorama do Time (narrativa) — com fallback ====
+      // FIX.21 — substitui o "Sumário Executivo" determinístico curto.
+      heading('Panorama do Time');
+      if (narratives?.panorama) {
+        paragraph(narratives.panorama);
       } else {
-        partes.push('Competências individuais não disponíveis para este conjunto (formato legado do mapeamento).');
+        // Fallback determinístico (caso a chamada ao Gemini tenha falhado)
+        const dimDomEntry = Object.entries(discMed).sort((a, b) => b[1] - a[1])[0];
+        const dimBaixaEntry = Object.entries(discMed).sort((a, b) => a[1] - b[1])[0];
+        const perfisEntry = Object.entries(perfilCount).sort((a, b) => b[1] - a[1])[0];
+        const partes = [`O time de ${assessments.length} respondente(s) foi analisado.`];
+        if (dimDomEntry && dimBaixaEntry && Number.isFinite(dimDomEntry[1])) {
+          partes.push(
+            `Apresenta predominância em ${dimDomEntry[0]} (${Math.round(dimDomEntry[1])}) ` +
+            `e pontuação mais baixa em ${dimBaixaEntry[0]} (${Math.round(dimBaixaEntry[1])}) no DISC natural agregado.`,
+          );
+        }
+        if (perfisEntry) {
+          partes.push(`O perfil mais representado é "${perfisEntry[0]}" (${perfisEntry[1]}/${assessments.length}).`);
+        }
+        if (compMed.length > 0) {
+          const topComp = compMed[0];
+          const bottomComp = compMed[compMed.length - 1];
+          partes.push(
+            `A competência com maior maturidade média é "${topComp.nome}" (${topComp.media.toFixed(1)}) ` +
+            `e a mais frágil é "${bottomComp.nome}" (${bottomComp.media.toFixed(1)}).`,
+          );
+        }
+        paragraph(partes.join(' '));
       }
-      paragraph(partes.join(' '));
 
       // ==== DISC Natural Agregado ====
       heading('DISC Natural (médias do time)');
@@ -401,11 +453,14 @@ export default function ProjetoDetalhes() {
       barRow('Estabilidade (S)', discMed.S, 100, [16, 185, 129]);
       barRow('Conformidade (C)', discMed.C, 100, [56, 189, 248]);
 
-      heading('DISC Adaptado (como o time se ajusta em contexto de trabalho)');
-      barRow('Dominância (D)', discAMed.D, 100, [220, 38, 38]);
-      barRow('Influência (I)', discAMed.I, 100, [245, 158, 11]);
-      barRow('Estabilidade (S)', discAMed.S, 100, [16, 185, 129]);
-      barRow('Conformidade (C)', discAMed.C, 100, [56, 189, 248]);
+      // ==== DISC Adaptado — só se medido ====
+      if (dAHasData) {
+        heading('DISC Adaptado (como o time se ajusta em contexto de trabalho)');
+        barRow('Dominância (D)', discAMed.D, 100, [220, 38, 38]);
+        barRow('Influência (I)', discAMed.I, 100, [245, 158, 11]);
+        barRow('Estabilidade (S)', discAMed.S, 100, [16, 185, 129]);
+        barRow('Conformidade (C)', discAMed.C, 100, [56, 189, 248]);
+      }
 
       // ==== Estilos de Liderança (contagem) ====
       if (Object.keys(estiloCount).length > 0) {
@@ -415,13 +470,29 @@ export default function ProjetoDetalhes() {
         });
       }
 
-      // ==== Competências ====
+      // ==== Distribuição Jung/MBTI (se medida) ====
+      if (Object.keys(jungCount).length > 0) {
+        heading('Tipos Jung/MBTI — Distribuição');
+        Object.entries(jungCount).sort((a, b) => b[1] - a[1]).forEach(([tipo, count]) => {
+          paragraph(`• ${tipo}: ${count} respondente(s)`, 10);
+        });
+      }
+
+      // ==== Forças do Time (narrativa + bars) ====
       if (compMed.length > 0) {
-        heading('Competências — Top 5 e Bottom 5');
-        paragraph('Forças do time (top 5):', 10, [40, 40, 40]);
-        compMed.slice(0, 5).forEach(c => barRow(c.nome, c.media, 10, [16, 185, 129]));
+        heading('Forças do Time');
+        if (narratives?.forcas) paragraph(narratives.forcas);
         nl(4);
-        paragraph('Áreas de desenvolvimento (bottom 5):', 10, [40, 40, 40]);
+        paragraph('Top 5 competências (médias):', 10, [40, 40, 40]);
+        compMed.slice(0, 5).forEach(c => barRow(c.nome, c.media, 10, [16, 185, 129]));
+      }
+
+      // ==== Desenvolvimento (narrativa + bars) ====
+      if (compMed.length > 0) {
+        heading('Desenvolvimento do Time');
+        if (narratives?.desenvolvimento) paragraph(narratives.desenvolvimento);
+        nl(4);
+        paragraph('Bottom 5 competências (médias):', 10, [40, 40, 40]);
         compMed.slice(-5).reverse().forEach(c => barRow(c.nome, c.media, 10, [244, 63, 94]));
       }
 
@@ -430,6 +501,12 @@ export default function ProjetoDetalhes() {
       Object.entries(perfilCount).sort((a, b) => b[1] - a[1]).forEach(([label, count]) => {
         paragraph(`• ${label} — ${count} respondente(s)`, 10);
       });
+
+      // ==== Dinâmicas do Time (narrativa) ====
+      if (narratives?.dinamicas) {
+        heading('Dinâmicas do Time');
+        paragraph(narratives.dinamicas);
+      }
 
       // ==== Perfil Individual ====
       heading('Perfis Individuais');
@@ -447,27 +524,37 @@ export default function ProjetoDetalhes() {
         y += 16;
       }
 
-      // ==== Insights ====
-      heading('Leitura Estratégica');
-      const gaps = [];
-      if (Number.isFinite(discMed.S) && discMed.S < 50) gaps.push('Baixa estabilidade (S) agregada — time pode ter dificuldade em processos longos e consistência operacional.');
-      if (Number.isFinite(discMed.D) && discMed.D > 65) gaps.push('Alta dominância (D) agregada — risco de conflitos entre múltiplos protagonistas, cuidado com alinhamento.');
-      if (Number.isFinite(discMed.C) && discMed.C < 50) gaps.push('Baixa conformidade (C) agregada — atenção com rigor analítico e aderência a processos.');
-      if (Number.isFinite(discMed.I) && discMed.I < 45) gaps.push('Baixa influência (I) agregada — time mais técnico que relacional, possível lacuna em comunicação externa.');
-      if (gaps.length === 0) {
-        gaps.push('Distribuição equilibrada entre as quatro dimensões DISC, sem alertas extremos.');
+      // ==== Recomendações para a Liderança (narrativa, com fallback) ====
+      heading('Recomendações para a Liderança');
+      if (narratives?.recomendacoes) {
+        paragraph(narratives.recomendacoes);
+      } else {
+        // Fallback determinístico
+        const gaps = [];
+        if (Number.isFinite(discMed.S) && discMed.S < 50) gaps.push('Baixa estabilidade (S) agregada — time pode ter dificuldade em processos longos e consistência operacional.');
+        if (Number.isFinite(discMed.D) && discMed.D > 65) gaps.push('Alta dominância (D) agregada — risco de conflitos entre múltiplos protagonistas, cuidado com alinhamento.');
+        if (Number.isFinite(discMed.C) && discMed.C < 50) gaps.push('Baixa conformidade (C) agregada — atenção com rigor analítico e aderência a processos.');
+        if (Number.isFinite(discMed.I) && discMed.I < 45) gaps.push('Baixa influência (I) agregada — time mais técnico que relacional, possível lacuna em comunicação externa.');
+        if (gaps.length === 0) {
+          gaps.push('Distribuição equilibrada entre as quatro dimensões DISC, sem alertas extremos.');
+        }
+        gaps.forEach(t => paragraph(`• ${t}`));
       }
-      gaps.forEach(t => paragraph(`• ${t}`));
 
       nl(20);
       doc.setFontSize(8); doc.setTextColor(150, 150, 150);
-      doc.text('Gerado automaticamente por Espansione • Metodologia DISC + 16 competências + estilos de liderança', marginX, y);
+      const rodape = narratives
+        ? 'Gerado automaticamente por Espansione • Análise por gemini-3-flash-preview'
+        : 'Gerado automaticamente por Espansione • Análise textual indisponível (Gemini falhou) — dados quantitativos íntegros';
+      doc.text(rodape, marginX, y);
 
       const filename = `${projetoNome || 'Projeto'}_Relatorio_Comportamental.pdf`;
       doc.save(filename);
     } catch (err) {
       console.error('[downloadDiscReport]', err);
       alert(`Erro ao gerar PDF: ${err?.message || String(err)}`);
+    } finally {
+      setGeneratingTeamReport(false);
     }
   };
 
@@ -1043,11 +1130,13 @@ export default function ProjetoDetalhes() {
                   </button>
                   <button
                     onClick={downloadDiscReport}
-                    disabled={!(data?.cisAssessments?.length > 0)}
+                    disabled={!(data?.cisAssessments?.length > 0) || generatingTeamReport}
                     title="Baixar relatório comportamental consolidado (PDF)"
-                    style={{ flex: 1, background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', borderRadius: '8px', color: 'var(--accent-blue)', fontWeight: 700, padding: '0.6rem', cursor: (data?.cisAssessments?.length > 0) ? 'pointer' : 'not-allowed', fontSize: '0.85rem', opacity: (data?.cisAssessments?.length > 0) ? 1 : 0.5 }}
+                    style={{ flex: 1, background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', borderRadius: '8px', color: 'var(--accent-blue)', fontWeight: 700, padding: '0.6rem', cursor: generatingTeamReport ? 'wait' : ((data?.cisAssessments?.length > 0) ? 'pointer' : 'not-allowed'), fontSize: '0.85rem', opacity: (generatingTeamReport || !(data?.cisAssessments?.length > 0)) ? 0.6 : 1 }}
                   >
-                    📄 Relatório Comportamental ({data?.cisAssessments?.length || 0})
+                    {generatingTeamReport
+                      ? '⏳ Gerando análise…'
+                      : `📄 Relatório Comportamental (${data?.cisAssessments?.length || 0})`}
                   </button>
                 </div>
               </div>
