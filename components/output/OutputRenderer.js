@@ -29,15 +29,26 @@ import {
 import { RadarMaturidade360 } from '../visualizations/maturidade';
 import PaletaCores from '../visualizations/identidade/PaletaCores';
 import Tipografia from '../visualizations/identidade/Tipografia';
+import AvaliacaoRDPC from '../visualizations/identidade/AvaliacaoRDPC';
+import ComportamentoVisual from '../visualizations/identidade/ComportamentoVisual';
+import SimboloMarca from '../visualizations/identidade/SimboloMarca';
+import Moodboard from '../visualizations/identidade/Moodboard';
 import {
   parseVizMarkers,
   vizMarkerKey,
 } from '../../lib/output/parseVizMarkers';
 
-// FIX.34 — fenced code blocks com `language` reservado viram visualizações.
-// Lista de languages que o renderer reconhece; demais blocos ficam como
-// código normal (compat com markdown padrão).
-const LANGS_VIZ = new Set(['paleta-cores', 'tipografia']);
+// FIX.34/35 — fenced code blocks com `language` reservado viram
+// visualizações. Lista de languages que o renderer reconhece; demais
+// blocos ficam como código normal (compat com markdown padrão).
+const LANGS_VIZ = new Set([
+  'paleta-cores',
+  'tipografia',
+  'avaliacao-rdpc',
+  'comportamento-visual',
+  'simbolo-marca',
+  'moodboard',
+]);
 
 function tryParseFencedJson(content) {
   try {
@@ -65,6 +76,18 @@ function MarkdownCustomCode({ inline, className, children, ...props }) {
   }
   if (lang === 'tipografia') {
     return <div className="my-6"><Tipografia tipografia={data} /></div>;
+  }
+  if (lang === 'avaliacao-rdpc') {
+    return <div className="my-6"><AvaliacaoRDPC avaliacao={data} /></div>;
+  }
+  if (lang === 'comportamento-visual') {
+    return <div className="my-6"><ComportamentoVisual comportamento={data} /></div>;
+  }
+  if (lang === 'simbolo-marca') {
+    return <div className="my-6"><SimboloMarca simbolo={data} /></div>;
+  }
+  if (lang === 'moodboard') {
+    return <div className="my-6"><Moodboard moodboard={data} /></div>;
   }
   return null;
 }

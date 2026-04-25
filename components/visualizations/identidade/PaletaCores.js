@@ -41,6 +41,10 @@ function Swatch({ nome, hex, papel, uso }) {
   const luma = lumaFromHex(cor);
   const textoSobreCor = luma > 0.55 ? '#0a1f3d' : '#ffffff';
 
+  // FIX.35 — minWidth:0 + overflow-wrap:anywhere quebram texto longo
+  // (ex.: "Verde Musgo de Arquivo") evitando overflow horizontal do card.
+  const textoQuebravel = { wordBreak: 'break-word', overflowWrap: 'anywhere' };
+
   return (
     <div style={{
       borderRadius: 10,
@@ -49,6 +53,7 @@ function Swatch({ nome, hex, papel, uso }) {
       background: 'var(--viz-card-bg)',
       display: 'flex',
       flexDirection: 'column',
+      minWidth: 0,
     }}>
       <div style={{
         background: cor,
@@ -58,21 +63,22 @@ function Swatch({ nome, hex, papel, uso }) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-end',
+        minWidth: 0,
       }}>
-        <div style={{ fontSize: '1rem', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: '1rem', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2, ...textoQuebravel }}>
           {nome || '—'}
         </div>
-        <div style={{ fontSize: '0.78rem', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', opacity: 0.85, marginTop: '0.25rem' }}>
+        <div style={{ fontSize: '0.78rem', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', opacity: 0.85, marginTop: '0.25rem', ...textoQuebravel }}>
           {cor.toUpperCase()}
         </div>
       </div>
       {(papel || uso) && (
-        <div style={{ padding: '0.55rem 0.85rem 0.7rem', fontSize: '0.78rem', lineHeight: 1.45 }}>
+        <div style={{ padding: '0.55rem 0.85rem 0.7rem', fontSize: '0.78rem', lineHeight: 1.45, minWidth: 0 }}>
           {papel && (
-            <div style={{ color: 'var(--viz-card-text)', fontWeight: 600 }}>{papel}</div>
+            <div style={{ color: 'var(--viz-card-text)', fontWeight: 600, ...textoQuebravel }}>{papel}</div>
           )}
           {uso && (
-            <div style={{ color: 'var(--viz-card-text-muted)', marginTop: '0.15rem' }}>{uso}</div>
+            <div style={{ color: 'var(--viz-card-text-muted)', marginTop: '0.15rem', ...textoQuebravel }}>{uso}</div>
           )}
         </div>
       )}

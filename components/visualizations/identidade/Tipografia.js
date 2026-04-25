@@ -61,6 +61,8 @@ function FamiliaBlock({ item, taglineFallback }) {
       borderRadius: 10,
       padding: '1rem 1.1rem 1.1rem',
       background: 'var(--viz-card-bg)',
+      minWidth: 0,
+      overflow: 'hidden',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.55rem' }}>
         <div>
@@ -88,6 +90,10 @@ function FamiliaBlock({ item, taglineFallback }) {
           color: 'var(--viz-card-text)',
           paddingTop: '0.4rem',
           borderTop: '1px solid var(--viz-card-border)',
+          // FIX.35 — quebra de linha em frases longas evita overflow do box.
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          maxWidth: '100%',
         }}
       >
         {amostra}
