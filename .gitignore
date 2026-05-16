@@ -45,3 +45,8 @@ next-env.d.ts
 /scripts/test-*.js
 /scripts/test-*.mjs
 /scripts/run-migration.mjs
+/scripts/seed-*.mjs
+/scripts/cleanup-*.mjs
+
+# artefato de handoff (binario grande, nao versionar / nao servir publicamente)
+/public/Espansione-handoff.zip
