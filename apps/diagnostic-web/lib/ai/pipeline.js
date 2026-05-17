@@ -45,7 +45,7 @@ export const STAGES = {
   cx:                  { agents: [12],              label: 'CX' },
   comunicacao:         { agents: [13],              label: 'Comunicação' },
   marca_empregadora:   { agents: [14],              label: 'Marca Empregadora (EVP)', modular: true },
-  encerramento:        { agents: [15],              label: 'Encerramento Editorial' },
+  encerramento:        { agents: [15, 16],          label: 'Encerramento Editorial' },
 };
 
 const AGENT_FORM_TYPES = {
