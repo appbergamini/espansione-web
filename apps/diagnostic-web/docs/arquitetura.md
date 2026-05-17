@@ -155,6 +155,8 @@ RLS ativo em todas. Queries server-side (pipeline, PDF, deliverable) usam `supab
 
 ## Pipeline de 15 agentes
 
+> **I/O detalhado de cada agente:** ver [`agentes-io.md`](./agentes-io.md) — inputs (formulários, outputs anteriores, CIS, clusters, curated blocks, enrichContext) e estrutura de saída por agente.
+
 | # | Nome | Stage | Inputs | Checkpoint | Modular |
 |---|---|---|---|---|---|
 | 1 | Roteiros VI — Entrevistas Internas | `pre_diagnostico` | — | — | — |
