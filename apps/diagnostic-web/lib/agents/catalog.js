@@ -209,9 +209,21 @@ export const CATALOGO_AGENTES = [
     inputs_opcionais: [14],
     checkpoint: null,
   },
+  {
+    agent_num: 16,
+    key: 'brand_memory_export',
+    nome_curto: 'Agente 16',
+    nome_exibicao: 'Exportador para Brand Memory',
+    stage: 'encerramento',
+    modular: true,
+    ordem_exibicao: 16,
+    inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    inputs_opcionais: [14],
+    checkpoint: null,
+  },
 ];
 
-/** Quantidade total de agentes (15). */
+/** Quantidade total de agentes (16). */
 export const TOTAL_AGENTES = CATALOGO_AGENTES.length;
 
 /**

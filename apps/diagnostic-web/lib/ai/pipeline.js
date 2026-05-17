@@ -31,6 +31,8 @@ export const AGENT_CONFIGS = {
   // window tratável). Gera Carta de Abertura + Sumário Executivo para
   // a Parte 0 do entregável final (TASK 4.4).
   15: { name: 'Consolidador Editorial do Entregável Final', stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], checkpoint: null },
+  // Agente 16 — Exportador para Brand Memory. Modular, disparo manual.
+  16: { name: 'Exportador para Brand Memory',              stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], checkpoint: null, modular: true },
 };
 
 export const STAGES = {

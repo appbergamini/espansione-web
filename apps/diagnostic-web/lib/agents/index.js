@@ -13,6 +13,7 @@ import { Agent_12_CX } from './Agent_12_CX';
 import { Agent_13_Comunicacao } from './Agent_13_Comunicacao';
 import { Agent_14_EVP } from './Agent_14_EVP';
 import { Agent_15_Editorial } from './Agent_15_Editorial';
+import { Agent_16_BrandMemoryExport } from './Agent_16_BrandMemoryExport';
 
 export const AGENTS_MAP = {
   1: Agent_01_RoteirosInternos,
@@ -30,4 +31,5 @@ export const AGENTS_MAP = {
   13: Agent_13_Comunicacao,
   14: Agent_14_EVP,
   15: Agent_15_Editorial,
+  16: Agent_16_BrandMemoryExport,
 };
