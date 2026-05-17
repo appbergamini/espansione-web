@@ -1,3 +1,3 @@
 // @espansione/types
 // Contratos compartilhados (EspansioneDiagnostic, etc.)
-export {};
+export * from './espansione-diagnostic.types.js';
