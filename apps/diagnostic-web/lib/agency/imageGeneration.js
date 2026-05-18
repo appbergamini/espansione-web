@@ -121,7 +121,7 @@ export async function generateApprovedArtwork({ prompt }) {
     throw error;
   }
 
-  const model = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+  const model = 'gpt-image-2-2026-04-21';
   const response = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: {
