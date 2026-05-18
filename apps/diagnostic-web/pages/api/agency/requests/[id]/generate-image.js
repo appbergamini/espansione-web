@@ -5,9 +5,9 @@ import { buildApprovedArtworkOverlay, buildApprovedArtworkPrompt, generateApprov
 
 export const config = {
   api: {
-    responseLimit: '8mb',
+    responseLimit: '16mb',
   },
-  maxDuration: 60,
+  maxDuration: 120,
 };
 
 export default async function handler(req, res) {

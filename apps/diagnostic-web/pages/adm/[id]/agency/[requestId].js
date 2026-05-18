@@ -128,7 +128,7 @@ export default function AgencyRequestDetailPage() {
     setErrorMsg('');
     try {
       const res = await fetch(`/api/agency/requests/${requestId}/generate-image`, { method: 'POST' });
-      const json = await res.json();
+      const json = await readJsonOrThrow(res, 'Erro ao gerar imagem');
       if (!json.success) throw new Error(json.error || 'Erro ao gerar imagem');
       const nextImage = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -850,6 +850,23 @@ function humanizeKey(key) {
   return String(key)
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+async function readJsonOrThrow(response, fallbackMessage) {
+  const text = await response.text();
+  let json = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    const compactText = text.replace(/\s+/g, ' ').trim();
+    throw new Error(compactText || fallbackMessage);
+  }
+
+  if (!response.ok) {
+    throw new Error(json?.error || fallbackMessage);
+  }
+
+  return json || {};
 }
 
 function downloadComposedArtwork(image) {
