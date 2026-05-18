@@ -132,7 +132,7 @@ export default function AgencyRequestDetailPage() {
   ];
   const completedSteps = agentFlow.filter((agent) => stepByAgent.get(agent.id)?.status === 'completed').length;
   const approverStep = stepByAgent.get('approver');
-  const approvalDecision = getStepPayload(approverStep)?.decisao || getStepPayload(approverStep)?.decision || null;
+  const approvalDecision = normalizeDecision(getStepPayload(approverStep)?.decisao || getStepPayload(approverStep)?.decision);
   const requestTypeLabel = REQUEST_TYPE_LABELS[request?.request_type] || request?.request_type;
   const channelLabel = CHANNEL_LABELS[request?.channel] || request?.channel;
   const objectiveLabel = OBJECTIVE_LABELS[request?.objective] || request?.objective;
@@ -169,7 +169,7 @@ export default function AgencyRequestDetailPage() {
                     </div>
                     <h1 style={{ margin: 0, fontSize: '1.35rem' }}>{requestTypeLabel}</h1>
                     <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.35rem' }}>
-                      {channelLabel} · {objectiveLabel} · status {request.status}
+                      {formatValue(channelLabel)} · {formatValue(objectiveLabel)} · status {formatValue(request.status)}
                     </div>
                   </div>
 
@@ -258,7 +258,7 @@ export default function AgencyRequestDetailPage() {
                     </div>
                     {approvalDecision && (
                       <span style={{ color: approvalDecision === 'approved' ? 'var(--success)' : 'var(--warning)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '0.25rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
-                        {approvalDecision}
+                        {decisionLabel(approvalDecision)}
                       </span>
                     )}
                   </div>
@@ -428,8 +428,8 @@ function AgentOutput({ agentId, output }) {
       <OutputCard>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
           <strong>Decisão final</strong>
-          <span style={{ color: decisionColor(data.decisao), background: 'rgba(255,255,255,0.05)', border: `1px solid ${decisionBorder(data.decisao)}`, borderRadius: 999, padding: '0.22rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
-            {decisionLabel(data.decisao)}
+          <span style={{ color: decisionColor(data.decisao || data.decision), background: 'rgba(255,255,255,0.05)', border: `1px solid ${decisionBorder(data.decisao || data.decision)}`, borderRadius: 999, padding: '0.22rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
+            {decisionLabel(data.decisao || data.decision)}
           </span>
         </div>
         <OutputLine title="Justificativa" value={data.justificativa} />
@@ -455,7 +455,7 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
   const visual = getStepPayload(visualStep);
   const editor = getStepPayload(editorStep);
   const approver = getStepPayload(approverStep);
-  const decision = approver.decisao || approver.decision;
+  const decision = normalizeDecision(approver.decisao || approver.decision);
   const editorText = extractEditedCopy(editor.versao_editada);
   const editorVisual = extractEditedVisual(editor.versao_editada);
   const hasGeneratedMaterial = !!(copy.copy_principal || editorText || visual.direcao_de_arte || editorVisual);
@@ -516,7 +516,7 @@ function OutputCard({ children }) {
 }
 
 function OutputLine({ title, value }) {
-  if (!value) return null;
+  if (!hasRenderableValue(value)) return null;
   return (
     <div>
       <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.2rem' }}>{title}</div>
@@ -549,7 +549,7 @@ function Checklist({ items }) {
           <div key={`${item.criterio}-${index}`} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.55rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
               <strong>{formatValue(item.criterio)}</strong>
-              <span style={{ color: checklistColor(item.status), fontSize: '0.78rem', fontWeight: 800 }}>{item.status}</span>
+              <span style={{ color: checklistColor(item.status), fontSize: '0.78rem', fontWeight: 800 }}>{formatValue(normalizeChecklistStatus(item.status))}</span>
             </div>
             {item.observacao && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{formatValue(item.observacao)}</div>}
           </div>
@@ -560,30 +560,59 @@ function Checklist({ items }) {
 }
 
 function decisionLabel(decision) {
+  const normalized = normalizeDecision(decision);
   const labels = {
     approved: 'Aprovado',
     revision_requested: 'Revisão solicitada',
     rejected: 'Rejeitado',
   };
-  return labels[decision] || decision || 'Sem decisão';
+  return labels[normalized] || formatValue(normalized) || 'Sem decisão';
 }
 
 function decisionColor(decision) {
-  if (decision === 'approved') return 'var(--success)';
-  if (decision === 'rejected') return 'var(--brand-red)';
+  const normalized = normalizeDecision(decision);
+  if (normalized === 'approved') return 'var(--success)';
+  if (normalized === 'rejected') return 'var(--brand-red)';
   return 'var(--warning)';
 }
 
 function decisionBorder(decision) {
-  if (decision === 'approved') return 'rgba(16,185,129,0.35)';
-  if (decision === 'rejected') return 'rgba(239,68,68,0.35)';
+  const normalized = normalizeDecision(decision);
+  if (normalized === 'approved') return 'rgba(16,185,129,0.35)';
+  if (normalized === 'rejected') return 'rgba(239,68,68,0.35)';
   return 'rgba(245,158,11,0.35)';
 }
 
 function checklistColor(status) {
-  if (status === 'pass') return 'var(--success)';
-  if (status === 'fail') return 'var(--brand-red)';
+  const normalized = normalizeChecklistStatus(status);
+  if (normalized === 'pass') return 'var(--success)';
+  if (normalized === 'fail') return 'var(--brand-red)';
   return 'var(--warning)';
+}
+
+function hasRenderableValue(value) {
+  if (value === null || value === undefined) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return String(value).length > 0;
+}
+
+function normalizeDecision(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    return formatValue(value.decisao || value.decision || value.status || value.resultado || value.result || value);
+  }
+  return String(value);
+}
+
+function normalizeChecklistStatus(value) {
+  if (!value) return 'warning';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    return formatValue(value.status || value.resultado || value.result || inferChecklistStatus(value));
+  }
+  return String(value);
 }
 
 function extractEditedCopy(value) {
@@ -632,7 +661,7 @@ function normalizeChecklistItem(item) {
   }
   return {
     criterio: item.criterio || item.criterion || item.titulo || item.title || 'Critério',
-    status: item.status || inferChecklistStatus(item.observacao || item.note || item),
+    status: normalizeChecklistStatus(item.status || inferChecklistStatus(item.observacao || item.note || item)),
     observacao: item.observacao || item.note || item.descricao || item.description || '',
   };
 }
@@ -668,7 +697,7 @@ function Label({ title, value, preserve }) {
   return (
     <>
       <dt style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{title}</dt>
-      <dd style={{ margin: 0, whiteSpace: preserve ? 'pre-wrap' : 'normal' }}>{value}</dd>
+      <dd style={{ margin: 0, whiteSpace: preserve ? 'pre-wrap' : 'normal' }}>{formatValue(value)}</dd>
     </>
   );
 }
