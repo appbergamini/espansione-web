@@ -1,2 +1,0 @@
-{ "name": "@espansione/agency-web", "version": "0.0.0", "private": true,
-  "scripts": { "dev": "echo TODO", "build": "echo placeholder", "type-check": "echo placeholder", "lint": "echo placeholder" } }

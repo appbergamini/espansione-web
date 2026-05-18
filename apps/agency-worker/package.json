@@ -1,3 +1,17 @@
-{ "name": "@espansione/agency-worker", "version": "0.0.0", "private": true,
-  "scripts": { "dev": "echo TODO", "build": "echo placeholder", "type-check": "tsc --noEmit", "lint": "echo placeholder", "clean": "rimraf .turbo node_modules dist" },
-  "devDependencies": { "rimraf": "^6.0.1", "typescript": "^5.6.0", "@types/node": "^22.0.0" } }
+{
+  "name": "@espansione/agency-worker",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo Use @espansione/agents inside diagnostic-web or a real worker when needed",
+    "build": "echo Agency worker intentionally has no runtime yet",
+    "type-check": "tsc --noEmit",
+    "lint": "echo Agency worker has no lint target yet",
+    "clean": "rimraf .turbo node_modules dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.0"
+  }
+}

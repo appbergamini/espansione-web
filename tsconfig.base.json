@@ -11,6 +11,14 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@espansione/agents": ["packages/agents/src/index.ts"],
+      "@espansione/brand-memory": ["packages/brand-memory/src/index.ts"],
+      "@espansione/db": ["packages/db/src/index.ts"],
+      "@espansione/shared": ["packages/shared/src/index.ts"],
+      "@espansione/types": ["packages/types/src/index.ts"]
+    },
     "incremental": true
   },
   "exclude": ["node_modules", "dist", ".next"]

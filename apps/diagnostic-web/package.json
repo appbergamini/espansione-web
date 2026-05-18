@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
+    "@espansione/agents": "workspace:^",
+    "@espansione/brand-memory": "workspace:^",
+    "@espansione/types": "workspace:^",
     "@react-pdf/renderer": "^4.3.2",
     "@sparticuz/chromium": "^147.0.2",
     "@supabase/ssr": "^0.10.0",

@@ -1,11 +1,20 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  turbopack: {
+    root: path.resolve(__dirname, '../..'),
+  },
 
   // Bloco D · TASK 4.3 — Playwright + @sparticuz/chromium são binários
   // grandes (Chromium slim ~50MB). Declarar como externals evita que
   // o bundler do Next tente incluí-los no output da função serverless.
   serverExternalPackages: ['@sparticuz/chromium', 'playwright-core'],
+  transpilePackages: ['@espansione/agents', '@espansione/brand-memory', '@espansione/types'],
 
   // FIX — Turbopack (Next 16) estava bundlando @sparticuz/chromium mesmo
   // com serverExternalPackages, relocando e perdendo a pasta `bin/` que

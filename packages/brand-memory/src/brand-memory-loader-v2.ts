@@ -24,14 +24,25 @@ export interface LoadResult {
   snapshotsWritten: number;
 }
 
+export interface LoadBrandMemoryOptions {
+  reviewedBy?: string;
+  reviewedAt?: string;
+  agent16OutputId?: string;
+}
+
 /**
  * Carrega um EspansioneDiagnostic na Brand Memory.
  * Idempotente: re-carregar sobrescreve via is_active flag.
  */
 export async function loadBrandMemory(
   supabase: SupabaseClient,
-  diagnostic: EspansioneDiagnostic
+  diagnostic: EspansioneDiagnostic,
+  options: LoadBrandMemoryOptions = {}
 ): Promise<LoadResult> {
+  if (!options.reviewedAt || !options.reviewedBy) {
+    throw new LoaderError('Brand Memory load requires explicit human review metadata.');
+  }
+
   if (diagnostic.schema_version !== '2.0') {
     throw new LoaderError(`Unsupported schema_version: "${diagnostic.schema_version}".`);
   }
@@ -40,9 +51,10 @@ export async function loadBrandMemory(
   }
 
   const brand = await upsertBrand(supabase, diagnostic);
-  const run = await createRun(supabase, brand.id, diagnostic);
+  const run = await createRun(supabase, brand.id, diagnostic, options);
   await archivePreviousActive(supabase, brand.id);
   const snapshotsWritten = await insertSnapshots(supabase, brand.id, run.id, diagnostic);
+  await finalizeRun(supabase, run.id);
 
   return {
     brandId: brand.id,
@@ -123,7 +135,8 @@ async function upsertBrand(
 async function createRun(
   supabase: SupabaseClient,
   brandId: string,
-  d: EspansioneDiagnostic
+  d: EspansioneDiagnostic,
+  options: LoadBrandMemoryOptions
 ): Promise<{ id: string }> {
   const { data: latest } = await supabase
     .from('diagnostic_runs')
@@ -142,13 +155,31 @@ async function createRun(
       version: nextVersion,
       schema_version: '2.0',
       espansione_project_id: d.espansione_project_id,
+      agent_16_output_id: options.agent16OutputId ?? null,
       consolidated_at: d.meta.consolidated_at,
+      human_reviewed_at: options.reviewedAt,
+      human_reviewed_by: options.reviewedBy,
     })
     .select('id')
     .single();
 
   if (error) throw new LoaderError(`create run failed: ${error.message}`);
   return data;
+}
+
+async function finalizeRun(
+  supabase: SupabaseClient,
+  runId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('diagnostic_runs')
+    .update({
+      status: 'complete',
+      completed_at: new Date().toISOString(),
+    })
+    .eq('id', runId);
+
+  if (error) throw new LoaderError(`finalize run failed: ${error.message}`);
 }
 
 async function archivePreviousActive(

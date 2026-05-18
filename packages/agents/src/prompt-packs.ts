@@ -1,0 +1,297 @@
+import type {
+  AccountDirectorOutput,
+  ApproverOutput,
+  AgencyPromptPack,
+  AgencyRequest,
+  BrandKernel,
+  CopywriterOutput,
+  EditorOutput,
+  VisualDirectorOutput,
+} from '@espansione/types';
+
+interface AccountDirectorPromptPackInput {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+}
+
+export const ACCOUNT_DIRECTOR_OUTPUT_SCHEMA = {
+  type: 'object',
+  required: [
+    'briefing_operacional',
+    'hipotese_criativa',
+    'criterios_de_sucesso',
+    'brand_memory_slices_used',
+    'warnings',
+  ],
+  properties: {
+    briefing_operacional: {
+      type: 'object',
+      required: [
+        'objetivo',
+        'publico',
+        'contexto',
+        'insight',
+        'promessa',
+        'mensagem_central',
+        'tom_recomendado',
+        'canal',
+        'formato',
+        'criterio_de_sucesso',
+      ],
+    },
+    hipotese_criativa: {
+      type: 'object',
+      required: ['conceito', 'angulo', 'narrativa'],
+    },
+    criterios_de_sucesso: { type: 'array', items: { type: 'string' } },
+    brand_memory_slices_used: { type: 'array', items: { type: 'string' } },
+    warnings: { type: 'array', items: { type: 'string' } },
+  },
+} as const satisfies Record<string, unknown>;
+
+export function buildAccountDirectorPromptPack({
+  brandKernel,
+  agencyRequest,
+}: AccountDirectorPromptPackInput): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+
+  return {
+    systemPrompt: [
+      'Voce e o agente account_director da Agencia IA da Espansione.',
+      'Sua funcao e transformar Brand Memory e pedido do usuario em briefing operacional.',
+      'Nao escreva a peca final. Nao crie copy final. Nao invente fatos, provas, numeros ou promessas.',
+      'Se faltar evidencia, declare como hipotese ou warning.',
+      'Use a Brand Memory como fonte canonica e preserve as escolhas estrategicas da Fase 1.',
+      'Responda apenas no schema esperado.',
+    ].join('\n'),
+    userPrompt: [
+      'BRAND_KERNEL',
+      JSON.stringify(brandKernel, null, 2),
+      '',
+      'AGENCY_REQUEST',
+      JSON.stringify(agencyRequest, null, 2),
+      '',
+      'TAREFA',
+      '- Definir objetivo, publico, contexto, insight, promessa, mensagem central, tom e criterio de sucesso.',
+      '- Usar os slices criticos: decodificacao, plataforma_branding, experiencia e plano_comunicacao.',
+      '- Considerar constraints, proofPoints, forbiddenClaims, preferredCTAs e channelGuidelines.',
+      '- Nao criar a peca final nesta etapa.',
+    ].join('\n'),
+    expectedOutputSchema: ACCOUNT_DIRECTOR_OUTPUT_SCHEMA,
+  };
+}
+
+export function buildCopywriterPromptPack({
+  brandKernel,
+  agencyRequest,
+  accountDirectorOutput,
+}: {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+  accountDirectorOutput: AccountDirectorOutput;
+}): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+  assertAccountDirectorOutput(accountDirectorOutput);
+
+  return makePromptPack({
+    agent: 'copywriter',
+    mission: 'Criar textos no tom proprietario da marca, a partir do briefing operacional.',
+    rules: [
+      'Usar voice_profile, tons de voz, territorios verbais e palavras proibidas.',
+      'Nao inventar fatos, provas, numeros ou promessas.',
+      'Declarar warnings quando houver falta de prova.',
+      'Entregar copy, variacoes, CTA e racional de tom.',
+    ],
+    payload: { brandKernel, agencyRequest, accountDirectorOutput },
+    expectedOutputSchema: {
+      required: ['copy_principal', 'variacoes', 'cta', 'racional_de_tom', 'claims_utilizados', 'claims_evitar', 'warnings'],
+    },
+  });
+}
+
+export function buildVisualDirectorPromptPack({
+  brandKernel,
+  agencyRequest,
+  accountDirectorOutput,
+}: {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+  accountDirectorOutput: AccountDirectorOutput;
+}): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+  assertAccountDirectorOutput(accountDirectorOutput);
+
+  return makePromptPack({
+    agent: 'visual_director',
+    mission: 'Traduzir identidade visual em direcao de arte para a peca.',
+    rules: [
+      'Respeitar visual_identity, manter/perder/ganhar, cores, tipografia e fotografia.',
+      'Gerar direcao de arte, nao arte final.',
+      'Evitar caminhos visuais marcados como inadequados.',
+      'Indicar assets necessarios, composicao e restricoes visuais.',
+    ],
+    payload: { brandKernel, agencyRequest, accountDirectorOutput },
+    expectedOutputSchema: {
+      required: ['direcao_de_arte', 'regras_visuais', 'assets_necessarios', 'composicao', 'estilo_imagem', 'restricoes_visuais', 'warnings'],
+    },
+  });
+}
+
+export function buildEditorPromptPack({
+  brandKernel,
+  agencyRequest,
+  accountDirectorOutput,
+  copywriterOutput,
+  visualDirectorOutput,
+}: {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+  accountDirectorOutput: AccountDirectorOutput;
+  copywriterOutput: CopywriterOutput;
+  visualDirectorOutput: VisualDirectorOutput;
+}): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+  assertAccountDirectorOutput(accountDirectorOutput);
+  assertCopywriterOutput(copywriterOutput);
+  assertVisualDirectorOutput(visualDirectorOutput);
+
+  return makePromptPack({
+    agent: 'editor',
+    mission: 'Ajustar copy e direcao visual para consistencia estrategica.',
+    rules: [
+      'Cortar excessos.',
+      'Preservar posicionamento, promessa e criterios do briefing.',
+      'Apontar riscos de incoerencia.',
+      'Gerar score de aderencia de 0 a 100.',
+    ],
+    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput },
+    expectedOutputSchema: {
+      required: ['versao_editada', 'ajustes_recomendados', 'riscos_de_incoerencia', 'score_aderencia', 'observacoes'],
+    },
+  });
+}
+
+export function buildApproverPromptPack({
+  brandKernel,
+  agencyRequest,
+  accountDirectorOutput,
+  copywriterOutput,
+  visualDirectorOutput,
+  editorOutput,
+}: {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+  accountDirectorOutput: AccountDirectorOutput;
+  copywriterOutput: CopywriterOutput;
+  visualDirectorOutput: VisualDirectorOutput;
+  editorOutput: EditorOutput;
+}): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+  assertAccountDirectorOutput(accountDirectorOutput);
+  assertCopywriterOutput(copywriterOutput);
+  assertVisualDirectorOutput(visualDirectorOutput);
+  assertEditorOutput(editorOutput);
+
+  return makePromptPack({
+    agent: 'approver',
+    mission: 'Funcionar como gate final antes de aprovacao humana.',
+    rules: [
+      'Checar coerencia estrategica, verbal, visual, audiencia, canal, restricoes e risco.',
+      'Pedir revisao ou rejeitar se houver violacao da Brand Memory.',
+      'Nao aprovar conteudo com claims sem sustentacao.',
+      'Decidir entre approved, revision_requested ou rejected.',
+    ],
+    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput, editorOutput },
+    expectedOutputSchema: {
+      required: ['decisao', 'checklist', 'ajustes_obrigatorios', 'justificativa'],
+    },
+  });
+}
+
+export function assertAccountDirectorOutput(
+  output: Partial<AccountDirectorOutput> | null | undefined
+): asserts output is AccountDirectorOutput {
+  if (!output?.briefing_operacional || !output?.hipotese_criativa) {
+    throw new Error('AccountDirectorOutput invalido: briefing_operacional e hipotese_criativa sao obrigatorios.');
+  }
+}
+
+function assertCopywriterOutput(
+  output: Partial<CopywriterOutput> | null | undefined
+): asserts output is CopywriterOutput {
+  if (!output?.copy_principal || !output?.cta) {
+    throw new Error('CopywriterOutput invalido: copy_principal e cta sao obrigatorios.');
+  }
+}
+
+function assertVisualDirectorOutput(
+  output: Partial<VisualDirectorOutput> | null | undefined
+): asserts output is VisualDirectorOutput {
+  if (!output?.direcao_de_arte || !output?.composicao) {
+    throw new Error('VisualDirectorOutput invalido: direcao_de_arte e composicao sao obrigatorios.');
+  }
+}
+
+function assertEditorOutput(
+  output: Partial<EditorOutput> | null | undefined
+): asserts output is EditorOutput {
+  if (!output?.versao_editada || typeof output.score_aderencia !== 'number') {
+    throw new Error('EditorOutput invalido: versao_editada e score_aderencia sao obrigatorios.');
+  }
+}
+
+function makePromptPack({
+  agent,
+  mission,
+  rules,
+  payload,
+  expectedOutputSchema,
+}: {
+  agent: string;
+  mission: string;
+  rules: string[];
+  payload: Record<string, unknown>;
+  expectedOutputSchema: unknown;
+}): AgencyPromptPack {
+  return {
+    systemPrompt: [
+      `Voce e o agente ${agent} da Agencia IA da Espansione.`,
+      mission,
+      'Use a Brand Memory como fonte canonica.',
+      'Responda apenas no schema esperado.',
+    ].join('\n'),
+    userPrompt: [
+      'INPUT_ESTRUTURADO',
+      JSON.stringify(payload, null, 2),
+      '',
+      'REGRAS',
+      ...rules.map((rule) => `- ${rule}`),
+    ].join('\n'),
+    expectedOutputSchema,
+  };
+}
+
+function assertBrandKernel(brandKernel: BrandKernel | null | undefined): asserts brandKernel is BrandKernel {
+  if (!brandKernel?.brand?.name || !brandKernel.strategy || !brandKernel.audience) {
+    throw new Error('brandKernel obrigatorio para montar prompt pack do account_director.');
+  }
+}
+
+function assertAgencyRequest(
+  agencyRequest: AgencyRequest | null | undefined
+): asserts agencyRequest is AgencyRequest {
+  if (
+    !agencyRequest?.brandId ||
+    !agencyRequest.requestType ||
+    !agencyRequest.channel ||
+    !agencyRequest.objective ||
+    !agencyRequest.context
+  ) {
+    throw new Error('agencyRequest incompleto para montar prompt pack do account_director.');
+  }
+}

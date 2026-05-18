@@ -956,6 +956,19 @@ export default function ProjetoDetalhes() {
               {/* FIX.29 (Fase B) — Card: Clusters de Comunicação (insumo do Agente 13) */}
               <ClustersCard projetoId={id} />
 
+              {/* Fase 2 — Agência IA */}
+              <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(56,189,248,0.3)', background: 'rgba(56,189,248,0.05)' }}>
+                <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-blue)', margin: 0, marginBottom: '0.5rem' }}>Agência IA</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
+                  Criar pedidos estruturados de marketing usando a Brand Memory da Fase 1.
+                </p>
+                <Link href={`/adm/${id}/agency`}>
+                  <span style={{ display: 'inline-block', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', borderRadius: '8px', color: 'var(--accent-blue)', fontWeight: 700, padding: '0.5rem 0.85rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                    Abrir pedidos da Agência →
+                  </span>
+                </Link>
+              </div>
+
               {/* FIX.24 — Card: Curadoria Estratégica */}
               <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.05)' }}>
                 <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-purple, #a78bfa)', margin: 0, marginBottom: '0.5rem' }}>Curadoria Estratégica</h3>
