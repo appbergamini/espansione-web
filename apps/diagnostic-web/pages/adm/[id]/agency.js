@@ -224,8 +224,8 @@ export default function AgencyRequestsPage() {
           {loading ? (
             <div className="glass-card" style={{ padding: '1.5rem' }}>Carregando...</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1.25rem', alignItems: 'start' }}>
-              <section className="glass-card" style={{ padding: '1.25rem' }}>
+            <div className="agency-workspace">
+              <section className="glass-card agency-panel" style={{ padding: '1.25rem' }}>
                 <h2 style={{ fontSize: '1rem', marginTop: 0 }}>1. Novo pedido</h2>
 
                 <div style={{ padding: '0.85rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', marginBottom: '1rem' }}>
@@ -287,7 +287,7 @@ export default function AgencyRequestsPage() {
                     )}
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.85rem' }}>
+                  <form className="agency-form" onSubmit={handleSubmit}>
                     <Field label="Tipo de entrega">
                       <select className="form-input" value={form.request_type} onChange={e => handleChange('request_type', e.target.value)} required>
                         {allowedRequestTypes.map((type) => (
@@ -296,7 +296,7 @@ export default function AgencyRequestsPage() {
                       </select>
                     </Field>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                    <div className="agency-form-row">
                       <Field label="Canal">
                         <select className="form-input" value={form.channel} onChange={e => handleChange('channel', e.target.value)} required>
                           {CHANNELS.map((channel) => <option key={channel} value={channel}>{CHANNEL_LABELS[channel]}</option>)}
@@ -350,7 +350,7 @@ export default function AgencyRequestsPage() {
                 )}
               </section>
 
-              <section className="glass-card" style={{ padding: '1.25rem' }}>
+              <section className="glass-card agency-panel" style={{ padding: '1.25rem' }}>
                 <h2 style={{ fontSize: '1rem', marginTop: 0 }}>2. Pedidos</h2>
                 {requests.length === 0 ? (
                   <p style={{ color: 'var(--text-secondary)' }}>{canCreate ? 'Crie o primeiro pedido à esquerda.' : 'Assim que a marca estiver pronta, os pedidos criados aparecerão aqui.'}</p>
@@ -358,7 +358,7 @@ export default function AgencyRequestsPage() {
                   <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {requests.map((request) => (
                       <Link key={request.id} href={`/adm/${id}/agency/${request.id}`} style={{ textDecoration: 'none' }}>
-                        <article style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.85rem', color: 'var(--text-primary)' }}>
+                        <article className="agency-request-card">
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
                             <strong>{REQUEST_TYPE_LABELS[request.request_type] || request.request_type}</strong>
                             <span style={{ color: 'var(--accent-blue)', fontSize: '0.78rem' }}>{request.status}</span>
@@ -377,6 +377,75 @@ export default function AgencyRequestsPage() {
               </section>
             </div>
           )}
+          <style jsx>{`
+            .agency-workspace {
+              display: grid;
+              grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+              gap: 1.25rem;
+              align-items: start;
+              width: 100%;
+            }
+
+            .agency-panel {
+              min-width: 0;
+              overflow: hidden;
+            }
+
+            .agency-form {
+              display: grid;
+              gap: 0.85rem;
+              min-width: 0;
+              width: 100%;
+            }
+
+            .agency-form-row {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 0.85rem;
+              min-width: 0;
+            }
+
+            .agency-request-card {
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              border-radius: 8px;
+              padding: 0.85rem;
+              color: var(--text-primary);
+              min-width: 0;
+              overflow: hidden;
+            }
+
+            :global(.agency-field) {
+              display: grid;
+              gap: 0.35rem;
+              min-width: 0;
+              width: 100%;
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+            }
+
+            :global(.agency-field .form-input) {
+              display: block;
+              width: 100%;
+              max-width: 100%;
+              min-width: 0;
+            }
+
+            :global(.agency-field textarea.form-input) {
+              resize: vertical;
+            }
+
+            @media (max-width: 900px) {
+              .agency-workspace {
+                grid-template-columns: 1fr;
+              }
+            }
+
+            @media (max-width: 640px) {
+              .agency-form-row {
+                grid-template-columns: 1fr;
+              }
+            }
+          `}</style>
         </main>
       </div>
     </>
@@ -385,7 +454,7 @@ export default function AgencyRequestsPage() {
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+    <label className="agency-field">
       <span>{label}</span>
       {children}
     </label>
