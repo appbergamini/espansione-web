@@ -1026,8 +1026,8 @@ export default function ProjetoDetalhes() {
             </div>
           </section>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(360px, 0.9fr)', gap: '1.25rem', alignItems: 'start' }}>
-            <aside style={{ display: 'grid', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(360px, 0.9fr)', gap: '1.25rem', alignItems: 'start', isolation: 'isolate' }}>
+            <aside style={{ display: 'grid', gap: '1rem', position: 'relative', zIndex: 2 }}>
               <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
                 <h2 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: '0 0 0.85rem' }}>Preparação</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
@@ -1353,7 +1353,7 @@ export default function ProjetoDetalhes() {
             </aside>
 
             {/* Direita: Trilha Visual dos Agentes (O histórico de Outputs) */}
-            <section className="glass-card" style={{ padding: '1.25rem', minWidth: 0 }}>
+            <section className="glass-card" style={{ padding: '1.25rem', minWidth: 0, position: 'relative', zIndex: 1, overflow: 'hidden', contain: 'paint', transform: 'none', background: 'rgba(8, 14, 28, 0.94)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.85rem', marginBottom: '0.85rem' }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Esteira de outputs</h2>
