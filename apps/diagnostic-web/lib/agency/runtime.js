@@ -120,6 +120,51 @@ export async function getAgencyReadiness(db, brandId) {
   return { brandMemory, readiness, brandKernel };
 }
 
+export async function getAgencyPhaseOneStatus(db, projetoId) {
+  if (!projetoId) return null;
+
+  const { data: outputs, error } = await db
+    .from('outputs')
+    .select('id, agent_num, conteudo, created_at')
+    .eq('projeto_id', projetoId)
+    .in('agent_num', [6, 9, 12, 13, 16])
+    .order('agent_num', { ascending: true });
+
+  if (error) throw error;
+
+  const presentAgents = [...new Set((outputs || []).map((output) => output.agent_num))].sort((a, b) => a - b);
+  const criticalAgents = [
+    { agent: 6, slice: 'decodificacao', label: 'Agente 6 - Direção estratégica / decodificação' },
+    { agent: 9, slice: 'plataforma_branding', label: 'Agente 9 - Plataforma de marca' },
+    { agent: 12, slice: 'experiencia', label: 'Agente 12 - Personas, jornada e momentos de marca' },
+    { agent: 13, slice: 'plano_comunicacao', label: 'Agente 13 - Plano de comunicação' },
+  ];
+  const missingCriticalAgents = criticalAgents.filter((item) => !presentAgents.includes(item.agent));
+  const agent16Output = (outputs || []).find((output) => output.agent_num === 16) || null;
+  const agent16HasExport = !!agent16Output?.conteudo?.match(/<brand_memory_export>[\s\S]*?<\/brand_memory_export>/i);
+
+  let nextStep = 'Rode a Fase 1 ate os agentes criticos e carregue a Brand Memory apos revisao humana.';
+  if (missingCriticalAgents.length > 0) {
+    nextStep = `Faltam agentes criticos para a Agencia: ${missingCriticalAgents.map((item) => item.agent).join(', ')}.`;
+  } else if (!agent16Output) {
+    nextStep = 'Os agentes criticos existem, mas falta rodar o Agente 16 para gerar o export da Brand Memory.';
+  } else if (!agent16HasExport) {
+    nextStep = 'O Agente 16 existe, mas nao encontrei a tag <brand_memory_export>. Revise ou rode novamente o Agente 16.';
+  } else {
+    nextStep = 'O export do Agente 16 existe. Falta revisao humana e carregamento na Brand Memory.';
+  }
+
+  return {
+    presentAgents,
+    criticalAgentsFound: criticalAgents.filter((item) => presentAgents.includes(item.agent)),
+    missingCriticalAgents,
+    hasAgent16: !!agent16Output,
+    agent16HasExport,
+    canLoadBrandMemory: missingCriticalAgents.length === 0 && !!agent16Output && agent16HasExport,
+    nextStep,
+  };
+}
+
 export async function getAgencyBrandMemory(db, brandId) {
   const [{ data: brand, error: brandError }, { data: snapshots, error: snapshotsError }] = await Promise.all([
     db.from('brands').select('slug, name, industry').eq('id', brandId).maybeSingle(),

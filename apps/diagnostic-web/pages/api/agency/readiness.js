@@ -1,6 +1,7 @@
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import {
+  getAgencyPhaseOneStatus,
   getAgencyReadiness,
   requireAgencyUser,
   resolveBrandContext,
@@ -24,12 +25,16 @@ export default async function handler(req, res) {
       brandId: brand_id,
     });
     const { readiness, brandKernel } = await getAgencyReadiness(supabaseAdmin, brand?.id);
+    const phaseOneStatus = projeto_id
+      ? await getAgencyPhaseOneStatus(supabaseAdmin, projeto_id)
+      : null;
 
     return res.status(200).json({
       success: true,
       projeto,
       brand,
       readiness,
+      phaseOneStatus,
       audienceOptions: brandKernel
         ? [...brandKernel.audience.clusters, ...brandKernel.audience.personas]
         : [],

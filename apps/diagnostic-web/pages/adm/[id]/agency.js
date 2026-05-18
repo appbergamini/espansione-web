@@ -79,6 +79,7 @@ export default function AgencyRequestsPage() {
   const readinessStatus = readinessData?.readiness?.status || 'not_ready';
   const brand = readinessData?.brand || null;
   const audienceOptions = readinessData?.audienceOptions || [];
+  const phaseOneStatus = readinessData?.phaseOneStatus || null;
 
   const canCreate = useMemo(
     () => !!brand && allowedRequestTypes.length > 0 && readinessStatus !== 'not_ready',
@@ -197,9 +198,36 @@ export default function AgencyRequestsPage() {
                 </div>
 
                 {!canCreate ? (
-                  <p style={{ color: 'var(--text-secondary)' }}>
-                    A Agência ainda não pode receber pedidos para esta marca. Carregue a Brand Memory com os slices críticos da Fase 1 antes de seguir.
-                  </p>
+                  <div style={{ display: 'grid', gap: '0.85rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+                      A Agência ainda não pode receber pedidos para esta marca. Carregue a Brand Memory com os slices críticos da Fase 1 antes de seguir.
+                    </p>
+
+                    {phaseOneStatus && (
+                      <div style={{ padding: '0.85rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', background: 'rgba(255,255,255,0.03)' }}>
+                        <div style={{ fontWeight: 700, marginBottom: '0.45rem' }}>Diagnóstico da Fase 1</div>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', marginBottom: '0.45rem' }}>
+                          Agentes críticos encontrados: {phaseOneStatus.criticalAgentsFound?.map((item) => item.agent).join(', ') || 'nenhum'}
+                        </div>
+                        {phaseOneStatus.missingCriticalAgents?.length > 0 && (
+                          <ul style={{ margin: '0.45rem 0', paddingLeft: '1.1rem', color: 'var(--brand-red)', fontSize: '0.84rem' }}>
+                            {phaseOneStatus.missingCriticalAgents.map((item) => (
+                              <li key={item.agent}>{item.label}</li>
+                            ))}
+                          </ul>
+                        )}
+                        <div style={{ color: phaseOneStatus.hasAgent16 ? 'var(--success)' : 'var(--text-secondary)', fontSize: '0.84rem' }}>
+                          Agente 16: {phaseOneStatus.hasAgent16 ? 'encontrado' : 'não encontrado'}
+                        </div>
+                        <div style={{ color: phaseOneStatus.agent16HasExport ? 'var(--success)' : 'var(--text-secondary)', fontSize: '0.84rem' }}>
+                          Export Brand Memory: {phaseOneStatus.agent16HasExport ? 'encontrado' : 'não encontrado'}
+                        </div>
+                        <div style={{ color: 'var(--accent-blue)', fontSize: '0.84rem', marginTop: '0.55rem' }}>
+                          Próximo passo: {phaseOneStatus.nextStep}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.85rem' }}>
                     <Field label="Tipo de entrega">
