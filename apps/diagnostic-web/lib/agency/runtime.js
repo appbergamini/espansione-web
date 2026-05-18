@@ -87,7 +87,7 @@ export async function resolveBrandContext(db, { projetoId, brandId }) {
     db.from('projetos').select('*').eq('id', projetoId).maybeSingle(),
     db
       .from('diagnostic_runs')
-      .select('brand_id, brands(id, slug, name, industry)')
+      .select('brand_id')
       .eq('espansione_project_id', projetoId)
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false })
@@ -98,9 +98,20 @@ export async function resolveBrandContext(db, { projetoId, brandId }) {
   if (projetoError) throw projetoError;
   if (runError) throw runError;
 
+  let brand = null;
+  if (run?.brand_id) {
+    const { data: brandData, error: brandError } = await db
+      .from('brands')
+      .select('id, slug, name, industry')
+      .eq('id', run.brand_id)
+      .maybeSingle();
+    if (brandError) throw brandError;
+    brand = brandData || null;
+  }
+
   return {
     projeto: projeto || null,
-    brand: run?.brands || null,
+    brand,
   };
 }
 

@@ -60,6 +60,53 @@ function compactOutput(output) {
   };
 }
 
+function slugify(value = '') {
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function isGenericBrandName(value = '') {
+  const normalized = slugify(value);
+  return !normalized || ['marca', 'marca-sem-nome', 'sem-nome', 'brand', 'untitled'].includes(normalized);
+}
+
+function projectBrandName(projeto, fallback) {
+  return projeto?.cliente || projeto?.nome || fallback || 'Marca sem nome';
+}
+
+function projectBrandSlug(projeto, brandName, fallback) {
+  if (projeto?.slug) return projeto.slug;
+  if (projeto?.cliente_slug) return projeto.cliente_slug;
+  if (fallback && !isGenericBrandName(fallback)) return fallback;
+  return slugify(brandName || 'marca');
+}
+
+function normalizeDiagnosticForProject(diagnostic, projeto) {
+  const fallbackName = diagnostic?.brand_name;
+  const brandName = isGenericBrandName(fallbackName)
+    ? projectBrandName(projeto, fallbackName)
+    : fallbackName;
+  const brandSlug = projectBrandSlug(projeto, brandName, diagnostic?.brand_slug);
+
+  return {
+    ...diagnostic,
+    brand_name: brandName,
+    brand_slug: brandSlug,
+    industry: diagnostic?.industry || projeto?.segmento || projeto?.industry || null,
+    espansione_project_id: projeto.id,
+    schema_version: '2.0',
+    meta: {
+      ...(diagnostic?.meta || {}),
+      consolidated_at: diagnostic?.meta?.consolidated_at || new Date().toISOString(),
+      schema_version: '2.0',
+    },
+  };
+}
+
 function legacyPersonaFromOutput(output) {
   const raw = compactOutput(output);
   return raw
@@ -191,7 +238,7 @@ export default async function handler(req, res) {
   try {
     const [{ data: profile }, { data: projeto }] = await Promise.all([
       db.from('profiles').select('empresa_id, role').eq('id', user.id).single(),
-      db.from('projetos').select('empresa_id, responsavel_email').eq('id', projetoId).single(),
+      db.from('projetos').select('*').eq('id', projetoId).single(),
     ]);
 
     if (!projeto) return res.status(404).json({ success: false, error: 'Projeto não encontrado' });
@@ -248,6 +295,8 @@ export default async function handler(req, res) {
 
       diagnostic = buildLegacyDiagnostic(projeto, outputsByAgent);
     }
+
+    diagnostic = normalizeDiagnosticForProject(diagnostic, projeto);
 
     if (!isAgencyUsableDiagnostic(diagnostic)) {
       return res.status(400).json({ success: false, error: 'Brand Memory insuficiente: faltam relatórios críticos 6, 9, 12 ou 13.' });
