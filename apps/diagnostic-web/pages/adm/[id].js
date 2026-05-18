@@ -821,8 +821,11 @@ export default function ProjetoDetalhes() {
     : null;
   const hasAgentOutput = (agentNum) => agentNumsCompletos.includes(agentNum);
   const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
+  const brandMemoryOutput = outputs.find(o => o.agent_num === 16) || null;
   const brandMemoryExportDone = hasAgentOutput(16);
-  const brandMemoryExportReady = !brandMemoryExportDone && brandMemoryExportDeps.ok && !pendingCkpt;
+  const brandMemoryExportValid = !!brandMemoryOutput?.conteudo?.match(/<brand_memory_export>[\s\S]*?<\/brand_memory_export>/i);
+  const brandMemoryExportInvalid = brandMemoryExportDone && !brandMemoryExportValid;
+  const brandMemoryExportReady = (!brandMemoryExportDone || brandMemoryExportInvalid) && brandMemoryExportDeps.ok && !pendingCkpt;
   const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
   const fluxoAgentes = CATALOGO_AGENTES
     .filter(a => !a.modular || a.agent_num === 16 || (a.agent_num === 14 && projetoTemEvp))
@@ -950,7 +953,11 @@ export default function ProjetoDetalhes() {
                     disabled={runningAgent !== null}
                     onClick={() => handleRequestRun(16)}
                   >
-                    {runningAgent === 16 ? (engineStage || 'Gerando export...') : 'Gerar Brand Memory'}
+                    {runningAgent === 16
+                      ? (engineStage || 'Gerando export...')
+                      : brandMemoryExportInvalid
+                        ? 'Regenerar Brand Memory'
+                        : 'Gerar Brand Memory'}
                   </button>
                 ) : (
                   <div style={{ color: 'var(--success)', fontWeight: 700, fontSize: '0.9rem', textAlign: 'center' }}>
@@ -967,6 +974,11 @@ export default function ProjetoDetalhes() {
                 {engineError && (
                   <div style={{ color: 'var(--brand-red)', fontSize: '0.78rem', textAlign: 'center' }}>
                     {engineError.includes('Missing fields') ? 'Faltam dados antes de rodar este agente.' : engineError}
+                  </div>
+                )}
+                {brandMemoryExportInvalid && !engineError && (
+                  <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
+                    O Agente 16 antigo não tem export válido. Regere antes de usar a Agência.
                   </div>
                 )}
               </div>
