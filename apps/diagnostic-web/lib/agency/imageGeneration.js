@@ -66,9 +66,10 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
   }
 
   return [
-    'Crie somente a imagem/fundo da arte de marketing em formato quadrado 1:1, pronta para receber texto por cima em uma camada separada.',
+    'Crie uma arte final de marketing em formato quadrado 1:1 com o texto aplicado dentro da imagem.',
     'Use a direção visual aprovada como fonte principal. Não adicione logotipos, selos, marcas de terceiros, dados, números ou claims que não estejam no material aprovado.',
-    'REGRA CRÍTICA: não inclua nenhuma palavra, letra, frase, número, assinatura, legenda, botão, texto simulado, placa, tipografia ou caracteres na imagem. Deixe áreas com respiro visual para aplicação posterior de texto real.',
+    'REGRA CRÍTICA: renderize apenas os textos informados abaixo, exatamente como estão. Não invente palavras, não corrija o texto, não adicione assinatura, legenda, botão, marca d’água, caracteres decorativos ou texto simulado.',
+    'Priorize tipografia grande, limpa, com alto contraste e poucas quebras de linha. Se o texto for longo, use a headline e o CTA como elementos principais e deixe o corpo como apoio curto.',
     '',
     'CONTEXTO DO PEDIDO:',
     `Tipo: ${request?.request_type || 'social_post'}`,
@@ -78,15 +79,12 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
     `Contexto: ${request?.context || 'não especificado'}`,
     '',
     'TEXTO APROVADO:',
-    'O texto abaixo é apenas contexto para composição. NÃO renderize esse texto dentro da imagem.',
     finalCopy || 'Sem texto final obrigatório.',
     '',
     'HEADLINE:',
-    'A headline será aplicada depois em HTML/CSS. NÃO renderize na imagem.',
     headline || 'Sem headline obrigatória.',
     '',
     'CTA:',
-    'O CTA será aplicado depois em HTML/CSS. NÃO renderize na imagem.',
     cta || 'Sem CTA obrigatório.',
     '',
     'DIREÇÃO VISUAL APROVADA:',

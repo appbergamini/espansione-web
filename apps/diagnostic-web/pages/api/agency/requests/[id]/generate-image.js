@@ -69,6 +69,7 @@ export default async function handler(req, res) {
       success: true,
       image,
       overlayText,
+      compositionMode: 'baked_text',
       prompt,
       runId: approvedRun.id,
     });

@@ -133,6 +133,7 @@ export default function AgencyRequestDetailPage() {
       setGeneratedImage({
         src: `data:${json.image.mimeType || 'image/png'};base64,${json.image.b64}`,
         model: json.image.model,
+        compositionMode: json.compositionMode,
         overlayText: json.overlayText || {},
         prompt: json.prompt,
         revisedPrompt: json.image.revisedPrompt,
@@ -544,15 +545,33 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
 
           {generatedImage?.src && (
             <div style={{ display: 'grid', gap: '0.65rem' }}>
-              <ComposedArtworkPreview image={generatedImage} />
+              {generatedImage.compositionMode === 'baked_text' ? (
+                <img
+                  src={generatedImage.src}
+                  alt="Arte aprovada gerada por GPT Image"
+                  style={{ width: '100%', maxWidth: 560, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}
+                />
+              ) : (
+                <ComposedArtworkPreview image={generatedImage} />
+              )}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => downloadComposedArtwork(generatedImage)}
-                  style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}
-                >
-                  Baixar PNG com texto correto
-                </button>
+                {generatedImage.compositionMode === 'baked_text' ? (
+                  <a
+                    href={generatedImage.src}
+                    download="arte-aprovada-espansione.png"
+                    style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}
+                  >
+                    Baixar PNG
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => downloadComposedArtwork(generatedImage)}
+                    style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}
+                  >
+                    Baixar PNG com texto correto
+                  </button>
+                )}
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
                   Modelo: {formatValue(generatedImage.model)}
                 </span>
