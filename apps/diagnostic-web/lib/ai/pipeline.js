@@ -14,6 +14,7 @@ import {
   getExpectedBrandMemorySlices,
   validateAgentBrandMemoryExport,
 } from '../brand-memory/exportValidation';
+import { getReadyCuratedEvidencePack } from '../curated-evidence/pack';
 
 export const AGENT_CONFIGS = {
   1:  { name: 'Roteiros VI — Entrevistas Internas',      stage: 'pre_diagnostico',      inputs: [],            checkpoint: null },
@@ -131,6 +132,15 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
     } catch (e) {
       console.error('[pipeline] falha ao carregar clusters:', e.message);
       context.clustersComunicacao = [];
+    }
+  }
+
+  if (agentNum === 6 && supabaseAdmin) {
+    try {
+      context.curatedEvidencePack = await getReadyCuratedEvidencePack(supabaseAdmin, projetoId);
+    } catch (e) {
+      console.error('[pipeline] falha ao carregar curatedEvidencePack:', e.message);
+      context.curatedEvidencePack = null;
     }
   }
 

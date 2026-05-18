@@ -8,7 +8,8 @@ import {
   AC_PRINCIPIOS,
   AC_REGRA_SEM_HTML,
   AC_REGRA_FINDINGS,
-} from './_anaCoutoKB';
+} from './_anaCoutoKB.js';
+import { buildAgent6CuratedEvidenceContext } from '../curated-evidence/pack.js';
 
 // Agente 6 — Decodificação e Direcionamento Estratégico
 // Especificação: agente_6_decodificacao_direcionamento.md
@@ -480,8 +481,20 @@ export const Agent_06_VisaoGeral = {
     dumpOutputLean('CONSOLIDADO VE (Output 4 — só Parte A)', ctxVe, { trimParteB: true });
     dumpOutputLean('VM — VISÃO DE MERCADO (Output 5)', ctxVm);
 
+    const curatedEvidenceContext = buildAgent6CuratedEvidenceContext(context.curatedEvidencePack);
+    if (curatedEvidenceContext) {
+      parts.push(curatedEvidenceContext);
+      parts.push('');
+    } else {
+      parts.push('=== CURADORIA VI/VE/VM — NÃO DISPONÍVEL ===');
+      parts.push('Sinalize que a síntese foi produzida sem pacote curado humano prévio. Não suavize divergências por falta de curadoria.');
+      parts.push('');
+    }
+
     parts.push('=== INSTRUÇÕES DE EXECUÇÃO ===');
     parts.push('- Rode TODOS os passos sequencialmente: Passo 1 (convergência) → Passo 2 (IDA + filtro DISC) → Passo 3 (De-Para) → Passo 4 (Diretrizes).');
+    parts.push('- Use a Curadoria VI/VE/VM como camada de controle humano: evidências fortes podem sustentar decisões; evidências fracas devem virar hipótese; lacunas devem aparecer como limitação.');
+    parts.push('- Preserve contradições declaradas na curadoria. Não harmonize tensões VI/VE/VM sem nomear o conflito e seu impacto estratégico.');
     parts.push('- Entregue PARTE A (ANALÍTICO) e PARTE B (DEVOLUTIVA) dentro de <conteudo>, separadas por "---".');
     parts.push('- Classifique CADA achado no mapa de convergência (A / B1 / B2 / B3 / C / D) com código de lentes.');
     parts.push('- Aplique filtro DISC em CADA item do IDA e em CADA Diretriz (com parágrafo explícito).');

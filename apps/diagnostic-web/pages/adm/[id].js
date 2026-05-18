@@ -101,6 +101,220 @@ function BrandMemoryExportReadinessPanel({ readiness }) {
   );
 }
 
+function CuratedEvidencePackPanel({ projectId, pack, outputs, onSaved }) {
+  const [form, setForm] = useState(() => buildCuratedEvidenceForm(pack));
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setForm(buildCuratedEvidenceForm(pack));
+    setMessage('');
+  }, [pack?.id, pack?.updated_at]);
+
+  const hasSources = Boolean(outputs.vi || outputs.ve || outputs.vm);
+  if (!hasSources) return null;
+
+  const sourceOutputs = {
+    vi_output_id: outputs.vi?.id,
+    ve_output_id: outputs.ve?.id,
+    vm_output_id: outputs.vm?.id,
+  };
+  const isReady = pack?.status === 'ready_for_agent_6';
+
+  const save = async (status) => {
+    setSaving(true);
+    setMessage('');
+    try {
+      const payload = {
+        id: pack?.id,
+        project_id: projectId,
+        pack: {
+          project_id: projectId,
+          source_outputs: sourceOutputs,
+          strong_evidence: parseEvidenceLines(form.strongEvidence, 'strong'),
+          weak_evidence: parseEvidenceLines(form.weakEvidence, 'weak'),
+          contradictions: parseContradictionLines(form.contradictions),
+          evidence_gaps: parseTextLines(form.evidenceGaps),
+          sensitive_points: parseTextLines(form.sensitivePoints),
+          unresolved_questions: parseTextLines(form.unresolvedQuestions),
+          assumptions_to_validate: parseTextLines(form.assumptionsToValidate),
+          curator_notes: form.curatorNotes,
+          status,
+        },
+      };
+      const res = await fetch('/api/curated-evidence-packs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Falha ao salvar curadoria');
+      setMessage(status === 'ready_for_agent_6' ? 'Curadoria pronta para o Agente 6.' : 'Rascunho salvo.');
+      await onSaved?.();
+    } catch (error) {
+      setMessage(`Erro: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const lensCard = (label, output) => (
+    <div style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.025)', borderRadius: 8, padding: '0.75rem', minWidth: 0 }}>
+      <div style={{ color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.78rem' }}>{label}</div>
+      {output ? (
+        <>
+          <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {output.resumo_executivo || output.conclusoes || 'Output disponível.'}
+          </p>
+          <Link href={`/adm/${projectId}/outputs/${output.agent_num}`} style={{ display: 'inline-block', marginTop: '0.5rem', color: 'var(--accent-blue)', fontSize: '0.76rem', fontWeight: 700, textDecoration: 'none' }}>
+            Abrir output
+          </Link>
+        </>
+      ) : (
+        <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--warning)' }}>Ainda não gerado.</p>
+      )}
+    </div>
+  );
+
+  return (
+    <section className="glass-card" style={{ padding: '1.1rem', marginBottom: '1.25rem', borderColor: isReady ? 'rgba(16,185,129,0.28)' : 'rgba(167,139,250,0.32)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '0.9rem' }}>
+        <div>
+          <p style={{ margin: 0, color: 'var(--accent-purple, #a78bfa)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
+            Antes do Agente 6
+          </p>
+          <h2 style={{ margin: '0.2rem 0 0', fontSize: '1rem' }}>Curadoria VI/VE/VM</h2>
+          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.45 }}>
+            Pacote humano de evidências, lacunas e contradições para orientar a síntese estratégica.
+          </p>
+        </div>
+        <span style={{ borderRadius: 999, padding: '0.28rem 0.7rem', fontSize: '0.78rem', fontWeight: 800, color: isReady ? 'var(--success)' : 'var(--warning)', background: isReady ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', border: `1px solid ${isReady ? 'rgba(16,185,129,0.28)' : 'rgba(245,158,11,0.28)'}` }}>
+          {isReady ? 'pronto para Agente 6' : 'rascunho ou pendente'}
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '0.65rem', marginBottom: '0.9rem' }}>
+        {lensCard('VI · Visão Interna', outputs.vi)}
+        {lensCard('VE · Visão Externa', outputs.ve)}
+        {lensCard('VM · Visão de Mercado', outputs.vm)}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '0.75rem' }}>
+        <CuratedTextArea label="Evidências fortes" value={form.strongEvidence} onChange={(value) => setForm({ ...form, strongEvidence: value })} placeholder="vi | Cliente valoriza profundidade | Descrição objetiva da evidência" />
+        <CuratedTextArea label="Evidências fracas / hipóteses" value={form.weakEvidence} onChange={(value) => setForm({ ...form, weakEvidence: value })} placeholder="vm | Mercado pouco comprovado | Tratar como hipótese até validar" />
+        <CuratedTextArea label="Contradições" value={form.contradictions} onChange={(value) => setForm({ ...form, contradictions: value })} placeholder="Título | sinal VI | sinal VE | sinal VM | por que importa" />
+        <CuratedTextArea label="Lacunas de evidência" value={form.evidenceGaps} onChange={(value) => setForm({ ...form, evidenceGaps: value })} placeholder="Uma lacuna por linha" />
+        <CuratedTextArea label="Pontos sensíveis" value={form.sensitivePoints} onChange={(value) => setForm({ ...form, sensitivePoints: value })} placeholder="Um ponto sensível por linha" />
+        <CuratedTextArea label="Perguntas e hipóteses" value={`${form.unresolvedQuestions}${form.unresolvedQuestions && form.assumptionsToValidate ? '\n--- hipóteses ---\n' : ''}${form.assumptionsToValidate}`} onChange={(value) => {
+          const [questions, assumptions = ''] = value.split(/\n---\s*hip[oó]teses\s*---\n/i);
+          setForm({ ...form, unresolvedQuestions: questions || '', assumptionsToValidate: assumptions || '' });
+        }} placeholder={'Perguntas em aberto\n--- hipóteses ---\nHipóteses a validar'} />
+      </div>
+
+      <textarea
+        className="form-input"
+        value={form.curatorNotes}
+        onChange={(event) => setForm({ ...form, curatorNotes: event.target.value })}
+        placeholder="Notas da curadoria"
+        style={{ width: '100%', margin: '0.75rem 0 0', minHeight: 78, resize: 'vertical', fontSize: '0.82rem' }}
+      />
+
+      <div style={{ display: 'flex', gap: '0.55rem', marginTop: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button onClick={() => save('draft')} disabled={saving} style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.35)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.55rem 0.9rem', fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}>
+          {saving ? 'Salvando...' : 'Salvar rascunho'}
+        </button>
+        <button onClick={() => save('ready_for_agent_6')} disabled={saving} className="btn-primary" style={{ padding: '0.55rem 0.9rem', background: 'rgba(16,185,129,0.9)' }}>
+          Marcar pronto para Agente 6
+        </button>
+        {message && <span style={{ color: message.startsWith('Erro') ? 'var(--brand-red)' : 'var(--success)', fontSize: '0.78rem', fontWeight: 700 }}>{message}</span>}
+      </div>
+    </section>
+  );
+}
+
+function CuratedTextArea({ label, value, onChange, placeholder }) {
+  return (
+    <label style={{ display: 'grid', gap: '0.3rem', minWidth: 0 }}>
+      <span style={{ color: 'var(--text-primary)', fontSize: '0.78rem', fontWeight: 800 }}>{label}</span>
+      <textarea
+        className="form-input"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        style={{ width: '100%', minHeight: 110, resize: 'vertical', fontSize: '0.78rem', margin: 0, lineHeight: 1.45 }}
+      />
+    </label>
+  );
+}
+
+function buildCuratedEvidenceForm(pack) {
+  return {
+    strongEvidence: evidenceToText(pack?.strong_evidence || []),
+    weakEvidence: evidenceToText(pack?.weak_evidence || []),
+    contradictions: contradictionsToText(pack?.contradictions || []),
+    evidenceGaps: textLinesToText(pack?.evidence_gaps || []),
+    sensitivePoints: textLinesToText(pack?.sensitive_points || []),
+    unresolvedQuestions: textLinesToText(pack?.unresolved_questions || []),
+    assumptionsToValidate: textLinesToText(pack?.assumptions_to_validate || []),
+    curatorNotes: pack?.curator_notes || '',
+  };
+}
+
+function evidenceToText(items) {
+  return (items || []).map((item) => [
+    item.source_lens || 'vi',
+    item.title || '',
+    item.description || '',
+    item.source_reference || '',
+  ].join(' | ').replace(/\s+\|\s+$/g, '')).join('\n');
+}
+
+function contradictionsToText(items) {
+  return (items || []).map((item) => [
+    item.title || '',
+    item.vi_signal || '',
+    item.ve_signal || '',
+    item.vm_signal || '',
+    item.why_it_matters || '',
+  ].join(' | ').replace(/\s+\|\s+$/g, '')).join('\n');
+}
+
+function textLinesToText(items) {
+  return (items || []).join('\n');
+}
+
+function parseEvidenceLines(text, strength) {
+  return parseTextLines(text).map((line) => {
+    const [lensRaw, titleRaw, descriptionRaw, referenceRaw] = line.split('|').map((part) => part.trim());
+    const lens = ['vi', 've', 'vm'].includes(lensRaw) ? lensRaw : 'vi';
+    return {
+      source_lens: lens,
+      title: titleRaw || (['vi', 've', 'vm'].includes(lensRaw) ? descriptionRaw : lensRaw) || 'Evidência',
+      description: descriptionRaw || titleRaw || line,
+      source_reference: referenceRaw || undefined,
+      evidence_strength: strength,
+    };
+  });
+}
+
+function parseContradictionLines(text) {
+  return parseTextLines(text).map((line) => {
+    const [title, viSignal, veSignal, vmSignal, why] = line.split('|').map((part) => part.trim());
+    return {
+      title: title || 'Contradição VI/VE/VM',
+      vi_signal: viSignal || undefined,
+      ve_signal: veSignal || undefined,
+      vm_signal: vmSignal || undefined,
+      why_it_matters: why || line,
+      should_preserve_for_strategy: true,
+    };
+  });
+}
+
+function parseTextLines(text) {
+  return String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
+}
+
 export default function ProjetoDetalhes() {
   const router = useRouter();
   const { id } = router.query;
@@ -247,6 +461,20 @@ export default function ProjetoDetalhes() {
   ];
 
   const handleRequestRun = (agentNum) => {
+    if (Number(agentNum) === 6) {
+      const outputsList = Array.isArray(data?.outputs) ? data.outputs : [];
+      const hasAgent6 = outputsList.some((output) => Number(output.agent_num) === 6);
+      const curatedReady = data?.curatedEvidencePack?.status === 'ready_for_agent_6';
+      if (!hasAgent6 && !curatedReady) {
+        const ok = window.confirm(
+          'A Curadoria VI/VE/VM ainda não está marcada como pronta para o Agente 6.\n\nVocê pode seguir, mas a síntese estratégica será gerada sem o pacote humano de evidências, lacunas e contradições. Deseja rodar mesmo assim?'
+        );
+        if (!ok) {
+          setEngineError('Prepare a Curadoria VI/VE/VM e marque como pronta antes de rodar o Agente 6.');
+          return;
+        }
+      }
+    }
     setPickerMode('agent');
     setPendingAgentNum(agentNum);
     setShowModelPicker(true);
@@ -931,6 +1159,10 @@ export default function ProjetoDetalhes() {
   const checkpointAgent = pendingCkpt ? CATALOGO_AGENTES.find(a => a.checkpoint === pendingCkpt.checkpoint_num) : null;
   const checkpointOutput = checkpointAgent ? latestOutputs.find(o => o.agent_num === checkpointAgent.agent_num) : null;
   const hasAgentOutput = (agentNum) => agentNumsCompletos.includes(agentNum);
+  const curatedEvidencePack = data.curatedEvidencePack || null;
+  const viOutput = latestOutputs.find(o => Number(o.agent_num) === 2) || null;
+  const veOutput = latestOutputs.find(o => Number(o.agent_num) === 4) || null;
+  const vmOutput = latestOutputs.find(o => Number(o.agent_num) === 5) || null;
   const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
   const brandMemoryExportReadiness = buildBrandMemoryExportReadiness(latestOutputs, { includeEvp: projetoTemEvp });
   const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
@@ -1146,6 +1378,13 @@ export default function ProjetoDetalhes() {
               </div>
             )}
           </section>
+
+          <CuratedEvidencePackPanel
+            projectId={id}
+            pack={curatedEvidencePack}
+            outputs={{ vi: viOutput, ve: veOutput, vm: vmOutput }}
+            onSaved={loadData}
+          />
 
           <BrandMemoryExportReadinessPanel readiness={brandMemoryExportReadiness} />
 
