@@ -7,6 +7,7 @@ import RespondentesManager from '../../components/RespondentesManager';
 import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import ClustersCard from '../../components/clusters/ClustersCard';
+import OutputQualityPanel from '../../components/output/OutputQualityPanel';
 import { supabase } from '../../lib/supabaseClient';
 import { generateOutputPdf } from '../../lib/pdf/outputPdf';
 import {
@@ -17,6 +18,10 @@ import {
   podeExecutar,
   formatarTituloAdmin,
 } from '../../lib/agents/catalog';
+import {
+  canPrepareBrandMemoryBeforeEditorial,
+  getPrimaryAdminAction,
+} from '../../lib/agents/adminFlow';
 import { getCisParsed, COMPETENCIAS_KEYS } from '../../lib/cis/parseCis';
 
 // Formato "02. Consolidado da Visão Interna (VI)" — preserva layout
@@ -851,6 +856,8 @@ export default function ProjetoDetalhes() {
   const pendingCkpt = (pendingCheckpoints && pendingCheckpoints.length > 0) 
     ? [...pendingCheckpoints].sort((a,b) => a.checkpoint_num - b.checkpoint_num)[0]
     : null;
+  const checkpointAgent = pendingCkpt ? CATALOGO_AGENTES.find(a => a.checkpoint === pendingCkpt.checkpoint_num) : null;
+  const checkpointOutput = checkpointAgent ? latestOutputs.find(o => o.agent_num === checkpointAgent.agent_num) : null;
   const hasAgentOutput = (agentNum) => agentNumsCompletos.includes(agentNum);
   const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
   const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
@@ -859,14 +866,39 @@ export default function ProjetoDetalhes() {
   const brandMemoryExportInvalid = brandMemoryExportDone && !brandMemoryExportValid;
   const brandMemoryExportReady = (!brandMemoryExportDone || brandMemoryExportInvalid) && brandMemoryExportDeps.ok && !pendingCkpt;
   const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
+  const editorialOutputDone = hasAgentOutput(15);
+  const primaryAction = getPrimaryAdminAction({
+    pendingCheckpoint: pendingCkpt,
+    nextAgent,
+    brandMemoryExportReady,
+    brandMemoryExportValid,
+    brandMemoryExportInvalid,
+  });
+  const brandMemoryIsPrimary = ['generate_brand_memory', 'load_brand_memory'].includes(primaryAction.type);
+  const showEditorialPendingBrandMemoryNotice = canPrepareBrandMemoryBeforeEditorial({
+    brandMemoryExportReady,
+    brandMemoryExportValid,
+    hasEditorialOutput: editorialOutputDone,
+  });
   const fluxoAgentes = CATALOGO_AGENTES
     .filter(a => !a.modular || a.agent_num === 16 || (a.agent_num === 14 && projetoTemEvp))
     .sort((a, b) => a.ordem_exibicao - b.ordem_exibicao);
   const etapaAtualLabel = pendingCkpt
     ? `Checkpoint ${pendingCkpt.checkpoint_num} pendente`
+    : primaryAction.type === 'generate_brand_memory'
+      ? (brandMemoryExportInvalid ? 'Brand Memory precisa ser regenerada' : 'Brand Memory pronta para exportação')
+      : primaryAction.type === 'load_brand_memory'
+        ? 'Brand Memory pronta para carregar'
     : nextAgent
       ? nomeAgente(nextAgent)
       : 'Esteira editorial completa';
+  const etapaAtualColor = pendingCkpt
+    ? 'var(--warning)'
+    : brandMemoryIsPrimary
+      ? 'var(--success)'
+      : nextAgent
+        ? 'var(--accent-blue)'
+        : 'var(--success)';
 
   // Render formatters
   const renderMarkdownText = (text) => {
@@ -920,7 +952,7 @@ export default function ProjetoDetalhes() {
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
                   Fluxo principal
                 </div>
-                <div style={{ color: pendingCkpt ? 'var(--warning)' : nextAgent ? 'var(--accent-blue)' : 'var(--success)', fontSize: '1rem', fontWeight: 800 }}>
+                <div style={{ color: etapaAtualColor, fontSize: '1rem', fontWeight: 800 }}>
                   {etapaAtualLabel}
                 </div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.35rem' }}>
@@ -931,7 +963,10 @@ export default function ProjetoDetalhes() {
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${fluxoAgentes.length}, minmax(34px, 1fr))`, gap: '0.35rem', alignItems: 'center', overflowX: 'auto', paddingBottom: '0.2rem' }}>
                 {fluxoAgentes.map((agent) => {
                   const done = hasAgentOutput(agent.agent_num);
-                  const current = nextAgent === agent.agent_num && !pendingCkpt;
+                  const current = !pendingCkpt && (
+                    (brandMemoryIsPrimary && agent.agent_num === 16)
+                    || (!brandMemoryIsPrimary && nextAgent === agent.agent_num)
+                  );
                   const blocked = !done && !current && !podeExecutar(agent.agent_num, agentNumsCompletos).ok;
                   const isMemory = agent.agent_num === 16;
                   const bg = done
@@ -960,7 +995,7 @@ export default function ProjetoDetalhes() {
               </div>
 
               <div style={{ display: 'grid', gap: '0.55rem' }}>
-                {pendingCkpt ? (
+                {primaryAction.type === 'approve_checkpoint' ? (
                   <button
                     className="btn-primary"
                     style={{ width: '100%', padding: '0.75rem', background: 'var(--warning)', color: '#000', filter: 'none', boxShadow: 'none' }}
@@ -969,36 +1004,34 @@ export default function ProjetoDetalhes() {
                   >
                     {approving ? 'Aprovando...' : `Aprovar Checkpoint ${pendingCkpt.checkpoint_num}`}
                   </button>
-                ) : nextAgent !== null ? (
-                  <button
-                    className="btn-primary"
-                    style={{ width: '100%', padding: '0.75rem' }}
-                    disabled={runningAgent !== null}
-                    onClick={() => handleRequestRun(nextAgent)}
-                  >
-                    {runningAgent !== null && runningAgent === nextAgent ? (engineStage || 'Processando...') : `Executar Agente ${nextAgent}`}
-                  </button>
-                ) : brandMemoryExportReady ? (
+                ) : primaryAction.type === 'generate_brand_memory' ? (
                   <button
                     className="btn-primary"
                     style={{ width: '100%', padding: '0.75rem', background: 'rgba(16,185,129,0.9)' }}
                     disabled={runningAgent !== null}
-                    onClick={() => handleRequestRun(16)}
+                    onClick={() => handleRequestRun(primaryAction.agentNum)}
                   >
-                    {runningAgent === 16
+                    {runningAgent === primaryAction.agentNum
                       ? (engineStage || 'Gerando export...')
-                      : brandMemoryExportInvalid
-                        ? 'Regenerar Brand Memory'
-                        : 'Gerar Brand Memory'}
+                      : primaryAction.label}
                   </button>
-                ) : brandMemoryExportValid ? (
+                ) : primaryAction.type === 'load_brand_memory' ? (
                   <button
                     className="btn-primary"
                     style={{ width: '100%', padding: '0.75rem', background: 'rgba(16,185,129,0.9)' }}
                     disabled={loadingBrandMemory}
                     onClick={handleLoadBrandMemory}
                   >
-                    {loadingBrandMemory ? 'Carregando...' : 'Carregar Brand Memory'}
+                    {loadingBrandMemory ? 'Carregando...' : primaryAction.label}
+                  </button>
+                ) : primaryAction.type === 'run_agent' ? (
+                  <button
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '0.75rem' }}
+                    disabled={runningAgent !== null}
+                    onClick={() => handleRequestRun(primaryAction.agentNum)}
+                  >
+                    {runningAgent !== null && runningAgent === primaryAction.agentNum ? (engineStage || 'Processando...') : primaryAction.label}
                   </button>
                 ) : (
                   <div style={{ color: 'var(--success)', fontWeight: 700, fontSize: '0.9rem', textAlign: 'center' }}>
@@ -1022,8 +1055,18 @@ export default function ProjetoDetalhes() {
                     O Agente 16 antigo não tem export válido. Regere antes de usar a Agência.
                   </div>
                 )}
+                {showEditorialPendingBrandMemoryNotice && !engineError && (
+                  <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
+                    Entregável editorial final ainda não foi gerado, mas a Brand Memory já pode ser preparada.
+                  </div>
+                )}
               </div>
             </div>
+            {pendingCkpt && (
+              <div style={{ marginTop: '1rem' }}>
+                <OutputQualityPanel metadata={checkpointOutput?.quality_metadata} />
+              </div>
+            )}
           </section>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(360px, 0.9fr)', gap: '1.25rem', alignItems: 'start', isolation: 'isolate' }}>

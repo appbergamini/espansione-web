@@ -90,6 +90,8 @@ export const db = {
           confianca: output.confianca || 'Media',
           fontes: output.fontes || '',
           gaps: output.gaps || '',
+          quality_metadata: output.quality_metadata || null,
+          execution_metadata: output.execution_metadata || null,
           findings_json: Array.isArray(output.findings_json) ? output.findings_json : null,
         }
       ])
@@ -271,7 +273,16 @@ export const db = {
           tokens_out: stats.tokensOut || 0,
           modelo: stats.model || '',
           status: stats.status || 'ok',
-          error_msg: stats.error || ''
+          error_msg: stats.error || '',
+          execution_metadata: stats.execution_metadata || stats.executionMetadata || {
+            provider: stats.provider || undefined,
+            model: stats.model || undefined,
+            input_tokens: stats.tokensIn || 0,
+            output_tokens: stats.tokensOut || 0,
+            total_tokens: (stats.tokensIn || 0) + (stats.tokensOut || 0),
+            duration_ms: stats.durationMs || stats.duration_ms || undefined,
+            error_message: stats.error || undefined,
+          },
         }
       ]);
 

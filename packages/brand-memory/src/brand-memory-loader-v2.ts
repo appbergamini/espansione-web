@@ -12,7 +12,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { EspansioneDiagnostic } from '@espansione/types';
+import type { BrandMemoryVersionStatus, EspansioneDiagnostic } from '@espansione/types';
 
 // ============================================================
 // PUBLIC API
@@ -21,6 +21,8 @@ import type { EspansioneDiagnostic } from '@espansione/types';
 export interface LoadResult {
   brandId: string;
   diagnosticRunId: string;
+  brandMemoryVersionId: string;
+  versionNumber: number;
   snapshotsWritten: number;
 }
 
@@ -28,6 +30,24 @@ export interface LoadBrandMemoryOptions {
   reviewedBy?: string;
   reviewedAt?: string;
   agent16OutputId?: string;
+  changeSummary?: string;
+}
+
+export interface ActiveBrandMemoryVersion {
+  id: string;
+  brandId: string;
+  diagnosticRunId: string | null;
+  sourceOutputId: string | null;
+  versionNumber: number;
+  status: BrandMemoryVersionStatus;
+  espansioneDiagnosticJson: EspansioneDiagnostic;
+  changeSummary: string | null;
+  validationStatus: string | null;
+  validationErrors: unknown[];
+  approvedBy: string | null;
+  activatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -55,10 +75,13 @@ export async function loadBrandMemory(
   await archivePreviousActive(supabase, brand.id);
   const snapshotsWritten = await insertSnapshots(supabase, brand.id, run.id, diagnostic);
   await finalizeRun(supabase, run.id);
+  const version = await activateBrandMemoryVersion(supabase, brand.id, run, diagnostic, options);
 
   return {
     brandId: brand.id,
     diagnosticRunId: run.id,
+    brandMemoryVersionId: version.id,
+    versionNumber: version.versionNumber,
     snapshotsWritten,
   };
 }
@@ -71,6 +94,11 @@ export async function getBrandMemory(
   supabase: SupabaseClient,
   brandId: string
 ): Promise<EspansioneDiagnostic | null> {
+  const activeVersion = await getActiveBrandMemoryVersion(supabase, brandId);
+  if (activeVersion?.espansioneDiagnosticJson) {
+    return activeVersion.espansioneDiagnosticJson;
+  }
+
   const { data: snapshots, error } = await supabase
     .from('brand_snapshots')
     .select('agent_id, data, diagnostic_run_id')
@@ -88,6 +116,41 @@ export async function getBrandMemory(
   if (!brand) return null;
 
   return reconstructDiagnostic(brand, snapshots);
+}
+
+export async function getActiveBrandMemoryVersion(
+  supabase: SupabaseClient,
+  brandId: string
+): Promise<ActiveBrandMemoryVersion | null> {
+  if (!brandId) return null;
+
+  const { data, error } = await supabase
+    .from('brand_memory_versions')
+    .select('*')
+    .eq('brand_id', brandId)
+    .eq('status', 'active')
+    .order('version_number', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    brandId: data.brand_id,
+    diagnosticRunId: data.diagnostic_run_id,
+    sourceOutputId: data.source_output_id,
+    versionNumber: data.version_number,
+    status: data.status,
+    espansioneDiagnosticJson: data.espansione_diagnostic_json as EspansioneDiagnostic,
+    changeSummary: data.change_summary,
+    validationStatus: data.validation_status,
+    validationErrors: data.validation_errors || [],
+    approvedBy: data.approved_by,
+    activatedAt: data.activated_at,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
 }
 
 /**
@@ -137,7 +200,7 @@ async function createRun(
   brandId: string,
   d: EspansioneDiagnostic,
   options: LoadBrandMemoryOptions
-): Promise<{ id: string }> {
+): Promise<{ id: string; version: number }> {
   const { data: latest } = await supabase
     .from('diagnostic_runs')
     .select('version')
@@ -160,11 +223,62 @@ async function createRun(
       human_reviewed_at: options.reviewedAt,
       human_reviewed_by: options.reviewedBy,
     })
-    .select('id')
+    .select('id, version')
     .single();
 
   if (error) throw new LoaderError(`create run failed: ${error.message}`);
   return data;
+}
+
+async function activateBrandMemoryVersion(
+  supabase: SupabaseClient,
+  brandId: string,
+  run: { id: string; version: number },
+  diagnostic: EspansioneDiagnostic,
+  options: LoadBrandMemoryOptions
+): Promise<{ id: string; versionNumber: number }> {
+  const { error: archiveError } = await supabase
+    .from('brand_memory_versions')
+    .update({ status: 'archived' })
+    .eq('brand_id', brandId)
+    .eq('status', 'active');
+
+  if (archiveError) {
+    throw new LoaderError(`archive previous Brand Memory versions failed: ${archiveError.message}`);
+  }
+
+  const validationErrors = diagnostic.meta?.validation_errors || [];
+  const validationStatus = validationErrors.length > 0 ? 'warnings' : 'valid';
+  const { data, error } = await supabase
+    .from('brand_memory_versions')
+    .insert({
+      brand_id: brandId,
+      diagnostic_run_id: run.id,
+      source_output_id: options.agent16OutputId ?? null,
+      version_number: run.version,
+      status: 'active',
+      espansione_diagnostic_json: diagnostic,
+      change_summary: options.changeSummary ?? buildDefaultChangeSummary(run.version),
+      validation_status: validationStatus,
+      validation_errors: validationErrors,
+      approved_by: options.reviewedBy ?? null,
+      activated_at: options.reviewedAt ?? new Date().toISOString(),
+    })
+    .select('id, version_number')
+    .single();
+
+  if (error) throw new LoaderError(`create Brand Memory version failed: ${error.message}`);
+
+  return {
+    id: data.id,
+    versionNumber: data.version_number,
+  };
+}
+
+function buildDefaultChangeSummary(version: number): string {
+  return version === 1
+    ? 'Primeira Brand Memory ativa carregada a partir do Agente 16.'
+    : `Brand Memory v${version} ativada a partir de novo carregamento revisado.`;
 }
 
 async function finalizeRun(

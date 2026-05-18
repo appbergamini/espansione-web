@@ -149,6 +149,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.101.0
         version: 2.105.4
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.19
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3

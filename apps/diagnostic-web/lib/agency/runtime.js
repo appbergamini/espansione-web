@@ -2,6 +2,7 @@ import {
   buildBrandKernel,
   validateBrandReadinessForAgency,
 } from '@espansione/agents';
+import { getActiveBrandMemoryVersion } from '@espansione/brand-memory';
 
 export const REQUEST_TYPES = [
   'social_post',
@@ -34,10 +35,12 @@ export const OBJECTIVES = [
 export const REQUEST_STATUSES = [
   'draft',
   'briefing_pending',
-  'briefing_created',
+  'briefing_generated',
+  'briefing_revision_requested',
   'briefing_approved',
   'generation_pending',
-  'generated',
+  'generation_running',
+  'approval_pending',
   'revision_requested',
   'approved',
   'rejected',
@@ -119,16 +122,18 @@ export async function getAgencyReadiness(db, brandId) {
   if (!brandId) {
     return {
       brandMemory: null,
+      brandMemoryVersion: null,
       readiness: validateBrandReadinessForAgency(null),
       brandKernel: null,
     };
   }
 
-  const brandMemory = await getAgencyBrandMemory(db, brandId);
+  const brandMemoryVersion = await getActiveBrandMemoryVersion(db, brandId);
+  const brandMemory = brandMemoryVersion?.espansioneDiagnosticJson || null;
   const readiness = validateBrandReadinessForAgency(brandMemory);
   const brandKernel = brandMemory ? buildBrandKernel(brandMemory) : null;
 
-  return { brandMemory, readiness, brandKernel };
+  return { brandMemory, brandMemoryVersion, readiness, brandKernel };
 }
 
 export async function getAgencyPhaseOneStatus(db, projetoId) {
@@ -178,6 +183,11 @@ export async function getAgencyPhaseOneStatus(db, projetoId) {
 }
 
 export async function getAgencyBrandMemory(db, brandId) {
+  const activeVersion = await getActiveBrandMemoryVersion(db, brandId);
+  if (activeVersion?.espansioneDiagnosticJson) {
+    return activeVersion.espansioneDiagnosticJson;
+  }
+
   const [{ data: brand, error: brandError }, { data: snapshots, error: snapshotsError }] = await Promise.all([
     db.from('brands').select('slug, name, industry').eq('id', brandId).maybeSingle(),
     db

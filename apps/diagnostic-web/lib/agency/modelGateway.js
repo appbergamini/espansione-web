@@ -1,4 +1,4 @@
-import { AIRouter } from '../ai/router';
+import { AIRouter } from '../ai/router.js';
 
 const DEFAULT_AGENCY_MODEL_KEY = 'gemini-flash';
 
@@ -53,12 +53,16 @@ export class AIRouterModelGateway {
       data,
       warnings: collectWarnings(data),
       brandMemorySlicesUsed: extractSlices(promptPack),
+      provider: inferProvider(result.model),
       model: result.model,
+      promptVersion: promptPack.promptVersion,
       tokens: {
         input: result.tokensIn || 0,
         output: result.tokensOut || 0,
         total: (result.tokensIn || 0) + (result.tokensOut || 0),
       },
+      estimatedCost: 0,
+      temperature: Number(process.env.AGENCY_MODEL_TEMPERATURE || 0.2),
     };
   }
 }
@@ -88,6 +92,16 @@ export class MockModelGateway {
         criterios_de_sucesso: ['Coerência estratégica', 'Clareza de mensagem', 'Aderência ao canal'],
         brand_memory_slices_used: ['decodificacao', 'plataforma_branding', 'experiencia', 'plano_comunicacao'],
         warnings: ['Output mockado para validação de fluxo; ainda não é geração final de IA.'],
+        quality_metadata: {
+          confidence_score: 72,
+          evidence_strength: 'medium',
+          evidence_gaps: ['Validar provas antes de transformar briefing em peça final.'],
+          assumptions: ['Pedido estruturado representa o objetivo real da demanda.'],
+          contradictions: [],
+          needs_human_attention: true,
+          risk_summary: 'Briefing mockado exige revisão humana antes da criação.',
+          source_coverage: { vi: true, ve: true, vm: true, forms: true, interviews: false, market_research: true },
+        },
       },
       copywriter: {
         copy_principal: 'Texto mockado do copywriter para validar o fluxo da Agência IA.',
@@ -118,6 +132,15 @@ export class MockModelGateway {
         riscos_de_incoerencia: ['Claim sem sustentação se números forem adicionados depois'],
         score_aderencia: 82,
         observacoes: ['Fluxo validado com mock.'],
+        quality_metadata: {
+          confidence_score: 80,
+          evidence_strength: 'medium',
+          evidence_gaps: ['Não há peça real para revisão editorial completa.'],
+          assumptions: ['A copy mockada será substituída por geração real.'],
+          contradictions: [],
+          needs_human_attention: true,
+          risk_summary: 'Não publicar conteúdo mockado.',
+        },
       },
       approver: {
         decisao: 'revision_requested',
@@ -128,6 +151,15 @@ export class MockModelGateway {
         ajustes_obrigatorios: ['Substituir outputs mockados por geração real antes de publicar.'],
         risco_principal: 'Publicar peça mockada como se fosse final.',
         justificativa: 'Fluxo técnico aprovado, conteúdo final ainda depende de execução real e revisão humana.',
+        quality_metadata: {
+          confidence_score: 76,
+          evidence_strength: 'medium',
+          evidence_gaps: ['Faltam evidências finais da peça real.'],
+          assumptions: ['A revisão humana ocorrerá antes de uso externo.'],
+          contradictions: [],
+          needs_human_attention: true,
+          risk_summary: 'Publicação automática ou sem revisão humana seria inadequada.',
+        },
       },
     };
 
@@ -136,8 +168,12 @@ export class MockModelGateway {
       data: outputByAgent[agentId],
       warnings: [`MockModelGateway usado para ${agentId}.`],
       brandMemorySlicesUsed: extractSlices(promptPack),
+      provider: 'mock',
       model: 'mock',
+      promptVersion: promptPack?.promptVersion,
       tokens: { input: 0, output: 0, total: 0 },
+      estimatedCost: 0,
+      temperature: 0,
     };
   }
 }
@@ -181,4 +217,11 @@ function extractAgencyRequest(promptPack) {
   const requestType = text.match(/"requestType":\s*"([^"]+)"/)?.[1];
   const desiredCta = text.match(/"desiredCta":\s*"([^"]+)"/)?.[1];
   return { channel, requestType, desiredCta };
+}
+
+function inferProvider(model = '') {
+  const value = String(model || '').toLowerCase();
+  if (value.includes('gemini')) return 'google';
+  if (value.includes('gpt') || value.includes('openai')) return 'openai';
+  return 'unknown';
 }

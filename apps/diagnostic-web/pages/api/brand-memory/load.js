@@ -1,6 +1,7 @@
 import { loadBrandMemory } from '@espansione/brand-memory';
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import { markProjectBrandMemoryActive } from '../../../lib/agency/projectLifecycle';
 
 function extractBrandMemoryExport(content = '') {
   const matches = Array.from(content.matchAll(/<brand_memory_export>([\s\S]*?)<\/brand_memory_export>/gi));
@@ -307,6 +308,8 @@ export default async function handler(req, res) {
       reviewedBy: user.id,
       agent16OutputId: output.id,
     });
+
+    await markProjectBrandMemoryActive(db, projetoId);
 
     return res.status(200).json({ success: true, result });
   } catch (err) {

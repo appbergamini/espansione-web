@@ -1,6 +1,6 @@
 import { getServerUser } from '../../../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../../../lib/supabaseAdmin';
-import { prepareAgencyRun } from '../../../../../lib/agency/prepareRun';
+import { generateAccountDirectorBriefing } from '../../../../../lib/agency/briefingGate';
 import { requireAgencyUser } from '../../../../../lib/agency/runtime';
 
 export default async function handler(req, res) {
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   try {
     await requireAgencyUser(supabaseAdmin, user);
-    const result = await prepareAgencyRun(supabaseAdmin, req.query.id);
+    const result = await generateAccountDirectorBriefing(supabaseAdmin, req.query.id);
     return res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error('[agency/prepare-run]', error);

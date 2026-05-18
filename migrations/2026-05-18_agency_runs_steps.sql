@@ -15,11 +15,11 @@ create table if not exists agency_runs (
   brand_kernel_version text,
   status text not null default 'pending' check (status in (
     'pending',
-    'ready',
     'running',
     'completed',
     'failed',
-    'cancelled'
+    'cancelled',
+    'partial'
   )),
   started_at timestamptz,
   completed_at timestamptz,
@@ -48,11 +48,11 @@ create table if not exists agency_steps (
   output jsonb,
   status text not null default 'pending' check (status in (
     'pending',
-    'ready',
     'running',
     'completed',
     'failed',
-    'skipped'
+    'skipped',
+    'regenerated'
   )),
   model_used text,
   tokens jsonb,

@@ -192,6 +192,16 @@ export default function AgencyRequestsPage() {
                 <p style={{ color: 'var(--text-secondary)', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
                   Pedido estruturado primeiro. Execução dos agentes depois, dentro de cada pedido.
                 </p>
+                {brand?.id && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.65rem' }}>
+                    <Link href={`/adm/${id}/agency/library?brand_id=${brand.id}`} style={{ color: 'var(--success)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
+                      Abrir Biblioteca da Marca
+                    </Link>
+                    <Link href={`/adm/${id}/agency/learnings?brand_id=${brand.id}`} style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
+                      Aprendizados Sugeridos
+                    </Link>
+                  </div>
+                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem' }}>
                 {[

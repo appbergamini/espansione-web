@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Logo from '../../../../components/Logo';
+import OutputQualityPanel from '../../../../components/output/OutputQualityPanel';
 import { supabase } from '../../../../lib/supabaseClient';
 
 const REQUEST_TYPE_LABELS = {
@@ -33,6 +34,27 @@ const OBJECTIVE_LABELS = {
   retention: 'Retenção',
 };
 
+const AGENCY_AGENT_ORDER = ['account_director', 'copywriter', 'visual_director', 'editor', 'approver'];
+
+const CREATIVE_ASSET_TYPE_LABELS = {
+  conceptual_image: 'Imagem conceitual',
+  moodboard_reference: 'Referência de moodboard',
+  background_image: 'Imagem de fundo',
+  visual_prompt: 'Prompt visual',
+  editable_art_reference: 'Referência para arte editável',
+  final_art: 'Arte final',
+};
+
+const CREATIVE_ASSET_STATUS_LABELS = {
+  draft: 'Rascunho',
+  generated: 'Gerado',
+  approved: 'Aprovado',
+  rejected: 'Rejeitado',
+  archived: 'Arquivado',
+};
+
+const EMBEDDED_TEXT_REVIEW_WARNING = 'Imagens com texto embutido exigem revisão humana de ortografia, legibilidade, marca e claims.';
+
 export default function AgencyRequestDetailPage() {
   const router = useRouter();
   const { id, requestId } = router.query;
@@ -43,9 +65,18 @@ export default function AgencyRequestDetailPage() {
   const [archiving, setArchiving] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [runningWorkflow, setRunningWorkflow] = useState(false);
+  const [approvingBriefing, setApprovingBriefing] = useState(false);
+  const [requestingBriefingRevision, setRequestingBriefingRevision] = useState(false);
+  const [briefingEditorValue, setBriefingEditorValue] = useState('');
+  const [briefingRevisionReason, setBriefingRevisionReason] = useState('');
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [generatedImages, setGeneratedImages] = useState([]);
+  const [reprocessingAction, setReprocessingAction] = useState('');
+  const [savingLibraryAction, setSavingLibraryAction] = useState('');
+  const [savingLearningAction, setSavingLearningAction] = useState('');
+  const [creativeAssets, setCreativeAssets] = useState([]);
+  const [savingAssetAction, setSavingAssetAction] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -57,6 +88,21 @@ export default function AgencyRequestDetailPage() {
     return () => { active = false; };
   }, [router]);
 
+  const loadCreativeAssets = async (nextRequest) => {
+    if (!nextRequest?.brand_id) {
+      setCreativeAssets([]);
+      return;
+    }
+    const query = new URLSearchParams({
+      brand_id: nextRequest.brand_id,
+      request_id: nextRequest.id,
+    });
+    const res = await fetch(`/api/agency/assets?${query}`);
+    const json = await readJsonOrThrow(res, 'Erro ao carregar ativos visuais');
+    if (!json.success) throw new Error(json.error || 'Erro ao carregar ativos visuais');
+    setCreativeAssets(json.assets || []);
+  };
+
   const loadRequest = async () => {
     if (!requestId) return;
     setLoading(true);
@@ -67,6 +113,7 @@ export default function AgencyRequestDetailPage() {
       if (!json.success) throw new Error(json.error || 'Erro ao carregar pedido');
       setRequest(json.request);
       setRuns(json.runs || []);
+      await loadCreativeAssets(json.request);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -77,6 +124,12 @@ export default function AgencyRequestDetailPage() {
   useEffect(() => {
     loadRequest();
   }, [requestId]);
+
+  useEffect(() => {
+    const briefing = request?.approved_briefing_json || request?.briefing_original_json;
+    setBriefingEditorValue(briefing ? JSON.stringify(briefing, null, 2) : '');
+    setBriefingRevisionReason(request?.briefing_revision_reason || '');
+  }, [request?.id, request?.briefing_original_json, request?.approved_briefing_json, request?.briefing_revision_reason]);
 
   const archiveRequest = async () => {
     if (!window.confirm('Arquivar este pedido?')) return;
@@ -123,6 +176,51 @@ export default function AgencyRequestDetailPage() {
     }
   };
 
+  const approveBriefing = async () => {
+    setApprovingBriefing(true);
+    setErrorMsg('');
+    try {
+      const originalText = request?.briefing_original_json ? JSON.stringify(request.briefing_original_json, null, 2) : '';
+      const editedText = String(briefingEditorValue || '').trim();
+      let editedBriefing = null;
+      if (editedText && editedText !== originalText) {
+        editedBriefing = JSON.parse(editedText);
+      }
+
+      const res = await fetch(`/api/agency/requests/${requestId}/briefing/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ editedBriefing }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao aprovar briefing');
+      if (!json.success) throw new Error(json.error || 'Erro ao aprovar briefing');
+      await loadRequest();
+    } catch (err) {
+      setErrorMsg(err.message.includes('JSON') ? 'O briefing editado precisa ser um JSON válido.' : err.message);
+    } finally {
+      setApprovingBriefing(false);
+    }
+  };
+
+  const requestBriefingRevision = async () => {
+    setRequestingBriefingRevision(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/agency/requests/${requestId}/briefing/revision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: briefingRevisionReason }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao solicitar revisão do briefing');
+      if (!json.success) throw new Error(json.error || 'Erro ao solicitar revisão do briefing');
+      await loadRequest();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setRequestingBriefingRevision(false);
+    }
+  };
+
   const generateApprovedImage = async () => {
     setGeneratingImage(true);
     setErrorMsg('');
@@ -131,16 +229,18 @@ export default function AgencyRequestDetailPage() {
       const json = await readJsonOrThrow(res, 'Erro ao gerar imagem');
       if (!json.success) throw new Error(json.error || 'Erro ao gerar imagem');
       const nextImage = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        src: `data:${json.image.mimeType || 'image/png'};base64,${json.image.b64}`,
+        id: json.asset?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        src: json.asset?.file_url || `data:${json.image.mimeType || 'image/png'};base64,${json.image.b64}`,
         model: json.image.model,
         compositionMode: json.compositionMode,
         overlayText: json.overlayText || {},
         prompt: json.prompt,
         revisedPrompt: json.image.revisedPrompt,
+        asset: json.asset,
       };
       setGeneratedImages((current) => [nextImage, ...current]);
       setGeneratedImage(nextImage);
+      if (json.asset) setCreativeAssets((current) => [json.asset, ...current.filter((asset) => asset.id !== json.asset.id)]);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -148,9 +248,227 @@ export default function AgencyRequestDetailPage() {
     }
   };
 
+  const runStepAction = async (action, agentId) => {
+    if (!latestRun?.id) return;
+    const approvedRequest = request?.status === 'approved';
+    let confirmApproved = false;
+    if (approvedRequest) {
+      confirmApproved = window.confirm('Este pedido já está aprovado. Criar uma nova versão vai manter o histórico, mas mudar o status do pedido. Continuar?');
+      if (!confirmApproved) return;
+    }
+
+    setReprocessingAction(`${action}:${agentId}`);
+    setErrorMsg('');
+    try {
+      const endpoint = action === 'from'
+        ? 'regenerate-from-step'
+        : 'regenerate-step';
+      const res = await fetch(`/api/agency/runs/${latestRun.id}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId, confirmApproved }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao reprocessar agente');
+      if (!json.success) throw new Error(json.error || 'Erro ao reprocessar agente');
+      await loadRequest();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setReprocessingAction('');
+    }
+  };
+
+  const createVariation = async () => {
+    if (!latestRun?.id) return;
+    const label = window.prompt('Nome da variação', `Variação ${runs.length + 1}`);
+    if (label === null) return;
+
+    setReprocessingAction('variation');
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/agency/runs/${latestRun.id}/variation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: label || undefined }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao criar variação');
+      if (!json.success) throw new Error(json.error || 'Erro ao criar variação');
+      await loadRequest();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setReprocessingAction('');
+    }
+  };
+
+  const saveStepToLibrary = async (agentId, step, polarity) => {
+    if (!latestRun?.id || !step?.id) return;
+    const itemType = libraryItemTypeForAgent(agentId, polarity);
+    const notes = window.prompt(
+      polarity === 'positive'
+        ? 'Notas para salvar como exemplo positivo'
+        : 'Notas para salvar como exemplo negativo',
+      ''
+    );
+    if (notes === null) return;
+
+    setSavingLibraryAction(`${step.id}:${polarity}`);
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/agency/runs/${latestRun.id}/library`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemType,
+          sourceStepId: step.id,
+          notes,
+          tags: [polarity, agentId],
+        }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao salvar na Biblioteca');
+      if (!json.success) throw new Error(json.error || 'Erro ao salvar na Biblioteca');
+      await loadRequest();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSavingLibraryAction('');
+    }
+  };
+
+  const createLearningFromStep = async (agentId, step) => {
+    if (!latestRun?.id || !step?.id) return;
+    const learningType = window.prompt('Tipo de aprendizado', defaultLearningTypeForAgent(agentId, step));
+    if (!learningType) return;
+    const content = window.prompt('Conteúdo do aprendizado', defaultLearningContent(agentId, step));
+    if (!content) return;
+    const rationale = window.prompt('Justificativa', `Sugerido a partir do step ${labelAgent(agentId)}.`) || '';
+
+    setSavingLearningAction(step.id);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/agency/learnings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceAgencyRunId: latestRun.id,
+          sourceAgencyRequestId: request.id,
+          learningType,
+          content,
+          rationale,
+          confidenceScore: 70,
+        }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao criar aprendizado');
+      if (!json.success) throw new Error(json.error || 'Erro ao criar aprendizado');
+      await loadRequest();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSavingLearningAction('');
+    }
+  };
+
+  const saveVisualPromptAsset = async (step) => {
+    if (!latestRun?.id || !step?.id) return;
+    setSavingAssetAction(`visual_prompt:${step.id}`);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/agency/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save_visual_prompt',
+          runId: latestRun.id,
+          sourceStepId: step.id,
+        }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao salvar prompt visual');
+      if (!json.success) throw new Error(json.error || 'Erro ao salvar prompt visual');
+      setCreativeAssets((current) => [json.asset, ...current.filter((asset) => asset.id !== json.asset.id)]);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSavingAssetAction('');
+    }
+  };
+
+  const addManualCreativeAsset = async () => {
+    if (!request?.brand_id) return;
+    const assetType = window.prompt('Tipo de ativo visual', 'moodboard_reference');
+    if (!assetType) return;
+    const title = window.prompt('Título do ativo', CREATIVE_ASSET_TYPE_LABELS[assetType] || 'Ativo visual');
+    if (!title) return;
+    const prompt = window.prompt('Prompt, descrição ou referência visual', '');
+    if (prompt === null) return;
+    const fileUrl = window.prompt('URL da imagem/referência, se houver', '') || '';
+    const hasEmbeddedText = window.confirm('Este ativo tem texto embutido na imagem?');
+
+    setSavingAssetAction('manual');
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/agency/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brandId: request.brand_id,
+          agencyRequestId: request.id,
+          agencyRunId: latestRun?.id,
+          assetType,
+          title,
+          prompt,
+          fileUrl,
+          hasEmbeddedText,
+          textReviewRequired: hasEmbeddedText,
+        }),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao adicionar ativo visual');
+      if (!json.success) throw new Error(json.error || 'Erro ao adicionar ativo visual');
+      setCreativeAssets((current) => [json.asset, ...current.filter((asset) => asset.id !== json.asset.id)]);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSavingAssetAction('');
+    }
+  };
+
+  const reviewCreativeAsset = async (asset, action) => {
+    if (!asset?.id) return;
+    const body = { action };
+    if (action === 'approve') {
+      body.notes = window.prompt('Notas da aprovação/revisão', asset.text_review_required ? 'Texto embutido revisado manualmente.' : '') || '';
+    }
+    if (action === 'reject') {
+      const reason = window.prompt('Motivo da rejeição', asset.review_notes || '');
+      if (!reason) return;
+      body.reason = reason;
+    }
+    if (action === 'archive' && !window.confirm('Arquivar este ativo visual?')) return;
+
+    setSavingAssetAction(`${action}:${asset.id}`);
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/agency/assets/${asset.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao revisar ativo visual');
+      if (!json.success) throw new Error(json.error || 'Erro ao revisar ativo visual');
+      setCreativeAssets((current) => current.map((item) => item.id === json.asset.id ? json.asset : item));
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSavingAssetAction('');
+    }
+  };
+
+
   const latestRun = runs[0] || null;
-  const accountStep = latestRun?.agency_steps?.find?.((step) => step.agent_id === 'account_director') || null;
-  const stepByAgent = new Map((latestRun?.agency_steps || []).map((step) => [step.agent_id, step]));
+  const allRunSteps = sortAgencySteps(latestRun?.agency_steps || []);
+  const currentRunSteps = allRunSteps.filter((step) => step.is_current !== false);
+  const accountStep = currentRunSteps.find((step) => step.agent_id === 'account_director') || null;
+  const stepByAgent = new Map(currentRunSteps.map((step) => [step.agent_id, step]));
+  const stepsByAgent = groupStepsByAgent(allRunSteps);
   const agentFlow = [
     { id: 'account_director', label: 'Atendimento', description: 'Briefing operacional' },
     { id: 'copywriter', label: 'Copywriter', description: 'Texto e tom' },
@@ -164,6 +482,7 @@ export default function AgencyRequestDetailPage() {
   const requestTypeLabel = REQUEST_TYPE_LABELS[request?.request_type] || request?.request_type;
   const channelLabel = CHANNEL_LABELS[request?.channel] || request?.channel;
   const objectiveLabel = OBJECTIVE_LABELS[request?.objective] || request?.objective;
+  const briefingApproved = isBriefingApprovedRequest(request);
 
   return (
     <>
@@ -222,14 +541,14 @@ export default function AgencyRequestDetailPage() {
                       disabled={preparing || runningWorkflow}
                       style={{ padding: '0.72rem 0.8rem' }}
                     >
-                      {preparing ? 'Preparando...' : latestRun ? 'Preparar nova run' : 'Preparar briefing'}
+                      {preparing ? 'Gerando...' : request?.briefing_original_json ? 'Gerar novo briefing' : 'Gerar briefing'}
                     </button>
                     <button
                       onClick={runWorkflow}
-                      disabled={runningWorkflow || preparing}
-                      style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', color: 'var(--accent-blue)', padding: '0.72rem 0.8rem', cursor: runningWorkflow || preparing ? 'wait' : 'pointer', fontWeight: 800 }}
+                      disabled={runningWorkflow || preparing || !briefingApproved}
+                      style={{ background: briefingApproved ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${briefingApproved ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: '8px', color: briefingApproved ? 'var(--accent-blue)' : 'var(--text-secondary)', padding: '0.72rem 0.8rem', cursor: runningWorkflow || preparing || !briefingApproved ? 'not-allowed' : 'pointer', fontWeight: 800 }}
                     >
-                      {runningWorkflow ? 'Rodando...' : latestRun ? 'Rodar Agência' : 'Preparar e rodar'}
+                      {runningWorkflow ? 'Rodando...' : briefingApproved ? 'Rodar criação' : 'Aprovar briefing'}
                     </button>
                   </div>
                 </div>
@@ -276,18 +595,61 @@ export default function AgencyRequestDetailPage() {
                   </details>
                 </section>
 
+                <BriefingPanel
+                  request={request}
+                  accountStep={accountStep}
+                  editorValue={briefingEditorValue}
+                  revisionReason={briefingRevisionReason}
+                  preparing={preparing}
+                  approving={approvingBriefing}
+                  requestingRevision={requestingBriefingRevision}
+                  runningWorkflow={runningWorkflow}
+                  onEditorChange={setBriefingEditorValue}
+                  onRevisionReasonChange={setBriefingRevisionReason}
+                  onGenerate={prepareBriefing}
+                  onApprove={approveBriefing}
+                  onRequestRevision={requestBriefingRevision}
+                  onRunWorkflow={runWorkflow}
+                />
+
                 <section className="glass-card" style={{ padding: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                       <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Timeline dos agentes</h2>
                       <p style={{ margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
-                        {latestRun ? `${completedSteps}/${agentFlow.length} etapas concluídas · run ${latestRun.status}` : 'Nenhuma run preparada ainda.'}
+                        {latestRun
+                          ? `${completedSteps}/${agentFlow.length} etapas concluídas · ${latestRun.branch_label || 'Original'} · run ${latestRun.status}`
+                          : 'Nenhuma run preparada ainda.'}
                       </p>
+                      {latestRun?.parent_run_id && (
+                        <p style={{ margin: '0.25rem 0 0', color: 'var(--accent-blue)', fontSize: '0.78rem', fontWeight: 700 }}>
+                          Variação vinculada à run original.
+                        </p>
+                      )}
+                      <RunExecutionSummary run={latestRun} steps={currentRunSteps} />
                     </div>
                     {approvalDecision && (
                       <span style={{ color: approvalDecision === 'approved' ? 'var(--success)' : 'var(--warning)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '0.25rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
                         {decisionLabel(approvalDecision)}
                       </span>
+                    )}
+                    {latestRun && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', justifyContent: 'flex-end' }}>
+                        <Link href={`/adm/${id}/agency/library?brand_id=${request.brand_id}`} style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 8, color: 'var(--success)', padding: '0.42rem 0.7rem', textDecoration: 'none', fontWeight: 800, fontSize: '0.78rem' }}>
+                          Biblioteca da Marca
+                        </Link>
+                        <Link href={`/adm/${id}/agency/learnings?brand_id=${request.brand_id}`} style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.28)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.42rem 0.7rem', textDecoration: 'none', fontWeight: 800, fontSize: '0.78rem' }}>
+                          Aprendizados
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={createVariation}
+                          disabled={!!reprocessingAction}
+                          style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.42rem 0.7rem', cursor: reprocessingAction ? 'wait' : 'pointer', fontWeight: 800, fontSize: '0.78rem' }}
+                        >
+                          {reprocessingAction === 'variation' ? 'Criando...' : 'Criar variação'}
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -304,11 +666,21 @@ export default function AgencyRequestDetailPage() {
                     onGenerateImage={generateApprovedImage}
                   />
 
+                  <CreativeAssetsPanel
+                    assets={creativeAssets}
+                    latestRun={latestRun}
+                    visualStep={stepByAgent.get('visual_director')}
+                    savingAction={savingAssetAction}
+                    onAddAsset={addManualCreativeAsset}
+                    onSaveVisualPrompt={saveVisualPromptAsset}
+                    onReviewAsset={reviewCreativeAsset}
+                  />
+
                   {!latestRun && (
                     <div style={{ border: '1px solid rgba(56,189,248,0.24)', borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: 'rgba(56,189,248,0.06)' }}>
                       <strong style={{ display: 'block', marginBottom: '0.25rem' }}>A run ainda não foi preparada</strong>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0 0 0.75rem' }}>
-                        Prepare o briefing para criar a primeira etapa do Atendimento Estratégico, ou rode a Agência para preparar e executar a esteira mockada.
+                        Gere o briefing do Atendimento Estratégico. A criação só fica disponível depois da aprovação humana.
                       </p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
                         <button
@@ -318,15 +690,15 @@ export default function AgencyRequestDetailPage() {
                           disabled={preparing || runningWorkflow}
                           style={{ padding: '0.62rem 0.8rem' }}
                         >
-                          {preparing ? 'Preparando...' : 'Preparar briefing'}
+                          {preparing ? 'Gerando...' : 'Gerar briefing'}
                         </button>
                         <button
                           type="button"
                           onClick={runWorkflow}
-                          disabled={preparing || runningWorkflow}
-                          style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', color: 'var(--accent-blue)', padding: '0.62rem 0.8rem', cursor: preparing || runningWorkflow ? 'wait' : 'pointer', fontWeight: 800 }}
+                          disabled={preparing || runningWorkflow || !briefingApproved}
+                          style={{ background: briefingApproved ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${briefingApproved ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: '8px', color: briefingApproved ? 'var(--accent-blue)' : 'var(--text-secondary)', padding: '0.62rem 0.8rem', cursor: preparing || runningWorkflow || !briefingApproved ? 'not-allowed' : 'pointer', fontWeight: 800 }}
                         >
-                          {runningWorkflow ? 'Rodando...' : 'Preparar e rodar Agência'}
+                          {runningWorkflow ? 'Rodando...' : 'Aprovar briefing para rodar'}
                         </button>
                       </div>
                     </div>
@@ -335,7 +707,9 @@ export default function AgencyRequestDetailPage() {
                   <div style={{ display: 'grid', gap: '0.65rem' }}>
                     {agentFlow.map((agent, index) => {
                       const step = stepByAgent.get(agent.id);
+                      const history = stepsByAgent.get(agent.id) || [];
                       const done = step?.status === 'completed';
+                      const downstreamObsolete = hasObsoleteDownstream(allRunSteps, agent.id);
                       return (
                         <details key={agent.id} open={!!step?.output && agent.id === 'approver'} style={{ border: `1px solid ${done ? 'rgba(16,185,129,0.28)' : step ? 'rgba(56,189,248,0.24)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, background: done ? 'rgba(16,185,129,0.05)' : 'rgba(255,255,255,0.025)' }}>
                           <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.75rem 0.85rem' }}>
@@ -345,15 +719,107 @@ export default function AgencyRequestDetailPage() {
                               <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.77rem', marginTop: '0.12rem' }}>{agent.description}</span>
                             </span>
                             <span style={{ color: done ? 'var(--success)' : step ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
-                              {step?.status || 'aguardando'}
+                              {step ? `v${step.version_number || 1} · ${step.status}` : 'aguardando'}
                             </span>
                           </summary>
                           <div style={{ padding: '0 0.85rem 0.85rem' }}>
+                            {step && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '0.75rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => runStepAction('one', agent.id)}
+                                  disabled={!!reprocessingAction || !latestRun}
+                                  style={miniActionStyle(reprocessingAction === `one:${agent.id}`)}
+                                >
+                                  {reprocessingAction === `one:${agent.id}` ? 'Regenerando...' : 'Regenerar este agente'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => runStepAction('from', agent.id)}
+                                  disabled={!!reprocessingAction || !latestRun}
+                                  style={miniActionStyle(reprocessingAction === `from:${agent.id}`)}
+                                >
+                                  {reprocessingAction === `from:${agent.id}` ? 'Rodando...' : 'Regenerar a partir daqui'}
+                                </button>
+                                {history.length > 1 && (
+                                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', alignSelf: 'center' }}>
+                                    {history.length} versões no histórico
+                                  </span>
+                                )}
+                                {downstreamObsolete && (
+                                  <span style={{ color: 'var(--warning)', fontSize: '0.76rem', alignSelf: 'center', fontWeight: 800 }}>
+                                    há outputs posteriores obsoletos
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => saveStepToLibrary(agent.id, step, 'positive')}
+                                  disabled={!!savingLibraryAction}
+                                  style={libraryActionStyle(savingLibraryAction === `${step.id}:positive`, 'positive')}
+                                >
+                                  {savingLibraryAction === `${step.id}:positive` ? 'Salvando...' : 'Exemplo positivo'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => saveStepToLibrary(agent.id, step, 'negative')}
+                                  disabled={!!savingLibraryAction}
+                                  style={libraryActionStyle(savingLibraryAction === `${step.id}:negative`, 'negative')}
+                                >
+                                  {savingLibraryAction === `${step.id}:negative` ? 'Salvando...' : 'Exemplo negativo'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => createLearningFromStep(agent.id, step)}
+                                  disabled={!!savingLearningAction}
+                                  style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.24)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.4rem 0.58rem', cursor: savingLearningAction ? 'wait' : 'pointer', fontWeight: 800, fontSize: '0.74rem' }}
+                                >
+                                  {savingLearningAction === step.id ? 'Criando...' : 'Sugerir aprendizado'}
+                                </button>
+                                {agent.id === 'visual_director' && getStepPayload(step).prompt_visual_opcional && (
+                                  <button
+                                    type="button"
+                                    onClick={() => saveVisualPromptAsset(step)}
+                                    disabled={!!savingAssetAction}
+                                    style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.26)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.4rem 0.58rem', cursor: savingAssetAction ? 'wait' : 'pointer', fontWeight: 800, fontSize: '0.74rem' }}
+                                  >
+                                    {savingAssetAction === `visual_prompt:${step.id}` ? 'Salvando...' : 'Salvar prompt visual'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
                             {step?.error && <p style={{ color: 'var(--brand-red)', margin: 0 }}>{step.error}</p>}
                             {step?.output ? (
-                              <AgentOutput agentId={agent.id} output={step.output} />
+                              <>
+                                <AgentOutput agentId={agent.id} output={step.output} />
+                                <TechnicalExecutionPanel step={step} />
+                              </>
                             ) : (
-                              <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>Sem output salvo ainda.</p>
+                              <>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>Sem output salvo ainda.</p>
+                                {step && <TechnicalExecutionPanel step={step} />}
+                              </>
+                            )}
+                            {history.length > 1 && (
+                              <details style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.65rem' }}>
+                                <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.8rem' }}>
+                                  Ver versões anteriores
+                                </summary>
+                                <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.65rem' }}>
+                                  {history.filter((item) => item.id !== step?.id).map((oldStep) => (
+                                    <div key={oldStep.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.65rem', background: 'rgba(255,255,255,0.025)' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.45rem', color: 'var(--text-secondary)', fontSize: '0.76rem', fontWeight: 800 }}>
+                                        <span>v{oldStep.version_number || 1} · {oldStep.status}</span>
+                                        <span>{oldStep.invalidated_by_step_id ? 'obsoleto' : 'substituído'}</span>
+                                      </div>
+                                      {oldStep.output ? (
+                                        <AgentOutput agentId={agent.id} output={oldStep.output} />
+                                      ) : (
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', margin: 0 }}>Versão sem output salvo.</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
                             )}
                           </div>
                         </details>
@@ -377,6 +843,165 @@ export default function AgencyRequestDetailPage() {
       </div>
     </>
   );
+}
+
+function BriefingPanel({
+  request,
+  accountStep,
+  editorValue,
+  revisionReason,
+  preparing,
+  approving,
+  requestingRevision,
+  runningWorkflow,
+  onEditorChange,
+  onRevisionReasonChange,
+  onGenerate,
+  onApprove,
+  onRequestRevision,
+  onRunWorkflow,
+}) {
+  const generatedBriefing = request?.briefing_original_json || getStepPayload(accountStep);
+  const approvedBriefing = request?.approved_briefing_json;
+  const visibleBriefing = approvedBriefing || generatedBriefing;
+  const briefingStatus = getBriefingStatus(request, visibleBriefing);
+  const canApprove = !!generatedBriefing && !approving && !preparing;
+  const canRun = isBriefingApprovedRequest(request);
+
+  return (
+    <section className="glass-card" style={{ padding: '1.25rem', borderColor: canRun ? 'rgba(16,185,129,0.32)' : 'rgba(56,189,248,0.22)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Briefing Operacional</h2>
+          <p style={{ color: 'var(--text-secondary)', margin: '0.3rem 0 0', fontSize: '0.84rem' }}>
+            Gate obrigatório antes de copy, visual e edição.
+          </p>
+        </div>
+        <span style={{ color: briefingStatus.color, background: 'rgba(255,255,255,0.04)', border: `1px solid ${briefingStatus.border}`, borderRadius: 999, padding: '0.25rem 0.65rem', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+          {briefingStatus.label}
+        </span>
+      </div>
+
+      {!visibleBriefing ? (
+        <div style={{ border: '1px solid rgba(56,189,248,0.22)', borderRadius: 8, padding: '0.9rem', background: 'rgba(56,189,248,0.055)' }}>
+          <strong>Aguardando geração</strong>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0.3rem 0 0.8rem' }}>
+            Gere o briefing do Atendimento Estratégico. A esteira criativa fica bloqueada até aprovação humana.
+          </p>
+          <button className="btn-primary" type="button" onClick={onGenerate} disabled={preparing || runningWorkflow} style={{ padding: '0.65rem 0.85rem' }}>
+            {preparing ? 'Gerando briefing...' : 'Gerar briefing'}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '0.85rem' }}>
+          <BriefingSummary briefing={visibleBriefing} />
+
+          <details open={!canRun} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.75rem', background: 'rgba(0,0,0,0.12)' }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.85rem' }}>
+              Editar briefing estruturado
+            </summary>
+            <textarea
+              className="form-input"
+              value={editorValue}
+              onChange={(event) => onEditorChange(event.target.value)}
+              spellCheck={false}
+              style={{ width: '100%', minHeight: 260, marginTop: '0.75rem', fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace', fontSize: '0.78rem', lineHeight: 1.45 }}
+            />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', margin: '0.45rem 0 0' }}>
+              Se você alterar o JSON antes de aprovar, a versão aprovada será marcada como editada pelo admin.
+            </p>
+          </details>
+
+          {request?.briefing_source && (
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+              Fonte aprovada: {request.briefing_source === 'admin_edited' ? 'editada pelo admin' : 'IA sem edição'}
+            </div>
+          )}
+
+          {request?.briefing_revision_reason && (
+            <div style={{ border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '0.75rem', color: 'var(--warning)', background: 'rgba(245,158,11,0.055)', fontSize: '0.84rem' }}>
+              Revisão solicitada: {request.briefing_revision_reason}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gap: '0.55rem' }}>
+            <textarea
+              className="form-input"
+              value={revisionReason}
+              onChange={(event) => onRevisionReasonChange(event.target.value)}
+              placeholder="Motivo para pedir revisão do briefing"
+              style={{ width: '100%', minHeight: 74 }}
+            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
+              <button className="btn-primary" type="button" onClick={onApprove} disabled={!canApprove || approving} style={{ padding: '0.65rem 0.85rem' }}>
+                {approving ? 'Aprovando...' : canRun ? 'Salvar aprovação' : 'Aprovar briefing'}
+              </button>
+              <button
+                type="button"
+                onClick={onRequestRevision}
+                disabled={requestingRevision || preparing}
+                style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.32)', borderRadius: 8, color: 'var(--warning)', padding: '0.65rem 0.85rem', cursor: requestingRevision || preparing ? 'wait' : 'pointer', fontWeight: 800 }}
+              >
+                {requestingRevision ? 'Solicitando...' : 'Pedir revisão'}
+              </button>
+              <button
+                type="button"
+                onClick={onGenerate}
+                disabled={preparing || runningWorkflow}
+                style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.65rem 0.85rem', cursor: preparing || runningWorkflow ? 'wait' : 'pointer', fontWeight: 800 }}
+              >
+                {preparing ? 'Gerando...' : 'Gerar nova versão'}
+              </button>
+              <button
+                type="button"
+                onClick={onRunWorkflow}
+                disabled={!canRun || runningWorkflow || preparing}
+                style={{ background: canRun ? 'rgba(16,185,129,0.14)' : 'rgba(255,255,255,0.04)', border: `1px solid ${canRun ? 'rgba(16,185,129,0.38)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, color: canRun ? 'var(--success)' : 'var(--text-secondary)', padding: '0.65rem 0.85rem', cursor: !canRun || runningWorkflow || preparing ? 'not-allowed' : 'pointer', fontWeight: 800 }}
+              >
+                {runningWorkflow ? 'Rodando...' : 'Prosseguir para criação'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function BriefingSummary({ briefing }) {
+  const operational = briefing?.briefing_operacional || {};
+  const creative = briefing?.hipotese_criativa || {};
+  return (
+    <div style={{ display: 'grid', gap: '0.65rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.85rem', background: 'rgba(255,255,255,0.025)' }}>
+      <OutputLine title="Objetivo" value={operational.objetivo} />
+      <OutputLine title="Público" value={operational.publico} />
+      <OutputLine title="Insight" value={operational.insight} />
+      <OutputLine title="Promessa" value={operational.promessa} />
+      <OutputLine title="Mensagem central" value={operational.mensagem_central} />
+      <OutputLine title="Tom recomendado" value={operational.tom_recomendado} />
+      <OutputLine title="Hipótese criativa" value={[creative.conceito, creative.angulo, creative.narrativa].filter(Boolean).join(' · ')} />
+      <OutputList title="Critérios de sucesso" items={briefing?.criterios_de_sucesso || operational.criterio_de_sucesso} />
+      <OutputList title="Warnings" items={briefing?.warnings} muted />
+    </div>
+  );
+}
+
+function getBriefingStatus(request, briefing) {
+  if (!briefing) {
+    return { label: 'aguardando geração', color: 'var(--text-secondary)', border: 'rgba(255,255,255,0.12)' };
+  }
+  if (request?.status === 'briefing_approved') {
+    return { label: 'aprovado', color: 'var(--success)', border: 'rgba(16,185,129,0.35)' };
+  }
+  if (request?.status === 'briefing_revision_requested') {
+    return { label: 'revisão solicitada', color: 'var(--warning)', border: 'rgba(245,158,11,0.35)' };
+  }
+  return { label: 'aguardando aprovação', color: 'var(--accent-blue)', border: 'rgba(56,189,248,0.35)' };
+}
+
+function isBriefingApprovedRequest(request) {
+  return !!request?.approved_briefing_json
+    && !['draft', 'briefing_pending', 'briefing_generated', 'briefing_revision_requested'].includes(request.status);
 }
 
 function labelAgent(agentId) {
@@ -411,6 +1036,7 @@ function AgentOutput({ agentId, output }) {
         <OutputLine title="Tom recomendado" value={briefing.tom_recomendado} />
         <OutputLine title="Hipótese criativa" value={[creative.conceito, creative.angulo, creative.narrativa].filter(Boolean).join(' · ')} />
         <OutputList title="Critérios de sucesso" items={data.criterios_de_sucesso || briefing.criterio_de_sucesso} />
+        <OutputQualityPanel metadata={data.quality_metadata} compact />
         <OutputList title="Avisos" items={warnings} muted />
       </OutputCard>
     );
@@ -451,6 +1077,7 @@ function AgentOutput({ agentId, output }) {
         <OutputLine title="Score de aderência" value={typeof data.score_aderencia === 'number' ? `${data.score_aderencia}/100` : data.score_aderencia} />
         <OutputList title="Ajustes recomendados" items={data.ajustes_recomendados} />
         <OutputList title="Riscos de incoerência" items={data.riscos_de_incoerencia} muted />
+        <OutputQualityPanel metadata={data.quality_metadata} compact />
         <OutputList title="Observações" items={data.observacoes} muted />
       </OutputCard>
     );
@@ -469,6 +1096,7 @@ function AgentOutput({ agentId, output }) {
         <OutputLine title="Risco principal" value={data.risco_principal} />
         <Checklist items={data.checklist} />
         <OutputList title="Ajustes obrigatórios" items={data.ajustes_obrigatorios} />
+        <OutputQualityPanel metadata={data.quality_metadata} compact />
         <OutputList title="Avisos" items={warnings} muted />
       </OutputCard>
     );
@@ -480,6 +1108,75 @@ function AgentOutput({ agentId, output }) {
         {JSON.stringify(output, null, 2)}
       </pre>
     </OutputCard>
+  );
+}
+
+function RunExecutionSummary({ run, steps }) {
+  if (!run) return null;
+  const summary = run.execution_metadata || calculateRunExecutionSummary(steps);
+  if (!summary?.total_steps) return null;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.55rem' }}>
+      <MetricPill label="Steps" value={`${summary.completed_steps || 0}/${summary.total_steps || 0}`} />
+      <MetricPill label="Falhas" value={summary.failed_steps || 0} tone={summary.failed_steps ? 'danger' : 'muted'} />
+      <MetricPill label="Tokens" value={summary.total_tokens || 0} />
+      <MetricPill label="Custo" value={formatMoney(summary.estimated_cost_total)} />
+      <MetricPill label="Tempo" value={formatDuration(summary.duration_ms_total)} />
+    </div>
+  );
+}
+
+function TechnicalExecutionPanel({ step }) {
+  const meta = step.execution_metadata || {};
+  const tokens = step.tokens || {
+    input: meta.input_tokens,
+    output: meta.output_tokens,
+    total: meta.total_tokens,
+  };
+  const hasMeta = step.model_used || step.prompt_version || step.provider || step.duration_ms || step.attempt_count || step.cost_estimate || step.error || tokens?.total;
+  if (!hasMeta) return null;
+
+  return (
+    <details style={{ marginTop: '0.65rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.65rem', background: 'rgba(255,255,255,0.02)' }}>
+      <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.78rem' }}>
+        Metadados técnicos da execução
+      </summary>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.55rem', marginTop: '0.65rem' }}>
+        <TechMetric label="Provider" value={step.provider || meta.provider} />
+        <TechMetric label="Modelo" value={step.model_used || meta.model} />
+        <TechMetric label="Prompt" value={step.prompt_version || meta.prompt_version || step.input?.promptPack?.promptVersion} />
+        <TechMetric label="Tokens in" value={tokens?.input ?? meta.input_tokens} />
+        <TechMetric label="Tokens out" value={tokens?.output ?? meta.output_tokens} />
+        <TechMetric label="Tokens total" value={tokens?.total ?? meta.total_tokens} />
+        <TechMetric label="Custo" value={formatMoney(step.cost_estimate ?? meta.estimated_cost)} />
+        <TechMetric label="Duração" value={formatDuration(step.duration_ms ?? meta.duration_ms)} />
+        <TechMetric label="Tentativas" value={step.attempt_count ?? meta.attempt_count} />
+      </div>
+      {(step.error || meta.error_message) && (
+        <div style={{ marginTop: '0.6rem', color: 'var(--brand-red)', fontSize: '0.8rem', whiteSpace: 'pre-wrap' }}>
+          {step.error || meta.error_message}
+        </div>
+      )}
+    </details>
+  );
+}
+
+function TechMetric({ label, value }) {
+  if (value === undefined || value === null || value === '') return null;
+  return (
+    <div style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.5rem', background: 'rgba(0,0,0,0.12)' }}>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', marginBottom: '0.18rem' }}>{label}</div>
+      <div style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 800, wordBreak: 'break-word' }}>{formatValue(value)}</div>
+    </div>
+  );
+}
+
+function MetricPill({ label, value, tone = 'muted' }) {
+  const color = tone === 'danger' ? 'var(--brand-red)' : 'var(--text-secondary)';
+  return (
+    <span style={{ color, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 999, padding: '0.18rem 0.55rem', fontSize: '0.72rem', fontWeight: 800 }}>
+      {label}: {value}
+    </span>
   );
 }
 
@@ -539,13 +1236,16 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
 
       {approved && (
         <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.95rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>
+            A imagem gerada aqui é apoio conceitual para revisão visual. Ela não é publicação automática nem substitui arte final editável.
+          </p>
           <button
             type="button"
             onClick={onGenerateImage}
             disabled={generatingImage}
             style={{ background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.38)', borderRadius: 8, color: 'var(--success)', padding: '0.72rem 0.85rem', cursor: generatingImage ? 'wait' : 'pointer', fontWeight: 800 }}
           >
-            {generatingImage ? 'Criando imagem...' : generatedImages?.length ? 'Gerar outra opção de imagem' : 'Criar imagem da arte aprovada'}
+            {generatingImage ? 'Criando imagem...' : generatedImages?.length ? 'Gerar outra imagem conceitual' : 'Gerar imagem conceitual'}
           </button>
 
           {generatedImage?.src && (
@@ -556,7 +1256,7 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
               {generatedImage.compositionMode === 'baked_text' ? (
                 <img
                   src={generatedImage.src}
-                  alt="Arte aprovada gerada por GPT Image"
+                  alt="Imagem conceitual gerada por GPT Image"
                   style={{ width: '100%', maxWidth: 560, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}
                 />
               ) : (
@@ -566,7 +1266,7 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
                 {generatedImage.compositionMode === 'baked_text' ? (
                   <a
                     href={generatedImage.src}
-                    download="arte-aprovada-espansione.png"
+                    download="ativo-visual-espansione.png"
                     style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}
                   >
                     Baixar PNG
@@ -635,12 +1335,266 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
   );
 }
 
+function CreativeAssetsPanel({
+  assets,
+  latestRun,
+  visualStep,
+  savingAction,
+  onAddAsset,
+  onSaveVisualPrompt,
+  onReviewAsset,
+}) {
+  const hasVisualPrompt = !!getStepPayload(visualStep).prompt_visual_opcional;
+  return (
+    <section style={{ border: '1px solid rgba(56,189,248,0.2)', borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: 'rgba(56,189,248,0.045)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <div>
+          <strong>Ativos Visuais</strong>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0.3rem 0 0' }}>
+            Direção visual, imagens conceituais, moodboards e referências ficam aqui para revisão antes de qualquer uso.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', justifyContent: 'flex-end' }}>
+          {latestRun && hasVisualPrompt && (
+            <button
+              type="button"
+              onClick={() => onSaveVisualPrompt(visualStep)}
+              disabled={!!savingAction}
+              style={{ background: 'rgba(14,165,233,0.09)', border: '1px solid rgba(14,165,233,0.28)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.45rem 0.65rem', cursor: savingAction ? 'wait' : 'pointer', fontWeight: 800, fontSize: '0.76rem' }}
+            >
+              {savingAction === `visual_prompt:${visualStep?.id}` ? 'Salvando...' : 'Salvar prompt visual'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onAddAsset}
+            disabled={!!savingAction}
+            style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'var(--text-primary)', padding: '0.45rem 0.65rem', cursor: savingAction ? 'wait' : 'pointer', fontWeight: 800, fontSize: '0.76rem' }}
+          >
+            {savingAction === 'manual' ? 'Adicionando...' : 'Adicionar ativo'}
+          </button>
+        </div>
+      </div>
+
+      {!assets?.length ? (
+        <div style={{ border: '1px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '0.85rem', color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+          Nenhum ativo visual salvo ainda. Gere uma imagem conceitual, salve o prompt do Diretor Visual ou adicione uma referência manual.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '0.65rem' }}>
+          {assets.map((asset) => (
+            <CreativeAssetCard
+              key={asset.id}
+              asset={asset}
+              savingAction={savingAction}
+              onReviewAsset={onReviewAsset}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CreativeAssetCard({ asset, savingAction, onReviewAsset }) {
+  const warnings = getCreativeAssetWarnings(asset);
+  const metadataWarnings = toArray(asset.metadata_json?.warnings);
+  const allWarnings = [...new Set([...warnings, ...metadataWarnings])];
+  return (
+    <article style={{ display: 'grid', gap: '0.6rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.75rem', background: 'rgba(0,0,0,0.14)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+        <div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase' }}>
+            {CREATIVE_ASSET_TYPE_LABELS[asset.asset_type] || asset.asset_type}
+          </div>
+          <strong>{asset.title}</strong>
+        </div>
+        <span style={{ color: creativeAssetStatusColor(asset.status), border: `1px solid ${creativeAssetStatusBorder(asset.status)}`, borderRadius: 999, padding: '0.2rem 0.58rem', fontSize: '0.74rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+          {CREATIVE_ASSET_STATUS_LABELS[asset.status] || asset.status}
+        </span>
+      </div>
+
+      {asset.file_url && (
+        <img
+          src={asset.file_url}
+          alt={asset.title}
+          style={{ width: '100%', maxWidth: 420, aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.22)' }}
+        />
+      )}
+
+      {asset.prompt && (
+        <details style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.6rem', background: 'rgba(255,255,255,0.025)' }}>
+          <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.8rem' }}>Prompt / descrição</summary>
+          <div style={{ whiteSpace: 'pre-wrap', color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.45rem' }}>
+            {asset.prompt}
+          </div>
+        </details>
+      )}
+
+      {allWarnings.length > 0 && (
+        <div style={{ display: 'grid', gap: '0.35rem' }}>
+          {allWarnings.map((warning, index) => (
+            <div key={`${asset.id}-warning-${index}`} style={{ color: 'var(--warning)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.22)', borderRadius: 8, padding: '0.55rem', fontSize: '0.82rem' }}>
+              {warning}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {asset.review_notes && (
+        <OutputLine title="Notas de revisão" value={asset.review_notes} />
+      )}
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+        <button
+          type="button"
+          onClick={() => onReviewAsset(asset, 'approve')}
+          disabled={!!savingAction || asset.status === 'approved'}
+          style={assetActionStyle('approve', savingAction === `approve:${asset.id}`)}
+        >
+          {savingAction === `approve:${asset.id}` ? 'Aprovando...' : 'Aprovar ativo'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onReviewAsset(asset, 'reject')}
+          disabled={!!savingAction || asset.status === 'rejected'}
+          style={assetActionStyle('reject', savingAction === `reject:${asset.id}`)}
+        >
+          {savingAction === `reject:${asset.id}` ? 'Rejeitando...' : 'Rejeitar'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onReviewAsset(asset, 'archive')}
+          disabled={!!savingAction || asset.status === 'archived'}
+          style={assetActionStyle('archive', savingAction === `archive:${asset.id}`)}
+        >
+          {savingAction === `archive:${asset.id}` ? 'Arquivando...' : 'Arquivar'}
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function OutputCard({ children }) {
   return (
     <div style={{ display: 'grid', gap: '0.7rem', background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.85rem' }}>
       {children}
     </div>
   );
+}
+
+function miniActionStyle(loading) {
+  return {
+    background: loading ? 'rgba(56,189,248,0.18)' : 'rgba(255,255,255,0.04)',
+    border: `1px solid ${loading ? 'rgba(56,189,248,0.45)' : 'rgba(255,255,255,0.1)'}`,
+    borderRadius: 8,
+    color: loading ? 'var(--accent-blue)' : 'var(--text-secondary)',
+    padding: '0.4rem 0.58rem',
+    cursor: loading ? 'wait' : 'pointer',
+    fontWeight: 800,
+    fontSize: '0.74rem',
+  };
+}
+
+function libraryActionStyle(loading, polarity) {
+  const positive = polarity === 'positive';
+  return {
+    background: loading
+      ? 'rgba(56,189,248,0.18)'
+      : positive
+        ? 'rgba(16,185,129,0.08)'
+        : 'rgba(245,158,11,0.08)',
+    border: `1px solid ${positive ? 'rgba(16,185,129,0.28)' : 'rgba(245,158,11,0.28)'}`,
+    borderRadius: 8,
+    color: loading ? 'var(--accent-blue)' : positive ? 'var(--success)' : 'var(--warning)',
+    padding: '0.4rem 0.58rem',
+    cursor: loading ? 'wait' : 'pointer',
+    fontWeight: 800,
+    fontSize: '0.74rem',
+  };
+}
+
+function assetActionStyle(action, loading) {
+  const variants = {
+    approve: ['rgba(16,185,129,0.08)', 'rgba(16,185,129,0.28)', 'var(--success)'],
+    reject: ['rgba(245,158,11,0.08)', 'rgba(245,158,11,0.28)', 'var(--warning)'],
+    archive: ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.12)', 'var(--text-secondary)'],
+  };
+  const [background, border, color] = variants[action] || variants.archive;
+  return {
+    background: loading ? 'rgba(56,189,248,0.18)' : background,
+    border: `1px solid ${loading ? 'rgba(56,189,248,0.45)' : border}`,
+    borderRadius: 8,
+    color: loading ? 'var(--accent-blue)' : color,
+    padding: '0.4rem 0.58rem',
+    cursor: loading ? 'wait' : 'pointer',
+    fontWeight: 800,
+    fontSize: '0.74rem',
+  };
+}
+
+function creativeAssetStatusColor(status) {
+  if (status === 'approved') return 'var(--success)';
+  if (status === 'rejected') return 'var(--brand-red)';
+  if (status === 'generated') return 'var(--accent-blue)';
+  if (status === 'archived') return 'var(--text-secondary)';
+  return 'var(--warning)';
+}
+
+function creativeAssetStatusBorder(status) {
+  if (status === 'approved') return 'rgba(16,185,129,0.35)';
+  if (status === 'rejected') return 'rgba(239,68,68,0.35)';
+  if (status === 'generated') return 'rgba(56,189,248,0.35)';
+  if (status === 'archived') return 'rgba(255,255,255,0.12)';
+  return 'rgba(245,158,11,0.35)';
+}
+
+function getCreativeAssetWarnings(asset = {}) {
+  const warnings = [];
+  if (asset.has_embedded_text) warnings.push(EMBEDDED_TEXT_REVIEW_WARNING);
+  if (asset.asset_type === 'final_art' && asset.text_review_required) {
+    warnings.push('Ativo final_art com texto embutido só deve avançar após revisão humana explícita.');
+  }
+  return warnings;
+}
+
+function libraryItemTypeForAgent(agentId, polarity) {
+  const positive = polarity === 'positive';
+  if (agentId === 'copywriter' || agentId === 'editor') {
+    return positive ? 'approved_copy' : 'rejected_copy';
+  }
+  if (agentId === 'visual_director') {
+    return positive ? 'approved_visual_direction' : 'rejected_visual_direction';
+  }
+  if (agentId === 'approver') {
+    return positive ? 'campaign_example' : 'negative_example';
+  }
+  return positive ? 'creative_reference' : 'negative_example';
+}
+
+function defaultLearningTypeForAgent(agentId, step) {
+  const payload = getStepPayload(step);
+  const decision = normalizeDecision(payload.decisao || payload.decision);
+  if (agentId === 'copywriter') return 'voice_preference';
+  if (agentId === 'visual_director') return 'visual_preference';
+  if (agentId === 'editor') return 'campaign_learning';
+  if (agentId === 'approver' && decision === 'rejected') return 'claim_rule';
+  if (agentId === 'approver' && decision === 'revision_requested') return 'claim_rule';
+  return 'campaign_learning';
+}
+
+function defaultLearningContent(agentId, step) {
+  const payload = getStepPayload(step);
+  if (agentId === 'copywriter') return payload.racional_de_tom || payload.copy_principal || payload.cta || '';
+  if (agentId === 'visual_director') return payload.direcao_de_arte || payload.composicao || payload.prompt_visual_opcional || '';
+  if (agentId === 'editor') return payload.versao_editada || toArray(payload.riscos_de_incoerencia).join('\n') || '';
+  if (agentId === 'approver') {
+    return payload.risco_principal
+      || payload.justificativa
+      || toArray(payload.ajustes_obrigatorios).join('\n')
+      || '';
+  }
+  return JSON.stringify(payload);
 }
 
 function ComposedArtworkPreview({ image }) {
@@ -756,6 +1710,60 @@ function hasRenderableValue(value) {
   return String(value).length > 0;
 }
 
+function sortAgencySteps(steps = []) {
+  return [...steps].sort((a, b) => {
+    const agentDelta = AGENCY_AGENT_ORDER.indexOf(a.agent_id) - AGENCY_AGENT_ORDER.indexOf(b.agent_id);
+    if (agentDelta !== 0) return agentDelta;
+    const versionDelta = Number(b.version_number || 1) - Number(a.version_number || 1);
+    if (versionDelta !== 0) return versionDelta;
+    return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+  });
+}
+
+function groupStepsByAgent(steps = []) {
+  const grouped = new Map();
+  for (const step of steps) {
+    const current = grouped.get(step.agent_id) || [];
+    current.push(step);
+    grouped.set(step.agent_id, current);
+  }
+  return grouped;
+}
+
+function hasObsoleteDownstream(steps = [], agentId) {
+  const index = AGENCY_AGENT_ORDER.indexOf(agentId);
+  if (index < 0) return false;
+  const downstream = new Set(AGENCY_AGENT_ORDER.slice(index + 1));
+  return steps.some((step) => downstream.has(step.agent_id) && step.is_current === false && step.invalidated_by_step_id);
+}
+
+function calculateRunExecutionSummary(steps = []) {
+  const relevant = (steps || []).filter((step) => step && step.status !== 'skipped' && step.status !== 'regenerated');
+  return relevant.reduce((acc, step) => {
+    const tokens = step.tokens || {};
+    const inputTokens = Number(tokens.input || tokens.input_tokens || 0);
+    const outputTokens = Number(tokens.output || tokens.output_tokens || 0);
+    acc.total_steps += 1;
+    if (step.status === 'completed') acc.completed_steps += 1;
+    if (step.status === 'failed') acc.failed_steps += 1;
+    acc.input_tokens_total += inputTokens;
+    acc.output_tokens_total += outputTokens;
+    acc.total_tokens += Number(tokens.total || tokens.total_tokens || inputTokens + outputTokens || 0);
+    acc.estimated_cost_total += Number(step.cost_estimate || step.execution_metadata?.estimated_cost || 0);
+    acc.duration_ms_total += Number(step.duration_ms || step.execution_metadata?.duration_ms || 0);
+    return acc;
+  }, {
+    total_steps: 0,
+    completed_steps: 0,
+    failed_steps: 0,
+    estimated_cost_total: 0,
+    input_tokens_total: 0,
+    output_tokens_total: 0,
+    total_tokens: 0,
+    duration_ms_total: 0,
+  });
+}
+
 function normalizeDecision(value) {
   if (!value) return '';
   if (typeof value === 'string') return value;
@@ -850,6 +1858,19 @@ function humanizeKey(key) {
   return String(key)
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatMoney(value) {
+  const numeric = Number(value || 0);
+  if (!numeric) return 'US$ 0.0000';
+  return `US$ ${numeric.toFixed(4)}`;
+}
+
+function formatDuration(value) {
+  const ms = Number(value || 0);
+  if (!ms) return '0 ms';
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(1)} s`;
 }
 
 async function readJsonOrThrow(response, fallbackMessage) {

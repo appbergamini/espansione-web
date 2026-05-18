@@ -1,6 +1,6 @@
 import { getBrandMemory } from '@espansione/brand-memory';
-export * from './brand-readiness';
-export * from './prompt-packs';
+export * from './brand-readiness.ts';
+export * from './prompt-packs.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   AgencyAgentId,

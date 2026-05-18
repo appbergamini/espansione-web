@@ -1,4 +1,4 @@
-import { AC_REGRA_SEM_HTML } from './_anaCoutoKB';
+import { AC_REGRA_SEM_HTML } from './_anaCoutoKB.js';
 
 // Agente 16 — Exportador para Brand Memory
 // Especificação: brand-memory-export-contract-v2.md + agent-16-system-prompt-v2.md

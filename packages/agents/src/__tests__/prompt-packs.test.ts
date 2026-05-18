@@ -6,6 +6,11 @@ import {
   buildCopywriterPromptPack,
   buildEditorPromptPack,
   buildVisualDirectorPromptPack,
+  ACCOUNT_DIRECTOR_PROMPT_VERSION,
+  COPYWRITER_PROMPT_VERSION,
+  VISUAL_DIRECTOR_PROMPT_VERSION,
+  EDITOR_PROMPT_VERSION,
+  APPROVER_PROMPT_VERSION,
 } from '../prompt-packs.ts';
 import type {
   AccountDirectorOutput,
@@ -144,10 +149,17 @@ test('todos os prompt packs sao gerados com input minimo valido', () => {
   for (const pack of [account, copy, visual, editor, approver]) {
     assert.equal(typeof pack.systemPrompt, 'string');
     assert.equal(typeof pack.userPrompt, 'string');
+    assert.equal(typeof pack.promptVersion, 'string');
     assert.ok(pack.expectedOutputSchema);
     assert.match(pack.userPrompt, /Marca Teste/);
     assert.match(pack.userPrompt, /social_post/);
   }
+
+  assert.equal(account.promptVersion, ACCOUNT_DIRECTOR_PROMPT_VERSION);
+  assert.equal(copy.promptVersion, COPYWRITER_PROMPT_VERSION);
+  assert.equal(visual.promptVersion, VISUAL_DIRECTOR_PROMPT_VERSION);
+  assert.equal(editor.promptVersion, EDITOR_PROMPT_VERSION);
+  assert.equal(approver.promptVersion, APPROVER_PROMPT_VERSION);
 });
 
 test('erro quando falta input obrigatorio', () => {

@@ -1,5 +1,10 @@
-import { buildAccountDirectorPromptPack } from '@espansione/agents';
-import { getAgencyReadiness } from './runtime';
+import { buildAccountDirectorPromptPack } from '../../../../packages/agents/src/prompt-packs.ts';
+import { getAgencyReadiness } from './runtime.js';
+import {
+  assertActiveBrandMemoryVersion,
+  createInitialAgencyRun,
+  createInitialAgencyStep,
+} from './runPersistence.js';
 
 export async function prepareAgencyRun(db, requestId) {
   if (!requestId) {
@@ -21,7 +26,9 @@ export async function prepareAgencyRun(db, requestId) {
     throw err;
   }
 
-  const { readiness, brandKernel } = await getAgencyReadiness(db, request.brand_id);
+  const { readiness, brandKernel, brandMemoryVersion } = await getAgencyReadiness(db, request.brand_id);
+  assertActiveBrandMemoryVersion(brandMemoryVersion, readiness);
+
   if (!brandKernel || !['ready_for_content', 'ready_for_campaigns'].includes(readiness.status)) {
     const err = new Error('Brand Memory insuficiente para preparar briefing operacional');
     err.statusCode = 400;
@@ -42,37 +49,14 @@ export async function prepareAgencyRun(db, requestId) {
     agencyRequest,
   });
 
-  const { data: run, error: runError } = await db
-    .from('agency_runs')
-    .insert({
-      request_id: request.id,
-      brand_id: request.brand_id,
-      brand_kernel_version: brandKernel.source?.schemaVersion || '2.0',
-      status: 'ready',
-    })
-    .select('*')
-    .single();
-
-  if (runError) throw runError;
-
   const stepInput = {
     brandKernel,
     agencyRequest,
     promptPack,
   };
 
-  const { data: step, error: stepError } = await db
-    .from('agency_steps')
-    .insert({
-      run_id: run.id,
-      agent_id: 'account_director',
-      input: stepInput,
-      status: 'ready',
-    })
-    .select('*')
-    .single();
-
-  if (stepError) throw stepError;
+  const run = await createInitialAgencyRun(db, { request, brandKernel, brandMemoryVersion });
+  const step = await createInitialAgencyStep(db, { run, stepInput });
 
   await db
     .from('agency_requests')

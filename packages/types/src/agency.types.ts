@@ -1,4 +1,5 @@
 import type { EspansioneDiagnostic } from './espansione-diagnostic.types.js';
+import type { OutputQualityMetadata } from './output-quality.types.js';
 
 export type AgencyRequestType =
   | 'social_post'
@@ -25,13 +26,26 @@ export type AgencyObjective =
   | 'relationship'
   | 'retention';
 
+export type ProjectLifecycleStatus =
+  | 'project_created'
+  | 'intake_configured'
+  | 'diagnosis_running'
+  | 'checkpoint_pending'
+  | 'diagnosis_completed'
+  | 'brand_memory_ready_to_load'
+  | 'brand_memory_active'
+  | 'agency_ready'
+  | 'archived';
+
 export type AgencyRequestStatus =
   | 'draft'
   | 'briefing_pending'
-  | 'briefing_created'
+  | 'briefing_generated'
+  | 'briefing_revision_requested'
   | 'briefing_approved'
   | 'generation_pending'
-  | 'generated'
+  | 'generation_running'
+  | 'approval_pending'
   | 'revision_requested'
   | 'approved'
   | 'rejected'
@@ -39,19 +53,72 @@ export type AgencyRequestStatus =
 
 export type AgencyRunStatus =
   | 'pending'
-  | 'ready'
   | 'running'
   | 'completed'
   | 'failed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'partial';
 
 export type AgencyStepStatus =
   | 'pending'
-  | 'ready'
   | 'running'
   | 'completed'
   | 'failed'
-  | 'skipped';
+  | 'skipped'
+  | 'regenerated';
+
+export type BrandMemoryVersionStatus =
+  | 'draft'
+  | 'active'
+  | 'archived'
+  | 'invalid';
+
+export type BrandLibraryItemType =
+  | 'approved_copy'
+  | 'rejected_copy'
+  | 'approved_visual_direction'
+  | 'rejected_visual_direction'
+  | 'approved_cta'
+  | 'rejected_cta'
+  | 'visual_prompt'
+  | 'creative_reference'
+  | 'campaign_example'
+  | 'negative_example';
+
+export type BrandLibraryItemStatus = 'active' | 'archived';
+
+export type BrandLearningType =
+  | 'voice_preference'
+  | 'forbidden_language'
+  | 'approved_cta'
+  | 'rejected_cta'
+  | 'audience_insight'
+  | 'visual_preference'
+  | 'visual_rejection'
+  | 'claim_rule'
+  | 'channel_rule'
+  | 'campaign_learning';
+
+export type BrandLearningSuggestionStatus =
+  | 'suggested'
+  | 'approved_for_memory'
+  | 'rejected'
+  | 'archived';
+
+export type CreativeAssetType =
+  | 'conceptual_image'
+  | 'moodboard_reference'
+  | 'background_image'
+  | 'visual_prompt'
+  | 'editable_art_reference'
+  | 'final_art';
+
+export type CreativeAssetStatus =
+  | 'draft'
+  | 'generated'
+  | 'approved'
+  | 'rejected'
+  | 'archived';
 
 export type AgencyAgentId =
   | 'account_director'
@@ -93,12 +160,17 @@ export interface AgencyRun {
   id?: string;
   requestId?: string;
   brandId: string;
+  brandMemoryVersionId?: string;
+  brandKernelSnapshot?: BrandKernel;
   brandKernelVersion?: string;
+  parentRunId?: string;
+  branchLabel?: string;
   status: AgencyRunStatus;
   steps: AgencyStep[];
   startedAt?: string;
   completedAt?: string;
   error?: string;
+  executionMetadata?: AgencyRunExecutionSummary;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -107,16 +179,26 @@ export interface AgencyStep {
   id?: string;
   runId?: string;
   agentId: AgencyAgentId;
+  parentStepId?: string;
+  supersededByStepId?: string;
+  invalidatedByStepId?: string;
+  versionNumber?: number;
+  isCurrent?: boolean;
   input: unknown;
   output?: AgencyOutput;
   status: AgencyStepStatus;
   modelUsed?: string;
+  provider?: string;
+  promptVersion?: string;
   tokens?: {
     input?: number;
     output?: number;
     total?: number;
   };
   costEstimate?: number;
+  durationMs?: number;
+  attemptCount?: number;
+  executionMetadata?: AgentExecutionMetadata;
   error?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -146,6 +228,23 @@ export interface BrandReadinessResult {
   warnings: string[];
   allowedRequestTypes: AgencyRequestType[];
   criticalSlicesFound: string[];
+}
+
+export interface BrandMemoryVersion {
+  id?: string;
+  brandId: string;
+  diagnosticRunId?: string;
+  sourceOutputId?: string;
+  versionNumber: number;
+  status: BrandMemoryVersionStatus;
+  espansioneDiagnosticJson: EspansioneDiagnostic;
+  changeSummary?: string;
+  validationStatus?: string;
+  validationErrors?: unknown[];
+  approvedBy?: string;
+  activatedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BrandKernel {
@@ -209,6 +308,93 @@ export interface AgencyPromptPack {
   systemPrompt: string;
   userPrompt: string;
   expectedOutputSchema: unknown;
+  promptVersion: string;
+}
+
+export interface AgentExecutionMetadata {
+  provider?: string;
+  model?: string;
+  prompt_version?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  total_tokens?: number;
+  estimated_cost?: number;
+  duration_ms?: number;
+  attempt_count?: number;
+  temperature?: number;
+  structured_output?: boolean;
+  error_code?: string;
+  error_message?: string;
+  trace_id?: string;
+}
+
+export interface AgencyRunExecutionSummary {
+  total_steps: number;
+  completed_steps: number;
+  failed_steps: number;
+  estimated_cost_total: number;
+  input_tokens_total: number;
+  output_tokens_total: number;
+  total_tokens: number;
+  duration_ms_total: number;
+}
+
+export interface BrandLibraryItem {
+  id?: string;
+  brandId: string;
+  sourceAgencyRunId?: string;
+  sourceAgencyStepId?: string;
+  sourceAgencyRequestId?: string;
+  itemType: BrandLibraryItemType;
+  status: BrandLibraryItemStatus;
+  title: string;
+  contentJson: unknown;
+  plainText?: string;
+  tags?: string[];
+  channel?: AgencyChannel;
+  requestType?: AgencyRequestType;
+  objective?: AgencyObjective;
+  audienceCluster?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BrandLearningSuggestion {
+  id?: string;
+  brandId: string;
+  sourceAgencyRunId?: string;
+  sourceAgencyRequestId?: string;
+  sourceLibraryItemId?: string;
+  learningType: BrandLearningType;
+  content: string;
+  rationale?: string;
+  confidenceScore?: number;
+  status: BrandLearningSuggestionStatus;
+  approvedAt?: string;
+  rejectedReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreativeAsset {
+  id?: string;
+  brandId: string;
+  agencyRequestId?: string;
+  agencyRunId?: string;
+  sourceStepId?: string;
+  assetType: CreativeAssetType;
+  status: CreativeAssetStatus;
+  title: string;
+  prompt?: string;
+  negativePrompt?: string;
+  fileUrl?: string;
+  metadataJson?: unknown;
+  hasEmbeddedText?: boolean;
+  textReviewRequired?: boolean;
+  reviewNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AccountDirectorOutput {
@@ -235,6 +421,7 @@ export interface AccountDirectorOutput {
   criterios_de_sucesso: string[];
   brand_memory_slices_used: string[];
   warnings: string[];
+  quality_metadata?: OutputQualityMetadata;
 }
 
 export interface CopywriterOutput {
@@ -268,6 +455,7 @@ export interface EditorOutput {
   riscos_de_incoerencia: string[];
   score_aderencia: number;
   observacoes: string[];
+  quality_metadata?: OutputQualityMetadata;
 }
 
 export interface ApproverOutput {
@@ -280,6 +468,7 @@ export interface ApproverOutput {
   ajustes_obrigatorios: string[];
   risco_principal?: string;
   justificativa: string;
+  quality_metadata?: OutputQualityMetadata;
 }
 
 export interface ModelGatewayInput {

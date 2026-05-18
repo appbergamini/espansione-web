@@ -4,6 +4,10 @@ import { AGENTS_MAP } from '../agents';
 import { podeExecutar } from '../agents/catalog';
 import { parseFindingsFromRaw, materializarFindings } from '../curadoria/extractFindings';
 import { supabaseAdmin } from '../supabaseAdmin';
+import {
+  buildQualityMetadataPromptInstruction,
+  parseQualityMetadataFromRaw,
+} from '../output/qualityMetadata';
 
 export const AGENT_CONFIGS = {
   1:  { name: 'Roteiros VI — Entrevistas Internas',      stage: 'pre_diagnostico',      inputs: [],            checkpoint: null },
@@ -30,9 +34,9 @@ export const AGENT_CONFIGS = {
   // Consome apenas resumo_executivo + conclusoes dos demais (context
   // window tratável). Gera Carta de Abertura + Sumário Executivo para
   // a Parte 0 do entregável final (TASK 4.4).
-  15: { name: 'Consolidador Editorial do Entregável Final', stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], checkpoint: null },
+  15: { name: 'Consolidador Editorial do Entregável Final', stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], optionalInputs: [14], checkpoint: null },
   // Agente 16 — Exportador para Brand Memory. Modular, disparo manual.
-  16: { name: 'Exportador para Brand Memory',              stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], checkpoint: null, modular: true },
+  16: { name: 'Exportador para Brand Memory',              stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], optionalInputs: [14], checkpoint: null, modular: true },
 };
 
 export const STAGES = {
@@ -68,6 +72,7 @@ const AGENT_FORM_TYPES = {
 };
 
 const AGENTS_WITH_CIS = new Set([1, 2, 6]);
+const AGENTS_WITH_QUALITY_METADATA = new Set([6, 9, 11, 12, 13]);
 
 async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}) {
   const agent = AGENTS_MAP[agentNum];
@@ -155,6 +160,9 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
   }
 
   const systemParts = [agent.getSystemPrompt()];
+  if (AGENTS_WITH_QUALITY_METADATA.has(agentNum)) {
+    systemParts.push(buildQualityMetadataPromptInstruction());
+  }
 
   // FIX.12 — evita duplicação de contexto quando o agente já consome
   // previousOutputs no próprio getUserPrompt (flag consumesContextInUserPrompt).
@@ -286,6 +294,9 @@ export const Pipeline = {
     }
 
     const parsed = prompts.agent.parseOutput(response.text);
+    if (AGENTS_WITH_QUALITY_METADATA.has(agentNum)) {
+      parsed.quality_metadata = parseQualityMetadataFromRaw(response.text);
+    }
 
     // FIX.24 — extrai findings_json estruturado do raw text antes de salvar.
     // Se o modelo não emitiu (ou JSON inválido), fica null e o

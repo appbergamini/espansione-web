@@ -66,10 +66,11 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
   }
 
   return [
-    'Crie uma arte final de marketing em formato quadrado 1:1 com o texto aplicado dentro da imagem.',
-    'Use a direção visual aprovada como fonte principal. Não adicione logotipos, selos, marcas de terceiros, dados, números ou claims que não estejam no material aprovado.',
-    'REGRA CRÍTICA: renderize apenas os textos informados abaixo, exatamente como estão. Não invente palavras, não corrija o texto, não adicione assinatura, legenda, botão, marca d’água, caracteres decorativos ou texto simulado.',
-    'Priorize tipografia grande, limpa, com alto contraste e poucas quebras de linha. Se o texto for longo, use a headline e o CTA como elementos principais e deixe o corpo como apoio curto.',
+    'Crie uma imagem conceitual quadrada 1:1 para apoiar a direção visual aprovada.',
+    'Esta imagem é um ativo visual de apoio criativo, não uma publicação automática nem uma arte final editável.',
+    'Não renderize texto, frases, letras, logotipos, selos, marcas de terceiros, números ou claims dentro da imagem.',
+    'Use a copy aprovada apenas como contexto estratégico e emocional para a composição visual.',
+    'Priorize uma cena forte, legível, sofisticada e coerente com a direção visual aprovada.',
     '',
     'CONTEXTO DO PEDIDO:',
     `Tipo: ${request?.request_type || 'social_post'}`,
@@ -78,7 +79,7 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
     `Público: ${request?.audience_cluster || 'não especificado'}`,
     `Contexto: ${request?.context || 'não especificado'}`,
     '',
-    'TEXTO APROVADO:',
+    'COPY APROVADA COMO CONTEXTO, SEM RENDERIZAR TEXTO:',
     finalCopy || 'Sem texto final obrigatório.',
     '',
     'HEADLINE:',

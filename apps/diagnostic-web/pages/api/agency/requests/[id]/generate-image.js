@@ -2,6 +2,7 @@ import { getServerUser } from '../../../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../../../lib/supabaseAdmin';
 import { requireAgencyUser } from '../../../../../lib/agency/runtime';
 import { buildApprovedArtworkOverlay, buildApprovedArtworkPrompt, generateApprovedArtwork, normalizeDecision } from '../../../../../lib/agency/imageGeneration';
+import { createCreativeAsset } from '../../../../../lib/agency/creativeAssets';
 
 export const config = {
   api: {
@@ -64,12 +65,39 @@ export default async function handler(req, res) {
       editorStep: stepByAgent.get('editor'),
     });
 
+    const { assetType = 'conceptual_image', hasEmbeddedText = false, title } = req.body || {};
     const image = await generateApprovedArtwork({ prompt });
+    const fileUrl = `data:${image.mimeType || 'image/png'};base64,${image.b64}`;
+    const sourceStep = stepByAgent.get('visual_director') || stepByAgent.get('approver') || null;
+    const compositionMode = hasEmbeddedText ? 'embedded_text_review' : 'conceptual_no_text';
+    const asset = await createCreativeAsset(supabaseAdmin, {
+      brandId: request.brand_id,
+      agencyRequestId: request.id,
+      agencyRunId: approvedRun.id,
+      sourceStepId: sourceStep?.id,
+      assetType,
+      status: 'generated',
+      title: title || 'Imagem conceitual gerada',
+      prompt,
+      fileUrl,
+      hasEmbeddedText,
+      textReviewRequired: hasEmbeddedText,
+      metadataJson: {
+        model: image.model,
+        revisedPrompt: image.revisedPrompt,
+        usage: image.usage,
+        overlayText,
+        compositionMode,
+        note: 'Ativo visual conceitual. Não publicar sem revisão humana.',
+      },
+    });
+
     return res.status(200).json({
       success: true,
       image,
+      asset,
       overlayText,
-      compositionMode: 'baked_text',
+      compositionMode,
       prompt,
       runId: approvedRun.id,
     });

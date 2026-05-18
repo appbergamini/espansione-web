@@ -14,6 +14,20 @@ interface AccountDirectorPromptPackInput {
   agencyRequest: AgencyRequest;
 }
 
+export const ACCOUNT_DIRECTOR_PROMPT_VERSION = 'account_director_v1';
+export const COPYWRITER_PROMPT_VERSION = 'copywriter_v1';
+export const VISUAL_DIRECTOR_PROMPT_VERSION = 'visual_director_v1';
+export const EDITOR_PROMPT_VERSION = 'editor_v1';
+export const APPROVER_PROMPT_VERSION = 'approver_v1';
+
+const PROMPT_VERSION_BY_AGENT = {
+  account_director: ACCOUNT_DIRECTOR_PROMPT_VERSION,
+  copywriter: COPYWRITER_PROMPT_VERSION,
+  visual_director: VISUAL_DIRECTOR_PROMPT_VERSION,
+  editor: EDITOR_PROMPT_VERSION,
+  approver: APPROVER_PROMPT_VERSION,
+} as const;
+
 export const ACCOUNT_DIRECTOR_OUTPUT_SCHEMA = {
   type: 'object',
   required: [
@@ -46,6 +60,7 @@ export const ACCOUNT_DIRECTOR_OUTPUT_SCHEMA = {
     criterios_de_sucesso: { type: 'array', items: { type: 'string' } },
     brand_memory_slices_used: { type: 'array', items: { type: 'string' } },
     warnings: { type: 'array', items: { type: 'string' } },
+    quality_metadata: qualityMetadataSchema(),
   },
 } as const satisfies Record<string, unknown>;
 
@@ -57,11 +72,13 @@ export function buildAccountDirectorPromptPack({
   assertAgencyRequest(agencyRequest);
 
   return {
+    promptVersion: ACCOUNT_DIRECTOR_PROMPT_VERSION,
     systemPrompt: [
       'Voce e o agente account_director da Agencia IA da Espansione.',
       'Sua funcao e transformar Brand Memory e pedido do usuario em briefing operacional.',
       'Nao escreva a peca final. Nao crie copy final. Nao invente fatos, provas, numeros ou promessas.',
       'Se faltar evidencia, declare como hipotese ou warning.',
+      'Inclua quality_metadata com confiança, força de evidência, hipóteses, lacunas, contradições e necessidade de atenção humana.',
       'Use a Brand Memory como fonte canonica e preserve as escolhas estrategicas da Fase 1.',
       'Responda apenas no schema esperado.',
     ].join('\n'),
@@ -167,10 +184,12 @@ export function buildEditorPromptPack({
       'Preservar posicionamento, promessa e criterios do briefing.',
       'Apontar riscos de incoerencia.',
       'Gerar score de aderencia de 0 a 100.',
+      'Incluir quality_metadata quando houver riscos, lacunas ou hipóteses relevantes.',
     ],
     payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput },
     expectedOutputSchema: {
       required: ['versao_editada', 'ajustes_recomendados', 'riscos_de_incoerencia', 'score_aderencia', 'observacoes'],
+      properties: { quality_metadata: qualityMetadataSchema() },
     },
   });
 }
@@ -205,10 +224,12 @@ export function buildApproverPromptPack({
       'Pedir revisao ou rejeitar se houver violacao da Brand Memory.',
       'Nao aprovar conteudo com claims sem sustentacao.',
       'Decidir entre approved, revision_requested ou rejected.',
+      'Incluir quality_metadata para registrar confiança, lacunas de evidência, hipóteses e riscos da decisão.',
     ],
     payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput, editorOutput },
     expectedOutputSchema: {
       required: ['decisao', 'checklist', 'ajustes_obrigatorios', 'justificativa'],
+      properties: { quality_metadata: qualityMetadataSchema() },
     },
   });
 }
@@ -259,6 +280,7 @@ function makePromptPack({
   expectedOutputSchema: unknown;
 }): AgencyPromptPack {
   return {
+    promptVersion: PROMPT_VERSION_BY_AGENT[agent as keyof typeof PROMPT_VERSION_BY_AGENT],
     systemPrompt: [
       `Voce e o agente ${agent} da Agencia IA da Espansione.`,
       mission,
@@ -273,6 +295,22 @@ function makePromptPack({
       ...rules.map((rule) => `- ${rule}`),
     ].join('\n'),
     expectedOutputSchema,
+  };
+}
+
+function qualityMetadataSchema() {
+  return {
+    type: 'object',
+    properties: {
+      confidence_score: { type: 'number', minimum: 0, maximum: 100 },
+      evidence_strength: { type: 'string', enum: ['strong', 'medium', 'weak', 'unknown'] },
+      evidence_gaps: { type: 'array', items: { type: 'string' } },
+      assumptions: { type: 'array', items: { type: 'string' } },
+      contradictions: { type: 'array', items: { type: 'string' } },
+      needs_human_attention: { type: 'boolean' },
+      risk_summary: { type: 'string' },
+      source_coverage: { type: 'object' },
+    },
   };
 }
 

@@ -23,6 +23,7 @@ import Logo from '../../../../components/Logo';
 import OutputHeader from '../../../../components/output/OutputHeader';
 import OutputSidebar from '../../../../components/output/OutputSidebar';
 import OutputRenderer from '../../../../components/output/OutputRenderer';
+import OutputQualityPanel from '../../../../components/output/OutputQualityPanel';
 import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
 import { getServerUser } from '../../../../lib/getServerUser';
 import { resolveVizData } from '../../../../lib/output/resolveVizData';
@@ -110,7 +111,7 @@ export async function getServerSideProps({ params, query, req, res }) {
   // Se houver múltiplos (histórico), pega o mais recente.
   const { data: outputs, error: outErr } = await supabaseAdmin
     .from('outputs')
-    .select('id, agent_num, conteudo, resumo_executivo, conclusoes, confianca, fontes, gaps, created_at')
+    .select('id, agent_num, conteudo, resumo_executivo, conclusoes, confianca, fontes, gaps, quality_metadata, created_at')
     .eq('projeto_id', projetoId)
     .eq('agent_num', agentNum)
     .order('created_at', { ascending: false })
@@ -253,6 +254,9 @@ export default function OutputPage({
                 boxShadow: 'var(--viz-card-shadow)',
               }}
             >
+              <div className="screen-only" style={{ marginBottom: '1rem' }}>
+                <OutputQualityPanel metadata={output.quality_metadata} />
+              </div>
               <OutputRenderer
                 conteudo={output.conteudo}
                 resumoExecutivo={output.resumo_executivo}
