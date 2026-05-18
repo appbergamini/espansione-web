@@ -132,7 +132,7 @@ export default function AgencyRequestDetailPage() {
   ];
   const completedSteps = agentFlow.filter((agent) => stepByAgent.get(agent.id)?.status === 'completed').length;
   const approverStep = stepByAgent.get('approver');
-  const approvalDecision = approverStep?.output?.decisao || approverStep?.output?.decision || null;
+  const approvalDecision = getStepPayload(approverStep)?.decisao || getStepPayload(approverStep)?.decision || null;
   const requestTypeLabel = REQUEST_TYPE_LABELS[request?.request_type] || request?.request_type;
   const channelLabel = CHANNEL_LABELS[request?.channel] || request?.channel;
   const objectiveLabel = OBJECTIVE_LABELS[request?.objective] || request?.objective;
@@ -310,9 +310,7 @@ export default function AgencyRequestDetailPage() {
                           <div style={{ padding: '0 0.85rem 0.85rem' }}>
                             {step?.error && <p style={{ color: 'var(--brand-red)', margin: 0 }}>{step.error}</p>}
                             {step?.output ? (
-                              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', overflowX: 'auto', background: 'rgba(0,0,0,0.18)', borderRadius: 8, padding: '0.75rem', margin: 0 }}>
-                                {JSON.stringify(step.output, null, 2)}
-                              </pre>
+                              <AgentOutput agentId={agent.id} output={step.output} />
                             ) : (
                               <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>Sem output salvo ainda.</p>
                             )}
@@ -349,6 +347,178 @@ function labelAgent(agentId) {
     approver: 'Aprovador de Marca',
   };
   return labels[agentId] || agentId;
+}
+
+function getStepPayload(stepOrOutput) {
+  const output = stepOrOutput?.output || stepOrOutput;
+  return output?.data || output || {};
+}
+
+function AgentOutput({ agentId, output }) {
+  const data = getStepPayload(output);
+  const warnings = [...(data.warnings || []), ...(output?.warnings || [])].filter(Boolean);
+
+  if (agentId === 'account_director') {
+    const briefing = data.briefing_operacional || {};
+    const creative = data.hipotese_criativa || {};
+    return (
+      <OutputCard>
+        <OutputLine title="Objetivo" value={briefing.objetivo} />
+        <OutputLine title="Público" value={briefing.publico} />
+        <OutputLine title="Mensagem central" value={briefing.mensagem_central} />
+        <OutputLine title="Promessa" value={briefing.promessa} />
+        <OutputLine title="Tom recomendado" value={briefing.tom_recomendado} />
+        <OutputLine title="Hipótese criativa" value={[creative.conceito, creative.angulo, creative.narrativa].filter(Boolean).join(' · ')} />
+        <OutputList title="Critérios de sucesso" items={data.criterios_de_sucesso || briefing.criterio_de_sucesso} />
+        <OutputList title="Avisos" items={warnings} muted />
+      </OutputCard>
+    );
+  }
+
+  if (agentId === 'copywriter') {
+    return (
+      <OutputCard>
+        <OutputLine title="Headline" value={data.headline} />
+        <OutputLine title="Copy principal" value={data.copy_principal || data.legenda} />
+        <OutputList title="Variações" items={data.variacoes} />
+        <OutputLine title="CTA" value={data.cta} />
+        <OutputLine title="Racional de tom" value={data.racional_de_tom} />
+        <OutputList title="Claims a evitar" items={data.claims_evitar} muted />
+        <OutputList title="Avisos" items={warnings} muted />
+      </OutputCard>
+    );
+  }
+
+  if (agentId === 'visual_director') {
+    return (
+      <OutputCard>
+        <OutputLine title="Direção de arte" value={data.direcao_de_arte} />
+        <OutputLine title="Composição" value={data.composicao} />
+        <OutputLine title="Estilo de imagem" value={data.estilo_imagem} />
+        <OutputList title="Regras visuais" items={data.regras_visuais} />
+        <OutputList title="Assets necessários" items={data.assets_necessarios} />
+        <OutputList title="Restrições visuais" items={data.restricoes_visuais} muted />
+        <OutputList title="Avisos" items={warnings} muted />
+      </OutputCard>
+    );
+  }
+
+  if (agentId === 'editor') {
+    return (
+      <OutputCard>
+        <OutputLine title="Versão editada" value={data.versao_editada} />
+        <OutputLine title="Score de aderência" value={typeof data.score_aderencia === 'number' ? `${data.score_aderencia}/100` : data.score_aderencia} />
+        <OutputList title="Ajustes recomendados" items={data.ajustes_recomendados} />
+        <OutputList title="Riscos de incoerência" items={data.riscos_de_incoerencia} muted />
+        <OutputList title="Observações" items={data.observacoes} muted />
+      </OutputCard>
+    );
+  }
+
+  if (agentId === 'approver') {
+    return (
+      <OutputCard>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
+          <strong>Decisão final</strong>
+          <span style={{ color: decisionColor(data.decisao), background: 'rgba(255,255,255,0.05)', border: `1px solid ${decisionBorder(data.decisao)}`, borderRadius: 999, padding: '0.22rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
+            {decisionLabel(data.decisao)}
+          </span>
+        </div>
+        <OutputLine title="Justificativa" value={data.justificativa} />
+        <OutputLine title="Risco principal" value={data.risco_principal} />
+        <Checklist items={data.checklist} />
+        <OutputList title="Ajustes obrigatórios" items={data.ajustes_obrigatorios} />
+        <OutputList title="Avisos" items={warnings} muted />
+      </OutputCard>
+    );
+  }
+
+  return (
+    <OutputCard>
+      <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', overflowX: 'auto', margin: 0 }}>
+        {JSON.stringify(output, null, 2)}
+      </pre>
+    </OutputCard>
+  );
+}
+
+function OutputCard({ children }) {
+  return (
+    <div style={{ display: 'grid', gap: '0.7rem', background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.85rem' }}>
+      {children}
+    </div>
+  );
+}
+
+function OutputLine({ title, value }) {
+  if (!value) return null;
+  return (
+    <div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.2rem' }}>{title}</div>
+      <div style={{ whiteSpace: 'pre-wrap' }}>{value}</div>
+    </div>
+  );
+}
+
+function OutputList({ title, items, muted }) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) return null;
+  return (
+    <div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.3rem' }}>{title}</div>
+      <ul style={{ margin: 0, paddingLeft: '1.1rem', color: muted ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+        {list.map((item, index) => <li key={`${title}-${index}`} style={{ marginBottom: '0.18rem' }}>{item}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+function Checklist({ items }) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) return null;
+  return (
+    <div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.35rem' }}>Checklist</div>
+      <div style={{ display: 'grid', gap: '0.4rem' }}>
+        {list.map((item, index) => (
+          <div key={`${item.criterio}-${index}`} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.55rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <strong>{item.criterio}</strong>
+              <span style={{ color: checklistColor(item.status), fontSize: '0.78rem', fontWeight: 800 }}>{item.status}</span>
+            </div>
+            {item.observacao && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{item.observacao}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function decisionLabel(decision) {
+  const labels = {
+    approved: 'Aprovado',
+    revision_requested: 'Revisão solicitada',
+    rejected: 'Rejeitado',
+  };
+  return labels[decision] || decision || 'Sem decisão';
+}
+
+function decisionColor(decision) {
+  if (decision === 'approved') return 'var(--success)';
+  if (decision === 'rejected') return 'var(--brand-red)';
+  return 'var(--warning)';
+}
+
+function decisionBorder(decision) {
+  if (decision === 'approved') return 'rgba(16,185,129,0.35)';
+  if (decision === 'rejected') return 'rgba(239,68,68,0.35)';
+  return 'rgba(245,158,11,0.35)';
+}
+
+function checklistColor(status) {
+  if (status === 'pass') return 'var(--success)';
+  if (status === 'fail') return 'var(--brand-red)';
+  return 'var(--warning)';
 }
 
 function Label({ title, value, preserve }) {
