@@ -364,7 +364,7 @@ function getStepPayload(stepOrOutput) {
 
 function AgentOutput({ agentId, output }) {
   const data = getStepPayload(output);
-  const warnings = [...(data.warnings || []), ...(output?.warnings || [])].filter(Boolean);
+  const warnings = [...toArray(data.warnings), ...toArray(output?.warnings)].filter(Boolean);
 
   if (agentId === 'account_director') {
     const briefing = data.briefing_operacional || {};
@@ -456,7 +456,9 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
   const editor = getStepPayload(editorStep);
   const approver = getStepPayload(approverStep);
   const decision = approver.decisao || approver.decision;
-  const hasGeneratedMaterial = !!(copy.copy_principal || editor.versao_editada || visual.direcao_de_arte);
+  const editorText = extractEditedCopy(editor.versao_editada);
+  const editorVisual = extractEditedVisual(editor.versao_editada);
+  const hasGeneratedMaterial = !!(copy.copy_principal || editorText || visual.direcao_de_arte || editorVisual);
 
   if (!latestRun) {
     return (
@@ -496,10 +498,10 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
         </p>
       )}
 
-      <OutputLine title="Texto final/editado" value={editor.versao_editada || copy.copy_principal || copy.legenda} />
+      <OutputLine title="Texto final/editado" value={editorText || copy.copy_principal || copy.legenda} />
       <OutputLine title="Headline" value={copy.headline} />
       <OutputLine title="CTA" value={copy.cta} />
-      <OutputLine title="Direção visual" value={visual.direcao_de_arte} />
+      <OutputLine title="Direção visual" value={editorVisual || visual.direcao_de_arte} />
       <OutputList title="Ajustes obrigatórios" items={approver.ajustes_obrigatorios} muted={!approved} />
     </section>
   );
@@ -518,26 +520,26 @@ function OutputLine({ title, value }) {
   return (
     <div>
       <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.2rem' }}>{title}</div>
-      <div style={{ whiteSpace: 'pre-wrap' }}>{value}</div>
+      <div style={{ whiteSpace: 'pre-wrap' }}>{formatValue(value)}</div>
     </div>
   );
 }
 
 function OutputList({ title, items, muted }) {
-  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  const list = toArray(items).filter(Boolean);
   if (!list.length) return null;
   return (
     <div>
       <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.3rem' }}>{title}</div>
       <ul style={{ margin: 0, paddingLeft: '1.1rem', color: muted ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-        {list.map((item, index) => <li key={`${title}-${index}`} style={{ marginBottom: '0.18rem' }}>{item}</li>)}
+        {list.map((item, index) => <li key={`${title}-${index}`} style={{ marginBottom: '0.18rem' }}>{formatValue(item)}</li>)}
       </ul>
     </div>
   );
 }
 
 function Checklist({ items }) {
-  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  const list = normalizeChecklist(items);
   if (!list.length) return null;
   return (
     <div>
@@ -546,10 +548,10 @@ function Checklist({ items }) {
         {list.map((item, index) => (
           <div key={`${item.criterio}-${index}`} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.55rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
-              <strong>{item.criterio}</strong>
+              <strong>{formatValue(item.criterio)}</strong>
               <span style={{ color: checklistColor(item.status), fontSize: '0.78rem', fontWeight: 800 }}>{item.status}</span>
             </div>
-            {item.observacao && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{item.observacao}</div>}
+            {item.observacao && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{formatValue(item.observacao)}</div>}
           </div>
         ))}
       </div>
@@ -582,6 +584,84 @@ function checklistColor(status) {
   if (status === 'pass') return 'var(--success)';
   if (status === 'fail') return 'var(--brand-red)';
   return 'var(--warning)';
+}
+
+function extractEditedCopy(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    return value.copy_final || value.copy || value.texto || value.legenda || value.versao_final || '';
+  }
+  return String(value);
+}
+
+function extractEditedVisual(value) {
+  if (!value || typeof value !== 'object') return '';
+  return value.direcao_visual_final || value.direcao_visual || value.visual || '';
+}
+
+function toArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'object') {
+    return Object.entries(value).map(([key, item]) => {
+      if (item && typeof item === 'object') return { titulo: humanizeKey(key), ...item };
+      return `${humanizeKey(key)}: ${item}`;
+    });
+  }
+  return [value];
+}
+
+function normalizeChecklist(items) {
+  if (!items) return [];
+  if (Array.isArray(items)) {
+    return items.map((item) => normalizeChecklistItem(item)).filter(Boolean);
+  }
+  if (typeof items === 'object') {
+    return Object.entries(items)
+      .map(([key, value]) => normalizeChecklistItem({ criterio: humanizeKey(key), observacao: value, status: inferChecklistStatus(value) }))
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function normalizeChecklistItem(item) {
+  if (!item) return null;
+  if (typeof item === 'string') {
+    return { criterio: item, status: 'pass', observacao: '' };
+  }
+  return {
+    criterio: item.criterio || item.criterion || item.titulo || item.title || 'Critério',
+    status: item.status || inferChecklistStatus(item.observacao || item.note || item),
+    observacao: item.observacao || item.note || item.descricao || item.description || '',
+  };
+}
+
+function inferChecklistStatus(value) {
+  const text = String(formatValue(value)).toLowerCase();
+  if (text.includes('violação') || text.includes('falha') || text.includes('não ')) return 'warning';
+  return 'pass';
+}
+
+function formatValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(formatValue).filter(Boolean).join('\n');
+  if (typeof value === 'object') {
+    if (value.texto && value.titulo) return `${value.titulo}: ${value.texto}`;
+    if (value.titulo && value.descricao) return `${value.titulo}: ${value.descricao}`;
+    if (value.name && value.description) return `${value.name}: ${value.description}`;
+    return Object.entries(value)
+      .map(([key, item]) => `${humanizeKey(key)}: ${formatValue(item)}`)
+      .join('\n');
+  }
+  return String(value);
+}
+
+function humanizeKey(key) {
+  return String(key)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function Label({ title, value, preserve }) {
