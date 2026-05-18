@@ -45,6 +45,7 @@ export default function AgencyRequestDetailPage() {
   const [runningWorkflow, setRunningWorkflow] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
+  const [generatedImages, setGeneratedImages] = useState([]);
 
   useEffect(() => {
     let active = true;
@@ -124,20 +125,22 @@ export default function AgencyRequestDetailPage() {
 
   const generateApprovedImage = async () => {
     setGeneratingImage(true);
-    setGeneratedImage(null);
     setErrorMsg('');
     try {
       const res = await fetch(`/api/agency/requests/${requestId}/generate-image`, { method: 'POST' });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Erro ao gerar imagem');
-      setGeneratedImage({
+      const nextImage = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         src: `data:${json.image.mimeType || 'image/png'};base64,${json.image.b64}`,
         model: json.image.model,
         compositionMode: json.compositionMode,
         overlayText: json.overlayText || {},
         prompt: json.prompt,
         revisedPrompt: json.image.revisedPrompt,
-      });
+      };
+      setGeneratedImages((current) => [nextImage, ...current]);
+      setGeneratedImage(nextImage);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -296,6 +299,8 @@ export default function AgencyRequestDetailPage() {
                     approverStep={approverStep}
                     generatingImage={generatingImage}
                     generatedImage={generatedImage}
+                    generatedImages={generatedImages}
+                    onSelectImage={setGeneratedImage}
                     onGenerateImage={generateApprovedImage}
                   />
 
@@ -478,7 +483,7 @@ function AgentOutput({ agentId, output }) {
   );
 }
 
-function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverStep, generatingImage, generatedImage, onGenerateImage }) {
+function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverStep, generatingImage, generatedImage, generatedImages, onSelectImage, onGenerateImage }) {
   const copy = getStepPayload(copyStep);
   const visual = getStepPayload(visualStep);
   const editor = getStepPayload(editorStep);
@@ -540,11 +545,14 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
             disabled={generatingImage}
             style={{ background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.38)', borderRadius: 8, color: 'var(--success)', padding: '0.72rem 0.85rem', cursor: generatingImage ? 'wait' : 'pointer', fontWeight: 800 }}
           >
-            {generatingImage ? 'Criando imagem...' : 'Criar imagem da arte aprovada'}
+            {generatingImage ? 'Criando imagem...' : generatedImages?.length ? 'Gerar outra opção de imagem' : 'Criar imagem da arte aprovada'}
           </button>
 
           {generatedImage?.src && (
             <div style={{ display: 'grid', gap: '0.65rem' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
+                Opção escolhida
+              </div>
               {generatedImage.compositionMode === 'baked_text' ? (
                 <img
                   src={generatedImage.src}
@@ -584,6 +592,41 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
                   </div>
                 </details>
               )}
+            </div>
+          )}
+
+          {generatedImages?.length > 0 && (
+            <div style={{ display: 'grid', gap: '0.55rem' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
+                Galeria de opções
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.55rem' }}>
+                {generatedImages.map((image, index) => {
+                  const selected = image.id === generatedImage?.id;
+                  return (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => onSelectImage(image)}
+                      style={{ display: 'grid', gap: '0.35rem', textAlign: 'left', background: selected ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.035)', border: `1px solid ${selected ? 'rgba(56,189,248,0.48)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, padding: '0.45rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                    >
+                      <img
+                        src={image.src}
+                        alt={`Opção de arte ${index + 1}`}
+                        style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 6, background: 'rgba(0,0,0,0.2)' }}
+                      />
+                      <span style={{ fontSize: '0.76rem', fontWeight: 800 }}>
+                        Opção {generatedImages.length - index}
+                      </span>
+                      {selected && (
+                        <span style={{ color: 'var(--accent-blue)', fontSize: '0.72rem', fontWeight: 800 }}>
+                          Escolhida
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
