@@ -24,10 +24,12 @@ import OutputHeader from '../../../../components/output/OutputHeader';
 import OutputSidebar from '../../../../components/output/OutputSidebar';
 import OutputRenderer from '../../../../components/output/OutputRenderer';
 import OutputQualityPanel from '../../../../components/output/OutputQualityPanel';
+import StrategicTensionsPanel from '../../../../components/strategic/StrategicTensionsPanel';
 import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
 import { getServerUser } from '../../../../lib/getServerUser';
 import { resolveVizData } from '../../../../lib/output/resolveVizData';
 import { validarTokenPdf } from '../../../../lib/pdf/pdfToken';
+import { extractStrategicTensionsFromAgent6Output } from '../../../../lib/strategic-tensions/extract';
 
 const AGENT_NAMES = [
   null,
@@ -111,7 +113,7 @@ export async function getServerSideProps({ params, query, req, res }) {
   // Se houver múltiplos (histórico), pega o mais recente.
   const { data: outputs, error: outErr } = await supabaseAdmin
     .from('outputs')
-    .select('id, agent_num, conteudo, resumo_executivo, conclusoes, confianca, fontes, gaps, quality_metadata, created_at')
+    .select('id, agent_num, conteudo, resumo_executivo, conclusoes, confianca, fontes, gaps, quality_metadata, brand_memory_export_json, created_at')
     .eq('projeto_id', projetoId)
     .eq('agent_num', agentNum)
     .order('created_at', { ascending: false })
@@ -174,6 +176,10 @@ export default function OutputPage({
   vizData,
   isPrintMode,
 }) {
+  const strategicTensions = Number(agentNum) === 6
+    ? extractStrategicTensionsFromAgent6Output(output)
+    : null;
+
   // ─── Modo print: só o conteúdo editorial, fundo branco, sem chrome
   if (isPrintMode) {
     return (
@@ -256,6 +262,7 @@ export default function OutputPage({
             >
               <div className="screen-only" style={{ marginBottom: '1rem' }}>
                 <OutputQualityPanel metadata={output.quality_metadata} />
+                <StrategicTensionsPanel slice={strategicTensions} />
               </div>
               <OutputRenderer
                 conteudo={output.conteudo}

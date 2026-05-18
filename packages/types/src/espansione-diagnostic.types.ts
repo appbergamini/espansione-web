@@ -62,6 +62,7 @@ export interface EspansioneDiagnostic {
   experiencia: Experiencia;                          // Agente 12
   plano_comunicacao: PlanoComunicacao;               // Agente 13
   evp?: Evp;                                         // Agente 14 (opcional)
+  strategic_tensions?: StrategicTensionsSlice;        // Agente 6 (opcional, compatível com diagnósticos legados)
 
   // Metadados de consolidação
   meta: ConsolidationMeta;
@@ -350,6 +351,8 @@ export interface DecodificacaoEstrategica {
   divergencias_criticas: DivergenciaCritica[];
   de_para: DeParaItem[];
   escolhas_pendentes: EscolhaPendente[];
+  strategic_tensions?: StrategicTensionsSlice;
+  pontos_de_escolha_estrategica?: StrategicTensionsSlice;
   diretrizes_resumo: { numero: number; titulo: string }[];
   conexao_plataforma_branding: ConexaoPlataformaBranding;
 }
@@ -408,6 +411,34 @@ export interface ConexaoPlataformaBranding {
   atributos_direcionais: string[];
   lexico_proprietario_sugerido: string[];
   termos_a_evitar: string[];
+}
+
+export type StrategicTensionStatus = 'open' | 'resolved' | 'monitor';
+
+export interface StrategicTension {
+  id?: string;
+  title: string;
+  theme: string;
+  vi_signal?: string;
+  ve_signal?: string;
+  vm_signal?: string;
+  tension_summary: string;
+  strategic_choice_needed: string;
+  recommended_choice?: string;
+  risk_if_ignored: string;
+  impact_on_positioning?: string;
+  impact_on_communication?: string;
+  impact_on_experience?: string;
+  confidence_score?: number;
+  evidence_strength?: 'strong' | 'medium' | 'weak' | 'unknown';
+  status?: StrategicTensionStatus;
+}
+
+export interface StrategicTensionsSlice {
+  tensions: StrategicTension[];
+  summary: string;
+  unresolved_count: number;
+  high_risk_count: number;
 }
 
 // ============================================================

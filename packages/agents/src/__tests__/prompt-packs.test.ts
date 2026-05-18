@@ -67,6 +67,29 @@ const brandKernel: BrandKernel = {
   forbiddenClaims: ['resultado garantido'],
   preferredCTAs: ['Agendar conversa'],
   channelGuidelines: ['linkedin: autoridade'],
+  strategicTensions: [
+    {
+      title: 'Escala versus profundidade',
+      theme: 'Modelo de entrega',
+      tension_summary: 'VI quer escala; VE valoriza profundidade.',
+      strategic_choice_needed: 'Definir promessa de campanha sem resolver a tensão.',
+      risk_if_ignored: 'A campanha pode prometer velocidade sem sustentação operacional.',
+      impact_on_communication: 'Evitar claims de agilidade absoluta.',
+      status: 'open',
+    },
+  ],
+  unresolvedStrategicTensions: [
+    {
+      title: 'Escala versus profundidade',
+      theme: 'Modelo de entrega',
+      tension_summary: 'VI quer escala; VE valoriza profundidade.',
+      strategic_choice_needed: 'Definir promessa de campanha sem resolver a tensão.',
+      risk_if_ignored: 'A campanha pode prometer velocidade sem sustentação operacional.',
+      impact_on_communication: 'Evitar claims de agilidade absoluta.',
+      status: 'open',
+    },
+  ],
+  communicationRisksFromTensions: ['Modelo de entrega: Evitar claims de agilidade absoluta.'],
   source: { schemaVersion: '2.0', agentsPresent: [6, 9, 12, 13], generatedFrom: 'espansione_diagnostic' },
 };
 
@@ -156,6 +179,9 @@ test('todos os prompt packs sao gerados com input minimo valido', () => {
   }
 
   assert.equal(account.promptVersion, ACCOUNT_DIRECTOR_PROMPT_VERSION);
+  assert.match(account.systemPrompt, /strategicTensions/);
+  assert.match(account.systemPrompt, /nao resolva tensoes abertas/i);
+  assert.match(account.userPrompt, /Escala versus profundidade/);
   assert.equal(copy.promptVersion, COPYWRITER_PROMPT_VERSION);
   assert.equal(visual.promptVersion, VISUAL_DIRECTOR_PROMPT_VERSION);
   assert.equal(editor.promptVersion, EDITOR_PROMPT_VERSION);

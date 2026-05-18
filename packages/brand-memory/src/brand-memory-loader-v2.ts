@@ -313,11 +313,15 @@ async function insertSnapshots(
   runId: string,
   d: EspansioneDiagnostic
 ): Promise<number> {
+  const decodificacaoSnapshot = d.strategic_tensions
+    ? { ...d.decodificacao, strategic_tensions: d.strategic_tensions }
+    : d.decodificacao;
+
   const payloads: { agent_id: number; data: unknown }[] = [
     { agent_id: 2, data: d.vi },
     { agent_id: 4, data: d.ve },
     { agent_id: 5, data: { vm: d.vm, sources: d.vm_sources } },
-    { agent_id: 6, data: d.decodificacao },
+    { agent_id: 6, data: decodificacaoSnapshot },
     { agent_id: 7, data: d.values_and_attributes },
     { agent_id: 8, data: { diretrizes: d.diretrizes_estrategicas, reinforcement_logic: d.diretrizes_reinforcement_logic } },
     { agent_id: 9, data: d.plataforma_branding },
@@ -383,6 +387,13 @@ function reconstructDiagnostic(
       load_status: 'loaded',
     },
   };
+
+  const decodificacao = diagnostic.decodificacao as EspansioneDiagnostic['decodificacao'] | undefined;
+  if (decodificacao?.strategic_tensions) {
+    diagnostic.strategic_tensions = decodificacao.strategic_tensions;
+  } else if (decodificacao?.pontos_de_escolha_estrategica) {
+    diagnostic.strategic_tensions = decodificacao.pontos_de_escolha_estrategica;
+  }
 
   if (byAgent.has(14)) {
     diagnostic.evp = byAgent.get(14) as EspansioneDiagnostic['evp'];

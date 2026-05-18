@@ -8,6 +8,7 @@ import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import ClustersCard from '../../components/clusters/ClustersCard';
 import OutputQualityPanel from '../../components/output/OutputQualityPanel';
+import StrategicTensionsPanel from '../../components/strategic/StrategicTensionsPanel';
 import { supabase } from '../../lib/supabaseClient';
 import { generateOutputPdf } from '../../lib/pdf/outputPdf';
 import {
@@ -23,6 +24,7 @@ import {
   getPrimaryAdminAction,
 } from '../../lib/agents/adminFlow';
 import { buildBrandMemoryExportReadiness } from '../../lib/brand-memory/exportValidation';
+import { extractStrategicTensionsFromAgent6Output } from '../../lib/strategic-tensions/extract';
 import { getCisParsed, COMPETENCIAS_KEYS } from '../../lib/cis/parseCis';
 
 // Formato "02. Consolidado da Visão Interna (VI)" — preserva layout
@@ -1168,6 +1170,9 @@ export default function ProjetoDetalhes() {
   const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
   const brandMemoryExportDone = hasAgentOutput(16);
   const brandMemoryExportValid = !!brandMemoryOutput?.conteudo?.match(/<brand_memory_export>[\s\S]*?<\/brand_memory_export>/i);
+  const checkpointStrategicTensions = checkpointOutput?.agent_num === 6
+    ? extractStrategicTensionsFromAgent6Output(checkpointOutput)
+    : null;
   const brandMemoryExportInvalid = brandMemoryExportDone && !brandMemoryExportValid;
   const brandMemoryExportReady = (!brandMemoryExportDone || brandMemoryExportInvalid) && brandMemoryExportDeps.ok && brandMemoryExportReadiness.ready && !pendingCkpt;
   const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
@@ -1375,6 +1380,7 @@ export default function ProjetoDetalhes() {
             {pendingCkpt && (
               <div style={{ marginTop: '1rem' }}>
                 <OutputQualityPanel metadata={checkpointOutput?.quality_metadata} />
+                <StrategicTensionsPanel slice={checkpointStrategicTensions} compact />
               </div>
             )}
           </section>

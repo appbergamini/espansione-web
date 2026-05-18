@@ -11,6 +11,7 @@ import type {
   EspansioneDiagnostic,
   OndaBranding,
   Persona,
+  StrategicTension,
 } from '@espansione/types';
 
 export type {
@@ -113,6 +114,17 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
   const visual = diagnostic.visual_identity;
   const plano = diagnostic.plano_comunicacao;
   const experiencia = diagnostic.experiencia;
+  const strategicTensions = extractStrategicTensions(diagnostic);
+  const unresolvedStrategicTensions = strategicTensions.filter(
+    (tension) => tension.status !== 'resolved'
+  );
+  const communicationRisksFromTensions = unique(
+    unresolvedStrategicTensions.map((tension) =>
+      tension.impact_on_communication
+        ? `${tension.theme}: ${tension.impact_on_communication}`
+        : `${tension.theme}: ${tension.risk_if_ignored}`
+    )
+  );
   const forbiddenWords = (voice?.palavras_proibidas ?? []).map(
     (word) => `${word.termo}: ${word.razao}`
   );
@@ -235,12 +247,34 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
     forbiddenClaims: forbiddenWords,
     preferredCTAs: [],
     channelGuidelines,
+    strategicTensions,
+    unresolvedStrategicTensions,
+    communicationRisksFromTensions,
     source: {
       schemaVersion: diagnostic.schema_version,
       agentsPresent: diagnostic.meta?.agents_present ?? [],
       generatedFrom: 'espansione_diagnostic',
     },
   };
+}
+
+function extractStrategicTensions(diagnostic: EspansioneDiagnostic): StrategicTension[] {
+  const slice =
+    diagnostic.strategic_tensions ??
+    diagnostic.decodificacao?.strategic_tensions ??
+    diagnostic.decodificacao?.pontos_de_escolha_estrategica;
+
+  if (!slice || !Array.isArray(slice.tensions)) return [];
+  return slice.tensions.filter((tension): tension is StrategicTension => {
+    return Boolean(
+      tension &&
+        typeof tension.title === 'string' &&
+        typeof tension.theme === 'string' &&
+        typeof tension.tension_summary === 'string' &&
+        typeof tension.strategic_choice_needed === 'string' &&
+        typeof tension.risk_if_ignored === 'string'
+    );
+  });
 }
 
 export function buildAgencyRun(
