@@ -129,9 +129,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.101.0
         version: 2.105.4
-      openai:
-        specifier: ^4.0.0
-        version: 4.104.0
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3

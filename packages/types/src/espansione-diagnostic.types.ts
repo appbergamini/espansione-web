@@ -80,7 +80,7 @@ export interface ConsolidationMeta {
   validation_errors: ValidationError[];
   missing_required_fields: MissingField[];
   gaps_by_agent: Record<string, GapEntry[]>;
-  load_status: 'ready' | 'partial' | 'blocked';
+  load_status: 'ready' | 'partial' | 'blocked' | 'loaded';
 }
 
 export interface ValidationError {

@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.101.0",
-    "openai": "^4.0.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.6.0"
   },
@@ -18,7 +17,6 @@
     "@espansione/types": "workspace:^"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "^2.101.0",
-    "openai": "^4.0.0"
+    "@supabase/supabase-js": "^2.101.0"
   }
 }
