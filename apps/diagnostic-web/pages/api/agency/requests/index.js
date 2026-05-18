@@ -65,7 +65,7 @@ export default async function handler(req, res) {
         restrictions: normalizeStringArray(body.restrictions),
         reference_material: normalizeStringArray(body.reference_material),
         readiness_warnings: readiness.warnings,
-        status: body.status || 'briefing_pending',
+        status: body.status || 'draft',
         created_by: user.id,
       };
 

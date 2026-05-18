@@ -194,14 +194,14 @@ export default function AgencyRequestDetailPage() {
                       disabled={preparing || runningWorkflow}
                       style={{ padding: '0.72rem 0.8rem' }}
                     >
-                      {preparing ? 'Preparando...' : 'Preparar briefing'}
+                      {preparing ? 'Preparando...' : latestRun ? 'Preparar nova run' : 'Preparar briefing'}
                     </button>
                     <button
                       onClick={runWorkflow}
                       disabled={runningWorkflow || preparing}
                       style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', color: 'var(--accent-blue)', padding: '0.72rem 0.8rem', cursor: runningWorkflow || preparing ? 'wait' : 'pointer', fontWeight: 800 }}
                     >
-                      {runningWorkflow ? 'Rodando...' : 'Rodar Agência'}
+                      {runningWorkflow ? 'Rodando...' : latestRun ? 'Rodar Agência' : 'Preparar e rodar'}
                     </button>
                   </div>
                 </div>
@@ -262,6 +262,34 @@ export default function AgencyRequestDetailPage() {
                       </span>
                     )}
                   </div>
+
+                  {!latestRun && (
+                    <div style={{ border: '1px solid rgba(56,189,248,0.24)', borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: 'rgba(56,189,248,0.06)' }}>
+                      <strong style={{ display: 'block', marginBottom: '0.25rem' }}>A run ainda não foi preparada</strong>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0 0 0.75rem' }}>
+                        Prepare o briefing para criar a primeira etapa do Atendimento Estratégico, ou rode a Agência para preparar e executar a esteira mockada.
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
+                        <button
+                          className="btn-primary"
+                          type="button"
+                          onClick={prepareBriefing}
+                          disabled={preparing || runningWorkflow}
+                          style={{ padding: '0.62rem 0.8rem' }}
+                        >
+                          {preparing ? 'Preparando...' : 'Preparar briefing'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={runWorkflow}
+                          disabled={preparing || runningWorkflow}
+                          style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', color: 'var(--accent-blue)', padding: '0.62rem 0.8rem', cursor: preparing || runningWorkflow ? 'wait' : 'pointer', fontWeight: 800 }}
+                        >
+                          {runningWorkflow ? 'Rodando...' : 'Preparar e rodar Agência'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ display: 'grid', gap: '0.65rem' }}>
                     {agentFlow.map((agent, index) => {
