@@ -510,9 +510,9 @@ export default function AgencyRequestDetailPage() {
             <div className="glass-card" style={{ padding: '1.5rem' }}>Carregando...</div>
           ) : request ? (
             <>
-              <section className="glass-card outline-glow" style={{ position: 'sticky', top: '0.75rem', zIndex: 20, padding: '1rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.35)', background: 'rgba(6,12,25,0.94)', backdropFilter: 'blur(18px)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', alignItems: 'center' }}>
-                  <div>
+              <section className="glass-card outline-glow agency-topbar">
+                <div className="agency-topbar-main">
+                  <div className="agency-title-block">
                     <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
                       Pedido de Agência IA
                     </div>
@@ -522,21 +522,21 @@ export default function AgencyRequestDetailPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(76px, 1fr))', gap: '0.45rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+                  <div className="agency-step-strip">
                     {agentFlow.map((agent, index) => {
                       const step = stepByAgent.get(agent.id);
                       const done = step?.status === 'completed';
                       const active = step && !done;
                       return (
-                        <div key={agent.id} title={labelAgent(agent.id)} style={{ minWidth: '76px', border: `1px solid ${done ? 'rgba(16,185,129,0.5)' : active ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.09)'}`, background: done ? 'rgba(16,185,129,0.14)' : active ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.55rem 0.45rem' }}>
+                        <div key={agent.id} title={labelAgent(agent.id)} className="agency-step-pill" style={{ borderColor: done ? 'rgba(16,185,129,0.5)' : active ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.09)', background: done ? 'rgba(16,185,129,0.14)' : active ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.04)' }}>
                           <div style={{ color: done ? 'var(--success)' : active ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 800 }}>0{index + 1}</div>
-                          <div style={{ color: 'var(--text-primary)', fontSize: '0.76rem', fontWeight: 700, marginTop: '0.15rem', whiteSpace: 'nowrap' }}>{agent.label}</div>
+                          <div className="agency-step-label">{agent.label}</div>
                         </div>
                       );
                     })}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.55rem' }}>
+                  <div className="agency-top-actions">
                     <button
                       className="btn-primary"
                       onClick={prepareBriefing}
@@ -554,13 +554,11 @@ export default function AgencyRequestDetailPage() {
                     </button>
                   </div>
                 </div>
-                {errorMsg && (
-                  <div style={{ marginTop: '0.85rem', color: 'var(--brand-red)', fontSize: '0.84rem' }}>{errorMsg}</div>
-                )}
               </section>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1.25rem', alignItems: 'start' }}>
-                <section className="glass-card" style={{ padding: '1.25rem' }}>
+              <div className="agency-workspace">
+                <aside className="agency-sidebar">
+                <section className="glass-card agency-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div>
                       <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Brief do pedido</h2>
@@ -581,7 +579,6 @@ export default function AgencyRequestDetailPage() {
                     <Label title="Tipo" value={requestTypeLabel} />
                     <Label title="Canal" value={channelLabel} />
                     <Label title="Objetivo" value={objectiveLabel} />
-                    <Label title="Público/cluster" value={request.audience_cluster || '-'} />
                     <Label title="Oferta" value={request.offer || '-'} />
                     <Label title="CTA" value={request.desired_cta || '-'} />
                     <Label title="Contexto" value={request.context} />
@@ -590,13 +587,16 @@ export default function AgencyRequestDetailPage() {
                   <details style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem' }}>
                     <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.85rem' }}>Restrições, referências e warnings</summary>
                     <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 0.34fr) 1fr', gap: '0.65rem 0.9rem', margin: '0.85rem 0 0' }}>
+                      <Label title="Público/cluster" value={request.audience_cluster || '-'} preserve />
                       <Label title="Restrições" value={(request.restrictions || []).join('\n') || '-'} preserve />
                       <Label title="Referências" value={(request.reference_material || []).join('\n') || '-'} preserve />
                       <Label title="Warnings" value={(request.readiness_warnings || []).join('\n') || '-'} preserve />
                     </dl>
                   </details>
                 </section>
+                </aside>
 
+                <div className="agency-content">
                 <BriefingPanel
                   request={request}
                   accountStep={accountStep}
@@ -619,7 +619,7 @@ export default function AgencyRequestDetailPage() {
                   onRunWorkflow={runWorkflow}
                 />
 
-                <section className="glass-card" style={{ padding: '1.25rem' }}>
+                <section className="glass-card agency-card agency-execution-card">
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                       <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Timeline dos agentes</h2>
@@ -843,9 +843,161 @@ export default function AgencyRequestDetailPage() {
                     </details>
                   )}
                 </section>
+                </div>
               </div>
             </>
           ) : null}
+          <style jsx global>{`
+            .agency-topbar {
+              position: sticky;
+              top: 0.75rem;
+              z-index: 20;
+              padding: 0.95rem;
+              margin-bottom: 1rem;
+              border-color: rgba(56, 189, 248, 0.35);
+              background: rgba(6, 12, 25, 0.94);
+              backdrop-filter: blur(18px);
+            }
+
+            .agency-topbar-main {
+              display: grid;
+              grid-template-columns: minmax(220px, 0.9fr) minmax(360px, 1.25fr) minmax(260px, 0.8fr);
+              gap: 0.9rem;
+              align-items: center;
+            }
+
+            .agency-title-block {
+              min-width: 0;
+            }
+
+            .agency-step-strip {
+              display: grid;
+              grid-template-columns: repeat(5, minmax(0, 1fr));
+              gap: 0.45rem;
+              min-width: 0;
+            }
+
+            .agency-step-pill {
+              min-width: 0;
+              border: 1px solid rgba(255, 255, 255, 0.09);
+              border-radius: 8px;
+              padding: 0.5rem 0.45rem;
+            }
+
+            .agency-step-label {
+              color: var(--text-primary);
+              font-size: 0.73rem;
+              font-weight: 800;
+              margin-top: 0.14rem;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .agency-top-actions {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 0.55rem;
+            }
+
+            .agency-workspace {
+              display: grid;
+              grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+              gap: 1rem;
+              align-items: start;
+            }
+
+            .agency-sidebar {
+              position: sticky;
+              top: 7.35rem;
+              align-self: start;
+              min-width: 0;
+            }
+
+            .agency-content {
+              display: grid;
+              gap: 1rem;
+              min-width: 0;
+            }
+
+            .agency-card {
+              padding: 1.05rem;
+              min-width: 0;
+            }
+
+            .agency-execution-card {
+              display: grid;
+              gap: 0.85rem;
+            }
+
+            .briefing-summary-card {
+              display: grid;
+              gap: 0.8rem;
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              border-radius: 8px;
+              padding: 0.85rem;
+              background: rgba(255, 255, 255, 0.025);
+            }
+
+            .briefing-highlight {
+              display: grid;
+              gap: 0.65rem;
+              border: 1px solid rgba(56, 189, 248, 0.16);
+              border-radius: 8px;
+              padding: 0.75rem;
+              background: rgba(56, 189, 248, 0.04);
+            }
+
+            .briefing-summary-grid {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 0.8rem 1rem;
+            }
+
+            @media (max-width: 1180px) {
+              .agency-topbar-main {
+                grid-template-columns: minmax(220px, 1fr) minmax(320px, 1fr);
+              }
+
+              .agency-top-actions {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(2, minmax(180px, 1fr));
+              }
+
+              .agency-workspace {
+                grid-template-columns: 1fr;
+              }
+
+              .agency-sidebar {
+                position: static;
+              }
+            }
+
+            @media (max-width: 720px) {
+              .agency-topbar {
+                position: static;
+              }
+
+              .agency-topbar-main,
+              .agency-top-actions {
+                grid-template-columns: 1fr;
+              }
+
+              .agency-step-strip {
+                grid-template-columns: repeat(5, minmax(72px, 1fr));
+                overflow-x: auto;
+                padding-bottom: 0.2rem;
+              }
+
+              .agency-card {
+                padding: 0.9rem;
+              }
+
+              .briefing-summary-grid {
+                grid-template-columns: 1fr;
+              }
+            }
+          `}</style>
         </main>
       </div>
     </>
@@ -1190,13 +1342,17 @@ function BriefingSummary({ briefing }) {
   const operational = briefing?.briefing_operacional || {};
   const creative = briefing?.hipotese_criativa || {};
   return (
-    <div style={{ display: 'grid', gap: '0.65rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.85rem', background: 'rgba(255,255,255,0.025)' }}>
-      <OutputLine title="Objetivo" value={operational.objetivo} />
-      <OutputLine title="Público" value={operational.publico} />
-      <OutputLine title="Insight" value={operational.insight} />
-      <OutputLine title="Promessa" value={operational.promessa} />
-      <OutputLine title="Mensagem central" value={operational.mensagem_central} />
-      <OutputLine title="Tom recomendado" value={operational.tom_recomendado} />
+    <div className="briefing-summary-card">
+      <div className="briefing-highlight">
+        <OutputLine title="Objetivo" value={operational.objetivo} />
+        <OutputLine title="Mensagem central" value={operational.mensagem_central} />
+      </div>
+      <div className="briefing-summary-grid">
+        <OutputLine title="Público" value={operational.publico} />
+        <OutputLine title="Insight" value={operational.insight} />
+        <OutputLine title="Promessa" value={operational.promessa} />
+        <OutputLine title="Tom recomendado" value={operational.tom_recomendado} />
+      </div>
       <OutputLine title="Hipótese criativa" value={[creative.conceito, creative.angulo, creative.narrativa].filter(Boolean).join(' · ')} />
       <OutputList title="Critérios de sucesso" items={briefing?.criterios_de_sucesso || operational.criterio_de_sucesso} />
       <OutputList title="Warnings" items={briefing?.warnings} muted />
