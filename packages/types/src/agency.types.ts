@@ -126,6 +126,38 @@ export type BrandLearningSuggestionStatus =
   | 'rejected'
   | 'archived';
 
+export type AgencySignalAffectedSlice =
+  | 'decodificacao'
+  | 'plataforma_branding'
+  | 'voice_profile'
+  | 'visual_identity'
+  | 'experiencia'
+  | 'plano_comunicacao'
+  | 'strategic_tensions'
+  | 'executional_readiness'
+  | 'other';
+
+export type AgencySignalType =
+  | 'missing_information'
+  | 'vague_guideline'
+  | 'contradiction'
+  | 'weak_proof'
+  | 'tone_gap'
+  | 'visual_gap'
+  | 'audience_gap'
+  | 'channel_gap'
+  | 'repeated_manual_edit'
+  | 'performance_learning';
+
+export type AgencySignalSeverity = 'low' | 'medium' | 'high';
+
+export type AgencySignalStatus =
+  | 'open'
+  | 'reviewed'
+  | 'converted_to_learning'
+  | 'dismissed'
+  | 'archived';
+
 export type CreativeAssetType =
   | 'conceptual_image'
   | 'moodboard_reference'
@@ -425,6 +457,7 @@ export interface BrandLearningSuggestion {
   sourceAgencyRunId?: string;
   sourceAgencyRequestId?: string;
   sourceLibraryItemId?: string;
+  sourceAgencySignalId?: string;
   learningType: BrandLearningType;
   content: string;
   rationale?: string;
@@ -434,6 +467,24 @@ export interface BrandLearningSuggestion {
   rejectedReason?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface AgencySignal {
+  id?: string;
+  brand_id: string;
+  agency_run_id?: string;
+  agency_request_id?: string;
+  source_agent_id?: AgencyAgentId | string;
+  affected_slice: AgencySignalAffectedSlice;
+  signal_type: AgencySignalType;
+  severity: AgencySignalSeverity;
+  title: string;
+  description: string;
+  evidence: string[];
+  recommendation: string;
+  status: AgencySignalStatus;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreativeAsset {

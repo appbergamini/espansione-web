@@ -649,6 +649,9 @@ export default function AgencyRequestDetailPage() {
                         <Link href={`/adm/${id}/agency/learnings?brand_id=${request.brand_id}`} style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.28)', borderRadius: 8, color: 'var(--accent-blue)', padding: '0.42rem 0.7rem', textDecoration: 'none', fontWeight: 800, fontSize: '0.78rem' }}>
                           Aprendizados
                         </Link>
+                        <Link href={`/adm/${id}/agency/signals?brand_id=${request.brand_id}`} style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.28)', borderRadius: 8, color: 'var(--warning)', padding: '0.42rem 0.7rem', textDecoration: 'none', fontWeight: 800, fontSize: '0.78rem' }}>
+                          Sinais
+                        </Link>
                         <button
                           type="button"
                           onClick={createVariation}

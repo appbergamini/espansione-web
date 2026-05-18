@@ -13,6 +13,7 @@ import {
   calculateAgencyRunExecutionSummary,
   updateRunExecutionMetadata,
 } from './executionMetadata.js';
+import { createAgencySignalsFromStep } from './agencySignals.js';
 
 export const AGENCY_AGENT_ORDER = [
   'account_director',
@@ -40,14 +41,14 @@ export async function runAgencyWorkflow(db, requestId, modelGateway = getAgencyM
       brandKernel,
       agencyRequest,
       accountDirectorOutput: approvedBriefing,
-    }), modelGateway);
+    }), modelGateway, { run, request: agencyRequest });
 
     const visualOutput = await createAndCompleteStep(db, run.id, 'visual_director', buildStepInput({
       agentId: 'visual_director',
       brandKernel,
       agencyRequest,
       accountDirectorOutput: approvedBriefing,
-    }), modelGateway);
+    }), modelGateway, { run, request: agencyRequest });
 
     const editorOutput = await createAndCompleteStep(db, run.id, 'editor', buildStepInput({
       agentId: 'editor',
@@ -56,7 +57,7 @@ export async function runAgencyWorkflow(db, requestId, modelGateway = getAgencyM
       accountDirectorOutput: approvedBriefing,
       copywriterOutput: copyOutput.data,
       visualDirectorOutput: visualOutput.data,
-    }), modelGateway);
+    }), modelGateway, { run, request: agencyRequest });
 
     await db.from('agency_requests').update({ status: 'approval_pending' }).eq('id', requestId);
 
@@ -68,7 +69,7 @@ export async function runAgencyWorkflow(db, requestId, modelGateway = getAgencyM
       copywriterOutput: copyOutput.data,
       visualDirectorOutput: visualOutput.data,
       editorOutput: editorOutput.data,
-    }), modelGateway);
+    }), modelGateway, { run, request: agencyRequest });
 
     const finalDecision = approverOutput.data?.decisao || 'revision_requested';
     await completeRunAndRequest(db, run.id, requestId, finalDecision);
@@ -271,7 +272,7 @@ async function createVersionedStep(db, {
     await invalidateDownstreamSteps(db, steps, agentId, step.id);
   }
 
-  const output = await completeStep(db, step, modelGateway);
+  const output = await completeStep(db, step, modelGateway, { run, request });
 
   if (agentId === 'account_director') {
     await db
@@ -446,10 +447,10 @@ async function getOrPrepareRun(db, requestId) {
   return prepareAgencyRun(db, requestId);
 }
 
-async function createAndCompleteStep(db, runId, agentId, input, modelGateway) {
+async function createAndCompleteStep(db, runId, agentId, input, modelGateway, context = {}) {
   const steps = await listRunSteps(db, runId);
   const existing = getCurrentStepMap(steps).get(agentId);
-  if (existing) return completeStep(db, existing, modelGateway);
+  if (existing) return completeStep(db, existing, modelGateway, context);
 
   const { data: step, error } = await db
     .from('agency_steps')
@@ -467,10 +468,10 @@ async function createAndCompleteStep(db, runId, agentId, input, modelGateway) {
     .select('*')
     .single();
   if (error) throw error;
-  return completeStep(db, step, modelGateway);
+  return completeStep(db, step, modelGateway, context);
 }
 
-async function completeStep(db, step, modelGateway) {
+async function completeStep(db, step, modelGateway, context = {}) {
   if (step.status === 'completed' && step.output) return step.output;
 
   const attemptCount = Number(step.attempt_count || 0) + 1;
@@ -506,6 +507,17 @@ async function completeStep(db, step, modelGateway) {
       .select('*')
       .single();
     if (error) throw error;
+    try {
+      await createAgencySignalsFromStep(db, {
+        run: context.run,
+        request: context.request,
+        step: data,
+        output: outputWithAssessment,
+        qualityAssessment,
+      });
+    } catch (signalError) {
+      console.warn('[agency/signals] Falha ao registrar sinais da Agência:', signalError.message);
+    }
     await updateRunExecutionMetadata(db, step.run_id);
     return data.output;
   } catch (error) {

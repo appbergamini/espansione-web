@@ -200,6 +200,9 @@ export default function AgencyRequestsPage() {
                     <Link href={`/adm/${id}/agency/learnings?brand_id=${brand.id}`} style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
                       Aprendizados Sugeridos
                     </Link>
+                    <Link href={`/adm/${id}/agency/signals?brand_id=${brand.id}`} style={{ color: 'var(--warning)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
+                      Sinais da Agência
+                    </Link>
                   </div>
                 )}
               </div>

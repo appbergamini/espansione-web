@@ -34,6 +34,7 @@ export async function createLearningSuggestion(db, input = {}) {
     source_agency_run_id: input.sourceAgencyRunId || input.source_agency_run_id || source.runId || null,
     source_agency_request_id: input.sourceAgencyRequestId || input.source_agency_request_id || source.requestId || null,
     source_library_item_id: input.sourceLibraryItemId || input.source_library_item_id || null,
+    source_agency_signal_id: input.sourceAgencySignalId || input.source_agency_signal_id || null,
     learning_type: learningType,
     content,
     rationale: input.rationale ? String(input.rationale).trim() : null,
@@ -121,6 +122,7 @@ export async function listLearningSuggestions(db, brandId, filters = {}) {
   if (filters.sourceAgencyRunId) query = query.eq('source_agency_run_id', filters.sourceAgencyRunId);
   if (filters.sourceAgencyRequestId) query = query.eq('source_agency_request_id', filters.sourceAgencyRequestId);
   if (filters.sourceLibraryItemId) query = query.eq('source_library_item_id', filters.sourceLibraryItemId);
+  if (filters.sourceAgencySignalId) query = query.eq('source_agency_signal_id', filters.sourceAgencySignalId);
 
   const { data, error } = await query.order('created_at', { ascending: false });
   if (error) throw error;
@@ -138,8 +140,24 @@ export async function listLearningSuggestions(db, brandId, filters = {}) {
 async function resolveLearningSource(db, input) {
   const explicitBrandId = input.brandId || input.brand_id;
   const sourceLibraryItemId = input.sourceLibraryItemId || input.source_library_item_id;
+  const sourceAgencySignalId = input.sourceAgencySignalId || input.source_agency_signal_id;
   const sourceRunId = input.sourceAgencyRunId || input.source_agency_run_id;
   const sourceRequestId = input.sourceAgencyRequestId || input.source_agency_request_id;
+
+  if (sourceAgencySignalId) {
+    const { data: signal, error } = await db
+      .from('agency_signals')
+      .select('*')
+      .eq('id', sourceAgencySignalId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!signal) throw sourceNotFoundError('Sinal da Agência não encontrado.');
+    return {
+      brandId: signal.brand_id,
+      runId: signal.agency_run_id,
+      requestId: signal.agency_request_id,
+    };
+  }
 
   if (sourceLibraryItemId) {
     const { data: item, error } = await db

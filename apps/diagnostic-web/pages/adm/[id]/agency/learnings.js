@@ -163,9 +163,14 @@ export default function BrandLearningSuggestionsPage() {
                   Fila humana para aprovar aprendizados futuros. Aprovar aqui não altera a Brand Memory.
                 </p>
               </div>
-              <Link href={`/adm/${id}/agency/library?brand_id=${brandId || ''}`} style={{ color: 'var(--success)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
-                Biblioteca da Marca
-              </Link>
+              <div style={{ display: 'grid', gap: '0.45rem', justifyItems: 'end' }}>
+                <Link href={`/adm/${id}/agency/library?brand_id=${brandId || ''}`} style={{ color: 'var(--success)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
+                  Biblioteca da Marca
+                </Link>
+                <Link href={`/adm/${id}/agency/signals?brand_id=${brandId || ''}`} style={{ color: 'var(--warning)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
+                  Sinais da Agência
+                </Link>
+              </div>
             </div>
           </section>
 
