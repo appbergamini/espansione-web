@@ -1,7 +1,7 @@
 import { getServerUser } from '../../../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../../../lib/supabaseAdmin';
 import { requireAgencyUser } from '../../../../../lib/agency/runtime';
-import { buildApprovedArtworkPrompt, generateApprovedArtwork, normalizeDecision } from '../../../../../lib/agency/imageGeneration';
+import { buildApprovedArtworkOverlay, buildApprovedArtworkPrompt, generateApprovedArtwork, normalizeDecision } from '../../../../../lib/agency/imageGeneration';
 
 export const config = {
   api: {
@@ -59,11 +59,16 @@ export default async function handler(req, res) {
       editorStep: stepByAgent.get('editor'),
       approverStep: stepByAgent.get('approver'),
     });
+    const overlayText = buildApprovedArtworkOverlay({
+      copyStep: stepByAgent.get('copywriter'),
+      editorStep: stepByAgent.get('editor'),
+    });
 
     const image = await generateApprovedArtwork({ prompt });
     return res.status(200).json({
       success: true,
       image,
+      overlayText,
       prompt,
       runId: approvedRun.id,
     });

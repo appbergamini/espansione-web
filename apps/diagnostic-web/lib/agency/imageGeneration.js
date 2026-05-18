@@ -66,9 +66,9 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
   }
 
   return [
-    'Crie uma arte final de marketing em formato quadrado 1:1, pronta para revisão humana.',
+    'Crie somente a imagem/fundo da arte de marketing em formato quadrado 1:1, pronta para receber texto por cima em uma camada separada.',
     'Use a direção visual aprovada como fonte principal. Não adicione logotipos, selos, marcas de terceiros, dados, números ou claims que não estejam no material aprovado.',
-    'Não escreva textos pequenos demais. Se usar texto na imagem, use apenas o essencial: headline e CTA.',
+    'REGRA CRÍTICA: não inclua nenhuma palavra, letra, frase, número, assinatura, legenda, botão, texto simulado, placa, tipografia ou caracteres na imagem. Deixe áreas com respiro visual para aplicação posterior de texto real.',
     '',
     'CONTEXTO DO PEDIDO:',
     `Tipo: ${request?.request_type || 'social_post'}`,
@@ -78,12 +78,15 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
     `Contexto: ${request?.context || 'não especificado'}`,
     '',
     'TEXTO APROVADO:',
+    'O texto abaixo é apenas contexto para composição. NÃO renderize esse texto dentro da imagem.',
     finalCopy || 'Sem texto final obrigatório.',
     '',
     'HEADLINE:',
+    'A headline será aplicada depois em HTML/CSS. NÃO renderize na imagem.',
     headline || 'Sem headline obrigatória.',
     '',
     'CTA:',
+    'O CTA será aplicado depois em HTML/CSS. NÃO renderize na imagem.',
     cta || 'Sem CTA obrigatório.',
     '',
     'DIREÇÃO VISUAL APROVADA:',
@@ -93,6 +96,21 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
     formatValue(visual.regras_visuais || ''),
     formatValue(visual.restricoes_visuais || ''),
   ].filter(Boolean).join('\n');
+}
+
+export function buildApprovedArtworkOverlay({ copyStep, editorStep }) {
+  const copy = getStepPayload(copyStep);
+  const editor = getStepPayload(editorStep);
+  const finalCopy = extractEditedCopy(editor.versao_editada) || copy.copy_principal || copy.legenda || '';
+  const headline = formatValue(copy.headline || firstSentence(finalCopy)).trim();
+  const cta = formatValue(copy.cta || '').trim();
+  const body = finalCopy && finalCopy !== headline ? formatValue(finalCopy).trim() : '';
+
+  return {
+    headline,
+    body: body.length > 220 ? `${body.slice(0, 217).trim()}...` : body,
+    cta,
+  };
 }
 
 export async function generateApprovedArtwork({ prompt }) {
@@ -146,4 +164,8 @@ function humanizeKey(key) {
   return String(key)
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function firstSentence(text) {
+  return String(text || '').split(/(?<=[.!?])\s+/)[0] || '';
 }

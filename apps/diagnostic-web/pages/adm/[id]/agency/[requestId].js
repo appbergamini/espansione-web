@@ -133,6 +133,7 @@ export default function AgencyRequestDetailPage() {
       setGeneratedImage({
         src: `data:${json.image.mimeType || 'image/png'};base64,${json.image.b64}`,
         model: json.image.model,
+        overlayText: json.overlayText || {},
         prompt: json.prompt,
         revisedPrompt: json.image.revisedPrompt,
       });
@@ -543,19 +544,15 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
 
           {generatedImage?.src && (
             <div style={{ display: 'grid', gap: '0.65rem' }}>
-              <img
-                src={generatedImage.src}
-                alt="Arte aprovada gerada por GPT Image"
-                style={{ width: '100%', maxWidth: 560, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}
-              />
+              <ComposedArtworkPreview image={generatedImage} />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem', alignItems: 'center' }}>
-                <a
-                  href={generatedImage.src}
-                  download="arte-aprovada-espansione.png"
+                <button
+                  type="button"
+                  onClick={() => downloadComposedArtwork(generatedImage)}
                   style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}
                 >
-                  Baixar PNG
-                </a>
+                  Baixar PNG com texto correto
+                </button>
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
                   Modelo: {formatValue(generatedImage.model)}
                 </span>
@@ -580,6 +577,37 @@ function OutputCard({ children }) {
   return (
     <div style={{ display: 'grid', gap: '0.7rem', background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '0.85rem' }}>
       {children}
+    </div>
+  );
+}
+
+function ComposedArtworkPreview({ image }) {
+  const text = image.overlayText || {};
+  return (
+    <div style={{ position: 'relative', width: '100%', maxWidth: 560, aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
+      <img
+        src={image.src}
+        alt="Arte aprovada gerada por GPT Image"
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.04) 32%, rgba(0,0,0,0.72) 100%)' }} />
+      <div style={{ position: 'absolute', left: '7%', right: '7%', bottom: '7%', color: '#fff', textShadow: '0 2px 16px rgba(0,0,0,0.6)' }}>
+        {text.headline && (
+          <div style={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: 'clamp(1.8rem, 6.2vw, 3.25rem)', lineHeight: 1.03, fontWeight: 700, marginBottom: '0.75rem', letterSpacing: 0 }}>
+            {text.headline}
+          </div>
+        )}
+        {text.body && (
+          <div style={{ fontSize: 'clamp(0.88rem, 2.2vw, 1.16rem)', lineHeight: 1.22, maxWidth: '92%', marginBottom: text.cta ? '0.7rem' : 0 }}>
+            {text.body}
+          </div>
+        )}
+        {text.cta && (
+          <div style={{ fontSize: 'clamp(0.86rem, 2vw, 1.06rem)', lineHeight: 1.2, fontWeight: 800 }}>
+            {text.cta}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -760,6 +788,88 @@ function humanizeKey(key) {
   return String(key)
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function downloadComposedArtwork(image) {
+  if (!image?.src || typeof window === 'undefined') return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+  const img = new window.Image();
+
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const gradient = ctx.createLinearGradient(0, canvas.height * 0.35, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(0,0,0,0.04)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0.72)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const text = image.overlayText || {};
+    const left = 72;
+    const maxWidth = canvas.width - 144;
+    let y = canvas.height - 84;
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 4;
+
+    if (text.cta) {
+      ctx.font = '800 34px Arial, sans-serif';
+      const ctaLines = wrapCanvasText(ctx, text.cta, maxWidth);
+      y = drawCanvasLines(ctx, ctaLines, left, y, 40);
+      y -= 28;
+    }
+
+    if (text.body) {
+      ctx.font = '400 34px Arial, sans-serif';
+      const bodyLines = wrapCanvasText(ctx, text.body, maxWidth).slice(0, 5);
+      y = drawCanvasLines(ctx, bodyLines, left, y, 42);
+      y -= 34;
+    }
+
+    if (text.headline) {
+      ctx.font = '700 64px Georgia, serif';
+      const headlineLines = wrapCanvasText(ctx, text.headline, maxWidth).slice(0, 4);
+      drawCanvasLines(ctx, headlineLines, left, y, 70);
+    }
+
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = 'arte-aprovada-espansione.png';
+    link.click();
+  };
+
+  img.src = image.src;
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (ctx.measureText(next).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawCanvasLines(ctx, lines, x, bottomY, lineHeight) {
+  let y = bottomY - (lines.length - 1) * lineHeight;
+  for (const line of lines) {
+    ctx.fillText(line, x, y);
+    y += lineHeight;
+  }
+  return bottomY - lines.length * lineHeight;
 }
 
 function Label({ title, value, preserve }) {
