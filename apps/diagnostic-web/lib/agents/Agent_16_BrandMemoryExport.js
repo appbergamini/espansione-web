@@ -310,8 +310,12 @@ export const Agent_16_BrandMemoryExport = {
       const m = rawText.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));
       return m ? m[1].trim() : '';
     };
+    const conteudo = extract('conteudo') || rawText.trim();
+    const brandMemoryExport = extract('brand_memory_export');
     return {
-      conteudo: extract('conteudo') || rawText.trim(),
+      conteudo: brandMemoryExport
+        ? `${conteudo}\n\n<brand_memory_export>\n${brandMemoryExport}\n</brand_memory_export>`
+        : conteudo,
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',

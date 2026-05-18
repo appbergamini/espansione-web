@@ -53,6 +53,7 @@ export default function ProjetoDetalhes() {
   const [runningAgent, setRunningAgent] = useState(null);
   const [engineError, setEngineError] = useState('');
   const [engineStage, setEngineStage] = useState('');
+  const [loadingBrandMemory, setLoadingBrandMemory] = useState(false);
   const [approving, setApproving] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [pendingAgentNum, setPendingAgentNum] = useState(null);
@@ -173,6 +174,29 @@ export default function ProjetoDetalhes() {
     setPendingAgentNum(agentNum);
     setShowModelPicker(true);
     setEngineError('');
+  };
+
+  const handleLoadBrandMemory = async () => {
+    setLoadingBrandMemory(true);
+    setEngineError('');
+    try {
+      const res = await fetch('/api/brand-memory/load', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projetoId: id }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setEngineError(json.error || 'Falha ao carregar Brand Memory.');
+        return;
+      }
+      await loadData();
+      alert('Brand Memory carregada. A Agência IA já pode usar a memória ativa.');
+    } catch (err) {
+      setEngineError(`Falha ao carregar Brand Memory: ${err.message || err}`);
+    } finally {
+      setLoadingBrandMemory(false);
+    }
   };
 
   // FIX.22 — abre o mesmo picker em modo "team-report" (não tem agentNum
@@ -795,6 +819,14 @@ export default function ProjetoDetalhes() {
   if (!data || !data.projeto) return <div style={{ color: '#fff' }}>Projeto não encontrado.</div>;
 
   const { projeto, outputs = [], formularios = [], intake, respondentes = [] } = data;
+  const latestOutputs = Object.values(
+    [...outputs]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .reduce((acc, output) => {
+        if (!acc[output.agent_num]) acc[output.agent_num] = output;
+        return acc;
+      }, {})
+  );
 
   const PAPEL_FROM_TIPO = {
     entrevista_socios: 'socios',
@@ -810,7 +842,7 @@ export default function ProjetoDetalhes() {
   // FIX.15 — EVP (Agente 14, modular) entra no denominador via flag
   // explícita projetos.tem_evp (antes era proxy galinha-e-ovo:
   // includes(14), que escondia o agente até ele já ter rodado).
-  const agentNumsCompletos = outputs.map(o => o.agent_num);
+  const agentNumsCompletos = latestOutputs.map(o => o.agent_num);
   const projetoTemEvp = !!data?.projeto?.tem_evp;
   const progresso = calcularProgresso(agentNumsCompletos, projetoTemEvp);
   const nextAgent = progresso.proximoAgente?.agent_num || null;
@@ -821,7 +853,7 @@ export default function ProjetoDetalhes() {
     : null;
   const hasAgentOutput = (agentNum) => agentNumsCompletos.includes(agentNum);
   const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
-  const brandMemoryOutput = outputs.find(o => o.agent_num === 16) || null;
+  const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
   const brandMemoryExportDone = hasAgentOutput(16);
   const brandMemoryExportValid = !!brandMemoryOutput?.conteudo?.match(/<brand_memory_export>[\s\S]*?<\/brand_memory_export>/i);
   const brandMemoryExportInvalid = brandMemoryExportDone && !brandMemoryExportValid;
@@ -959,6 +991,15 @@ export default function ProjetoDetalhes() {
                         ? 'Regenerar Brand Memory'
                         : 'Gerar Brand Memory'}
                   </button>
+                ) : brandMemoryExportValid ? (
+                  <button
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '0.75rem', background: 'rgba(16,185,129,0.9)' }}
+                    disabled={loadingBrandMemory}
+                    onClick={handleLoadBrandMemory}
+                  >
+                    {loadingBrandMemory ? 'Carregando...' : 'Carregar Brand Memory'}
+                  </button>
                 ) : (
                   <div style={{ color: 'var(--success)', fontWeight: 700, fontSize: '0.9rem', textAlign: 'center' }}>
                     Fluxo pronto
@@ -985,7 +1026,7 @@ export default function ProjetoDetalhes() {
             </div>
           </section>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1.25rem', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(360px, 0.9fr)', gap: '1.25rem', alignItems: 'start' }}>
             <aside style={{ display: 'grid', gap: '1rem' }}>
               <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
                 <h2 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: '0 0 0.85rem' }}>Preparação</h2>
@@ -1321,18 +1362,18 @@ export default function ProjetoDetalhes() {
                   </p>
                 </div>
                 <span style={{ flexShrink: 0, fontSize: '0.78rem', color: 'var(--success)', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '0.25rem 0.6rem', fontWeight: 700 }}>
-                  {outputs.length} gerados
+                  {latestOutputs.length} gerados
                 </span>
               </div>
                 
-              {outputs.length === 0 ? (
+              {latestOutputs.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-secondary)' }}>
                   Nenhum output gerado ainda. Execute o Agente 01 no fluxo principal.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                   {/* Renderiza os outputs já concluídos */}
-                  {outputs.sort((a, b) => b.agent_num - a.agent_num).map((out) => (
+                  {[...latestOutputs].sort((a, b) => b.agent_num - a.agent_num).map((out) => (
                     <article key={out.id} style={{ background: 'rgba(255,255,255,0.025)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
                       <div style={{ padding: '0.8rem 0.9rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <div style={{ minWidth: 0 }}>
@@ -1402,11 +1443,11 @@ export default function ProjetoDetalhes() {
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.85rem 0 1.25rem', lineHeight: 1.5 }}>
               Excluir um relatório apaga o output, limpa logs e checkpoints relacionados e libera o agente para ser rodado novamente. Os agentes posteriores que dependem deste podem precisar ser re-executados.
             </p>
-            {outputs.length === 0 ? (
+            {latestOutputs.length === 0 ? (
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: 0 }}>Nenhum relatório gerado.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {outputs.sort((a, b) => a.agent_num - b.agent_num).map((out) => (
+                {[...latestOutputs].sort((a, b) => a.agent_num - b.agent_num).map((out) => (
                   <div key={out.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '8px', padding: '0.6rem 1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: 700, minWidth: '2.5rem' }}>A{out.agent_num}</span>

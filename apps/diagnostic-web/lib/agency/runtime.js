@@ -128,7 +128,8 @@ export async function getAgencyPhaseOneStatus(db, projetoId) {
     .select('id, agent_num, conteudo, created_at')
     .eq('projeto_id', projetoId)
     .in('agent_num', [6, 9, 12, 13, 16])
-    .order('agent_num', { ascending: true });
+    .order('agent_num', { ascending: true })
+    .order('created_at', { ascending: false });
 
   if (error) throw error;
 

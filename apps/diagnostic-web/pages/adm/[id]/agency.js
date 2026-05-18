@@ -58,6 +58,7 @@ export default function AgencyRequestsPage() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingBrandMemory, setLoadingBrandMemory] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -143,6 +144,27 @@ export default function AgencyRequestsPage() {
       setErrorMsg(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLoadBrandMemory = async () => {
+    setLoadingBrandMemory(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await fetch('/api/brand-memory/load', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projetoId: id }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Erro ao carregar Brand Memory');
+      setSuccessMsg('Brand Memory carregada. A Agência IA já pode receber pedidos.');
+      await loadAgencyData();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoadingBrandMemory(false);
     }
   };
 
@@ -247,9 +269,20 @@ export default function AgencyRequestsPage() {
                         <div style={{ color: 'var(--accent-blue)', fontSize: '0.84rem', marginTop: '0.55rem', fontWeight: 700 }}>
                           Próximo passo: {phaseOneStatus.nextStep}
                         </div>
-                        <Link href={`/adm/${id}`} style={{ display: 'inline-block', marginTop: '0.7rem', color: 'var(--accent-blue)', fontSize: '0.84rem', fontWeight: 800, textDecoration: 'none' }}>
-                          Voltar ao fluxo da Fase 1
-                        </Link>
+                        {phaseOneStatus.canLoadBrandMemory ? (
+                          <button
+                            type="button"
+                            onClick={handleLoadBrandMemory}
+                            disabled={loadingBrandMemory}
+                            style={{ display: 'inline-block', marginTop: '0.7rem', background: 'rgba(16,185,129,0.16)', border: '1px solid rgba(16,185,129,0.45)', borderRadius: '8px', color: 'var(--success)', fontSize: '0.84rem', fontWeight: 800, padding: '0.5rem 0.75rem', cursor: loadingBrandMemory ? 'wait' : 'pointer' }}
+                          >
+                            {loadingBrandMemory ? 'Carregando...' : 'Carregar Brand Memory'}
+                          </button>
+                        ) : (
+                          <Link href={`/adm/${id}`} style={{ display: 'inline-block', marginTop: '0.7rem', color: 'var(--accent-blue)', fontSize: '0.84rem', fontWeight: 800, textDecoration: 'none' }}>
+                            Voltar ao fluxo da Fase 1
+                          </Link>
+                        )}
                       </div>
                     )}
                   </div>
