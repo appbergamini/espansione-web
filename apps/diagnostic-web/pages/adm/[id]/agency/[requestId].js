@@ -68,6 +68,7 @@ export default function AgencyRequestDetailPage() {
   const [approvingBriefing, setApprovingBriefing] = useState(false);
   const [requestingBriefingRevision, setRequestingBriefingRevision] = useState(false);
   const [briefingEditorValue, setBriefingEditorValue] = useState('');
+  const [briefingFormValue, setBriefingFormValue] = useState(null);
   const [briefingRevisionReason, setBriefingRevisionReason] = useState('');
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
@@ -128,6 +129,7 @@ export default function AgencyRequestDetailPage() {
   useEffect(() => {
     const briefing = request?.approved_briefing_json || request?.briefing_original_json;
     setBriefingEditorValue(briefing ? JSON.stringify(briefing, null, 2) : '');
+    setBriefingFormValue(briefing ? cloneBriefing(briefing) : null);
     setBriefingRevisionReason(request?.briefing_revision_reason || '');
   }, [request?.id, request?.briefing_original_json, request?.approved_briefing_json, request?.briefing_revision_reason]);
 
@@ -180,12 +182,12 @@ export default function AgencyRequestDetailPage() {
     setApprovingBriefing(true);
     setErrorMsg('');
     try {
-      const originalText = request?.briefing_original_json ? JSON.stringify(request.briefing_original_json, null, 2) : '';
+      const originalBriefing = request?.briefing_original_json || null;
       const editedText = String(briefingEditorValue || '').trim();
-      let editedBriefing = null;
-      if (editedText && editedText !== originalText) {
-        editedBriefing = JSON.parse(editedText);
-      }
+      const candidateBriefing = briefingFormValue || (editedText ? JSON.parse(editedText) : null);
+      const editedBriefing = candidateBriefing && !briefingEquivalent(candidateBriefing, originalBriefing)
+        ? candidateBriefing
+        : null;
 
       const res = await fetch(`/api/agency/requests/${requestId}/briefing/approve`, {
         method: 'POST',
@@ -599,12 +601,17 @@ export default function AgencyRequestDetailPage() {
                   request={request}
                   accountStep={accountStep}
                   editorValue={briefingEditorValue}
+                  formValue={briefingFormValue}
                   revisionReason={briefingRevisionReason}
                   preparing={preparing}
                   approving={approvingBriefing}
                   requestingRevision={requestingBriefingRevision}
                   runningWorkflow={runningWorkflow}
                   onEditorChange={setBriefingEditorValue}
+                  onFormChange={(nextBriefing) => {
+                    setBriefingFormValue(nextBriefing);
+                    setBriefingEditorValue(nextBriefing ? JSON.stringify(nextBriefing, null, 2) : '');
+                  }}
                   onRevisionReasonChange={setBriefingRevisionReason}
                   onGenerate={prepareBriefing}
                   onApprove={approveBriefing}
@@ -849,12 +856,14 @@ function BriefingPanel({
   request,
   accountStep,
   editorValue,
+  formValue,
   revisionReason,
   preparing,
   approving,
   requestingRevision,
   runningWorkflow,
   onEditorChange,
+  onFormChange,
   onRevisionReasonChange,
   onGenerate,
   onApprove,
@@ -864,9 +873,20 @@ function BriefingPanel({
   const generatedBriefing = request?.briefing_original_json || getStepPayload(accountStep);
   const approvedBriefing = request?.approved_briefing_json;
   const visibleBriefing = approvedBriefing || generatedBriefing;
+  const editableBriefing = formValue || visibleBriefing;
   const briefingStatus = getBriefingStatus(request, visibleBriefing);
   const canApprove = !!generatedBriefing && !approving && !preparing;
   const canRun = isBriefingApprovedRequest(request);
+
+  const updateBriefingField = (path, value) => {
+    const next = cloneBriefing(editableBriefing || {});
+    setNestedValue(next, path, value);
+    onFormChange(next);
+  };
+
+  const updateBriefingList = (path, value) => {
+    updateBriefingField(path, splitLines(value));
+  };
 
   return (
     <section className="glass-card" style={{ padding: '1.25rem', borderColor: canRun ? 'rgba(16,185,129,0.32)' : 'rgba(56,189,248,0.22)' }}>
@@ -896,19 +916,42 @@ function BriefingPanel({
         <div style={{ display: 'grid', gap: '0.85rem' }}>
           <BriefingSummary briefing={visibleBriefing} />
 
-          <details open={!canRun} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.75rem', background: 'rgba(0,0,0,0.12)' }}>
-            <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.85rem' }}>
-              Editar briefing estruturado
+          <details open={!canRun} style={{ border: '1px solid rgba(56,189,248,0.18)', borderRadius: 8, padding: '0.85rem', background: 'rgba(56,189,248,0.035)' }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.9rem' }}>
+              Editar briefing por campos
+            </summary>
+            <BriefingForm
+              briefing={editableBriefing}
+              onFieldChange={updateBriefingField}
+              onListChange={updateBriefingList}
+              onReplace={onFormChange}
+            />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', margin: '0.45rem 0 0' }}>
+              Se você alterar qualquer campo antes de aprovar, a versão aprovada será marcada como editada pelo admin.
+            </p>
+          </details>
+
+          <details style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '0.75rem', background: 'rgba(0,0,0,0.1)' }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 800, fontSize: '0.82rem' }}>
+              JSON técnico
             </summary>
             <textarea
               className="form-input"
               value={editorValue}
-              onChange={(event) => onEditorChange(event.target.value)}
+              onChange={(event) => {
+                const nextText = event.target.value;
+                onEditorChange(nextText);
+                try {
+                  onFormChange(JSON.parse(nextText));
+                } catch {
+                  // Mantem o editor tecnico livre; a validacao acontece ao aprovar.
+                }
+              }}
               spellCheck={false}
-              style={{ width: '100%', minHeight: 260, marginTop: '0.75rem', fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace', fontSize: '0.78rem', lineHeight: 1.45 }}
+              style={{ width: '100%', minHeight: 220, marginTop: '0.75rem', fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace', fontSize: '0.76rem', lineHeight: 1.45 }}
             />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', margin: '0.45rem 0 0' }}>
-              Se você alterar o JSON antes de aprovar, a versão aprovada será marcada como editada pelo admin.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', margin: '0.45rem 0 0' }}>
+              Area tecnica para diagnostico. Prefira editar pelos campos acima.
             </p>
           </details>
 
@@ -965,6 +1008,181 @@ function BriefingPanel({
         </div>
       )}
     </section>
+  );
+}
+
+function BriefingForm({ briefing, onFieldChange, onListChange, onReplace }) {
+  const operational = briefing?.briefing_operacional || {};
+  const creative = briefing?.hipotese_criativa || {};
+  const criteria = briefing?.criterios_de_sucesso || operational.criterio_de_sucesso || [];
+
+  return (
+    <div style={{ display: 'grid', gap: '0.95rem', marginTop: '0.85rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))', gap: '0.75rem' }}>
+        <BriefingTextField
+          label="Objetivo"
+          value={operational.objetivo}
+          onChange={(value) => onFieldChange(['briefing_operacional', 'objetivo'], value)}
+        />
+        <BriefingTextField
+          label="Público"
+          value={operational.publico}
+          onChange={(value) => onFieldChange(['briefing_operacional', 'publico'], value)}
+        />
+        <BriefingTextField
+          label="Cluster"
+          value={operational.cluster}
+          onChange={(value) => onFieldChange(['briefing_operacional', 'cluster'], value)}
+        />
+      </div>
+
+      <BriefingTextField
+        label="Contexto"
+        value={operational.contexto}
+        multiline
+        onChange={(value) => onFieldChange(['briefing_operacional', 'contexto'], value)}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '0.75rem' }}>
+        <BriefingTextField
+          label="Insight"
+          value={operational.insight}
+          multiline
+          onChange={(value) => onFieldChange(['briefing_operacional', 'insight'], value)}
+        />
+        <BriefingTextField
+          label="Promessa"
+          value={operational.promessa}
+          multiline
+          onChange={(value) => onFieldChange(['briefing_operacional', 'promessa'], value)}
+        />
+      </div>
+
+      <BriefingTextField
+        label="Mensagem central"
+        value={operational.mensagem_central}
+        multiline
+        onChange={(value) => onFieldChange(['briefing_operacional', 'mensagem_central'], value)}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '0.75rem' }}>
+        <BriefingTextField
+          label="Prova"
+          value={operational.prova}
+          multiline
+          onChange={(value) => onFieldChange(['briefing_operacional', 'prova'], value)}
+        />
+        <BriefingTextField
+          label="Tom recomendado"
+          value={operational.tom_recomendado}
+          multiline
+          onChange={(value) => onFieldChange(['briefing_operacional', 'tom_recomendado'], value)}
+        />
+      </div>
+
+      <BriefingListField
+        label="Objeções"
+        value={operational.objecoes}
+        onChange={(value) => onListChange(['briefing_operacional', 'objecoes'], value)}
+      />
+
+      <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.85rem', background: 'rgba(0,0,0,0.12)' }}>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800, marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Hipótese criativa
+        </div>
+        <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <BriefingTextField
+            label="Conceito"
+            value={creative.conceito}
+            onChange={(value) => onFieldChange(['hipotese_criativa', 'conceito'], value)}
+          />
+          <BriefingTextField
+            label="Ângulo"
+            value={creative.angulo}
+            multiline
+            onChange={(value) => onFieldChange(['hipotese_criativa', 'angulo'], value)}
+          />
+          <BriefingTextField
+            label="Narrativa"
+            value={creative.narrativa}
+            multiline
+            onChange={(value) => onFieldChange(['hipotese_criativa', 'narrativa'], value)}
+          />
+        </div>
+      </div>
+
+      <BriefingListField
+        label="Critérios de sucesso"
+        value={criteria}
+        onChange={(value) => {
+          const list = splitLines(value);
+          const next = cloneBriefing(briefing || {});
+          setNestedValue(next, ['criterios_de_sucesso'], list);
+          setNestedValue(next, ['briefing_operacional', 'criterio_de_sucesso'], list);
+          onReplace(next);
+        }}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '0.75rem' }}>
+        <BriefingListField
+          label="Slices da Brand Memory usados"
+          value={briefing?.brand_memory_slices_used}
+          onChange={(value) => onListChange(['brand_memory_slices_used'], value)}
+        />
+        <BriefingListField
+          label="Warnings"
+          value={briefing?.warnings}
+          onChange={(value) => onListChange(['warnings'], value)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function BriefingTextField({ label, value, onChange, multiline }) {
+  const commonStyle = {
+    width: '100%',
+    marginTop: '0.32rem',
+    fontSize: '0.88rem',
+    lineHeight: 1.45,
+  };
+
+  return (
+    <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
+      {label}
+      {multiline ? (
+        <textarea
+          className="form-input"
+          value={value || ''}
+          onChange={(event) => onChange(event.target.value)}
+          style={{ ...commonStyle, minHeight: 86 }}
+        />
+      ) : (
+        <input
+          className="form-input"
+          value={value || ''}
+          onChange={(event) => onChange(event.target.value)}
+          style={commonStyle}
+        />
+      )}
+    </label>
+  );
+}
+
+function BriefingListField({ label, value, onChange }) {
+  return (
+    <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
+      {label}
+      <textarea
+        className="form-input"
+        value={toArray(value).map(formatValue).join('\n')}
+        onChange={(event) => onChange(event.target.value)}
+        style={{ width: '100%', minHeight: 92, marginTop: '0.32rem', fontSize: '0.88rem', lineHeight: 1.45 }}
+      />
+      <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.72rem', marginTop: '0.28rem', fontWeight: 500 }}>
+        Um item por linha.
+      </span>
+    </label>
   );
 }
 
@@ -1858,6 +2076,34 @@ function humanizeKey(key) {
   return String(key)
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function cloneBriefing(value) {
+  if (!value || typeof value !== 'object') return null;
+  return JSON.parse(JSON.stringify(value));
+}
+
+function setNestedValue(target, path, value) {
+  let cursor = target;
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const key = path[index];
+    if (!cursor[key] || typeof cursor[key] !== 'object' || Array.isArray(cursor[key])) {
+      cursor[key] = {};
+    }
+    cursor = cursor[key];
+  }
+  cursor[path[path.length - 1]] = value;
+}
+
+function splitLines(value) {
+  return String(value || '')
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function briefingEquivalent(left, right) {
+  return JSON.stringify(left || null) === JSON.stringify(right || null);
 }
 
 function formatMoney(value) {
