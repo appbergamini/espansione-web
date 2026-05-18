@@ -263,6 +263,14 @@ export default function AgencyRequestDetailPage() {
                     )}
                   </div>
 
+                  <DeliveryPanel
+                    latestRun={latestRun}
+                    copyStep={stepByAgent.get('copywriter')}
+                    visualStep={stepByAgent.get('visual_director')}
+                    editorStep={stepByAgent.get('editor')}
+                    approverStep={approverStep}
+                  />
+
                   {!latestRun && (
                     <div style={{ border: '1px solid rgba(56,189,248,0.24)', borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: 'rgba(56,189,248,0.06)' }}>
                       <strong style={{ display: 'block', marginBottom: '0.25rem' }}>A run ainda não foi preparada</strong>
@@ -439,6 +447,61 @@ function AgentOutput({ agentId, output }) {
         {JSON.stringify(output, null, 2)}
       </pre>
     </OutputCard>
+  );
+}
+
+function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverStep }) {
+  const copy = getStepPayload(copyStep);
+  const visual = getStepPayload(visualStep);
+  const editor = getStepPayload(editorStep);
+  const approver = getStepPayload(approverStep);
+  const decision = approver.decisao || approver.decision;
+  const hasGeneratedMaterial = !!(copy.copy_principal || editor.versao_editada || visual.direcao_de_arte);
+
+  if (!latestRun) {
+    return (
+      <section style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: 'rgba(255,255,255,0.025)' }}>
+        <strong>Entrega final</strong>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0.3rem 0 0' }}>
+          Ainda não existe material gerado. Prepare ou rode a Agência para criar a primeira entrega.
+        </p>
+      </section>
+    );
+  }
+
+  if (!hasGeneratedMaterial) {
+    return (
+      <section style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: 'rgba(255,255,255,0.025)' }}>
+        <strong>Entrega final</strong>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0.3rem 0 0' }}>
+          A run foi preparada, mas os agentes ainda não geraram material.
+        </p>
+      </section>
+    );
+  }
+
+  const approved = decision === 'approved';
+  return (
+    <section style={{ border: `1px solid ${approved ? 'rgba(16,185,129,0.32)' : 'rgba(245,158,11,0.28)'}`, borderRadius: 8, padding: '0.9rem', marginBottom: '0.85rem', background: approved ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.055)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.65rem' }}>
+        <strong>{approved ? 'Material aprovado' : 'Prévia da entrega'}</strong>
+        <span style={{ color: decisionColor(decision), background: 'rgba(255,255,255,0.05)', border: `1px solid ${decisionBorder(decision)}`, borderRadius: 999, padding: '0.22rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
+          {decisionLabel(decision)}
+        </span>
+      </div>
+
+      {!approved && (
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0 0 0.75rem' }}>
+          Este material ainda não está aprovado para uso. Veja os ajustes obrigatórios do aprovador antes de publicar.
+        </p>
+      )}
+
+      <OutputLine title="Texto final/editado" value={editor.versao_editada || copy.copy_principal || copy.legenda} />
+      <OutputLine title="Headline" value={copy.headline} />
+      <OutputLine title="CTA" value={copy.cta} />
+      <OutputLine title="Direção visual" value={visual.direcao_de_arte} />
+      <OutputList title="Ajustes obrigatórios" items={approver.ajustes_obrigatorios} muted={!approved} />
+    </section>
   );
 }
 
