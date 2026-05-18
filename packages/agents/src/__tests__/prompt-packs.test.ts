@@ -54,6 +54,27 @@ const brandKernel: BrandKernel = {
     photography: 'Pessoas reais',
     behavior: 'Organizado',
     symbol: 'Simbolo simples',
+    operationalGuidelines: {
+      visual_principles: ['Clareza visual'],
+      maintain: ['Simplicidade'],
+      lose: ['Excesso visual'],
+      gain: ['Mais contraste'],
+      color_direction: { primary: ['Azul'], avoid: ['Neon'] },
+      typography_direction: { recommended_style: 'Sans editorial', avoid: ['Infantil'] },
+      image_style: { photography: ['Pessoas reais'], iconography: ['Linha fina'], avoid: ['Banco genérico'] },
+      layout_behavior: { composition: ['Grid limpo'], density: 'Baixa' },
+      symbol_logo_guidance: ['Assinatura discreta'],
+      dos: ['Usar contraste'],
+      donts: ['Nao poluir'],
+      visual_risks: ['Parecer genérico'],
+      prompt_guidelines: ['Gerar imagem conceitual sem texto'],
+    },
+    visualPrinciples: ['Clareza visual'],
+    dos: ['Usar contraste'],
+    donts: ['Nao poluir'],
+    visualRisks: ['Parecer genérico'],
+    promptGuidelines: ['Gerar imagem conceitual sem texto'],
+    operationalWarnings: [],
   },
   communication: {
     waves: ['Onda 1: produto'],
@@ -185,6 +206,9 @@ test('todos os prompt packs sao gerados com input minimo valido', () => {
   assert.match(account.userPrompt, /Escala versus profundidade/);
   assert.equal(copy.promptVersion, COPYWRITER_PROMPT_VERSION);
   assert.equal(visual.promptVersion, VISUAL_DIRECTOR_PROMPT_VERSION);
+  assert.match(visual.userPrompt, /operationalGuidelines/);
+  assert.match(visual.userPrompt, /Nao poluir/);
+  assert.match(visual.userPrompt, /Visual identity operacional incompleta/);
   assert.equal(editor.promptVersion, EDITOR_PROMPT_VERSION);
   assert.equal(approver.promptVersion, APPROVER_PROMPT_VERSION);
 });

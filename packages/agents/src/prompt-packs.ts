@@ -148,10 +148,13 @@ export function buildVisualDirectorPromptPack({
     agent: 'visual_director',
     mission: 'Traduzir identidade visual em direcao de arte para a peca.',
     rules: [
-      'Respeitar visual_identity, manter/perder/ganhar, cores, tipografia e fotografia.',
+      'Consumir brandKernel.visual.operationalGuidelines quando existir; usar dos, donts, visualRisks e promptGuidelines como restricoes.',
+      'Respeitar visual_identity, manter/perder/ganhar, cores, tipografia, fotografia, iconografia e comportamento visual.',
       'Gerar direcao de arte, nao arte final.',
       'Evitar caminhos visuais marcados como inadequados.',
-      'Indicar assets necessarios, composicao e restricoes visuais.',
+      'Indicar assets necessarios, composicao, restricoes visuais e riscos visuais.',
+      'Gerar prompt_visual_opcional apenas quando houver direcao suficiente e sem exigir texto embutido.',
+      'Se brandKernel.visual.operationalWarnings incluir "Visual identity operacional incompleta.", declarar warning e pedir revisao humana visual.',
     ],
     payload: { brandKernel, agencyRequest, accountDirectorOutput },
     expectedOutputSchema: {

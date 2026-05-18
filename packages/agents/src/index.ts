@@ -12,6 +12,7 @@ import type {
   OndaBranding,
   Persona,
   StrategicTension,
+  VisualIdentityOperationalSlice,
 } from '@espansione/types';
 
 export type {
@@ -114,6 +115,10 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
   const visual = diagnostic.visual_identity;
   const plano = diagnostic.plano_comunicacao;
   const experiencia = diagnostic.experiencia;
+  const operationalVisual = extractVisualOperationalGuidelines(visual);
+  const visualOperationalWarnings = operationalVisual.complete
+    ? []
+    : ['Visual identity operacional incompleta.'];
   const strategicTensions = extractStrategicTensions(diagnostic);
   const checkpointContext = Array.isArray(diagnostic.meta?.checkpoint_context)
     ? diagnostic.meta.checkpoint_context
@@ -225,6 +230,13 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
         : null,
       behavior: visual?.comportamento_visual ?? null,
       symbol: visual?.simbolo_logo?.defesa ?? null,
+      operationalGuidelines: operationalVisual.slice,
+      visualPrinciples: operationalVisual.slice?.visual_principles ?? [],
+      dos: operationalVisual.slice?.dos ?? [],
+      donts: operationalVisual.slice?.donts ?? [],
+      visualRisks: operationalVisual.slice?.visual_risks ?? [],
+      promptGuidelines: operationalVisual.slice?.prompt_guidelines ?? [],
+      operationalWarnings: visualOperationalWarnings,
     },
     communication: {
       waves: (plano?.ondas_branding ?? []).map(formatWave),
@@ -260,6 +272,101 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
       generatedFrom: 'espansione_diagnostic',
     },
   };
+}
+
+function extractVisualOperationalGuidelines(
+  visual: EspansioneDiagnostic['visual_identity'] | undefined
+): { slice: VisualIdentityOperationalSlice | null; complete: boolean } {
+  if (!visual) return { slice: null, complete: false };
+  const existing = visual.operational_guidelines;
+  if (existing) {
+    return {
+      slice: {
+        visual_principles: existing.visual_principles ?? [],
+        maintain: existing.maintain ?? [],
+        lose: existing.lose ?? [],
+        gain: existing.gain ?? [],
+        color_direction: existing.color_direction ?? {},
+        typography_direction: existing.typography_direction ?? {},
+        image_style: existing.image_style ?? {},
+        layout_behavior: existing.layout_behavior ?? {},
+        symbol_logo_guidance: existing.symbol_logo_guidance ?? [],
+        dos: existing.dos ?? [],
+        donts: existing.donts ?? [],
+        visual_risks: existing.visual_risks ?? [],
+        prompt_guidelines: existing.prompt_guidelines ?? [],
+      },
+      complete: hasUsefulOperationalVisual(existing),
+    };
+  }
+
+  const fallback: VisualIdentityOperationalSlice = {
+    visual_principles: [
+      visual.comportamento_visual,
+      visual.forma?.como_cria_propriedade,
+      visual.typography?.logica_contraste,
+    ].filter(isString),
+    maintain: visual.manter_perder_ganhar?.manter ?? [],
+    lose: visual.manter_perder_ganhar?.perder ?? [],
+    gain: visual.manter_perder_ganhar?.ganhar ?? [],
+    color_direction: {
+      primary: (visual.color_palette?.principal ?? []).map(
+        (color) => `${color.nome}${color.hex ? ` (${color.hex})` : ''}: ${color.papel}`
+      ),
+      secondary: (visual.color_palette?.complementar ?? []).map(
+        (color) => `${color.nome}${color.hex ? ` (${color.hex})` : ''}: ${color.uso_contextual ?? color.descricao}`
+      ),
+      notes: 'Direção derivada do visual_identity legado; revisar manualmente para operação.',
+    },
+    typography_direction: {
+      recommended_style: [
+        visual.typography?.titulos?.estilo,
+        visual.typography?.corpo?.estilo,
+      ].filter(isString).join(' / ') || undefined,
+      hierarchy_notes: visual.typography?.logica_contraste ?? undefined,
+    },
+    image_style: {
+      photography: visual.fotografia
+        ? [visual.fotografia.estilo, ...visual.fotografia.temas, visual.fotografia.tratamento].filter(isString)
+        : [],
+      illustration: visual.ilustracao ? [visual.ilustracao.estilo, visual.ilustracao.papel_na_marca].filter(isString) : [],
+      iconography: visual.iconografia ? [visual.iconografia.estilo, visual.iconografia.regras_consistencia].filter(isString) : [],
+      avoid: [visual.fotografia?.proibido].filter(isString),
+    },
+    layout_behavior: {
+      composition: [visual.forma?.descricao].filter(isString),
+      hierarchy: visual.comportamento_visual ?? undefined,
+    },
+    symbol_logo_guidance: visual.simbolo_logo
+      ? [visual.simbolo_logo.tipo_recomendado, visual.simbolo_logo.defesa, ...(visual.simbolo_logo.conceitos_a_transmitir ?? [])].filter(isString)
+      : [],
+    dos: [
+      ...(visual.manter_perder_ganhar?.manter ?? []),
+      ...(visual.manter_perder_ganhar?.ganhar ?? []),
+    ],
+    donts: [
+      ...(visual.manter_perder_ganhar?.perder ?? []),
+      visual.fotografia?.proibido,
+    ].filter(isString),
+    visual_risks: ['Visual identity operacional incompleta.'],
+    prompt_guidelines: [],
+  };
+
+  return { slice: fallback, complete: false };
+}
+
+function hasUsefulOperationalVisual(slice: VisualIdentityOperationalSlice): boolean {
+  return Boolean(
+    slice.visual_principles?.length &&
+      slice.dos?.length &&
+      slice.donts?.length &&
+      slice.visual_risks?.length &&
+      (
+        slice.image_style?.photography?.length ||
+        slice.image_style?.illustration?.length ||
+        slice.image_style?.iconography?.length
+      )
+  );
 }
 
 function extractStrategicTensions(diagnostic: EspansioneDiagnostic): StrategicTension[] {

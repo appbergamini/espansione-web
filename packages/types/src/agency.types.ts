@@ -1,4 +1,8 @@
-import type { EspansioneDiagnostic, StrategicTension } from './espansione-diagnostic.types.js';
+import type {
+  EspansioneDiagnostic,
+  StrategicTension,
+  VisualIdentityOperationalSlice,
+} from './espansione-diagnostic.types.js';
 import type { CheckpointApprovalRecord } from './checkpoint.types.js';
 import type { OutputQualityMetadata } from './output-quality.types.js';
 
@@ -285,6 +289,13 @@ export interface BrandKernel {
     photography: string | null;
     behavior: string | null;
     symbol: string | null;
+    operationalGuidelines: VisualIdentityOperationalSlice | null;
+    visualPrinciples: string[];
+    dos: string[];
+    donts: string[];
+    visualRisks: string[];
+    promptGuidelines: string[];
+    operationalWarnings: string[];
   };
   communication: {
     waves: string[];

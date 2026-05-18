@@ -25,11 +25,13 @@ import OutputSidebar from '../../../../components/output/OutputSidebar';
 import OutputRenderer from '../../../../components/output/OutputRenderer';
 import OutputQualityPanel from '../../../../components/output/OutputQualityPanel';
 import StrategicTensionsPanel from '../../../../components/strategic/StrategicTensionsPanel';
+import VisualOperationalPanel from '../../../../components/visual/VisualOperationalPanel';
 import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
 import { getServerUser } from '../../../../lib/getServerUser';
 import { resolveVizData } from '../../../../lib/output/resolveVizData';
 import { validarTokenPdf } from '../../../../lib/pdf/pdfToken';
 import { extractStrategicTensionsFromAgent6Output } from '../../../../lib/strategic-tensions/extract';
+import { extractVisualOperationalSliceFromAgent11Output } from '../../../../lib/visual-identity/operational';
 
 const AGENT_NAMES = [
   null,
@@ -179,6 +181,9 @@ export default function OutputPage({
   const strategicTensions = Number(agentNum) === 6
     ? extractStrategicTensionsFromAgent6Output(output)
     : null;
+  const visualOperational = Number(agentNum) === 11
+    ? extractVisualOperationalSliceFromAgent11Output(output)
+    : null;
 
   // ─── Modo print: só o conteúdo editorial, fundo branco, sem chrome
   if (isPrintMode) {
@@ -263,6 +268,7 @@ export default function OutputPage({
               <div className="screen-only" style={{ marginBottom: '1rem' }}>
                 <OutputQualityPanel metadata={output.quality_metadata} />
                 <StrategicTensionsPanel slice={strategicTensions} />
+                <VisualOperationalPanel slice={visualOperational} />
               </div>
               <OutputRenderer
                 conteudo={output.conteudo}

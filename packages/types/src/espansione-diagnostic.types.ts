@@ -603,6 +603,42 @@ export interface VisualIdentity {
     consistente: { nivel: RdpcLevel; justificativa: string };
   };
   moodboard_sugerido: { territorio: string; referencias: string }[];
+  operational_guidelines?: VisualIdentityOperationalSlice;
+}
+
+export interface VisualIdentityOperationalSlice {
+  visual_principles: string[];
+  maintain: string[];
+  lose: string[];
+  gain: string[];
+  color_direction: {
+    primary?: string[];
+    secondary?: string[];
+    avoid?: string[];
+    notes?: string;
+  };
+  typography_direction: {
+    recommended_style?: string;
+    hierarchy_notes?: string;
+    avoid?: string[];
+  };
+  image_style: {
+    photography?: string[];
+    illustration?: string[];
+    iconography?: string[];
+    avoid?: string[];
+  };
+  layout_behavior: {
+    composition?: string[];
+    density?: string;
+    hierarchy?: string;
+    whitespace?: string;
+  };
+  symbol_logo_guidance?: string[];
+  dos: string[];
+  donts: string[];
+  visual_risks: string[];
+  prompt_guidelines?: string[];
 }
 
 export interface ColorPrincipal {

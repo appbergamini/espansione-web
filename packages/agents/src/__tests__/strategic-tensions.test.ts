@@ -70,4 +70,49 @@ test('BrandKernel nao quebra diagnostico legado sem strategic_tensions', () => {
   assert.deepEqual(kernel.strategicTensions, []);
   assert.deepEqual(kernel.unresolvedStrategicTensions, []);
   assert.deepEqual(kernel.communicationRisksFromTensions, []);
+  assert.deepEqual(kernel.visual.operationalWarnings, ['Visual identity operacional incompleta.']);
+  assert.deepEqual(kernel.visual.visualRisks, ['Visual identity operacional incompleta.']);
+});
+
+test('BrandKernel carrega Sistema Visual Operacional quando disponivel', () => {
+  const diagnostic = {
+    brand_slug: 'marca-visual',
+    brand_name: 'Marca Visual',
+    industry: null,
+    espansione_project_id: 'project-visual',
+    schema_version: '2.0',
+    vi: { evidencias_literais: [] },
+    decodificacao: { de_para: [] },
+    diretrizes_estrategicas: [],
+    plataforma_branding: {},
+    voice_profile: {},
+    visual_identity: {
+      operational_guidelines: {
+        visual_principles: ['Luxo silencioso'],
+        maintain: ['Rigor'],
+        lose: ['Genérico'],
+        gain: ['Sistema proprietário'],
+        color_direction: { primary: ['Azul'], avoid: ['Neon'] },
+        typography_direction: { recommended_style: 'Serif editorial' },
+        image_style: { photography: ['Editorial'], avoid: ['Banco genérico'] },
+        layout_behavior: { composition: ['Grid editorial'] },
+        symbol_logo_guidance: ['Assinatura discreta'],
+        dos: ['Usar respiro'],
+        donts: ['Não poluir'],
+        visual_risks: ['Parecer genérico'],
+        prompt_guidelines: ['Evitar texto embutido'],
+      },
+    },
+    experiencia: {},
+    plano_comunicacao: {},
+    values_and_attributes: {},
+    meta: { agents_present: [6, 9, 12, 13] },
+  } as unknown as EspansioneDiagnostic;
+
+  const kernel = buildBrandKernel(diagnostic);
+
+  assert.equal(kernel.visual.operationalGuidelines?.visual_principles[0], 'Luxo silencioso');
+  assert.deepEqual(kernel.visual.dos, ['Usar respiro']);
+  assert.deepEqual(kernel.visual.donts, ['Não poluir']);
+  assert.deepEqual(kernel.visual.operationalWarnings, []);
 });
