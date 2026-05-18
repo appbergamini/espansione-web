@@ -22,12 +22,84 @@ import {
   canPrepareBrandMemoryBeforeEditorial,
   getPrimaryAdminAction,
 } from '../../lib/agents/adminFlow';
+import { buildBrandMemoryExportReadiness } from '../../lib/brand-memory/exportValidation';
 import { getCisParsed, COMPETENCIAS_KEYS } from '../../lib/cis/parseCis';
 
 // Formato "02. Consolidado da Visão Interna (VI)" — preserva layout
 // do painel admin que antes consumia um array AGENT_NAMES hardcoded
 // com 13 itens. Agora vem do catálogo (15 agentes, FIX.3).
 const nomeAgente = (n) => formatarTituloAdmin(n);
+
+function BrandMemoryExportReadinessPanel({ readiness }) {
+  if (!readiness?.items?.length) return null;
+
+  const statusMeta = {
+    valid: { label: 'válido', color: 'var(--success)', bg: 'rgba(16,185,129,0.1)' },
+    warning: { label: 'aviso', color: 'var(--warning)', bg: 'rgba(245,158,11,0.1)' },
+    invalid: { label: 'inválido', color: 'var(--brand-red)', bg: 'rgba(239,68,68,0.1)' },
+    missing: { label: 'ausente', color: 'var(--brand-red)', bg: 'rgba(239,68,68,0.1)' },
+    not_applicable: { label: 'opcional', color: 'var(--text-secondary)', bg: 'rgba(148,163,184,0.08)' },
+  };
+
+  const blockers = readiness.blockingItems?.length || 0;
+  return (
+    <section className="glass-card" style={{ padding: '1.1rem', marginBottom: '1.25rem', borderColor: readiness.ready ? 'rgba(16,185,129,0.28)' : 'rgba(245,158,11,0.32)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1rem' }}>Prontidão dos exports para Brand Memory</h2>
+          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.45 }}>
+            Validação incremental dos blocos que o Agente 16 vai apenas consolidar.
+          </p>
+        </div>
+        <span style={{ borderRadius: 999, padding: '0.28rem 0.7rem', fontSize: '0.78rem', fontWeight: 800, color: readiness.ready ? 'var(--success)' : 'var(--warning)', background: readiness.ready ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', border: `1px solid ${readiness.ready ? 'rgba(16,185,129,0.28)' : 'rgba(245,158,11,0.28)'}` }}>
+          {readiness.ready ? 'pronto para A16' : `${blockers} bloqueio${blockers === 1 ? '' : 's'}`}
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0.65rem' }}>
+        {readiness.items.map((item) => {
+          const meta = statusMeta[item.status] || statusMeta.not_applicable;
+          const agentName = getAgenteByNum(item.agent_num)?.nome_exibicao || `Agente ${item.agent_num}`;
+          const problems = [...(item.errors || []), ...(item.warnings || [])].filter(Boolean);
+          return (
+            <article key={item.agent_num} style={{ border: `1px solid ${item.blocking ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.08)'}`, background: 'rgba(255,255,255,0.025)', borderRadius: 8, padding: '0.8rem', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: 'var(--accent-blue)', fontSize: '0.76rem', fontWeight: 800 }}>A{item.agent_num}</div>
+                  <h3 style={{ margin: '0.15rem 0 0', fontSize: '0.86rem', lineHeight: 1.3 }}>{agentName}</h3>
+                </div>
+                <span style={{ flexShrink: 0, borderRadius: 999, padding: '0.18rem 0.5rem', color: meta.color, background: meta.bg, fontSize: '0.72rem', fontWeight: 800 }}>
+                  {meta.label}
+                </span>
+              </div>
+              <div style={{ marginTop: '0.65rem', fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                <strong style={{ color: 'var(--text-primary)' }}>Slices:</strong> {item.expected_slices?.join(', ') || 'nenhum'}
+              </div>
+              {item.found_slices?.length > 0 && (
+                <div style={{ marginTop: '0.3rem', fontSize: '0.74rem', color: 'var(--success)' }}>
+                  Encontrados: {item.found_slices.join(', ')}
+                </div>
+              )}
+              {problems.length > 0 && (
+                <details style={{ marginTop: '0.55rem' }}>
+                  <summary style={{ cursor: 'pointer', color: item.blocking ? 'var(--brand-red)' : 'var(--warning)', fontSize: '0.74rem', fontWeight: 800 }}>
+                    Ver erros e avisos
+                  </summary>
+                  <ul style={{ margin: '0.45rem 0 0', paddingLeft: '1rem', color: 'var(--text-secondary)', fontSize: '0.74rem', lineHeight: 1.45 }}>
+                    {problems.map((problem, index) => <li key={index}>{problem}</li>)}
+                  </ul>
+                </details>
+              )}
+              <div style={{ marginTop: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.55rem', color: item.blocking ? 'var(--warning)' : 'var(--text-secondary)', fontSize: '0.74rem', lineHeight: 1.45 }}>
+                {item.recommended_action}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export default function ProjetoDetalhes() {
   const router = useRouter();
@@ -860,11 +932,12 @@ export default function ProjetoDetalhes() {
   const checkpointOutput = checkpointAgent ? latestOutputs.find(o => o.agent_num === checkpointAgent.agent_num) : null;
   const hasAgentOutput = (agentNum) => agentNumsCompletos.includes(agentNum);
   const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
+  const brandMemoryExportReadiness = buildBrandMemoryExportReadiness(latestOutputs, { includeEvp: projetoTemEvp });
   const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
   const brandMemoryExportDone = hasAgentOutput(16);
   const brandMemoryExportValid = !!brandMemoryOutput?.conteudo?.match(/<brand_memory_export>[\s\S]*?<\/brand_memory_export>/i);
   const brandMemoryExportInvalid = brandMemoryExportDone && !brandMemoryExportValid;
-  const brandMemoryExportReady = (!brandMemoryExportDone || brandMemoryExportInvalid) && brandMemoryExportDeps.ok && !pendingCkpt;
+  const brandMemoryExportReady = (!brandMemoryExportDone || brandMemoryExportInvalid) && brandMemoryExportDeps.ok && brandMemoryExportReadiness.ready && !pendingCkpt;
   const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
   const editorialOutputDone = hasAgentOutput(15);
   const primaryAction = getPrimaryAdminAction({
@@ -1055,6 +1128,11 @@ export default function ProjetoDetalhes() {
                     O Agente 16 antigo não tem export válido. Regere antes de usar a Agência.
                   </div>
                 )}
+                {!brandMemoryExportReadiness.ready && brandMemoryExportDeps.ok && !engineError && (
+                  <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
+                    Exports da Brand Memory incompletos. Veja o painel de prontidão antes do Agente 16.
+                  </div>
+                )}
                 {showEditorialPendingBrandMemoryNotice && !engineError && (
                   <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
                     Entregável editorial final ainda não foi gerado, mas a Brand Memory já pode ser preparada.
@@ -1068,6 +1146,8 @@ export default function ProjetoDetalhes() {
               </div>
             )}
           </section>
+
+          <BrandMemoryExportReadinessPanel readiness={brandMemoryExportReadiness} />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(360px, 0.9fr)', gap: '1.25rem', alignItems: 'start', isolation: 'isolate' }}>
             <aside style={{ display: 'grid', gap: '1rem', position: 'relative', zIndex: 2 }}>

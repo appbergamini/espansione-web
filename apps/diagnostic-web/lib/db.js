@@ -93,6 +93,10 @@ export const db = {
           quality_metadata: output.quality_metadata || null,
           execution_metadata: output.execution_metadata || null,
           findings_json: Array.isArray(output.findings_json) ? output.findings_json : null,
+          brand_memory_export_status: output.brand_memory_export_status || 'not_applicable',
+          brand_memory_export_validation_result: output.brand_memory_export_validation_result || null,
+          brand_memory_export_json: output.brand_memory_export_json || null,
+          brand_memory_export_validated_at: output.brand_memory_export_validated_at || null,
         }
       ])
       .select('*')

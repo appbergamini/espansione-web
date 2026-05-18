@@ -234,7 +234,11 @@ export const Agent_16_BrandMemoryExport = {
     // Sem isso, 12 outputs × ~10k tokens cada = 120k+ tokens de input.
     // Com isso, ~25-40k. Diferença econômica e de qualidade gigante.
     const extractBrandMemoryExport = (out) => {
-      if (!out || !out.conteudo) return null;
+      if (!out) return null;
+      if (out.brand_memory_export_json) {
+        return JSON.stringify(out.brand_memory_export_json, null, 2);
+      }
+      if (!out.conteudo) return null;
       const match = out.conteudo.match(
         /<brand_memory_export>([\s\S]*?)<\/brand_memory_export>/i
       );

@@ -8,6 +8,12 @@ import {
   buildQualityMetadataPromptInstruction,
   parseQualityMetadataFromRaw,
 } from '../output/qualityMetadata';
+import {
+  assertBrandMemoryExportsReadyForAgent16,
+  extractBrandMemoryExportJson,
+  getExpectedBrandMemorySlices,
+  validateAgentBrandMemoryExport,
+} from '../brand-memory/exportValidation';
 
 export const AGENT_CONFIGS = {
   1:  { name: 'Roteiros VI — Entrevistas Internas',      stage: 'pre_diagnostico',      inputs: [],            checkpoint: null },
@@ -266,6 +272,11 @@ export const Pipeline = {
       }
     }
 
+    if (agentNum === 16) {
+      const projeto = await db.getProject(projetoId);
+      assertBrandMemoryExportsReadyForAgent16(existentes, { includeEvp: !!projeto?.tem_evp });
+    }
+
     console.log(`Pipeline: executando Agente ${agentNum} (${config.name}) para ${projetoId}`);
 
     const prompts = await buildForAgent(projetoId, agentNum, { precomputedEnrichment });
@@ -302,6 +313,25 @@ export const Pipeline = {
     // Se o modelo não emitiu (ou JSON inválido), fica null e o
     // materializador cai no parser heurístico do conteudo markdown.
     parsed.findings_json = parseFindingsFromRaw(response.text);
+
+    const expectedBrandMemorySlices = getExpectedBrandMemorySlices(agentNum);
+    const brandMemoryExportValidation = validateAgentBrandMemoryExport({
+      agentId: String(agentNum),
+      outputContent: response.text,
+      expectedSlices: expectedBrandMemorySlices,
+    });
+    parsed.brand_memory_export_status = brandMemoryExportValidation.status;
+    parsed.brand_memory_export_validation_result = brandMemoryExportValidation;
+    parsed.brand_memory_export_validated_at = new Date().toISOString();
+    if (['valid', 'warning'].includes(brandMemoryExportValidation.status)) {
+      try {
+        parsed.brand_memory_export_json = extractBrandMemoryExportJson(response.text);
+      } catch {
+        parsed.brand_memory_export_json = null;
+      }
+    } else {
+      parsed.brand_memory_export_json = null;
+    }
 
     const savedOutput = await db.saveOutput(projetoId, agentNum, parsed);
 
