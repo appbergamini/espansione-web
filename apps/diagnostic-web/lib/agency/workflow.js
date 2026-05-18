@@ -4,10 +4,10 @@ import {
   buildEditorPromptPack,
   buildVisualDirectorPromptPack,
 } from '@espansione/agents';
-import { MockModelGateway } from './modelGateway';
+import { getAgencyModelGateway } from './modelGateway';
 import { prepareAgencyRun } from './prepareRun';
 
-export async function runAgencyWorkflow(db, requestId, modelGateway = new MockModelGateway()) {
+export async function runAgencyWorkflow(db, requestId, modelGateway = getAgencyModelGateway()) {
   const prepared = await getOrPrepareRun(db, requestId);
   const run = prepared.run;
   const accountStep = prepared.step;
@@ -98,7 +98,7 @@ async function getOrPrepareRun(db, requestId) {
   if (error) throw error;
   const existing = existingRuns?.[0];
   const accountStep = existing?.agency_steps?.find?.((step) => step.agent_id === 'account_director');
-  if (existing && accountStep) {
+  if (existing && accountStep && ['pending', 'ready', 'running'].includes(existing.status)) {
     return { run: existing, step: accountStep };
   }
 
@@ -142,8 +142,8 @@ async function completeStep(db, step, modelGateway) {
       .update({
         output,
         status: 'completed',
-        model_used: 'mock',
-        tokens: { input: 0, output: 0, total: 0 },
+        model_used: output.model || 'unknown',
+        tokens: output.tokens || { input: 0, output: 0, total: 0 },
       })
       .eq('id', step.id)
       .select('*')

@@ -1,3 +1,68 @@
+import { AIRouter } from '../ai/router';
+
+const DEFAULT_AGENCY_MODEL_KEY = 'gemini-flash';
+
+export function getAgencyModelGateway() {
+  const mode = process.env.AGENCY_MODEL_GATEWAY || (process.env.NODE_ENV === 'production' ? 'real' : 'mock');
+  if (mode === 'mock') return new MockModelGateway();
+  return new AIRouterModelGateway({
+    modelKey: process.env.AGENCY_MODEL_KEY || DEFAULT_AGENCY_MODEL_KEY,
+  });
+}
+
+export class AIRouterModelGateway {
+  constructor({ modelKey = DEFAULT_AGENCY_MODEL_KEY } = {}) {
+    this.modelKey = modelKey;
+  }
+
+  async generateStructuredOutput({ agentId, promptPack }) {
+    if (!agentId || !promptPack?.systemPrompt || !promptPack?.userPrompt) {
+      throw new Error('ModelGatewayInput incompleto para geração da Agência.');
+    }
+
+    const systemPrompt = [
+      promptPack.systemPrompt,
+      '',
+      'CONTRATO DE SAIDA',
+      '- Responda somente JSON valido, sem Markdown, sem crases e sem texto fora do JSON.',
+      '- O JSON deve representar apenas o objeto data do agente atual.',
+      '- Use strings vazias ou arrays vazios quando nao houver informacao suficiente.',
+      '- Nao invente evidencias, numeros, provas ou claims.',
+    ].join('\n');
+
+    const userPrompt = [
+      promptPack.userPrompt,
+      '',
+      'SCHEMA ESPERADO',
+      JSON.stringify(promptPack.expectedOutputSchema, null, 2),
+    ].join('\n');
+
+    const result = await AIRouter.callModel(
+      systemPrompt,
+      [{ role: 'user', content: userPrompt }],
+      {
+        modelKey: this.modelKey,
+        maxTokens: Number(process.env.AGENCY_MODEL_MAX_TOKENS || 6000),
+        temperature: Number(process.env.AGENCY_MODEL_TEMPERATURE || 0.2),
+      }
+    );
+
+    const data = parseJsonObject(result.text);
+    return {
+      agentId,
+      data,
+      warnings: collectWarnings(data),
+      brandMemorySlicesUsed: extractSlices(promptPack),
+      model: result.model,
+      tokens: {
+        input: result.tokensIn || 0,
+        output: result.tokensOut || 0,
+        total: (result.tokensIn || 0) + (result.tokensOut || 0),
+      },
+    };
+  }
+}
+
 export class MockModelGateway {
   async generateStructuredOutput({ agentId, promptPack }) {
     const request = extractAgencyRequest(promptPack);
@@ -71,8 +136,37 @@ export class MockModelGateway {
       data: outputByAgent[agentId],
       warnings: [`MockModelGateway usado para ${agentId}.`],
       brandMemorySlicesUsed: extractSlices(promptPack),
+      model: 'mock',
+      tokens: { input: 0, output: 0, total: 0 },
     };
   }
+}
+
+function parseJsonObject(text = '') {
+  const cleaned = String(text)
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {}
+
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const slice = cleaned.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(slice);
+    } catch {}
+  }
+
+  throw new Error('Modelo retornou resposta que não é JSON válido.');
+}
+
+function collectWarnings(data) {
+  return Array.isArray(data?.warnings) ? data.warnings : [];
 }
 
 function extractSlices(promptPack) {
