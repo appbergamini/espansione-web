@@ -160,10 +160,32 @@ export default function AgencyRequestsPage() {
             <Logo size="sm" showTagline={false} />
           </div>
 
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Agência IA</h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: 0, marginBottom: '1.5rem' }}>
-            Pedidos estruturados de marketing usando a Brand Memory como fonte canônica.
-          </p>
+          <section className="glass-card outline-glow" style={{ padding: '1.25rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.32)', background: 'rgba(56,189,248,0.045)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', alignItems: 'center' }}>
+              <div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
+                  Fase 2
+                </div>
+                <h1 style={{ fontSize: '1.65rem', margin: 0 }}>Agência IA</h1>
+                <p style={{ color: 'var(--text-secondary)', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
+                  Pedido estruturado primeiro. Execução dos agentes depois, dentro de cada pedido.
+                </p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem' }}>
+                {[
+                  ['1', 'Brand Memory', readinessStatus === 'ready_for_campaigns' || readinessStatus === 'ready_for_content' ? 'ok' : 'pendente'],
+                  ['2', 'Pedido', canCreate ? 'liberado' : 'bloqueado'],
+                  ['3', 'Agentes', requests.length > 0 ? 'abrir pedido' : 'aguardando'],
+                ].map(([num, label, status]) => (
+                  <div key={label} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.65rem', background: 'rgba(255,255,255,0.035)' }}>
+                    <div style={{ color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.75rem' }}>0{num}</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '0.82rem', marginTop: '0.15rem' }}>{label}</div>
+                    <div style={{ color: status === 'ok' || status === 'liberado' ? 'var(--success)' : 'var(--text-secondary)', fontSize: '0.74rem', marginTop: '0.2rem' }}>{status}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
 
           {errorMsg && (
             <div className="glass-card" style={{ padding: '1rem', marginBottom: '1rem', borderColor: 'rgba(239,68,68,0.35)', color: 'var(--brand-red)' }}>
@@ -180,14 +202,14 @@ export default function AgencyRequestsPage() {
           {loading ? (
             <div className="glass-card" style={{ padding: '1.5rem' }}>Carregando...</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(320px, 0.8fr)', gap: '1.25rem', alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1.25rem', alignItems: 'start' }}>
               <section className="glass-card" style={{ padding: '1.25rem' }}>
-                <h2 style={{ fontSize: '1rem', marginTop: 0 }}>Novo Pedido</h2>
+                <h2 style={{ fontSize: '1rem', marginTop: 0 }}>1. Novo pedido</h2>
 
                 <div style={{ padding: '0.85rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Marca</div>
                   <div style={{ fontWeight: 700 }}>{brand?.name || 'Brand Memory não carregada'}</div>
-                  <div style={{ fontSize: '0.8rem', color: readinessStatus === 'not_ready' ? 'var(--brand-red)' : 'var(--accent-blue)', marginTop: '0.35rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: readinessStatus === 'not_ready' ? 'var(--brand-red)' : readinessStatus === 'partial_ready' ? 'var(--warning)' : 'var(--success)', marginTop: '0.35rem', fontWeight: 700 }}>
                     Status: {readinessStatus}
                   </div>
                   {readinessData?.readiness?.warnings?.length > 0 && (
@@ -222,9 +244,12 @@ export default function AgencyRequestsPage() {
                         <div style={{ color: phaseOneStatus.agent16HasExport ? 'var(--success)' : 'var(--text-secondary)', fontSize: '0.84rem' }}>
                           Export Brand Memory: {phaseOneStatus.agent16HasExport ? 'encontrado' : 'não encontrado'}
                         </div>
-                        <div style={{ color: 'var(--accent-blue)', fontSize: '0.84rem', marginTop: '0.55rem' }}>
+                        <div style={{ color: 'var(--accent-blue)', fontSize: '0.84rem', marginTop: '0.55rem', fontWeight: 700 }}>
                           Próximo passo: {phaseOneStatus.nextStep}
                         </div>
+                        <Link href={`/adm/${id}`} style={{ display: 'inline-block', marginTop: '0.7rem', color: 'var(--accent-blue)', fontSize: '0.84rem', fontWeight: 800, textDecoration: 'none' }}>
+                          Voltar ao fluxo da Fase 1
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -293,9 +318,9 @@ export default function AgencyRequestsPage() {
               </section>
 
               <section className="glass-card" style={{ padding: '1.25rem' }}>
-                <h2 style={{ fontSize: '1rem', marginTop: 0 }}>Pedidos</h2>
+                <h2 style={{ fontSize: '1rem', marginTop: 0 }}>2. Pedidos</h2>
                 {requests.length === 0 ? (
-                  <p style={{ color: 'var(--text-secondary)' }}>Nenhum pedido criado ainda.</p>
+                  <p style={{ color: 'var(--text-secondary)' }}>{canCreate ? 'Crie o primeiro pedido à esquerda.' : 'Assim que a marca estiver pronta, os pedidos criados aparecerão aqui.'}</p>
                 ) : (
                   <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {requests.map((request) => (

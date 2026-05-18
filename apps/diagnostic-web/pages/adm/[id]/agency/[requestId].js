@@ -5,6 +5,34 @@ import { useEffect, useState } from 'react';
 import Logo from '../../../../components/Logo';
 import { supabase } from '../../../../lib/supabaseClient';
 
+const REQUEST_TYPE_LABELS = {
+  social_post: 'Post social',
+  carousel: 'Carrossel',
+  short_video_script: 'Roteiro vídeo curto',
+  email: 'E-mail',
+  landing_page_copy: 'Copy de landing page',
+};
+
+const CHANNEL_LABELS = {
+  linkedin: 'LinkedIn',
+  instagram: 'Instagram',
+  whatsapp: 'WhatsApp',
+  email: 'E-mail',
+  website: 'Website',
+  paid_media: 'Mídia paga',
+  other: 'Outro',
+};
+
+const OBJECTIVE_LABELS = {
+  awareness: 'Awareness',
+  authority: 'Autoridade',
+  lead_generation: 'Geração de leads',
+  conversion: 'Conversão',
+  launch: 'Lançamento',
+  relationship: 'Relacionamento',
+  retention: 'Retenção',
+};
+
 export default function AgencyRequestDetailPage() {
   const router = useRouter();
   const { id, requestId } = router.query;
@@ -94,6 +122,20 @@ export default function AgencyRequestDetailPage() {
 
   const latestRun = runs[0] || null;
   const accountStep = latestRun?.agency_steps?.find?.((step) => step.agent_id === 'account_director') || null;
+  const stepByAgent = new Map((latestRun?.agency_steps || []).map((step) => [step.agent_id, step]));
+  const agentFlow = [
+    { id: 'account_director', label: 'Atendimento', description: 'Briefing operacional' },
+    { id: 'copywriter', label: 'Copywriter', description: 'Texto e tom' },
+    { id: 'visual_director', label: 'Visual', description: 'Direção de arte' },
+    { id: 'editor', label: 'Editor', description: 'Coerência' },
+    { id: 'approver', label: 'Aprovador', description: 'Gate final' },
+  ];
+  const completedSteps = agentFlow.filter((agent) => stepByAgent.get(agent.id)?.status === 'completed').length;
+  const approverStep = stepByAgent.get('approver');
+  const approvalDecision = approverStep?.output?.decisao || approverStep?.output?.decision || null;
+  const requestTypeLabel = REQUEST_TYPE_LABELS[request?.request_type] || request?.request_type;
+  const channelLabel = CHANNEL_LABELS[request?.channel] || request?.channel;
+  const objectiveLabel = OBJECTIVE_LABELS[request?.objective] || request?.objective;
 
   return (
     <>
@@ -118,90 +160,151 @@ export default function AgencyRequestDetailPage() {
           {loading ? (
             <div className="glass-card" style={{ padding: '1.5rem' }}>Carregando...</div>
           ) : request ? (
-            <section className="glass-card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start' }}>
-                <div>
-                  <h1 style={{ marginTop: 0, marginBottom: '0.5rem' }}>Pedido de Agência IA</h1>
-                  <p style={{ color: 'var(--text-secondary)', marginTop: 0 }}>{request.status}</p>
-                </div>
-                <button
-                  onClick={archiveRequest}
-                  disabled={archiving}
-                  style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: 'var(--brand-red)', padding: '0.5rem 0.8rem', cursor: 'pointer' }}
-                >
-                  {archiving ? 'Arquivando...' : 'Arquivar'}
-                </button>
-              </div>
-
-              <dl style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '0.75rem 1rem', marginTop: '1.5rem' }}>
-                <Label title="Tipo" value={request.request_type} />
-                <Label title="Canal" value={request.channel} />
-                <Label title="Objetivo" value={request.objective} />
-                <Label title="Público/cluster" value={request.audience_cluster || '-'} />
-                <Label title="Oferta" value={request.offer || '-'} />
-                <Label title="CTA" value={request.desired_cta || '-'} />
-                <Label title="Contexto" value={request.context} />
-                <Label title="Restrições" value={(request.restrictions || []).join('\n') || '-'} preserve />
-                <Label title="Referências" value={(request.reference_material || []).join('\n') || '-'} preserve />
-                <Label title="Warnings de prontidão" value={(request.readiness_warnings || []).join('\n') || '-'} preserve />
-              </dl>
-
-              <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+            <>
+              <section className="glass-card outline-glow" style={{ position: 'sticky', top: '0.75rem', zIndex: 20, padding: '1rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.35)', background: 'rgba(6,12,25,0.94)', backdropFilter: 'blur(18px)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', alignItems: 'center' }}>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: '1rem' }}>Briefing Operacional</h2>
-                    <p style={{ margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      Primeira etapa da Agência: prepara o prompt pack do Atendimento Estratégico, sem chamar modelo.
-                    </p>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
+                      Pedido de Agência IA
+                    </div>
+                    <h1 style={{ margin: 0, fontSize: '1.35rem' }}>{requestTypeLabel}</h1>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.35rem' }}>
+                      {channelLabel} · {objectiveLabel} · status {request.status}
+                    </div>
                   </div>
-                  <button
-                    className="btn-primary"
-                    onClick={prepareBriefing}
-                    disabled={preparing}
-                    style={{ padding: '0.65rem 0.9rem' }}
-                  >
-                    {preparing ? 'Preparando...' : 'Preparar briefing'}
-                  </button>
-                  <button
-                    onClick={runWorkflow}
-                    disabled={runningWorkflow}
-                    style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', color: 'var(--accent-blue)', padding: '0.65rem 0.9rem', cursor: 'pointer', fontWeight: 700 }}
-                  >
-                    {runningWorkflow ? 'Rodando...' : 'Rodar Agência IA'}
-                  </button>
-                </div>
 
-                {latestRun ? (
-                  <div style={{ marginTop: '1rem', display: 'grid', gap: '0.75rem' }}>
-                    <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.85rem' }}>
-                      <strong>Run:</strong> {latestRun.status}
-                      <br />
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>ID: {latestRun.id}</span>
-                    </div>
-                    <div style={{ display: 'grid', gap: '0.5rem' }}>
-                      {(latestRun.agency_steps || []).map((step) => (
-                        <div key={step.id} style={{ display: 'flex', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.65rem 0.75rem' }}>
-                          <span>{labelAgent(step.agent_id)}</span>
-                          <span style={{ color: step.status === 'completed' ? 'var(--success)' : 'var(--text-secondary)' }}>{step.status}</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(76px, 1fr))', gap: '0.45rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+                    {agentFlow.map((agent, index) => {
+                      const step = stepByAgent.get(agent.id);
+                      const done = step?.status === 'completed';
+                      const active = step && !done;
+                      return (
+                        <div key={agent.id} title={labelAgent(agent.id)} style={{ minWidth: '76px', border: `1px solid ${done ? 'rgba(16,185,129,0.5)' : active ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.09)'}`, background: done ? 'rgba(16,185,129,0.14)' : active ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.55rem 0.45rem' }}>
+                          <div style={{ color: done ? 'var(--success)' : active ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 800 }}>0{index + 1}</div>
+                          <div style={{ color: 'var(--text-primary)', fontSize: '0.76rem', fontWeight: 700, marginTop: '0.15rem', whiteSpace: 'nowrap' }}>{agent.label}</div>
                         </div>
-                      ))}
+                      );
+                    })}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.55rem' }}>
+                    <button
+                      className="btn-primary"
+                      onClick={prepareBriefing}
+                      disabled={preparing || runningWorkflow}
+                      style={{ padding: '0.72rem 0.8rem' }}
+                    >
+                      {preparing ? 'Preparando...' : 'Preparar briefing'}
+                    </button>
+                    <button
+                      onClick={runWorkflow}
+                      disabled={runningWorkflow || preparing}
+                      style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', color: 'var(--accent-blue)', padding: '0.72rem 0.8rem', cursor: runningWorkflow || preparing ? 'wait' : 'pointer', fontWeight: 800 }}
+                    >
+                      {runningWorkflow ? 'Rodando...' : 'Rodar Agência'}
+                    </button>
+                  </div>
+                </div>
+                {errorMsg && (
+                  <div style={{ marginTop: '0.85rem', color: 'var(--brand-red)', fontSize: '0.84rem' }}>{errorMsg}</div>
+                )}
+              </section>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1.25rem', alignItems: 'start' }}>
+                <section className="glass-card" style={{ padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Brief do pedido</h2>
+                      <p style={{ color: 'var(--text-secondary)', margin: '0.3rem 0 0', fontSize: '0.84rem' }}>
+                        O essencial para orientar a esteira, sem misturar com execução.
+                      </p>
                     </div>
-                    {accountStep && (
-                      <details style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.85rem' }}>
-                        <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Prompt pack técnico do account_director</summary>
-                        <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', overflowX: 'auto' }}>
-                          {JSON.stringify(accountStep.input?.promptPack || accountStep.input || {}, null, 2)}
-                        </pre>
-                      </details>
+                    <button
+                      onClick={archiveRequest}
+                      disabled={archiving}
+                      style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.24)', borderRadius: '8px', color: 'var(--brand-red)', padding: '0.42rem 0.7rem', cursor: archiving ? 'wait' : 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                    >
+                      {archiving ? 'Arquivando...' : 'Arquivar'}
+                    </button>
+                  </div>
+
+                  <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 0.34fr) 1fr', gap: '0.65rem 0.9rem', margin: 0 }}>
+                    <Label title="Tipo" value={requestTypeLabel} />
+                    <Label title="Canal" value={channelLabel} />
+                    <Label title="Objetivo" value={objectiveLabel} />
+                    <Label title="Público/cluster" value={request.audience_cluster || '-'} />
+                    <Label title="Oferta" value={request.offer || '-'} />
+                    <Label title="CTA" value={request.desired_cta || '-'} />
+                    <Label title="Contexto" value={request.context} />
+                  </dl>
+
+                  <details style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem' }}>
+                    <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.85rem' }}>Restrições, referências e warnings</summary>
+                    <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 0.34fr) 1fr', gap: '0.65rem 0.9rem', margin: '0.85rem 0 0' }}>
+                      <Label title="Restrições" value={(request.restrictions || []).join('\n') || '-'} preserve />
+                      <Label title="Referências" value={(request.reference_material || []).join('\n') || '-'} preserve />
+                      <Label title="Warnings" value={(request.readiness_warnings || []).join('\n') || '-'} preserve />
+                    </dl>
+                  </details>
+                </section>
+
+                <section className="glass-card" style={{ padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Timeline dos agentes</h2>
+                      <p style={{ margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+                        {latestRun ? `${completedSteps}/${agentFlow.length} etapas concluídas · run ${latestRun.status}` : 'Nenhuma run preparada ainda.'}
+                      </p>
+                    </div>
+                    {approvalDecision && (
+                      <span style={{ color: approvalDecision === 'approved' ? 'var(--success)' : 'var(--warning)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '0.25rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
+                        {approvalDecision}
+                      </span>
                     )}
                   </div>
-                ) : (
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    Nenhuma run preparada ainda.
-                  </p>
-                )}
+
+                  <div style={{ display: 'grid', gap: '0.65rem' }}>
+                    {agentFlow.map((agent, index) => {
+                      const step = stepByAgent.get(agent.id);
+                      const done = step?.status === 'completed';
+                      return (
+                        <details key={agent.id} open={!!step?.output && agent.id === 'approver'} style={{ border: `1px solid ${done ? 'rgba(16,185,129,0.28)' : step ? 'rgba(56,189,248,0.24)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, background: done ? 'rgba(16,185,129,0.05)' : 'rgba(255,255,255,0.025)' }}>
+                          <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.75rem 0.85rem' }}>
+                            <span>
+                              <strong style={{ color: done ? 'var(--success)' : 'var(--text-primary)', marginRight: '0.45rem' }}>0{index + 1}</strong>
+                              {labelAgent(agent.id)}
+                              <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.77rem', marginTop: '0.12rem' }}>{agent.description}</span>
+                            </span>
+                            <span style={{ color: done ? 'var(--success)' : step ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
+                              {step?.status || 'aguardando'}
+                            </span>
+                          </summary>
+                          <div style={{ padding: '0 0.85rem 0.85rem' }}>
+                            {step?.error && <p style={{ color: 'var(--brand-red)', margin: 0 }}>{step.error}</p>}
+                            {step?.output ? (
+                              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', overflowX: 'auto', background: 'rgba(0,0,0,0.18)', borderRadius: 8, padding: '0.75rem', margin: 0 }}>
+                                {JSON.stringify(step.output, null, 2)}
+                              </pre>
+                            ) : (
+                              <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>Sem output salvo ainda.</p>
+                            )}
+                          </div>
+                        </details>
+                      );
+                    })}
+                  </div>
+
+                  {accountStep && process.env.NODE_ENV !== 'production' && (
+                    <details style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.85rem', marginTop: '0.85rem' }}>
+                      <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--accent-blue)' }}>Prompt pack técnico do account_director</summary>
+                      <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', overflowX: 'auto' }}>
+                        {JSON.stringify(accountStep.input?.promptPack || accountStep.input || {}, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </section>
               </div>
-            </section>
+            </>
           ) : null}
         </main>
       </div>

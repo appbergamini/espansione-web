@@ -824,6 +824,14 @@ export default function ProjetoDetalhes() {
   const brandMemoryExportDone = hasAgentOutput(16);
   const brandMemoryExportReady = !brandMemoryExportDone && brandMemoryExportDeps.ok && !pendingCkpt;
   const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
+  const fluxoAgentes = CATALOGO_AGENTES
+    .filter(a => !a.modular || a.agent_num === 16 || (a.agent_num === 14 && projetoTemEvp))
+    .sort((a, b) => a.ordem_exibicao - b.ordem_exibicao);
+  const etapaAtualLabel = pendingCkpt
+    ? `Checkpoint ${pendingCkpt.checkpoint_num} pendente`
+    : nextAgent
+      ? nomeAgente(nextAgent)
+      : 'Esteira editorial completa';
 
   // Render formatters
   const renderMarkdownText = (text) => {
@@ -866,12 +874,124 @@ export default function ProjetoDetalhes() {
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
-            {/* Esquerda: Informações Gerais */}
-            <div style={{ flex: '1 1 300px' }}>
+            <div style={{ flex: '1 1 100%' }}>
               <h1 style={{ marginBottom: '1rem', fontSize: '2rem' }}>{projeto.cliente}</h1>
+            </div>
+          </div>
 
+          <section className="glass-card outline-glow" style={{ position: 'sticky', top: '0.75rem', zIndex: 20, padding: '1rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.35)', background: 'rgba(6,12,25,0.92)', backdropFilter: 'blur(18px)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', alignItems: 'center' }}>
+              <div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
+                  Fluxo principal
+                </div>
+                <div style={{ color: pendingCkpt ? 'var(--warning)' : nextAgent ? 'var(--accent-blue)' : 'var(--success)', fontSize: '1rem', fontWeight: 800 }}>
+                  {etapaAtualLabel}
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.35rem' }}>
+                  {progresso.completos}/{progresso.total} etapas editoriais concluídas · {progresso.pct}%
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${fluxoAgentes.length}, minmax(34px, 1fr))`, gap: '0.35rem', alignItems: 'center', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+                {fluxoAgentes.map((agent) => {
+                  const done = hasAgentOutput(agent.agent_num);
+                  const current = nextAgent === agent.agent_num && !pendingCkpt;
+                  const blocked = !done && !current && !podeExecutar(agent.agent_num, agentNumsCompletos).ok;
+                  const isMemory = agent.agent_num === 16;
+                  const bg = done
+                    ? 'rgba(16,185,129,0.18)'
+                    : current
+                      ? 'rgba(56,189,248,0.22)'
+                      : blocked
+                        ? 'rgba(148,163,184,0.08)'
+                        : 'rgba(255,255,255,0.05)';
+                  const border = done
+                    ? 'rgba(16,185,129,0.5)'
+                    : current
+                      ? 'rgba(56,189,248,0.65)'
+                      : 'rgba(255,255,255,0.09)';
+                  return (
+                    <div
+                      key={agent.agent_num}
+                      title={`${agent.nome_curto} · ${agent.nome_exibicao}`}
+                      style={{ minWidth: '34px', height: '36px', display: 'grid', placeItems: 'center', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color: done ? 'var(--success)' : current ? 'var(--accent-blue)' : 'var(--text-secondary)', fontWeight: 800, fontSize: '0.78rem', position: 'relative' }}
+                    >
+                      {isMemory ? 'BM' : agent.agent_num}
+                      {current && <span style={{ position: 'absolute', left: '50%', bottom: '-7px', width: 6, height: 6, transform: 'translateX(-50%)', borderRadius: 999, background: 'var(--accent-blue)' }} />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'grid', gap: '0.55rem' }}>
+                {pendingCkpt ? (
+                  <button
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '0.75rem', background: 'var(--warning)', color: '#000', filter: 'none', boxShadow: 'none' }}
+                    onClick={() => handleApproveCheckpoint(pendingCkpt.checkpoint_num)}
+                    disabled={approving}
+                  >
+                    {approving ? 'Aprovando...' : `Aprovar Checkpoint ${pendingCkpt.checkpoint_num}`}
+                  </button>
+                ) : nextAgent !== null ? (
+                  <button
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '0.75rem' }}
+                    disabled={runningAgent !== null}
+                    onClick={() => handleRequestRun(nextAgent)}
+                  >
+                    {runningAgent !== null && runningAgent === nextAgent ? (engineStage || 'Processando...') : `Executar Agente ${nextAgent}`}
+                  </button>
+                ) : brandMemoryExportReady ? (
+                  <button
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '0.75rem', background: 'rgba(16,185,129,0.9)' }}
+                    disabled={runningAgent !== null}
+                    onClick={() => handleRequestRun(16)}
+                  >
+                    {runningAgent === 16 ? (engineStage || 'Gerando export...') : 'Gerar Brand Memory'}
+                  </button>
+                ) : (
+                  <div style={{ color: 'var(--success)', fontWeight: 700, fontSize: '0.9rem', textAlign: 'center' }}>
+                    Fluxo pronto
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <Link href={`/adm/${id}/curadoria`} style={{ color: 'var(--accent-purple, #a78bfa)', fontSize: '0.8rem', textDecoration: 'none', fontWeight: 700 }}>Curadoria</Link>
+                  <Link href={`/adm/${id}/deliverable`} style={{ color: 'var(--brand-blue-light)', fontSize: '0.8rem', textDecoration: 'none', fontWeight: 700 }}>Entregável</Link>
+                  <Link href={`/adm/${id}/agency`} style={{ color: 'var(--accent-blue)', fontSize: '0.8rem', textDecoration: 'none', fontWeight: 700 }}>Agência IA</Link>
+                  {brandMemoryExportDone && <Link href={`/adm/${id}/outputs/16`} style={{ color: 'var(--success)', fontSize: '0.8rem', textDecoration: 'none', fontWeight: 700 }}>Brand Memory</Link>}
+                </div>
+                {engineError && (
+                  <div style={{ color: 'var(--brand-red)', fontSize: '0.78rem', textAlign: 'center' }}>
+                    {engineError.includes('Missing fields') ? 'Faltam dados antes de rodar este agente.' : engineError}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1.25rem', alignItems: 'start' }}>
+            <aside style={{ display: 'grid', gap: '1rem' }}>
+              <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                <h2 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: '0 0 0.85rem' }}>Preparação</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <Link href={`/adm/${id}/curadoria`} style={{ textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 8, padding: '0.75rem', background: 'rgba(167,139,250,0.05)' }}>
+                    <div style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.82rem' }}>Curadoria</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginTop: '0.25rem' }}>Achados aprováveis</div>
+                  </Link>
+                  <Link href={`/adm/${id}/agency`} style={{ textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: 8, padding: '0.75rem', background: 'rgba(56,189,248,0.05)' }}>
+                    <div style={{ color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.82rem' }}>Agência IA</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginTop: '0.25rem' }}>Pedidos de marketing</div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Esquerda: Informações Gerais */}
               {/* Card: Responsável do Projeto */}
-              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+              <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: editingResp ? '1rem' : 0 }}>
                   <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>Responsavel do Projeto</h3>
                   {!editingResp && (
@@ -962,34 +1082,8 @@ export default function ProjetoDetalhes() {
               {/* FIX.29 (Fase B) — Card: Clusters de Comunicação (insumo do Agente 13) */}
               <ClustersCard projetoId={id} />
 
-              {/* Fase 2 — Agência IA */}
-              <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(56,189,248,0.3)', background: 'rgba(56,189,248,0.05)' }}>
-                <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-blue)', margin: 0, marginBottom: '0.5rem' }}>Agência IA</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
-                  Criar pedidos estruturados de marketing usando a Brand Memory da Fase 1.
-                </p>
-                <Link href={`/adm/${id}/agency`}>
-                  <span style={{ display: 'inline-block', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', borderRadius: '8px', color: 'var(--accent-blue)', fontWeight: 700, padding: '0.5rem 0.85rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                    Abrir pedidos da Agência →
-                  </span>
-                </Link>
-              </div>
-
-              {/* FIX.24 — Card: Curadoria Estratégica */}
-              <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.05)' }}>
-                <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-purple, #a78bfa)', margin: 0, marginBottom: '0.5rem' }}>Curadoria Estratégica</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
-                  Revisar, editar e aprovar os achados da IA antes do relatório final.
-                </p>
-                <Link href={`/adm/${id}/curadoria`}>
-                  <span style={{ display: 'inline-block', background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)', borderRadius: '8px', color: '#a78bfa', fontWeight: 700, padding: '0.5rem 0.85rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                    Abrir mesa de curadoria →
-                  </span>
-                </Link>
-              </div>
-
               {/* FIX.15 — Card: Escopo do Projeto (toggle EVP) */}
-              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+              <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
                 <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, marginBottom: '0.75rem' }}>Escopo do Projeto</h3>
                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: togglingEvp ? 'wait' : 'pointer', opacity: togglingEvp ? 0.6 : 1 }}>
                   <input
@@ -1030,7 +1124,7 @@ export default function ProjetoDetalhes() {
               </div>
 
               {/* Diagnósticos Essenciais — Formulários + Entrevistas */}
-              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+              <div className="glass-card" style={{ padding: '1.25rem' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Diagnósticos Essenciais</h3>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {[
@@ -1098,7 +1192,7 @@ export default function ProjetoDetalhes() {
               <OptInEntrevistasManager projetoId={id} />
 
               {/* Card: Mapeamento Comportamental CIS */}
-              <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>
+              <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h3 style={{ fontSize: '1rem', color: 'var(--accent-purple)', margin: 0 }}>🧠 Mapeamento Comportamental</h3>
                   <span style={{ fontSize: '0.8rem', background: 'rgba(167,139,250,0.1)', color: 'var(--accent-purple)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 600 }}>
@@ -1203,174 +1297,97 @@ export default function ProjetoDetalhes() {
                   </button>
                 </div>
               </div>
-              
-              {/* Box de Ação Principal */}
-              <div className="glass-card outline-glow" style={{ padding: '1.5rem', background: 'rgba(56, 189, 248, 0.05)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
-                <h3 style={{ marginBottom: '1rem', color: 'var(--accent-blue)' }}>Orquestrador de IA</h3>
-                {pendingCkpt ? (
-                  <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                    <p style={{ color: 'var(--warning)', fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>🛑</span> Checkpoint {pendingCkpt.checkpoint_num} Pendente
-                    </p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
-                      Valide os relatórios formatados entregues até agora. Eles devem ser apresentados ao cliente. 
-                      Se aprovado, o sistema destravará a próxima etapa da esteira.
-                    </p>
-                    <button 
-                      className="btn-primary" 
-                      style={{ width: '100%', padding: '0.75rem', background: 'var(--warning)', color: '#000', filter: 'none', boxShadow: 'none' }}
-                      onClick={() => handleApproveCheckpoint(pendingCkpt.checkpoint_num)}
-                      disabled={approving}
-                    >
-                      {approving ? 'Aprovando...' : `Aprovar Checkpoint ${pendingCkpt.checkpoint_num}`}
-                    </button>
-                    {engineError && <p style={{ color: 'var(--brand-red)', marginTop: '0.5rem', fontSize: '0.85rem' }}>{engineError}</p>}
-                  </div>
-                ) : nextAgent === null ? (
-                  <p style={{ color: 'var(--success)', fontWeight: 600 }}>Cérebro 100% Processado! 🎉</p>
-                ) : (
-                  <>
-                    <p style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
-                      Próximo passo na esteira:
-                    </p>
-                    <p style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '1.5rem' }}>
-                      {nomeAgente(nextAgent)}
-                    </p>
-                    {engineError && (
-                      <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--brand-red)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>
-                        {engineError.includes('Missing fields') ? '⚠️ Faltam dados na base (ex: formulário de clima) antes de rodar este agente.' : '🚨 Erro: ' + engineError}
-                      </div>
-                    )}
-                    <button
-                      className="btn-primary"
-                      style={{ width: '100%', padding: '0.85rem' }}
-                      disabled={runningAgent !== null}
-                      onClick={() => handleRequestRun(nextAgent)}
-                    >
-                      {runningAgent !== null ? (engineStage || 'Processando (aguarde 15s~30s)...') : `Executar Agente ${nextAgent}`}
-                    </button>
-                  </>
-                )}
-              </div>
-
-              <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginTop: '1rem', borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
-                <h3 style={{ fontSize: '0.95rem', color: 'var(--success)', margin: 0, marginBottom: '0.5rem' }}>Brand Memory</h3>
-                {brandMemoryExportDone ? (
-                  <>
-                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
-                      Export da Brand Memory gerado. Revise o output do Agente 16 antes de carregar a memória ativa da marca.
-                    </p>
-                    <Link href={`/adm/${id}/outputs/16`} style={{ color: 'var(--success)', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
-                      Abrir Agente 16 →
-                    </Link>
-                  </>
-                ) : brandMemoryExportReady ? (
-                  <>
-                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
-                      Os insumos obrigatórios estão prontos para gerar o export técnico que alimenta a Brand Memory da Agência.
-                    </p>
-                    <button
-                      onClick={() => handleRequestRun(16)}
-                      disabled={runningAgent !== null}
-                      style={{ width: '100%', background: 'rgba(16,185,129,0.16)', border: '1px solid rgba(16,185,129,0.45)', borderRadius: '8px', color: 'var(--success)', fontWeight: 700, padding: '0.65rem 0.85rem', cursor: runningAgent !== null ? 'wait' : 'pointer', fontSize: '0.85rem' }}
-                    >
-                      {runningAgent === 16 ? (engineStage || 'Gerando export...') : 'Gerar export da Brand Memory'}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.6rem', lineHeight: 1.5 }}>
-                      O export da Brand Memory fica disponível quando a Fase 1 tem os outputs obrigatórios e checkpoints aprovados.
-                    </p>
-                    {pendingCkpt ? (
-                      <p style={{ fontSize: '0.82rem', color: 'var(--warning)', margin: 0 }}>
-                        Checkpoint {pendingCkpt.checkpoint_num} pendente antes do Agente 16.
-                      </p>
-                    ) : brandMemoryMissingDeps.length > 0 ? (
-                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                        Faltam agentes: {brandMemoryMissingDeps.join(', ')}.
-                      </p>
-                    ) : null}
-                  </>
-                )}
-              </div>
-            </div>
+            </aside>
 
             {/* Direita: Trilha Visual dos Agentes (O histórico de Outputs) */}
-            <div style={{ flex: '2 1 500px' }}>
-              <div className="glass-card" style={{ padding: '2rem' }}>
-                <h2 style={{ marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>Relatórios Gerados (Outputs)</h2>
+            <section className="glass-card" style={{ padding: '1.25rem', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.85rem', marginBottom: '0.85rem' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Esteira de outputs</h2>
+                  <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                    Relatórios em ordem inversa, com detalhes recolhidos para não quebrar o fluxo.
+                  </p>
+                </div>
+                <span style={{ flexShrink: 0, fontSize: '0.78rem', color: 'var(--success)', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '0.25rem 0.6rem', fontWeight: 700 }}>
+                  {outputs.length} gerados
+                </span>
+              </div>
                 
-                {outputs.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                    Nenhum output gerado ainda. Execute o Agente 01 para começar.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {/* Renderiza os outputs já concluídos */}
-                    {outputs.sort((a, b) => b.agent_num - a.agent_num).map((out) => (
-                      <div key={out.id} style={{ background: 'var(--bg-tertiary)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem 1.5rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
-                            <span style={{ color: 'var(--accent-blue)', marginRight: '0.5rem' }}>A{out.agent_num}</span> 
+              {outputs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-secondary)' }}>
+                  Nenhum output gerado ainda. Execute o Agente 01 no fluxo principal.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  {/* Renderiza os outputs já concluídos */}
+                  {outputs.sort((a, b) => b.agent_num - a.agent_num).map((out) => (
+                    <article key={out.id} style={{ background: 'rgba(255,255,255,0.025)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ padding: '0.8rem 0.9rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <div style={{ minWidth: 0 }}>
+                          <h3 style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.35 }}>
+                            <span style={{ color: 'var(--accent-blue)', marginRight: '0.45rem', fontWeight: 800 }}>A{out.agent_num}</span>
                             {getAgenteByNum(out.agent_num)?.nome_exibicao || `Agente ${out.agent_num}`}
                           </h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          {out.resumo_executivo ? (
+                            <p style={{ margin: '0.28rem 0 0', color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {String(out.resumo_executivo).replace(/\s+/g, ' ').slice(0, 240)}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                             <Link
                               href={`/adm/${id}/outputs/${out.agent_num}`}
                               title="Abrir em página editorial"
-                              style={{ background: 'rgba(107,163,255,0.1)', border: '1px solid rgba(107,163,255,0.3)', color: 'var(--brand-blue-light)', borderRadius: '8px', padding: '0.3rem 0.7rem', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none' }}
+                              style={{ background: 'rgba(107,163,255,0.1)', border: '1px solid rgba(107,163,255,0.3)', color: 'var(--brand-blue-light)', borderRadius: '8px', padding: '0.3rem 0.65rem', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}
                             >
-                              📖 Abrir
+                              Abrir
                             </Link>
                             <button
                               onClick={() => downloadOutputPdf(out)}
                               title="Baixar em PDF"
-                              style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.3)', color: 'var(--accent-blue)', borderRadius: '8px', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                              style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.3)', color: 'var(--accent-blue)', borderRadius: '8px', padding: '0.3rem 0.65rem', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
                             >
-                              📄 PDF
+                              PDF
                             </button>
-                            <span style={{ fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.2rem 0.6rem', borderRadius: '12px' }}>Concluído</span>
-                          </div>
+                            <span style={{ fontSize: '0.72rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.18rem 0.52rem', borderRadius: 999, fontWeight: 700 }}>ok</span>
                         </div>
-                        <div style={{ padding: '1.5rem', fontSize: '0.95rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                      </div>
+                      <details style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 700, userSelect: 'none', fontSize: '0.8rem', padding: '0.65rem 0.9rem' }}>
+                          Ver resumo e documento completo
+                        </summary>
+                        <div style={{ padding: '0 0.9rem 0.9rem', fontSize: '0.86rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
                           {out.resumo_executivo ? (
-                            <div style={{ marginBottom: '1rem' }}>
-                              <strong style={{ color: 'var(--text-primary)' }}>Resumo Executivo:</strong><br/>
+                            <div style={{ marginBottom: '0.85rem' }}>
+                              <strong style={{ color: 'var(--text-primary)' }}>Resumo Executivo:</strong><br />
                               {renderMarkdownText(out.resumo_executivo)}
                             </div>
                           ) : null}
-                          
-                          {/* Botão simples que poderia expandir um modal com o conteúdo completo */}
-                          <details style={{ cursor: 'pointer', outline: 'none' }}>
-                            <summary style={{ color: 'var(--accent-blue)', fontWeight: 500, userSelect: 'none' }}>Ver Documento Completo</summary>
-                            <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', color: 'var(--text-secondary)' }}>
-                              {renderMarkdownText(out.conteudo)}
-                              
-                              {out.conclusoes && (
-                                <div style={{ marginTop: '1rem' }}>
-                                  <strong style={{ color: 'var(--text-primary)' }}>Conclusões/Takeaways:</strong><br/>
-                                  {renderMarkdownText(out.conclusoes)}
-                                </div>
-                              )}
-                            </div>
-                          </details>
+                          <div style={{ padding: '0.85rem', background: 'rgba(0,0,0,0.18)', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+                            {renderMarkdownText(out.conteudo)}
+
+                            {out.conclusoes && (
+                              <div style={{ marginTop: '1rem' }}>
+                                <strong style={{ color: 'var(--text-primary)' }}>Conclusões/Takeaways:</strong><br />
+                                {renderMarkdownText(out.conclusoes)}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+                      </details>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
 
           {/* Danger Zone — exclusão de relatórios individuais */}
-          <div className="glass-card" style={{ padding: '2rem', marginTop: '2.5rem', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>⚠️</span>
-              <h2 style={{ margin: 0, color: 'var(--brand-red)', fontSize: '1.15rem' }}>Danger Zone — Exclusão de Relatórios</h2>
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+          <details className="glass-card" style={{ padding: '1.1rem 1.25rem', marginTop: '1.25rem', borderColor: 'rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.025)' }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--brand-red)', fontSize: '0.95rem', fontWeight: 800, userSelect: 'none' }}>
+              Danger Zone — Exclusão de Relatórios
+            </summary>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.85rem 0 1.25rem', lineHeight: 1.5 }}>
               Excluir um relatório apaga o output, limpa logs e checkpoints relacionados e libera o agente para ser rodado novamente. Os agentes posteriores que dependem deste podem precisar ser re-executados.
             </p>
             {outputs.length === 0 ? (
@@ -1394,7 +1411,7 @@ export default function ProjetoDetalhes() {
                 ))}
               </div>
             )}
-          </div>
+          </details>
         </main>
 
         {/* FIX.4 — Modal de confirmação de exclusão com preview de cascata */}

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -33,7 +34,6 @@
 }
 
 /* ─── 2. Fontes web de apoio (Cabin + Andada Pro) ─── */
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Cabin:wght@400;500;600;700&display=swap');
 
 /* ─── 3. Tailwind v4 theme: paleta OFICIAL do manual de marca ─── */
 /* 9 cores oficiais — Azul 3 tons · Vermelho 3 tons · Verde · Cinza · Branco */
