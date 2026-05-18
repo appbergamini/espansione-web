@@ -313,9 +313,14 @@ async function insertSnapshots(
   runId: string,
   d: EspansioneDiagnostic
 ): Promise<number> {
-  const decodificacaoSnapshot = d.strategic_tensions
-    ? { ...d.decodificacao, strategic_tensions: d.strategic_tensions }
-    : d.decodificacao;
+  const decodificacaoSnapshot =
+    d.strategic_tensions || d.executional_readiness
+      ? {
+          ...d.decodificacao,
+          ...(d.strategic_tensions ? { strategic_tensions: d.strategic_tensions } : {}),
+          ...(d.executional_readiness ? { executional_readiness: d.executional_readiness } : {}),
+        }
+      : d.decodificacao;
 
   const payloads: { agent_id: number; data: unknown }[] = [
     { agent_id: 2, data: d.vi },
@@ -393,6 +398,10 @@ function reconstructDiagnostic(
     diagnostic.strategic_tensions = decodificacao.strategic_tensions;
   } else if (decodificacao?.pontos_de_escolha_estrategica) {
     diagnostic.strategic_tensions = decodificacao.pontos_de_escolha_estrategica;
+  }
+
+  if (decodificacao?.executional_readiness) {
+    diagnostic.executional_readiness = decodificacao.executional_readiness;
   }
 
   if (byAgent.has(14)) {

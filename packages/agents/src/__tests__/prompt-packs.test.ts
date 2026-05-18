@@ -32,6 +32,45 @@ const brandKernel: BrandKernel = {
     dePara: ['comunicacao: sair de generico para proprietario'],
     values: ['Clareza'],
     attributes: ['Especialista'],
+    executionalReadiness: {
+      summary: 'Time sustenta mudança com rituais claros.',
+      leadership_style_signals: ['Liderança técnica'],
+      cultural_blockers: ['Baixa cadência'],
+      adoption_risks: ['Prometer mais do que entrega'],
+      internal_alignment_level: 'medium',
+      decision_profile_signals: ['Decisão centralizada'],
+      behavioral_signals: ['CIS parcial'],
+      capability_gaps: ['Governança'],
+      implications_for_strategy: ['Criar rituais'],
+      implications_for_communication: ['Evitar promessa de velocidade'],
+      recommended_change_management_notes: ['Alinhar critérios semanalmente'],
+      confidence_score: 70,
+      source_basis: { forms: true, interviews: true, cis: true },
+    },
+    adoptionRisks: ['Prometer mais do que entrega'],
+    changeManagementNotes: ['Alinhar critérios semanalmente'],
+  },
+  internal: {
+    executionalReadiness: {
+      summary: 'Time sustenta mudança com rituais claros.',
+      leadership_style_signals: ['Liderança técnica'],
+      cultural_blockers: ['Baixa cadência'],
+      adoption_risks: ['Prometer mais do que entrega'],
+      internal_alignment_level: 'medium',
+      decision_profile_signals: ['Decisão centralizada'],
+      behavioral_signals: ['CIS parcial'],
+      capability_gaps: ['Governança'],
+      implications_for_strategy: ['Criar rituais'],
+      implications_for_communication: ['Evitar promessa de velocidade'],
+      recommended_change_management_notes: ['Alinhar critérios semanalmente'],
+      confidence_score: 70,
+      source_basis: { forms: true, interviews: true, cis: true },
+    },
+    adoptionRisks: ['Prometer mais do que entrega'],
+    culturalBlockers: ['Baixa cadência'],
+    capabilityGaps: ['Governança'],
+    internalAlignmentLevel: 'medium',
+    changeManagementNotes: ['Alinhar critérios semanalmente'],
   },
   audience: {
     personas: ['Diretor de marketing'],
@@ -203,7 +242,9 @@ test('todos os prompt packs sao gerados com input minimo valido', () => {
   assert.equal(account.promptVersion, ACCOUNT_DIRECTOR_PROMPT_VERSION);
   assert.match(account.systemPrompt, /strategicTensions/);
   assert.match(account.systemPrompt, /nao resolva tensoes abertas/i);
+  assert.match(account.systemPrompt, /executionalReadiness/);
   assert.match(account.userPrompt, /Escala versus profundidade/);
+  assert.match(account.userPrompt, /Prometer mais do que entrega/);
   assert.equal(copy.promptVersion, COPYWRITER_PROMPT_VERSION);
   assert.equal(visual.promptVersion, VISUAL_DIRECTOR_PROMPT_VERSION);
   assert.match(visual.userPrompt, /operationalGuidelines/);

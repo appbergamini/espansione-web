@@ -65,6 +65,7 @@ export interface EspansioneDiagnostic {
   plano_comunicacao: PlanoComunicacao;               // Agente 13
   evp?: Evp;                                         // Agente 14 (opcional)
   strategic_tensions?: StrategicTensionsSlice;        // Agente 6 (opcional, compatível com diagnósticos legados)
+  executional_readiness?: ExecutionalReadiness;       // Agente 6 (opcional, prontidão de execução)
 
   // Metadados de consolidação
   meta: ConsolidationMeta;
@@ -356,6 +357,7 @@ export interface DecodificacaoEstrategica {
   escolhas_pendentes: EscolhaPendente[];
   strategic_tensions?: StrategicTensionsSlice;
   pontos_de_escolha_estrategica?: StrategicTensionsSlice;
+  executional_readiness?: ExecutionalReadiness;
   diretrizes_resumo: { numero: number; titulo: string }[];
   conexao_plataforma_branding: ConexaoPlataformaBranding;
 }
@@ -442,6 +444,31 @@ export interface StrategicTensionsSlice {
   summary: string;
   unresolved_count: number;
   high_risk_count: number;
+}
+
+export type InternalAlignmentLevel = 'high' | 'medium' | 'low' | 'unknown';
+
+export interface ExecutionalReadiness {
+  summary: string;
+  leadership_style_signals: string[];
+  cultural_blockers: string[];
+  adoption_risks: string[];
+  internal_alignment_level?: InternalAlignmentLevel;
+  decision_profile_signals: string[];
+  behavioral_signals?: string[];
+  capability_gaps: string[];
+  implications_for_strategy: string[];
+  implications_for_communication: string[];
+  recommended_change_management_notes: string[];
+  confidence_score?: number;
+  source_basis: {
+    forms?: boolean;
+    interviews?: boolean;
+    cis?: boolean;
+    disc?: boolean;
+    diagnostic_360?: boolean;
+    inferred?: boolean;
+  };
 }
 
 // ============================================================

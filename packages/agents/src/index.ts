@@ -9,6 +9,7 @@ import type {
   ClusterComunicacao,
   DiretrizEstrategica,
   EspansioneDiagnostic,
+  ExecutionalReadiness,
   OndaBranding,
   Persona,
   StrategicTension,
@@ -120,6 +121,7 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
     ? []
     : ['Visual identity operacional incompleta.'];
   const strategicTensions = extractStrategicTensions(diagnostic);
+  const executionalReadiness = extractExecutionalReadiness(diagnostic);
   const checkpointContext = Array.isArray(diagnostic.meta?.checkpoint_context)
     ? diagnostic.meta.checkpoint_context
     : [];
@@ -180,6 +182,17 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
         ...(plataforma?.marca_e?.atributos ?? []).map((item) => item.name),
         ...(diagnostic.values_and_attributes?.personality_attributes ?? []).map((item) => item.name),
       ]),
+      executionalReadiness,
+      adoptionRisks: executionalReadiness?.adoption_risks ?? [],
+      changeManagementNotes: executionalReadiness?.recommended_change_management_notes ?? [],
+    },
+    internal: {
+      executionalReadiness,
+      adoptionRisks: executionalReadiness?.adoption_risks ?? [],
+      culturalBlockers: executionalReadiness?.cultural_blockers ?? [],
+      capabilityGaps: executionalReadiness?.capability_gaps ?? [],
+      internalAlignmentLevel: executionalReadiness?.internal_alignment_level ?? 'unknown',
+      changeManagementNotes: executionalReadiness?.recommended_change_management_notes ?? [],
     },
     audience: {
       personas: (experiencia?.personas ?? []).map(formatPersona),
@@ -388,6 +401,50 @@ function extractStrategicTensions(diagnostic: EspansioneDiagnostic): StrategicTe
   });
 }
 
+function extractExecutionalReadiness(diagnostic: EspansioneDiagnostic): ExecutionalReadiness | null {
+  const source =
+    diagnostic.executional_readiness ??
+    diagnostic.decodificacao?.executional_readiness;
+
+  if (!source || typeof source.summary !== 'string') return null;
+
+  return {
+    summary: source.summary,
+    leadership_style_signals: normalizeStringArray(source.leadership_style_signals),
+    cultural_blockers: normalizeStringArray(source.cultural_blockers),
+    adoption_risks: normalizeStringArray(source.adoption_risks),
+    internal_alignment_level: normalizeAlignmentLevel(source.internal_alignment_level),
+    decision_profile_signals: normalizeStringArray(source.decision_profile_signals),
+    behavioral_signals: normalizeStringArray(source.behavioral_signals),
+    capability_gaps: normalizeStringArray(source.capability_gaps),
+    implications_for_strategy: normalizeStringArray(source.implications_for_strategy),
+    implications_for_communication: normalizeStringArray(source.implications_for_communication),
+    recommended_change_management_notes: normalizeStringArray(source.recommended_change_management_notes),
+    confidence_score: Number.isFinite(Number(source.confidence_score))
+      ? Math.max(0, Math.min(100, Number(source.confidence_score)))
+      : undefined,
+    source_basis: {
+      forms: Boolean(source.source_basis?.forms),
+      interviews: Boolean(source.source_basis?.interviews),
+      cis: Boolean(source.source_basis?.cis),
+      disc: Boolean(source.source_basis?.disc),
+      diagnostic_360: Boolean(source.source_basis?.diagnostic_360),
+      inferred: Boolean(source.source_basis?.inferred),
+    },
+  };
+}
+
+function normalizeAlignmentLevel(value: unknown): ExecutionalReadiness['internal_alignment_level'] {
+  return value === 'high' || value === 'medium' || value === 'low' || value === 'unknown'
+    ? value
+    : 'unknown';
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isString);
+}
+
 export function buildAgencyRun(
   diagnostic: EspansioneDiagnostic,
   request: AgencyRequest,
@@ -445,6 +502,11 @@ export function buildAgentBrief(
       kernel.strategy.purpose ? `Proposito: ${kernel.strategy.purpose}` : null,
       ...formatList('De/para estrategico', kernel.strategy.dePara),
       ...formatList('Diferenciais', kernel.communication.differentials),
+      kernel.internal.executionalReadiness
+        ? `Prontidao de execucao: ${kernel.internal.executionalReadiness.summary}`
+        : null,
+      ...formatList('Riscos de adocao', kernel.internal.adoptionRisks),
+      ...formatList('Notas de gestao da mudanca', kernel.internal.changeManagementNotes),
     ].filter(isString),
     copywriter: [
       ...formatList('Tons de voz', kernel.voice.tones),

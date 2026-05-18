@@ -1,5 +1,6 @@
 import type {
   EspansioneDiagnostic,
+  ExecutionalReadiness,
   StrategicTension,
   VisualIdentityOperationalSlice,
 } from './espansione-diagnostic.types.js';
@@ -267,6 +268,17 @@ export interface BrandKernel {
     dePara: string[];
     values: string[];
     attributes: string[];
+    executionalReadiness: ExecutionalReadiness | null;
+    adoptionRisks: string[];
+    changeManagementNotes: string[];
+  };
+  internal: {
+    executionalReadiness: ExecutionalReadiness | null;
+    adoptionRisks: string[];
+    culturalBlockers: string[];
+    capabilityGaps: string[];
+    internalAlignmentLevel: ExecutionalReadiness['internal_alignment_level'];
+    changeManagementNotes: string[];
   };
   audience: {
     personas: string[];

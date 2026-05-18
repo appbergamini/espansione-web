@@ -46,6 +46,50 @@ test('BrandKernel carrega strategic_tensions da Brand Memory', () => {
   assert.deepEqual(kernel.checkpointContext, []);
 });
 
+test('BrandKernel carrega executional_readiness opcional', () => {
+  const diagnostic = {
+    brand_slug: 'marca-execucao',
+    brand_name: 'Marca Execucao',
+    industry: 'Servicos',
+    espansione_project_id: 'project-exec',
+    schema_version: '2.0',
+    vi: { evidencias_literais: [] },
+    decodificacao: {
+      de_para: [],
+      executional_readiness: {
+        summary: 'A estratégia exige rituais de gestão da mudança.',
+        leadership_style_signals: ['Liderança técnica e centralizada'],
+        cultural_blockers: ['Baixa cadência decisória'],
+        adoption_risks: ['Time pode não absorver nova promessa'],
+        internal_alignment_level: 'medium',
+        decision_profile_signals: ['Decisão concentrada'],
+        behavioral_signals: ['CIS parcial'],
+        capability_gaps: ['Governança'],
+        implications_for_strategy: ['Priorizar rituais'],
+        implications_for_communication: ['Evitar promessa de velocidade ampla'],
+        recommended_change_management_notes: ['Criar ritual semanal de alinhamento'],
+        confidence_score: 68,
+        source_basis: { forms: true, interviews: true, cis: true },
+      },
+    },
+    diretrizes_estrategicas: [],
+    plataforma_branding: {},
+    voice_profile: {},
+    visual_identity: {},
+    experiencia: {},
+    plano_comunicacao: {},
+    values_and_attributes: {},
+    meta: { agents_present: [6, 9, 12, 13] },
+  } as unknown as EspansioneDiagnostic;
+
+  const kernel = buildBrandKernel(diagnostic);
+
+  assert.equal(kernel.strategy.executionalReadiness?.summary, 'A estratégia exige rituais de gestão da mudança.');
+  assert.deepEqual(kernel.strategy.adoptionRisks, ['Time pode não absorver nova promessa']);
+  assert.deepEqual(kernel.strategy.changeManagementNotes, ['Criar ritual semanal de alinhamento']);
+  assert.equal(kernel.internal.internalAlignmentLevel, 'medium');
+});
+
 test('BrandKernel nao quebra diagnostico legado sem strategic_tensions', () => {
   const diagnostic = {
     brand_slug: 'marca-legada',

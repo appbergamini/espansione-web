@@ -81,6 +81,7 @@ export function buildAccountDirectorPromptPack({
       'Inclua quality_metadata com confiança, força de evidência, hipóteses, lacunas, contradições e necessidade de atenção humana.',
       'Use a Brand Memory como fonte canonica e preserve as escolhas estrategicas da Fase 1.',
       'Use strategicTensions como restricao estrategica: nao resolva tensoes abertas sem autorizacao humana.',
+      'Use executionalReadiness quando existir: nao trate DISC/CIS como obrigatorio, mas considere riscos de adocao, bloqueadores culturais, alinhamento interno e notas de gestao da mudanca.',
       'Responda apenas no schema esperado.',
     ].join('\n'),
     userPrompt: [
@@ -96,6 +97,7 @@ export function buildAccountDirectorPromptPack({
       '- Considerar constraints, proofPoints, forbiddenClaims, preferredCTAs e channelGuidelines.',
       '- Se o pedido tocar em tema com strategicTensions abertas, mencionar o risco no briefing.',
       '- Sinalizar quando a campanha puder reforcar uma divergencia sensivel entre VI, VE e VM.',
+      '- Considerar executionalReadiness em campanhas internas, mudanca de posicionamento, tom de comunicacao e risco de desalinhamento entre promessa externa e capacidade interna.',
       '- Nao criar a peca final nesta etapa.',
     ].join('\n'),
     expectedOutputSchema: ACCOUNT_DIRECTOR_OUTPUT_SCHEMA,

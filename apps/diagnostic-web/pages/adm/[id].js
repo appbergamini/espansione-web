@@ -7,6 +7,7 @@ import RespondentesManager from '../../components/RespondentesManager';
 import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import ClustersCard from '../../components/clusters/ClustersCard';
+import ExecutionalReadinessPanel from '../../components/executional/ExecutionalReadinessPanel';
 import OutputQualityPanel from '../../components/output/OutputQualityPanel';
 import StrategicTensionsPanel from '../../components/strategic/StrategicTensionsPanel';
 import { supabase } from '../../lib/supabaseClient';
@@ -24,6 +25,7 @@ import {
   getPrimaryAdminAction,
 } from '../../lib/agents/adminFlow';
 import { buildBrandMemoryExportReadiness } from '../../lib/brand-memory/exportValidation';
+import { extractExecutionalReadinessFromAgent6Output } from '../../lib/executional-readiness/extract';
 import { extractStrategicTensionsFromAgent6Output } from '../../lib/strategic-tensions/extract';
 import {
   buildStructuredNotesForm,
@@ -1288,6 +1290,9 @@ export default function ProjetoDetalhes() {
   const checkpointStrategicTensions = checkpointOutput?.agent_num === 6
     ? extractStrategicTensionsFromAgent6Output(checkpointOutput)
     : null;
+  const checkpointExecutionalReadiness = checkpointOutput?.agent_num === 6
+    ? extractExecutionalReadinessFromAgent6Output(checkpointOutput)
+    : null;
   const brandMemoryExportInvalid = brandMemoryExportDone && !brandMemoryExportValid;
   const brandMemoryExportReady = (!brandMemoryExportDone || brandMemoryExportInvalid) && brandMemoryExportDeps.ok && brandMemoryExportReadiness.ready && !pendingCkpt;
   const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
@@ -1497,6 +1502,7 @@ export default function ProjetoDetalhes() {
               <div style={{ marginTop: '1rem' }}>
                 <OutputQualityPanel metadata={checkpointOutput?.quality_metadata} />
                 <StrategicTensionsPanel slice={checkpointStrategicTensions} compact />
+                <ExecutionalReadinessPanel readiness={checkpointExecutionalReadiness} compact />
               </div>
             )}
           </section>
