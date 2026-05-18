@@ -310,8 +310,26 @@ export const Agent_16_BrandMemoryExport = {
       const m = rawText.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));
       return m ? m[1].trim() : '';
     };
+    const extractJsonTag = (tag) => {
+      const matches = Array.from(rawText.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'gi')));
+      const candidates = matches.map((match) => {
+        let text = match[1].trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim();
+        const firstBrace = text.indexOf('{');
+        const lastBrace = text.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) text = text.slice(firstBrace, lastBrace + 1).trim();
+        return text;
+      }).filter(Boolean);
+      return candidates.find((candidate) => {
+        try {
+          JSON.parse(candidate);
+          return true;
+        } catch {
+          return false;
+        }
+      }) || candidates.at(-1) || '';
+    };
     const conteudo = extract('conteudo') || rawText.trim();
-    const brandMemoryExport = extract('brand_memory_export');
+    const brandMemoryExport = extractJsonTag('brand_memory_export');
     return {
       conteudo: brandMemoryExport
         ? `${conteudo}\n\n<brand_memory_export>\n${brandMemoryExport}\n</brand_memory_export>`
