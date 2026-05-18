@@ -43,6 +43,8 @@ export default function AgencyRequestDetailPage() {
   const [archiving, setArchiving] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [runningWorkflow, setRunningWorkflow] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -117,6 +119,27 @@ export default function AgencyRequestDetailPage() {
       setErrorMsg(err.message);
     } finally {
       setRunningWorkflow(false);
+    }
+  };
+
+  const generateApprovedImage = async () => {
+    setGeneratingImage(true);
+    setGeneratedImage(null);
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/agency/requests/${requestId}/generate-image`, { method: 'POST' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Erro ao gerar imagem');
+      setGeneratedImage({
+        src: `data:${json.image.mimeType || 'image/png'};base64,${json.image.b64}`,
+        model: json.image.model,
+        prompt: json.prompt,
+        revisedPrompt: json.image.revisedPrompt,
+      });
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -269,6 +292,9 @@ export default function AgencyRequestDetailPage() {
                     visualStep={stepByAgent.get('visual_director')}
                     editorStep={stepByAgent.get('editor')}
                     approverStep={approverStep}
+                    generatingImage={generatingImage}
+                    generatedImage={generatedImage}
+                    onGenerateImage={generateApprovedImage}
                   />
 
                   {!latestRun && (
@@ -450,7 +476,7 @@ function AgentOutput({ agentId, output }) {
   );
 }
 
-function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverStep }) {
+function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverStep, generatingImage, generatedImage, onGenerateImage }) {
   const copy = getStepPayload(copyStep);
   const visual = getStepPayload(visualStep);
   const editor = getStepPayload(editorStep);
@@ -503,6 +529,49 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
       <OutputLine title="CTA" value={copy.cta} />
       <OutputLine title="Direção visual" value={editorVisual || visual.direcao_de_arte} />
       <OutputList title="Ajustes obrigatórios" items={approver.ajustes_obrigatorios} muted={!approved} />
+
+      {approved && (
+        <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.95rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <button
+            type="button"
+            onClick={onGenerateImage}
+            disabled={generatingImage}
+            style={{ background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.38)', borderRadius: 8, color: 'var(--success)', padding: '0.72rem 0.85rem', cursor: generatingImage ? 'wait' : 'pointer', fontWeight: 800 }}
+          >
+            {generatingImage ? 'Criando imagem...' : 'Criar imagem da arte aprovada'}
+          </button>
+
+          {generatedImage?.src && (
+            <div style={{ display: 'grid', gap: '0.65rem' }}>
+              <img
+                src={generatedImage.src}
+                alt="Arte aprovada gerada por GPT Image"
+                style={{ width: '100%', maxWidth: 560, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}
+              />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem', alignItems: 'center' }}>
+                <a
+                  href={generatedImage.src}
+                  download="arte-aprovada-espansione.png"
+                  style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}
+                >
+                  Baixar PNG
+                </a>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                  Modelo: {formatValue(generatedImage.model)}
+                </span>
+              </div>
+              {generatedImage.revisedPrompt && (
+                <details style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0.65rem' }}>
+                  <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontSize: '0.82rem', fontWeight: 800 }}>Prompt revisado</summary>
+                  <div style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', fontSize: '0.78rem', marginTop: '0.5rem' }}>
+                    {formatValue(generatedImage.revisedPrompt)}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }
