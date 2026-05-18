@@ -20,7 +20,8 @@ import { tavilyExtract, formatarExtractParaPrompt } from '../ai/tavilyExtract';
 export const Agent_05_BuscaWeb = {
   name: 'Visão de Mercado',
   stage: 'diagnostico_externo',
-  inputs: [2, 6], // consome contextos dos Agentes 2 e 6 para calibrar pesquisa
+  inputs: [2], // consome VI para calibrar pesquisa; Output 6 entra como contexto opcional em reprocessamentos
+  optionalInputs: [6],
   checkpoint: null,
   // FIX.12 — enrichContext + getUserPrompt injetam previousOutputs manualmente.
   consumesContextInUserPrompt: true,

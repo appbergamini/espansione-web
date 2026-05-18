@@ -14,6 +14,7 @@ import {
   TOTAL_AGENTES,
   getAgenteByNum,
   calcularProgresso,
+  podeExecutar,
   formatarTituloAdmin,
 } from '../../lib/agents/catalog';
 import { getCisParsed, COMPETENCIAS_KEYS } from '../../lib/cis/parseCis';
@@ -818,6 +819,11 @@ export default function ProjetoDetalhes() {
   const pendingCkpt = (pendingCheckpoints && pendingCheckpoints.length > 0) 
     ? [...pendingCheckpoints].sort((a,b) => a.checkpoint_num - b.checkpoint_num)[0]
     : null;
+  const hasAgentOutput = (agentNum) => agentNumsCompletos.includes(agentNum);
+  const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
+  const brandMemoryExportDone = hasAgentOutput(16);
+  const brandMemoryExportReady = !brandMemoryExportDone && brandMemoryExportDeps.ok && !pendingCkpt;
+  const brandMemoryMissingDeps = brandMemoryExportDeps.faltando || [];
 
   // Render formatters
   const renderMarkdownText = (text) => {
@@ -1243,6 +1249,48 @@ export default function ProjetoDetalhes() {
                     >
                       {runningAgent !== null ? (engineStage || 'Processando (aguarde 15s~30s)...') : `Executar Agente ${nextAgent}`}
                     </button>
+                  </>
+                )}
+              </div>
+
+              <div className="glass-card outline-glow" style={{ padding: '1.25rem', marginTop: '1rem', borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
+                <h3 style={{ fontSize: '0.95rem', color: 'var(--success)', margin: 0, marginBottom: '0.5rem' }}>Brand Memory</h3>
+                {brandMemoryExportDone ? (
+                  <>
+                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
+                      Export da Brand Memory gerado. Revise o output do Agente 16 antes de carregar a memória ativa da marca.
+                    </p>
+                    <Link href={`/adm/${id}/outputs/16`} style={{ color: 'var(--success)', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
+                      Abrir Agente 16 →
+                    </Link>
+                  </>
+                ) : brandMemoryExportReady ? (
+                  <>
+                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
+                      Os insumos obrigatórios estão prontos para gerar o export técnico que alimenta a Brand Memory da Agência.
+                    </p>
+                    <button
+                      onClick={() => handleRequestRun(16)}
+                      disabled={runningAgent !== null}
+                      style={{ width: '100%', background: 'rgba(16,185,129,0.16)', border: '1px solid rgba(16,185,129,0.45)', borderRadius: '8px', color: 'var(--success)', fontWeight: 700, padding: '0.65rem 0.85rem', cursor: runningAgent !== null ? 'wait' : 'pointer', fontSize: '0.85rem' }}
+                    >
+                      {runningAgent === 16 ? (engineStage || 'Gerando export...') : 'Gerar export da Brand Memory'}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.6rem', lineHeight: 1.5 }}>
+                      O export da Brand Memory fica disponível quando a Fase 1 tem os outputs obrigatórios e checkpoints aprovados.
+                    </p>
+                    {pendingCkpt ? (
+                      <p style={{ fontSize: '0.82rem', color: 'var(--warning)', margin: 0 }}>
+                        Checkpoint {pendingCkpt.checkpoint_num} pendente antes do Agente 16.
+                      </p>
+                    ) : brandMemoryMissingDeps.length > 0 ? (
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+                        Faltam agentes: {brandMemoryMissingDeps.join(', ')}.
+                      </p>
+                    ) : null}
                   </>
                 )}
               </div>

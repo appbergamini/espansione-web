@@ -92,7 +92,7 @@ export const CATALOGO_AGENTES = [
     stage: 'diagnostico_externo',
     modular: false,
     ordem_exibicao: 5,
-    inputs: [],
+    inputs: [2],
     checkpoint: null,
   },
   {

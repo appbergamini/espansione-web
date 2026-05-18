@@ -462,6 +462,7 @@ export const Agent_04_ContextoExterno = {
     parts.push('=== INSTRUÇÕES DE EXECUÇÃO ===');
     parts.push('- Rode TODO o Passo 1 (1.1–1.10) antes de escrever uma linha.');
     parts.push('- Codinomes (E1, E2, …) NO ANALÍTICO. CONSOLIDAÇÃO SEM IDENTIFICADORES no executivo.');
+    parts.push('- CAVEAT DE AMOSTRA no topo de AMBAS as Partes, de forma visível e não defensiva.');
     parts.push('- NÃO cruzar com VM — nenhuma afirmação sobre concorrência deve vir de dados externos, apenas do que foi dito pelos entrevistados.');
     parts.push('- Entregue PARTE A (ANALÍTICO) e PARTE B (DEVOLUTIVA) dentro de <conteudo>, separadas por "---".');
     parts.push('- MARCA IDEAL é seção estruturante em ambas as Partes.');

@@ -1,4 +1,4 @@
-import { AC_PLATAFORMA, AC_PRINCIPIOS, AC_REGRA_SEM_HTML, AC_REGRA_FINDINGS } from './_anaCoutoKB';
+import { AC_PLATAFORMA, AC_ARQUETIPOS, AC_ONDAS, AC_PRINCIPIOS, AC_REGRA_SEM_HTML, AC_REGRA_FINDINGS } from './_anaCoutoKB';
 
 export const Agent_09_Plataforma = {
   name: 'Plataforma de Branding',
@@ -19,6 +19,10 @@ export const Agent_09_Plataforma = {
       AC_REGRA_FINDINGS, // FIX.24 — findings_json estruturado pra curadoria
       '',
       AC_PLATAFORMA,
+      '',
+      AC_ARQUETIPOS,
+      '',
+      AC_ONDAS,
       '',
       'REGRAS DE CONSTRUÇÃO (Ana Couto)',
       '- PROPÓSITO: declaração de como a organização usa seu talento e poder para fazer o mundo melhor. NÃO é frase abstrata. Conecta com o negócio.',
