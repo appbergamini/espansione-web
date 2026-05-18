@@ -193,11 +193,12 @@ export function buildEditorPromptPack({
       'Apontar riscos de incoerencia.',
       'Gerar score de aderencia de 0 a 100.',
       'Incluir quality_metadata quando houver riscos, lacunas ou hipóteses relevantes.',
+      'Incluir quality_assessment separando qualidade do output de falha técnica.',
     ],
     payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput },
     expectedOutputSchema: {
       required: ['versao_editada', 'ajustes_recomendados', 'riscos_de_incoerencia', 'score_aderencia', 'observacoes'],
-      properties: { quality_metadata: qualityMetadataSchema() },
+      properties: { quality_metadata: qualityMetadataSchema(), quality_assessment: qualityAssessmentSchema() },
     },
   });
 }
@@ -233,11 +234,12 @@ export function buildApproverPromptPack({
       'Nao aprovar conteudo com claims sem sustentacao.',
       'Decidir entre approved, revision_requested ou rejected.',
       'Incluir quality_metadata para registrar confiança, lacunas de evidência, hipóteses e riscos da decisão.',
+      'Incluir quality_assessment final: approved geralmente acceptable, revision_requested geralmente needs_revision ou risky, rejected deve ser rejected.',
     ],
     payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput, editorOutput },
     expectedOutputSchema: {
       required: ['decisao', 'checklist', 'ajustes_obrigatorios', 'justificativa'],
-      properties: { quality_metadata: qualityMetadataSchema() },
+      properties: { quality_metadata: qualityMetadataSchema(), quality_assessment: qualityAssessmentSchema() },
     },
   });
 }
@@ -318,6 +320,25 @@ function qualityMetadataSchema() {
       needs_human_attention: { type: 'boolean' },
       risk_summary: { type: 'string' },
       source_coverage: { type: 'object' },
+    },
+  };
+}
+
+function qualityAssessmentSchema() {
+  return {
+    type: 'object',
+    required: ['quality_status', 'quality_issues'],
+    properties: {
+      quality_status: { type: 'string', enum: ['not_reviewed', 'acceptable', 'needs_revision', 'rejected', 'risky'] },
+      quality_score: { type: 'number', minimum: 0, maximum: 100 },
+      quality_issues: { type: 'array', items: { type: 'string' } },
+      strategic_alignment_score: { type: 'number', minimum: 0, maximum: 100 },
+      voice_alignment_score: { type: 'number', minimum: 0, maximum: 100 },
+      visual_alignment_score: { type: 'number', minimum: 0, maximum: 100 },
+      evidence_risk_score: { type: 'number', minimum: 0, maximum: 100 },
+      review_reason: { type: 'string' },
+      assessed_by: { type: 'string', enum: ['agent', 'human', 'system'] },
+      assessed_at: { type: 'string' },
     },
   };
 }

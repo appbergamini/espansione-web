@@ -525,7 +525,8 @@ export default function AgencyRequestDetailPage() {
                   <div className="agency-step-strip">
                     {agentFlow.map((agent, index) => {
                       const step = stepByAgent.get(agent.id);
-                      const done = step?.status === 'completed';
+                      const technicalStatus = getTechnicalStatus(step);
+                      const done = technicalStatus === 'completed';
                       const active = step && !done;
                       return (
                         <div key={agent.id} title={labelAgent(agent.id)} className="agency-step-pill" style={{ borderColor: done ? 'rgba(16,185,129,0.5)' : active ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.09)', background: done ? 'rgba(16,185,129,0.14)' : active ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.04)' }}>
@@ -715,7 +716,9 @@ export default function AgencyRequestDetailPage() {
                     {agentFlow.map((agent, index) => {
                       const step = stepByAgent.get(agent.id);
                       const history = stepsByAgent.get(agent.id) || [];
-                      const done = step?.status === 'completed';
+                      const technicalStatus = getTechnicalStatus(step);
+                      const qualityAssessment = getQualityAssessment(step);
+                      const done = technicalStatus === 'completed';
                       const downstreamObsolete = hasObsoleteDownstream(allRunSteps, agent.id);
                       return (
                         <details key={agent.id} open={!!step?.output && agent.id === 'approver'} style={{ border: `1px solid ${done ? 'rgba(16,185,129,0.28)' : step ? 'rgba(56,189,248,0.24)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, background: done ? 'rgba(16,185,129,0.05)' : 'rgba(255,255,255,0.025)' }}>
@@ -725,11 +728,19 @@ export default function AgencyRequestDetailPage() {
                               {labelAgent(agent.id)}
                               <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.77rem', marginTop: '0.12rem' }}>{agent.description}</span>
                             </span>
-                            <span style={{ color: done ? 'var(--success)' : step ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
-                              {step ? `v${step.version_number || 1} · ${step.status}` : 'aguardando'}
+                            <span style={{ display: 'grid', gap: '0.15rem', justifyItems: 'end' }}>
+                              <span style={{ color: done ? 'var(--success)' : step ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 800 }}>
+                                {step ? `v${step.version_number || 1} · execução ${technicalStatusLabel(technicalStatus)}` : 'aguardando'}
+                              </span>
+                              {step && (
+                                <span style={{ color: qualityStatusColor(qualityAssessment?.quality_status), fontSize: '0.7rem', fontWeight: 800 }}>
+                                  qualidade {qualityStatusLabel(qualityAssessment?.quality_status)}
+                                </span>
+                              )}
                             </span>
                           </summary>
                           <div style={{ padding: '0 0.85rem 0.85rem' }}>
+                            {step && <StepStatusSummary step={step} />}
                             {step && (
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '0.75rem' }}>
                                 <button
@@ -798,11 +809,13 @@ export default function AgencyRequestDetailPage() {
                             {step?.output ? (
                               <>
                                 <AgentOutput agentId={agent.id} output={step.output} />
+                                <QualityAssessmentPanel assessment={qualityAssessment} />
                                 <TechnicalExecutionPanel step={step} />
                               </>
                             ) : (
                               <>
                                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>Sem output salvo ainda.</p>
+                                <QualityAssessmentPanel assessment={qualityAssessment} />
                                 {step && <TechnicalExecutionPanel step={step} />}
                               </>
                             )}
@@ -1485,6 +1498,71 @@ function AgentOutput({ agentId, output }) {
   );
 }
 
+function StepStatusSummary({ step }) {
+  const technicalStatus = getTechnicalStatus(step);
+  const quality = getQualityAssessment(step);
+  const qualityStatus = quality?.quality_status || 'not_reviewed';
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '0.75rem' }}>
+      <span style={{ color: technicalStatusColor(technicalStatus), background: 'rgba(255,255,255,0.035)', border: `1px solid ${technicalStatusBorder(technicalStatus)}`, borderRadius: 999, padding: '0.2rem 0.58rem', fontSize: '0.74rem', fontWeight: 800 }}>
+        Execução técnica: {technicalStatusLabel(technicalStatus)}
+      </span>
+      <span style={{ color: qualityStatusColor(qualityStatus), background: 'rgba(255,255,255,0.035)', border: `1px solid ${qualityStatusBorder(qualityStatus)}`, borderRadius: 999, padding: '0.2rem 0.58rem', fontSize: '0.74rem', fontWeight: 800 }}>
+        Qualidade: {qualityStatusLabel(qualityStatus)}
+      </span>
+      {technicalStatus === 'failed' && (
+        <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', alignSelf: 'center' }}>
+          retry técnico disponível em “Regenerar este agente”
+        </span>
+      )}
+      {['needs_revision', 'risky'].includes(qualityStatus) && (
+        <span style={{ color: qualityStatusColor(qualityStatus), fontSize: '0.74rem', alignSelf: 'center', fontWeight: 800 }}>
+          regenerar, editar manualmente ou adicionar observação
+        </span>
+      )}
+    </div>
+  );
+}
+
+function QualityAssessmentPanel({ assessment }) {
+  if (!assessment || assessment.quality_status === 'not_reviewed') return null;
+  const issues = toArray(assessment.quality_issues);
+  return (
+    <details
+      open={['needs_revision', 'risky', 'rejected'].includes(assessment.quality_status)}
+      style={{
+        marginTop: '0.65rem',
+        border: `1px solid ${qualityStatusBorder(assessment.quality_status)}`,
+        borderRadius: 8,
+        padding: '0.65rem',
+        background: qualityStatusBackground(assessment.quality_status),
+      }}
+    >
+      <summary style={{ cursor: 'pointer', color: qualityStatusColor(assessment.quality_status), fontWeight: 800, fontSize: '0.78rem' }}>
+        Qualidade do output: {qualityStatusLabel(assessment.quality_status)}
+      </summary>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.55rem', marginTop: '0.65rem' }}>
+        <TechMetric label="Score qualidade" value={scoreLabel(assessment.quality_score)} />
+        <TechMetric label="Estratégia" value={scoreLabel(assessment.strategic_alignment_score)} />
+        <TechMetric label="Voz" value={scoreLabel(assessment.voice_alignment_score)} />
+        <TechMetric label="Visual" value={scoreLabel(assessment.visual_alignment_score)} />
+        <TechMetric label="Risco evidência" value={scoreLabel(assessment.evidence_risk_score)} />
+        <TechMetric label="Avaliado por" value={assessment.assessed_by} />
+      </div>
+      {assessment.review_reason && (
+        <p style={{ color: 'var(--text-secondary)', margin: '0.65rem 0 0', fontSize: '0.8rem', lineHeight: 1.45 }}>
+          {assessment.review_reason}
+        </p>
+      )}
+      {issues.length > 0 && (
+        <ul style={{ margin: '0.65rem 0 0', paddingLeft: '1rem', color: 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.45 }}>
+          {issues.map((issue, index) => <li key={index}>{issue}</li>)}
+        </ul>
+      )}
+    </details>
+  );
+}
+
 function RunExecutionSummary({ run, steps }) {
   if (!run) return null;
   const summary = run.execution_metadata || calculateRunExecutionSummary(steps);
@@ -2112,14 +2190,15 @@ function hasObsoleteDownstream(steps = [], agentId) {
 }
 
 function calculateRunExecutionSummary(steps = []) {
-  const relevant = (steps || []).filter((step) => step && step.status !== 'skipped' && step.status !== 'regenerated');
+  const relevant = (steps || []).filter((step) => step && getTechnicalStatus(step) !== 'skipped');
   return relevant.reduce((acc, step) => {
     const tokens = step.tokens || {};
     const inputTokens = Number(tokens.input || tokens.input_tokens || 0);
     const outputTokens = Number(tokens.output || tokens.output_tokens || 0);
+    const technicalStatus = getTechnicalStatus(step);
     acc.total_steps += 1;
-    if (step.status === 'completed') acc.completed_steps += 1;
-    if (step.status === 'failed') acc.failed_steps += 1;
+    if (technicalStatus === 'completed') acc.completed_steps += 1;
+    if (technicalStatus === 'failed') acc.failed_steps += 1;
     acc.input_tokens_total += inputTokens;
     acc.output_tokens_total += outputTokens;
     acc.total_tokens += Number(tokens.total || tokens.total_tokens || inputTokens + outputTokens || 0);
@@ -2136,6 +2215,142 @@ function calculateRunExecutionSummary(steps = []) {
     total_tokens: 0,
     duration_ms_total: 0,
   });
+}
+
+function getTechnicalStatus(step) {
+  if (!step) return 'pending';
+  if (step.technical_status) return step.technical_status;
+  if (['pending', 'running', 'completed', 'failed', 'cancelled', 'skipped'].includes(step.status)) return step.status;
+  if (step.status === 'regenerated') return 'skipped';
+  return 'pending';
+}
+
+function getQualityAssessment(step) {
+  if (!step) return { quality_status: 'not_reviewed', quality_issues: [] };
+  const output = step.output || {};
+  const data = getStepPayload(step);
+  const explicit = step.quality_assessment || output.qualityAssessment || output.quality_assessment || data.quality_assessment;
+  if (explicit?.quality_status) return normalizeQualityAssessment(explicit);
+  return inferQualityAssessmentFromStep(step, data);
+}
+
+function normalizeQualityAssessment(value) {
+  return {
+    quality_status: normalizeQualityStatus(value.quality_status),
+    quality_score: normalizeScore(value.quality_score),
+    quality_issues: toArray(value.quality_issues).map(formatValue).filter(Boolean),
+    strategic_alignment_score: normalizeScore(value.strategic_alignment_score),
+    voice_alignment_score: normalizeScore(value.voice_alignment_score),
+    visual_alignment_score: normalizeScore(value.visual_alignment_score),
+    evidence_risk_score: normalizeScore(value.evidence_risk_score),
+    review_reason: value.review_reason || '',
+    assessed_by: value.assessed_by || 'system',
+    assessed_at: value.assessed_at || '',
+  };
+}
+
+function inferQualityAssessmentFromStep(step, data = {}) {
+  const technicalStatus = getTechnicalStatus(step);
+  if (technicalStatus === 'failed') {
+    return { quality_status: 'not_reviewed', quality_issues: ['Execução técnica falhou antes de produzir output revisável.'], assessed_by: 'system' };
+  }
+  if (step.agent_id === 'editor' && data.score_aderencia !== undefined) {
+    const issues = [...toArray(data.riscos_de_incoerencia), ...toArray(data.warnings)].map(formatValue).filter(Boolean);
+    const score = normalizeScore(data.score_aderencia);
+    const risky = issues.some((item) => /claim|prova|evid[eê]ncia|sustenta|n[uú]mero|garant/i.test(item));
+    return {
+      quality_status: risky ? 'risky' : score !== undefined && score < 70 ? 'needs_revision' : issues.length ? 'needs_revision' : 'acceptable',
+      quality_score: score,
+      quality_issues: issues,
+      strategic_alignment_score: score,
+      evidence_risk_score: risky ? 80 : 20,
+      assessed_by: 'system',
+    };
+  }
+  if (step.agent_id === 'approver' && (data.decisao || data.decision)) {
+    const decision = normalizeDecision(data.decisao || data.decision);
+    const issues = [...toArray(data.ajustes_obrigatorios), ...toArray(data.warnings)].map(formatValue).filter(Boolean);
+    return {
+      quality_status: decision === 'approved' ? 'acceptable' : decision === 'rejected' ? 'rejected' : 'needs_revision',
+      quality_issues: issues,
+      review_reason: data.justificativa || data.risco_principal || '',
+      assessed_by: 'agent',
+    };
+  }
+  return { quality_status: 'not_reviewed', quality_issues: [], assessed_by: 'system' };
+}
+
+function normalizeQualityStatus(value) {
+  return ['not_reviewed', 'acceptable', 'needs_revision', 'rejected', 'risky'].includes(value)
+    ? value
+    : 'not_reviewed';
+}
+
+function normalizeScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return undefined;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function technicalStatusLabel(status) {
+  return ({
+    pending: 'pendente',
+    running: 'rodando',
+    completed: 'concluída',
+    failed: 'falhou',
+    cancelled: 'cancelada',
+    skipped: 'pulada',
+  })[status] || formatValue(status);
+}
+
+function qualityStatusLabel(status) {
+  return ({
+    not_reviewed: 'não revisada',
+    acceptable: 'aceitável',
+    needs_revision: 'precisa revisão',
+    rejected: 'rejeitada',
+    risky: 'arriscada',
+  })[status] || 'não revisada';
+}
+
+function technicalStatusColor(status) {
+  if (status === 'completed') return 'var(--success)';
+  if (status === 'failed') return 'var(--brand-red)';
+  if (status === 'running') return 'var(--accent-blue)';
+  return 'var(--text-secondary)';
+}
+
+function technicalStatusBorder(status) {
+  if (status === 'completed') return 'rgba(16,185,129,0.35)';
+  if (status === 'failed') return 'rgba(239,68,68,0.35)';
+  if (status === 'running') return 'rgba(56,189,248,0.35)';
+  return 'rgba(255,255,255,0.1)';
+}
+
+function qualityStatusColor(status) {
+  if (status === 'acceptable') return 'var(--success)';
+  if (status === 'rejected') return 'var(--brand-red)';
+  if (status === 'risky' || status === 'needs_revision') return 'var(--warning)';
+  return 'var(--text-secondary)';
+}
+
+function qualityStatusBorder(status) {
+  if (status === 'acceptable') return 'rgba(16,185,129,0.35)';
+  if (status === 'rejected') return 'rgba(239,68,68,0.35)';
+  if (status === 'risky' || status === 'needs_revision') return 'rgba(245,158,11,0.35)';
+  return 'rgba(255,255,255,0.1)';
+}
+
+function qualityStatusBackground(status) {
+  if (status === 'acceptable') return 'rgba(16,185,129,0.05)';
+  if (status === 'rejected') return 'rgba(239,68,68,0.05)';
+  if (status === 'risky' || status === 'needs_revision') return 'rgba(245,158,11,0.055)';
+  return 'rgba(255,255,255,0.02)';
+}
+
+function scoreLabel(value) {
+  const score = normalizeScore(value);
+  return score === undefined ? '' : `${score}/100`;
 }
 
 function normalizeDecision(value) {

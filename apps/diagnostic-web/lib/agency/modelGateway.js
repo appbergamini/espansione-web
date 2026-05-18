@@ -141,6 +141,15 @@ export class MockModelGateway {
           needs_human_attention: true,
           risk_summary: 'Não publicar conteúdo mockado.',
         },
+        quality_assessment: {
+          quality_status: 'risky',
+          quality_score: 45,
+          quality_issues: ['Conteúdo mockado não pode ser tratado como peça final.', 'Confirmar prova antes de publicar.'],
+          strategic_alignment_score: 82,
+          evidence_risk_score: 80,
+          review_reason: 'Editor identificou risco de publicação sem prova e sem geração real.',
+          assessed_by: 'agent',
+        },
       },
       approver: {
         decisao: 'revision_requested',
@@ -159,6 +168,15 @@ export class MockModelGateway {
           contradictions: [],
           needs_human_attention: true,
           risk_summary: 'Publicação automática ou sem revisão humana seria inadequada.',
+        },
+        quality_assessment: {
+          quality_status: 'risky',
+          quality_score: 40,
+          quality_issues: ['Substituir outputs mockados por geração real antes de publicar.', 'Confirmar evidências antes da publicação.'],
+          strategic_alignment_score: 76,
+          evidence_risk_score: 85,
+          review_reason: 'Fluxo técnico aprovado, mas o material ainda não é publicável.',
+          assessed_by: 'agent',
         },
       },
     };

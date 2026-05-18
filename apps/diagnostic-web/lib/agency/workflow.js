@@ -9,6 +9,7 @@ import { prepareAgencyRun } from './prepareRun.js';
 import { assertBriefingApproved } from './briefingApproval.js';
 import {
   buildStepUpdateFromExecution,
+  buildOutputQualityAssessment,
   calculateAgencyRunExecutionSummary,
   updateRunExecutionMetadata,
 } from './executionMetadata.js';
@@ -195,6 +196,7 @@ export async function createAgencyRunVariation(db, runId, label) {
       version_number: 1,
       is_current: true,
       parent_step_id: accountStep.id,
+      technical_status: briefing ? 'completed' : 'pending',
     })
     .select('*')
     .single();
@@ -247,6 +249,7 @@ async function createVersionedStep(db, {
       agent_id: agentId,
       input,
       status: 'pending',
+      technical_status: 'pending',
       prompt_version: input?.promptPack?.promptVersion || null,
       attempt_count: 0,
       parent_step_id: previous?.id || null,
@@ -260,7 +263,7 @@ async function createVersionedStep(db, {
   if (previous) {
     await db
       .from('agency_steps')
-      .update({ is_current: false, status: 'regenerated', superseded_by_step_id: step.id })
+      .update({ is_current: false, status: 'regenerated', technical_status: 'skipped', superseded_by_step_id: step.id })
       .eq('id', previous.id);
   }
 
@@ -417,6 +420,7 @@ async function ensureApprovedAccountStep(db, accountStep, approvedBriefing) {
         warnings: ['Briefing aprovado manualmente antes da geração criativa.'],
       },
       status: 'completed',
+      technical_status: 'completed',
       is_current: true,
       version_number: accountStep.version_number || 1,
     })
@@ -454,6 +458,7 @@ async function createAndCompleteStep(db, runId, agentId, input, modelGateway) {
       agent_id: agentId,
       input,
       status: 'pending',
+      technical_status: 'pending',
       prompt_version: input?.promptPack?.promptVersion || null,
       attempt_count: 0,
       version_number: 1,
@@ -470,7 +475,7 @@ async function completeStep(db, step, modelGateway) {
 
   const attemptCount = Number(step.attempt_count || 0) + 1;
   const startedAt = Date.now();
-  await db.from('agency_steps').update({ status: 'running', attempt_count: attemptCount }).eq('id', step.id);
+  await db.from('agency_steps').update({ status: 'running', technical_status: 'running', attempt_count: attemptCount }).eq('id', step.id);
   try {
     const output = await modelGateway.generateStructuredOutput({
       agentId: step.agent_id,
@@ -482,11 +487,18 @@ async function completeStep(db, step, modelGateway) {
       durationMs: Date.now() - startedAt,
       attemptCount,
     });
+    const qualityAssessment = buildOutputQualityAssessment({ agentId: step.agent_id, output });
+    const outputData = output?.data && typeof output.data === 'object' && !Array.isArray(output.data) ? output.data : {};
+    const outputWithAssessment = qualityAssessment
+      ? { ...output, qualityAssessment, data: { ...outputData, quality_assessment: outputData.quality_assessment || qualityAssessment } }
+      : output;
     const { data, error } = await db
       .from('agency_steps')
       .update({
-        output,
+        output: outputWithAssessment,
         status: 'completed',
+        technical_status: 'completed',
+        quality_assessment: qualityAssessment,
         is_current: true,
         ...executionUpdate,
       })
@@ -512,6 +524,7 @@ async function completeStep(db, step, modelGateway) {
     });
     await db.from('agency_steps').update({
       status: 'failed',
+      technical_status: 'failed',
       error: error.message,
       ...executionUpdate,
     }).eq('id', step.id);
@@ -526,7 +539,7 @@ async function invalidateDownstreamSteps(db, steps, agentId, invalidatedByStepId
     .filter((step) => step.is_current !== false && downstream.has(step.agent_id))
     .map((step) => db
       .from('agency_steps')
-      .update({ is_current: false, status: 'skipped', invalidated_by_step_id: invalidatedByStepId })
+      .update({ is_current: false, status: 'skipped', technical_status: 'skipped', invalidated_by_step_id: invalidatedByStepId })
       .eq('id', step.id));
   await Promise.all(updates);
 }

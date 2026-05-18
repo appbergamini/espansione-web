@@ -73,6 +73,21 @@ export type AgencyStepStatus =
   | 'skipped'
   | 'regenerated';
 
+export type TechnicalExecutionStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'skipped';
+
+export type OutputQualityStatus =
+  | 'not_reviewed'
+  | 'acceptable'
+  | 'needs_revision'
+  | 'rejected'
+  | 'risky';
+
 export type BrandMemoryVersionStatus =
   | 'draft'
   | 'active'
@@ -193,6 +208,8 @@ export interface AgencyStep {
   input: unknown;
   output?: AgencyOutput;
   status: AgencyStepStatus;
+  technicalStatus?: TechnicalExecutionStatus;
+  qualityAssessment?: OutputQualityAssessment;
   modelUsed?: string;
   provider?: string;
   promptVersion?: string;
@@ -215,6 +232,20 @@ export interface AgencyOutput {
   data: unknown;
   warnings?: string[];
   brandMemorySlicesUsed?: string[];
+  qualityAssessment?: OutputQualityAssessment;
+}
+
+export interface OutputQualityAssessment {
+  quality_status: OutputQualityStatus;
+  quality_score?: number;
+  quality_issues: string[];
+  strategic_alignment_score?: number;
+  voice_alignment_score?: number;
+  visual_alignment_score?: number;
+  evidence_risk_score?: number;
+  review_reason?: string;
+  assessed_by?: 'agent' | 'human' | 'system';
+  assessed_at?: string;
 }
 
 export interface ApprovalDecision {
@@ -484,6 +515,7 @@ export interface EditorOutput {
   score_aderencia: number;
   observacoes: string[];
   quality_metadata?: OutputQualityMetadata;
+  quality_assessment?: OutputQualityAssessment;
 }
 
 export interface ApproverOutput {
@@ -497,6 +529,7 @@ export interface ApproverOutput {
   risco_principal?: string;
   justificativa: string;
   quality_metadata?: OutputQualityMetadata;
+  quality_assessment?: OutputQualityAssessment;
 }
 
 export interface ModelGatewayInput {

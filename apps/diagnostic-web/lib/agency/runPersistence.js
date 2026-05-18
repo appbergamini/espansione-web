@@ -37,6 +37,7 @@ export async function createInitialAgencyStep(db, { run, stepInput }) {
       agent_id: 'account_director',
       input: stepInput,
       status: 'pending',
+      technical_status: 'pending',
       prompt_version: stepInput?.promptPack?.promptVersion || 'account_director_v1',
       attempt_count: 0,
       version_number: 1,

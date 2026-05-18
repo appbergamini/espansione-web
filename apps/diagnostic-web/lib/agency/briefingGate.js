@@ -45,7 +45,7 @@ async function getReusableAccountStep(db, requestId) {
 async function completeAccountDirectorStep(db, step, modelGateway) {
   const attemptCount = Number(step.attempt_count || 0) + 1;
   const startedAt = Date.now();
-  await db.from('agency_steps').update({ status: 'running', attempt_count: attemptCount }).eq('id', step.id);
+  await db.from('agency_steps').update({ status: 'running', technical_status: 'running', attempt_count: attemptCount }).eq('id', step.id);
 
   try {
     const output = await modelGateway.generateStructuredOutput({
@@ -64,6 +64,7 @@ async function completeAccountDirectorStep(db, step, modelGateway) {
       .update({
         output,
         status: 'completed',
+        technical_status: 'completed',
         ...executionUpdate,
       })
       .eq('id', step.id)
@@ -87,7 +88,7 @@ async function completeAccountDirectorStep(db, step, modelGateway) {
       attemptCount,
       error,
     });
-    await db.from('agency_steps').update({ status: 'failed', error: error.message, ...executionUpdate }).eq('id', step.id);
+    await db.from('agency_steps').update({ status: 'failed', technical_status: 'failed', error: error.message, ...executionUpdate }).eq('id', step.id);
     await updateRunExecutionMetadata(db, step.run_id);
     throw error;
   }

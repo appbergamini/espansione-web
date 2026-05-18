@@ -69,9 +69,12 @@ export function buildStepUpdateFromExecution({
 }
 
 export function calculateAgencyRunExecutionSummary(steps = []) {
-  const relevant = (steps || []).filter((step) => step && step.status !== 'skipped' && step.status !== 'regenerated');
-  const completed = relevant.filter((step) => step.status === 'completed');
-  const failed = relevant.filter((step) => step.status === 'failed');
+  const relevant = (steps || []).filter((step) => {
+    const technicalStatus = getTechnicalExecutionStatus(step);
+    return step && technicalStatus !== 'skipped';
+  });
+  const completed = relevant.filter((step) => getTechnicalExecutionStatus(step) === 'completed');
+  const failed = relevant.filter((step) => getTechnicalExecutionStatus(step) === 'failed');
   const totals = relevant.reduce((acc, step) => {
     const tokens = normalizeTokens(step.tokens || step.execution_metadata);
     acc.estimated_cost_total += normalizeNumber(step.cost_estimate ?? step.execution_metadata?.estimated_cost) || 0;
@@ -98,6 +101,125 @@ export function calculateAgencyRunExecutionSummary(steps = []) {
     total_tokens: totals.total_tokens,
     duration_ms_total: totals.duration_ms_total,
   };
+}
+
+export function getTechnicalExecutionStatus(step = {}) {
+  if (step.technical_status) return step.technical_status;
+  if (step.technicalStatus) return step.technicalStatus;
+  if (['pending', 'running', 'completed', 'failed', 'cancelled', 'skipped'].includes(step.status)) {
+    return step.status;
+  }
+  if (step.status === 'regenerated') return 'skipped';
+  return 'pending';
+}
+
+export function buildOutputQualityAssessment({ agentId, output, assessedAt = new Date().toISOString() } = {}) {
+  const data = output?.data || output || {};
+  const existing = data.quality_assessment || output?.qualityAssessment || output?.quality_assessment;
+  if (existing?.quality_status) {
+    return normalizeQualityAssessment(existing, assessedAt);
+  }
+
+  if (agentId === 'editor') {
+    return assessEditorOutput(data, assessedAt);
+  }
+
+  if (agentId === 'approver') {
+    return assessApproverOutput(data, assessedAt);
+  }
+
+  return null;
+}
+
+export function normalizeQualityAssessment(input, assessedAt = new Date().toISOString()) {
+  if (!input || typeof input !== 'object') return null;
+  const status = normalizeQualityStatus(input.quality_status);
+  return {
+    quality_status: status,
+    quality_score: normalizeScore(input.quality_score),
+    quality_issues: normalizeStringArray(input.quality_issues),
+    strategic_alignment_score: normalizeScore(input.strategic_alignment_score),
+    voice_alignment_score: normalizeScore(input.voice_alignment_score),
+    visual_alignment_score: normalizeScore(input.visual_alignment_score),
+    evidence_risk_score: normalizeScore(input.evidence_risk_score),
+    review_reason: firstString(input.review_reason),
+    assessed_by: ['agent', 'human', 'system'].includes(input.assessed_by) ? input.assessed_by : 'system',
+    assessed_at: firstString(input.assessed_at) || assessedAt,
+  };
+}
+
+function assessEditorOutput(data, assessedAt) {
+  const score = normalizeScore(data.score_aderencia);
+  const issues = [
+    ...normalizeStringArray(data.riscos_de_incoerencia),
+    ...normalizeStringArray(data.warnings),
+  ];
+  const evidenceRisk = hasEvidenceRisk(issues) ? 80 : 20;
+  const qualityStatus = evidenceRisk >= 70
+    ? 'risky'
+    : score !== undefined && score < 70
+      ? 'needs_revision'
+      : issues.length
+        ? 'needs_revision'
+        : 'acceptable';
+
+  return {
+    quality_status: qualityStatus,
+    quality_score: score,
+    quality_issues: issues,
+    strategic_alignment_score: score,
+    evidence_risk_score: evidenceRisk,
+    review_reason: qualityStatus === 'acceptable'
+      ? 'Editor não apontou riscos relevantes.'
+      : 'Editor apontou riscos, lacunas ou aderência insuficiente.',
+    assessed_by: 'system',
+    assessed_at: assessedAt,
+  };
+}
+
+function assessApproverOutput(data, assessedAt) {
+  const decision = normalizeDecision(data.decisao || data.decision);
+  const checklist = Array.isArray(data.checklist) ? data.checklist : [];
+  const issues = [
+    ...normalizeStringArray(data.ajustes_obrigatorios),
+    ...normalizeStringArray(data.warnings),
+    ...checklist
+      .filter((item) => ['warning', 'fail'].includes(String(item?.status || '').toLowerCase()))
+      .map((item) => [item.criterio, item.observacao].filter(Boolean).join(': ')),
+  ].filter(Boolean);
+  const evidenceRisk = hasEvidenceRisk([...issues, data.risco_principal, data.justificativa]) ? 85 : 20;
+  const qualityStatus = decision === 'approved'
+    ? (evidenceRisk >= 70 ? 'risky' : 'acceptable')
+    : decision === 'rejected'
+      ? 'rejected'
+      : evidenceRisk >= 70
+        ? 'risky'
+        : 'needs_revision';
+
+  return {
+    quality_status: qualityStatus,
+    quality_score: qualityStatus === 'acceptable' ? 90 : qualityStatus === 'needs_revision' ? 60 : qualityStatus === 'risky' ? 45 : 20,
+    quality_issues: issues,
+    evidence_risk_score: evidenceRisk,
+    review_reason: data.justificativa || data.risco_principal || 'Avaliação final do aprovador.',
+    assessed_by: 'agent',
+    assessed_at: assessedAt,
+  };
+}
+
+function normalizeQualityStatus(value) {
+  return ['not_reviewed', 'acceptable', 'needs_revision', 'rejected', 'risky'].includes(value)
+    ? value
+    : 'not_reviewed';
+}
+
+function normalizeDecision(value) {
+  if (value === 'approved' || value === 'rejected' || value === 'revision_requested') return value;
+  return 'revision_requested';
+}
+
+function hasEvidenceRisk(items = []) {
+  return items.some((item) => /claim|prova|evid[eê]ncia|sustenta|n[uú]mero|garantid/i.test(String(item || '')));
 }
 
 export async function updateRunExecutionMetadata(db, runId) {
@@ -150,6 +272,22 @@ function normalizeNumber(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return undefined;
   return numeric;
+}
+
+function normalizeScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return undefined;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function normalizeStringArray(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean);
+  if (typeof value === 'string' && value.trim()) return [value.trim()];
+  return [];
+}
+
+function firstString(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : '';
 }
 
 function roundMoney(value) {

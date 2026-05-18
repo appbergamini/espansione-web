@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildOutputQualityAssessment,
   buildStepExecutionMetadata,
   calculateAgencyRunExecutionSummary,
+  getTechnicalExecutionStatus,
 } from '../executionMetadata.js';
 import { runAgencyWorkflow } from '../workflow.js';
 import { FakeSupabase } from '../../../../../packages/brand-memory/src/__tests__/fake-supabase.ts';
@@ -46,6 +48,66 @@ test('agregados da run calculam steps, custo, tokens e duração', () => {
   assert.equal(summary.duration_ms_total, 150);
 });
 
+test('separa falha técnica de qualidade do output', () => {
+  assert.equal(getTechnicalExecutionStatus({ status: 'failed' }), 'failed');
+  assert.equal(getTechnicalExecutionStatus({ status: 'completed', technical_status: 'completed' }), 'completed');
+
+  const assessment = buildOutputQualityAssessment({
+    agentId: 'editor',
+    output: {
+      data: {
+        score_aderencia: 58,
+        riscos_de_incoerencia: ['Copy genérica e desalinhada com a promessa.'],
+        warnings: [],
+      },
+    },
+    assessedAt: '2026-05-18T12:00:00.000Z',
+  });
+
+  assert.equal(assessment.quality_status, 'needs_revision');
+  assert.equal(assessment.quality_score, 58);
+  assert.equal(assessment.assessed_by, 'system');
+});
+
+test('marca output concluído como arriscado quando há claim sem sustentação', () => {
+  const assessment = buildOutputQualityAssessment({
+    agentId: 'approver',
+    output: {
+      data: {
+        decisao: 'revision_requested',
+        checklist: [{ criterio: 'Claims com prova', status: 'warning', observacao: 'Confirmar evidências antes da publicação.' }],
+        ajustes_obrigatorios: ['Remover claim sem prova.'],
+        justificativa: 'Há risco de evidência.',
+      },
+    },
+    assessedAt: '2026-05-18T12:00:00.000Z',
+  });
+
+  assert.equal(assessment.quality_status, 'risky');
+  assert.equal(assessment.evidence_risk_score, 85);
+});
+
+test('quality_assessment explícito é normalizado e preservado', () => {
+  const assessment = buildOutputQualityAssessment({
+    agentId: 'editor',
+    output: {
+      data: {
+        quality_assessment: {
+          quality_status: 'acceptable',
+          quality_score: 105,
+          quality_issues: ['ok'],
+          assessed_by: 'agent',
+        },
+      },
+    },
+    assessedAt: '2026-05-18T12:00:00.000Z',
+  });
+
+  assert.equal(assessment.quality_status, 'acceptable');
+  assert.equal(assessment.quality_score, 100);
+  assert.equal(assessment.assessed_by, 'agent');
+});
+
 test('agency step salva metadata de execução e prompt_version', async () => {
   const db = makeAgencyDb();
   await runAgencyWorkflow(db, 'request-1', new InstrumentedGateway());
@@ -54,6 +116,7 @@ test('agency step salva metadata de execução e prompt_version', async () => {
   const run = db.tables.agency_runs.find((item) => item.id === 'run-1');
 
   assert.equal(copyStep.status, 'completed');
+  assert.equal(copyStep.technical_status, 'completed');
   assert.equal(copyStep.provider, 'test-provider');
   assert.equal(copyStep.model_used, 'test-model-copywriter');
   assert.equal(copyStep.prompt_version, 'copywriter_v1');
@@ -64,6 +127,13 @@ test('agency step salva metadata de execução e prompt_version', async () => {
   assert.equal(run.execution_metadata.total_steps, 5);
   assert.equal(run.execution_metadata.completed_steps, 5);
   assert.equal(run.execution_metadata.total_tokens, 120);
+
+  const editorStep = db.tables.agency_steps.find((step) => step.agent_id === 'editor');
+  const approverStep = db.tables.agency_steps.find((step) => step.agent_id === 'approver');
+  assert.equal(editorStep.quality_assessment.quality_status, 'acceptable');
+  assert.equal(approverStep.quality_assessment.quality_status, 'risky');
+  assert.equal(approverStep.status, 'completed');
+  assert.equal(approverStep.technical_status, 'completed');
 });
 
 test('erro de modelo registra step failed e run failed sem apagar histórico', async () => {
@@ -78,6 +148,7 @@ test('erro de modelo registra step failed e run failed sem apagar histórico', a
   const run = db.tables.agency_runs.find((item) => item.id === 'run-1');
 
   assert.equal(copyStep.status, 'failed');
+  assert.equal(copyStep.technical_status, 'failed');
   assert.equal(copyStep.error, 'Falha simulada do modelo');
   assert.equal(copyStep.execution_metadata.error_message, 'Falha simulada do modelo');
   assert.equal(copyStep.attempt_count, 1);
