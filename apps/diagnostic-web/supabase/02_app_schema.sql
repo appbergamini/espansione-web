@@ -74,6 +74,18 @@ create table if not exists checkpoints (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
+create table if not exists checkpoint_approval_records (
+  id uuid primary key default gen_random_uuid(),
+  checkpoint_id uuid not null references checkpoints(id) on delete cascade,
+  project_id uuid not null references projetos(id) on delete cascade,
+  agent_id text not null,
+  decision text not null,
+  structured_notes jsonb not null default '{}'::jsonb,
+  freeform_notes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
 -- ── logs_execucao ─────────────────────────────────────────────────
 create table if not exists logs_execucao (
   id uuid primary key default gen_random_uuid(),

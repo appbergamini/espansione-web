@@ -43,6 +43,7 @@ test('BrandKernel carrega strategic_tensions da Brand Memory', () => {
   assert.equal(kernel.strategicTensions.length, 1);
   assert.equal(kernel.unresolvedStrategicTensions.length, 1);
   assert.match(kernel.communicationRisksFromTensions[0], /Evitar claims/);
+  assert.deepEqual(kernel.checkpointContext, []);
 });
 
 test('BrandKernel nao quebra diagnostico legado sem strategic_tensions', () => {

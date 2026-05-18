@@ -90,6 +90,7 @@ const brandKernel: BrandKernel = {
     },
   ],
   communicationRisksFromTensions: ['Modelo de entrega: Evitar claims de agilidade absoluta.'],
+  checkpointContext: [],
   source: { schemaVersion: '2.0', agentsPresent: [6, 9, 12, 13], generatedFrom: 'espansione_diagnostic' },
 };
 

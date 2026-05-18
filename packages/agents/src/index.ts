@@ -115,6 +115,9 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
   const plano = diagnostic.plano_comunicacao;
   const experiencia = diagnostic.experiencia;
   const strategicTensions = extractStrategicTensions(diagnostic);
+  const checkpointContext = Array.isArray(diagnostic.meta?.checkpoint_context)
+    ? diagnostic.meta.checkpoint_context
+    : [];
   const unresolvedStrategicTensions = strategicTensions.filter(
     (tension) => tension.status !== 'resolved'
   );
@@ -250,6 +253,7 @@ export function buildBrandKernel(diagnostic: EspansioneDiagnostic): BrandKernel 
     strategicTensions,
     unresolvedStrategicTensions,
     communicationRisksFromTensions,
+    checkpointContext,
     source: {
       schemaVersion: diagnostic.schema_version,
       agentsPresent: diagnostic.meta?.agents_present ?? [],

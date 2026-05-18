@@ -13,6 +13,8 @@
  * Versão: 2.0
  */
 
+import type { CheckpointApprovalRecord } from './checkpoint.types';
+
 // ============================================================
 // PRIMITIVOS REUSADOS
 // ============================================================
@@ -82,6 +84,7 @@ export interface ConsolidationMeta {
   missing_required_fields: MissingField[];
   gaps_by_agent: Record<string, GapEntry[]>;
   load_status: 'ready' | 'partial' | 'blocked' | 'loaded';
+  checkpoint_context?: CheckpointApprovalRecord[];
 }
 
 export interface ValidationError {

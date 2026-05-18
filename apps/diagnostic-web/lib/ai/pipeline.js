@@ -15,6 +15,10 @@ import {
   validateAgentBrandMemoryExport,
 } from '../brand-memory/exportValidation';
 import { getReadyCuratedEvidencePack } from '../curated-evidence/pack';
+import {
+  formatCheckpointNotesForPrompt,
+  getRelevantCheckpointApprovalRecords,
+} from '../checkpoints/structuredNotes';
 
 export const AGENT_CONFIGS = {
   1:  { name: 'Roteiros VI — Entrevistas Internas',      stage: 'pre_diagnostico',      inputs: [],            checkpoint: null },
@@ -96,6 +100,7 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
     previousOutputs: {},
     formularios: [],
     cisAssessments: [],
+    checkpointApprovalRecords: [],
     _agentInputs: inputs,
     _agentOptionalInputs: optionalInputs,
   };
@@ -112,6 +117,19 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
 
   if (AGENTS_WITH_CIS.has(agentNum)) {
     context.cisAssessments = await db.getCisAssessmentsByProjeto?.(projetoId) || [];
+  }
+
+  if (supabaseAdmin) {
+    try {
+      context.checkpointApprovalRecords = await getRelevantCheckpointApprovalRecords(
+        supabaseAdmin,
+        projetoId,
+        agentNum
+      );
+    } catch (e) {
+      console.error('[pipeline] falha ao carregar ressalvas de checkpoints:', e.message);
+      context.checkpointApprovalRecords = [];
+    }
   }
 
   // FIX.29 (Fase C) — Agente 13 (Comunicação) consome clusters
@@ -178,6 +196,13 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
   const systemParts = [agent.getSystemPrompt()];
   if (AGENTS_WITH_QUALITY_METADATA.has(agentNum)) {
     systemParts.push(buildQualityMetadataPromptInstruction());
+  }
+
+  const checkpointNotesPrompt = formatCheckpointNotesForPrompt(
+    finalContext.checkpointApprovalRecords || context.checkpointApprovalRecords || []
+  );
+  if (checkpointNotesPrompt) {
+    systemParts.push('\n\n' + checkpointNotesPrompt);
   }
 
   // FIX.12 — evita duplicação de contexto quando o agente já consome

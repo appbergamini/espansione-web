@@ -25,6 +25,11 @@ import {
 } from '../../lib/agents/adminFlow';
 import { buildBrandMemoryExportReadiness } from '../../lib/brand-memory/exportValidation';
 import { extractStrategicTensionsFromAgent6Output } from '../../lib/strategic-tensions/extract';
+import {
+  buildStructuredNotesForm,
+  checkpointStatusToDecision,
+  parseStructuredNotesForm,
+} from '../../lib/checkpoints/structuredNotes';
 import { getCisParsed, COMPETENCIAS_KEYS } from '../../lib/cis/parseCis';
 
 // Formato "02. Consolidado da Visão Interna (VI)" — preserva layout
@@ -317,6 +322,101 @@ function parseTextLines(text) {
   return String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
 }
 
+function CheckpointStructuredNotesPanel({
+  checkpoint,
+  form,
+  setForm,
+  freeformNotes,
+  setFreeformNotes,
+  approving,
+  onDecision,
+}) {
+  if (!checkpoint) return null;
+
+  const decision = checkpoint.latest_approval_record?.decision || checkpointStatusToDecision(checkpoint.status);
+  const isBlocked = ['revision_requested', 'rejected'].includes(decision);
+
+  const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+
+  return (
+    <div style={{ border: '1px solid rgba(245,158,11,0.28)', background: 'rgba(245,158,11,0.05)', borderRadius: 12, padding: '0.9rem', display: 'grid', gap: '0.75rem' }}>
+      <div>
+        <div style={{ color: 'var(--warning)', fontSize: '0.76rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Checkpoint {checkpoint.checkpoint_num}
+        </div>
+        <h3 style={{ margin: '0.15rem 0 0', fontSize: '0.98rem' }}>Anotações estruturadas da revisão</h3>
+        {isBlocked && (
+          <p style={{ margin: '0.35rem 0 0', color: 'var(--brand-red)', fontSize: '0.78rem' }}>
+            Este checkpoint está bloqueando a esteira até nova decisão.
+          </p>
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0.65rem' }}>
+        <CheckpointTextArea label="Pontos aprovados" value={form.approvedPoints} onChange={(value) => update('approvedPoints', value)} />
+        <CheckpointTextArea label="Pontos aprovados com ressalva" value={form.pointsWithReservations} onChange={(value) => update('pointsWithReservations', value)} />
+        <CheckpointTextArea label="Ajustes obrigatórios" value={form.requiredAdjustments} onChange={(value) => update('requiredAdjustments', value)} />
+        <CheckpointTextArea label="Decisões pendentes" value={form.pendingDecisions} onChange={(value) => update('pendingDecisions', value)} />
+        <CheckpointTextArea label="Contexto para próximos agentes" value={form.contextForNextAgents} onChange={(value) => update('contextForNextAgents', value)} />
+        <CheckpointTextArea label="Riscos a monitorar" value={form.risksToMonitor} onChange={(value) => update('risksToMonitor', value)} />
+      </div>
+
+      <label style={{ display: 'grid', gap: '0.3rem', color: 'var(--text-secondary)', fontSize: '0.76rem', fontWeight: 700 }}>
+        Comentário livre
+        <textarea
+          value={freeformNotes}
+          onChange={(event) => setFreeformNotes(event.target.value)}
+          rows={3}
+          placeholder="Observação geral da aprovação ou revisão"
+          style={checkpointInputStyle}
+        />
+      </label>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
+        <button className="btn-primary" style={{ padding: '0.65rem' }} onClick={() => onDecision(checkpoint.checkpoint_num, 'approved')} disabled={approving}>
+          Aprovar
+        </button>
+        <button className="btn-secondary" style={{ padding: '0.65rem', borderColor: 'rgba(245,158,11,0.45)', color: 'var(--warning)' }} onClick={() => onDecision(checkpoint.checkpoint_num, 'approved_with_notes')} disabled={approving}>
+          Aprovar com ressalvas
+        </button>
+        <button className="btn-secondary" style={{ padding: '0.65rem', borderColor: 'rgba(245,158,11,0.45)', color: 'var(--warning)' }} onClick={() => onDecision(checkpoint.checkpoint_num, 'revision_requested')} disabled={approving}>
+          Solicitar revisão
+        </button>
+        <button className="btn-secondary" style={{ padding: '0.65rem', borderColor: 'rgba(239,68,68,0.45)', color: 'var(--brand-red)' }} onClick={() => onDecision(checkpoint.checkpoint_num, 'rejected')} disabled={approving}>
+          Rejeitar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CheckpointTextArea({ label, value, onChange }) {
+  return (
+    <label style={{ display: 'grid', gap: '0.3rem', color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700 }}>
+      {label}
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={3}
+        placeholder="Uma nota por linha"
+        style={checkpointInputStyle}
+      />
+    </label>
+  );
+}
+
+const checkpointInputStyle = {
+  width: '100%',
+  borderRadius: 8,
+  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(3,7,18,0.35)',
+  color: 'var(--text-primary)',
+  padding: '0.65rem',
+  fontSize: '0.78rem',
+  lineHeight: 1.45,
+  resize: 'vertical',
+};
+
 export default function ProjetoDetalhes() {
   const router = useRouter();
   const { id } = router.query;
@@ -348,6 +448,8 @@ export default function ProjetoDetalhes() {
   const [engineStage, setEngineStage] = useState('');
   const [loadingBrandMemory, setLoadingBrandMemory] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [checkpointNotesForm, setCheckpointNotesForm] = useState(() => buildStructuredNotesForm());
+  const [checkpointFreeformNotes, setCheckpointFreeformNotes] = useState('');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [pendingAgentNum, setPendingAgentNum] = useState(null);
   // FIX.22 — picker reusado entre execução de agente e geração do
@@ -413,6 +515,13 @@ export default function ProjetoDetalhes() {
     loadData();
   }, [id]);
 
+  useEffect(() => {
+    const pending = [...(data?.pendingCheckpoints || [])].sort((a, b) => a.checkpoint_num - b.checkpoint_num)[0];
+    const record = pending?.latest_approval_record;
+    setCheckpointNotesForm(buildStructuredNotesForm(record?.structured_notes));
+    setCheckpointFreeformNotes(record?.freeform_notes || pending?.notas || '');
+  }, [data?.pendingCheckpoints?.[0]?.id, data?.pendingCheckpoints?.[0]?.status]);
+
   const [deletando, setDeletando] = useState(false);
 
   const handleDeleteProjeto = async () => {
@@ -431,18 +540,24 @@ export default function ProjetoDetalhes() {
     }
   };
 
-  const handleApproveCheckpoint = async (checkpointNum) => {
+  const handleCheckpointDecision = async (checkpointNum, decision) => {
     setApproving(true);
     setEngineError('');
     try {
       const res = await fetch('/api/engine/checkpoint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projetoId: id, checkpointNum, status: 'aprovado' })
+        body: JSON.stringify({
+          projetoId: id,
+          checkpointNum,
+          decision,
+          structuredNotes: parseStructuredNotesForm(checkpointNotesForm),
+          freeformNotes: checkpointFreeformNotes,
+        })
       });
       const json = await res.json();
       if (!json.success) {
-        setEngineError(json.error || 'Falha ao aprovar checkpoint.');
+        setEngineError(json.error || 'Falha ao atualizar checkpoint.');
       } else {
         await loadData();
       }
@@ -1306,14 +1421,15 @@ export default function ProjetoDetalhes() {
 
               <div style={{ display: 'grid', gap: '0.55rem' }}>
                 {primaryAction.type === 'approve_checkpoint' ? (
-                  <button
-                    className="btn-primary"
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--warning)', color: '#000', filter: 'none', boxShadow: 'none' }}
-                    onClick={() => handleApproveCheckpoint(pendingCkpt.checkpoint_num)}
-                    disabled={approving}
-                  >
-                    {approving ? 'Aprovando...' : `Aprovar Checkpoint ${pendingCkpt.checkpoint_num}`}
-                  </button>
+                  <CheckpointStructuredNotesPanel
+                    checkpoint={pendingCkpt}
+                    form={checkpointNotesForm}
+                    setForm={setCheckpointNotesForm}
+                    freeformNotes={checkpointFreeformNotes}
+                    setFreeformNotes={setCheckpointFreeformNotes}
+                    approving={approving}
+                    onDecision={handleCheckpointDecision}
+                  />
                 ) : primaryAction.type === 'generate_brand_memory' ? (
                   <button
                     className="btn-primary"

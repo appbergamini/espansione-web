@@ -1,4 +1,5 @@
 import type { EspansioneDiagnostic, StrategicTension } from './espansione-diagnostic.types.js';
+import type { CheckpointApprovalRecord } from './checkpoint.types.js';
 import type { OutputQualityMetadata } from './output-quality.types.js';
 
 export type AgencyRequestType =
@@ -300,6 +301,7 @@ export interface BrandKernel {
   strategicTensions: StrategicTension[];
   unresolvedStrategicTensions: StrategicTension[];
   communicationRisksFromTensions: string[];
+  checkpointContext: CheckpointApprovalRecord[];
   source: {
     schemaVersion: EspansioneDiagnostic['schema_version'];
     agentsPresent: number[];

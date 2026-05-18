@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabaseAdmin';
+import { BLOCKING_CHECKPOINT_STATUSES } from './checkpoints/structuredNotes';
 
 // Este módulo é usado só pelo pipeline (server-side, via /api/engine/*).
 // Usa service role para bypassar RLS — as escritas em outputs,
@@ -258,7 +259,7 @@ export const db = {
       .from('checkpoints')
       .select('*')
       .eq('projeto_id', projetoId)
-      .eq('status', 'pendente');
+      .in('status', BLOCKING_CHECKPOINT_STATUSES);
 
     if (error) throw new Error(`Erro getPendingCheckpoints: ${error.message}`);
     return data || [];

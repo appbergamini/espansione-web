@@ -1,6 +1,10 @@
 import { loadBrandMemory } from '@espansione/brand-memory';
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import {
+  getAllCheckpointApprovalRecordsForProject,
+  normalizeStructuredCheckpointNotes,
+} from '../../../lib/checkpoints/structuredNotes';
 import { markProjectBrandMemoryActive } from '../../../lib/agency/projectLifecycle';
 
 function extractBrandMemoryExport(content = '') {
@@ -298,6 +302,8 @@ export default async function handler(req, res) {
     }
 
     diagnostic = normalizeDiagnosticForProject(diagnostic, projeto);
+    diagnostic.meta = diagnostic.meta || {};
+    diagnostic.meta.checkpoint_context = await loadCheckpointContextForBrandMemory(db, projetoId);
 
     if (!isAgencyUsableDiagnostic(diagnostic)) {
       return res.status(400).json({ success: false, error: 'Brand Memory insuficiente: faltam relatórios críticos 6, 9, 12 ou 13.' });
@@ -316,4 +322,19 @@ export default async function handler(req, res) {
     console.error('[BrandMemory Load] Erro:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
+}
+
+async function loadCheckpointContextForBrandMemory(db, projetoId) {
+  const records = await getAllCheckpointApprovalRecordsForProject(db, projetoId);
+
+  return (records || []).map((record) => ({
+    checkpoint_id: record.checkpoint_id,
+    project_id: record.project_id,
+    agent_id: record.agent_id,
+    decision: record.decision,
+    structured_notes: normalizeStructuredCheckpointNotes(record.structured_notes),
+    freeform_notes: record.freeform_notes || undefined,
+    created_at: record.created_at,
+    updated_at: record.updated_at,
+  }));
 }

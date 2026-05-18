@@ -1,6 +1,7 @@
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { getLatestCuratedEvidencePack } from '../../../lib/curated-evidence/pack';
+import { BLOCKING_CHECKPOINT_STATUSES, recordFromCheckpoint } from '../../../lib/checkpoints/structuredNotes';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -44,11 +45,17 @@ export default async function handler(req, res) {
       return res.status(403).json({ success: false, error: 'Acesso negado a este projeto' });
     }
 
-    const [intakeRes, formRes, outputsRes, checkpointsRes, cisRes, respRes, cisAssessRes, curatedEvidencePack] = await Promise.all([
+    const [intakeRes, formRes, outputsRes, checkpointsRes, approvalRecordsRes, cisRes, respRes, cisAssessRes, curatedEvidencePack] = await Promise.all([
       db.from('intake_data').select('campo, valor').eq('projeto_id', id),
       db.from('formularios').select('*').eq('projeto_id', id).order('created_at', { ascending: true }),
       db.from('outputs').select('*').eq('projeto_id', id).order('agent_num', { ascending: true }).order('created_at', { ascending: false }),
-      db.from('checkpoints').select('*').eq('projeto_id', id).eq('status', 'pendente'),
+      db.from('checkpoints').select('*').eq('projeto_id', id).in('status', BLOCKING_CHECKPOINT_STATUSES),
+      db.from('checkpoint_approval_records').select('*').eq('project_id', id).order('created_at', { ascending: false }).then((result) => {
+        if (result.error && String(result.error.message || '').includes('checkpoint_approval_records')) {
+          return { data: [], error: null };
+        }
+        return result;
+      }),
       db.from('cis_participantes').select('*').eq('projeto_id', id).order('created_at', { ascending: false }),
       db.from('respondentes').select('*').eq('projeto_id', id).order('created_at', { ascending: true }),
       db.from('cis_assessments').select('*').eq('projeto_id', id).order('created_at', { ascending: true }),
@@ -63,6 +70,17 @@ export default async function handler(req, res) {
       intakeRes.data.forEach(row => { intake[row.campo] = row.valor; });
     }
 
+    const latestRecordsByCheckpoint = new Map();
+    for (const record of approvalRecordsRes.data || []) {
+      if (!latestRecordsByCheckpoint.has(record.checkpoint_id)) {
+        latestRecordsByCheckpoint.set(record.checkpoint_id, record);
+      }
+    }
+    const pendingCheckpoints = (checkpointsRes.data || []).map((checkpoint) => ({
+      ...checkpoint,
+      latest_approval_record: latestRecordsByCheckpoint.get(checkpoint.id) || recordFromCheckpoint(checkpoint),
+    }));
+
     return res.status(200).json({
       success: true,
       data: {
@@ -70,7 +88,7 @@ export default async function handler(req, res) {
         intake,
         formularios: formRes.data || [],
         outputs: outputsRes.data || [],
-        pendingCheckpoints: checkpointsRes.data || [],
+        pendingCheckpoints,
         cisParticipantes: cisRes.data || [],
         cisAssessments: cisAssessRes.data || [],
         respondentes: respRes.data || [],

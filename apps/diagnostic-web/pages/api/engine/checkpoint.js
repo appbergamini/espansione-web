@@ -1,5 +1,11 @@
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import { CATALOGO_AGENTES } from '../../../lib/agents/catalog';
+import {
+  checkpointDecisionToStatus,
+  normalizeCheckpointDecision,
+  normalizeStructuredCheckpointNotes,
+} from '../../../lib/checkpoints/structuredNotes';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,7 +15,15 @@ export default async function handler(req, res) {
   const { user } = await getServerUser(req, res);
   if (!user) return res.status(401).json({ success: false, error: 'Não autenticado' });
 
-  const { projetoId, checkpointNum, status, notas } = req.body;
+  const {
+    projetoId,
+    checkpointNum,
+    status,
+    notas,
+    decision,
+    structuredNotes,
+    freeformNotes,
+  } = req.body;
   if (!projetoId || checkpointNum === undefined) {
     return res.status(400).json({ success: false, error: 'Faltando projetoId ou checkpointNum' });
   }
@@ -29,7 +43,15 @@ export default async function handler(req, res) {
     return res.status(403).json({ success: false, error: 'Acesso negado a este projeto' });
   }
 
-  const finalStatus = status || 'aprovado';
+  const finalDecision = normalizeCheckpointDecision(decision || status || 'approved');
+  const finalStatus = checkpointDecisionToStatus(finalDecision);
+  const normalizedStructuredNotes = normalizeStructuredCheckpointNotes(structuredNotes);
+  const finalFreeformNotes = freeformNotes ?? notas ?? '';
+  const legacyNotesPayload = JSON.stringify({
+    decision: finalDecision,
+    structured_notes: normalizedStructuredNotes,
+    freeform_notes: finalFreeformNotes || '',
+  });
 
   try {
     const { data: ckpt } = await db
@@ -44,9 +66,31 @@ export default async function handler(req, res) {
     if (ckpt) {
       const { error: updErr } = await db
         .from('checkpoints')
-        .update({ status: finalStatus, notas: notas || '' })
+        .update({ status: finalStatus, notas: legacyNotesPayload })
         .eq('id', ckpt.id);
       if (updErr) throw updErr;
+
+      const checkpointAgent = CATALOGO_AGENTES.find(
+        (agent) => Number(agent.checkpoint) === Number(checkpointNum)
+      );
+
+      const { error: recordErr } = await db
+        .from('checkpoint_approval_records')
+        .insert({
+          checkpoint_id: ckpt.id,
+          project_id: projetoId,
+          agent_id: String(checkpointAgent?.agent_num || checkpointNum),
+          decision: finalDecision,
+          structured_notes: normalizedStructuredNotes,
+          freeform_notes: finalFreeformNotes || null,
+        });
+
+      if (recordErr) {
+        if (!String(recordErr.message || '').includes('checkpoint_approval_records')) {
+          throw recordErr;
+        }
+        console.warn('[checkpoint] checkpoint_approval_records ausente; checkpoint legado atualizado sem registro estruturado.');
+      }
     }
 
     const { error: projErr } = await db
@@ -55,7 +99,12 @@ export default async function handler(req, res) {
       .eq('id', projetoId);
     if (projErr) throw projErr;
 
-    return res.status(200).json({ success: true, checkpointNum, status: finalStatus });
+    return res.status(200).json({
+      success: true,
+      checkpointNum,
+      status: finalStatus,
+      decision: finalDecision,
+    });
   } catch (err) {
     console.error(`[API Engine] Erro ao atualizar checkpoint ${checkpointNum}:`, err);
     return res.status(500).json({ success: false, error: err.message });
