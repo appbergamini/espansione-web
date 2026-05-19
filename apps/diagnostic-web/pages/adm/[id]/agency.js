@@ -38,6 +38,7 @@ const OBJECTIVES = Object.keys(OBJECTIVE_LABELS);
 
 const initialForm = {
   request_type: '',
+  campaign_mode: 'single_piece',
   channel: 'linkedin',
   objective: 'authority',
   audience_cluster: '',
@@ -47,6 +48,20 @@ const initialForm = {
   restrictions: '',
   reference_material: '',
 };
+
+const CAMPAIGN_CONTEXT_PREFIX = '[Campanha leve / multicanal]';
+
+function isCampaignRequestContext(context) {
+  return /campanha|multicanal|multi[-\s]?canal/i.test(String(context || ''));
+}
+
+function buildContextForSubmission(form) {
+  const context = String(form.context || '').trim();
+  if (form.campaign_mode !== 'campaign_light' || isCampaignRequestContext(context)) {
+    return context;
+  }
+  return `${CAMPAIGN_CONTEXT_PREFIX}\n${context}`.trim();
+}
 
 export default function AgencyRequestsPage() {
   const router = useRouter();
@@ -130,10 +145,11 @@ export default function AgencyRequestsPage() {
     setErrorMsg('');
     setSuccessMsg('');
     try {
+      const context = buildContextForSubmission(form);
       const res = await fetch('/api/agency/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, projeto_id: id, brand_id: brand?.id }),
+        body: JSON.stringify({ ...form, context, projeto_id: id, brand_id: brand?.id }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Erro ao criar pedido');
@@ -309,6 +325,28 @@ export default function AgencyRequestsPage() {
                       </select>
                     </Field>
 
+                    <Field label="Escopo">
+                      <div className="agency-segmented-control" role="group" aria-label="Escopo do pedido">
+                        <button
+                          type="button"
+                          className={form.campaign_mode === 'single_piece' ? 'active' : ''}
+                          onClick={() => handleChange('campaign_mode', 'single_piece')}
+                        >
+                          Peça avulsa
+                        </button>
+                        <button
+                          type="button"
+                          className={form.campaign_mode === 'campaign_light' ? 'active' : ''}
+                          onClick={() => handleChange('campaign_mode', 'campaign_light')}
+                        >
+                          Campanha leve
+                        </button>
+                      </div>
+                      <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                        Campanha leve ativa o perfil de execução com adaptação por canal, direção visual, editor, compliance e aprovador.
+                      </span>
+                    </Field>
+
                     <div className="agency-form-row">
                       <Field label="Canal">
                         <select className="form-input" value={form.channel} onChange={e => handleChange('channel', e.target.value)} required>
@@ -376,6 +414,11 @@ export default function AgencyRequestsPage() {
                             <strong>{REQUEST_TYPE_LABELS[request.request_type] || request.request_type}</strong>
                             <span style={{ color: 'var(--accent-blue)', fontSize: '0.78rem' }}>{request.status}</span>
                           </div>
+                          {isCampaignRequestContext(request.context) && (
+                            <div style={{ display: 'inline-flex', marginTop: '0.45rem', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 999, padding: '0.16rem 0.5rem', color: 'var(--success)', fontSize: '0.72rem', fontWeight: 800 }}>
+                              Campanha leve
+                            </div>
+                          )}
                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.35rem' }}>
                             {CHANNEL_LABELS[request.channel] || request.channel} · {OBJECTIVE_LABELS[request.objective] || request.objective}
                           </div>
@@ -425,6 +468,33 @@ export default function AgencyRequestsPage() {
               color: var(--text-primary);
               min-width: 0;
               overflow: hidden;
+            }
+
+            .agency-segmented-control {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 0.4rem;
+              padding: 0.3rem;
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              border-radius: 8px;
+              background: rgba(255, 255, 255, 0.025);
+            }
+
+            .agency-segmented-control button {
+              border: 1px solid transparent;
+              border-radius: 6px;
+              padding: 0.5rem 0.65rem;
+              color: var(--text-secondary);
+              background: transparent;
+              cursor: pointer;
+              font-weight: 800;
+              font-size: 0.8rem;
+            }
+
+            .agency-segmented-control button.active {
+              color: var(--success);
+              border-color: rgba(16, 185, 129, 0.35);
+              background: rgba(16, 185, 129, 0.12);
             }
 
             :global(.agency-field) {
