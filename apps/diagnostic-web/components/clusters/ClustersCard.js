@@ -123,9 +123,9 @@ export default function ClustersCard({ projetoId }) {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167,139,250,0.30)', background: 'rgba(167,139,250,0.04)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.6rem' }}>
-        <div>
+    <div className="glass-card clusters-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: 'rgba(167,139,250,0.30)', background: 'rgba(167,139,250,0.04)' }}>
+      <div className="clusters-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.6rem' }}>
+        <div style={{ minWidth: 0 }}>
           <h3 style={{ fontSize: '0.95rem', color: 'var(--accent-purple, #a78bfa)', margin: 0 }}>
             Clusters de Comunicação ({clusters.filter(c => c.ativo !== false).length}/{clusters.length} selecionados)
           </h3>
@@ -135,7 +135,7 @@ export default function ClustersCard({ projetoId }) {
           </p>
         </div>
         {!editing && (
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <div className="clusters-card-actions" style={{ display: 'flex', gap: '0.4rem' }}>
             <button
               onClick={() => setShowModelPicker(true)}
               disabled={generating}

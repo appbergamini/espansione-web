@@ -183,6 +183,63 @@
 .page-container { min-height: 100vh; padding: 2rem 1rem; background: var(--bg-primary); }
 .container      { max-width: 1200px; margin: 0 auto; width: 100%; }
 
+.admin-project-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.9fr);
+  gap: 1.25rem;
+  align-items: start;
+  isolation: isolate;
+  width: 100%;
+}
+
+.admin-project-sidebar,
+.admin-project-output-rail {
+  min-width: 0;
+}
+
+.admin-project-sidebar {
+  display: grid;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-project-output-rail {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  contain: paint;
+  transform: none;
+  background: rgba(8, 14, 28, 0.94) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.clusters-card,
+.clusters-card * {
+  min-width: 0;
+}
+
+.clusters-card-header,
+.clusters-card-actions {
+  flex-wrap: wrap;
+}
+
+.clusters-card-actions {
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1120px) {
+  .admin-project-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-project-output-rail {
+    z-index: 1;
+  }
+}
+
 /* ─── 8. Botões (UNIFICADOS — ink primary, accent destructive) ─── */
 .btn-primary {
   background: var(--brand-blue);      /* era --accent-blue azul elétrico */
