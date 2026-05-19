@@ -15,10 +15,10 @@ export default async function handler(req, res) {
   try {
     await requireAgencyUser(supabaseAdmin, user);
     const { id } = req.query || {};
-    const { agentId, confirmApproved = false } = req.body || {};
+    const { agentId, confirmApproved = false, modelSelection } = req.body || {};
     if (!id || !agentId) return res.status(400).json({ success: false, error: 'runId e agentId são obrigatórios' });
 
-    const result = await regenerateFromAgencyStep(supabaseAdmin, id, agentId, undefined, { confirmApproved });
+    const result = await regenerateFromAgencyStep(supabaseAdmin, id, agentId, undefined, { confirmApproved, modelSelection });
     return res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error('[agency/runs/:id/regenerate-from-step]', error);

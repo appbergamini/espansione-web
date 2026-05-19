@@ -14,7 +14,8 @@ export default async function handler(req, res) {
 
   try {
     await requireAgencyUser(supabaseAdmin, user);
-    const result = await runAgencyWorkflow(supabaseAdmin, req.query.id);
+    const { modelSelection } = req.body || {};
+    const result = await runAgencyWorkflow(supabaseAdmin, req.query.id, undefined, { modelSelection });
     return res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error('[agency/run-workflow]', error);

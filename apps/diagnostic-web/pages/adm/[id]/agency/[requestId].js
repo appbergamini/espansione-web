@@ -34,7 +34,53 @@ const OBJECTIVE_LABELS = {
   retention: 'Retenção',
 };
 
-const AGENCY_AGENT_ORDER = ['account_director', 'copywriter', 'visual_director', 'editor', 'approver'];
+const AGENCY_AGENT_ORDER = ['account_director', 'copywriter', 'channel_adapter', 'visual_director', 'editor', 'brand_compliance', 'approver'];
+
+const AI_MODELS = [
+  { provider: 'mock', model_id: 'mock-model', display_name: 'Mock / Simulado', cost_tier: 'zero', is_mock: true },
+  { provider: 'google', model_id: 'gemini-3-flash-preview', display_name: 'Gemini 3 Flash', cost_tier: 'low', is_preview: true },
+  { provider: 'openai', model_id: 'gpt-5.4', display_name: 'GPT-5.4', cost_tier: 'medium_high' },
+  { provider: 'anthropic', model_id: 'claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6', cost_tier: 'medium_high' },
+];
+
+const REAL_AI_MODELS = AI_MODELS.filter((model) => !model.is_mock);
+const DEFAULT_AGENT_MODEL = {
+  account_director: 'gpt-5.4',
+  copywriter: 'claude-sonnet-4-6',
+  channel_adapter: 'gemini-3-flash-preview',
+  visual_director: 'gpt-5.4',
+  editor: 'claude-sonnet-4-6',
+  brand_compliance: 'gpt-5.4',
+  approver: 'gpt-5.4',
+};
+
+const EXECUTION_MODE_OPTIONS = [
+  {
+    value: 'mock',
+    label: 'Simular sem gastar tokens',
+    description: 'Testa fluxo, banco, timeline e UI sem chamar IA real.',
+  },
+  {
+    value: 'economical',
+    label: 'Econômico',
+    description: 'Usa modelo rápido/barato para testes com output real.',
+  },
+  {
+    value: 'use_agent_defaults',
+    label: 'Padrão por agente',
+    description: 'Usa o modelo recomendado para cada agente.',
+  },
+  {
+    value: 'use_single_model_for_run',
+    label: 'Modelo único para toda a execução',
+    description: 'Aplica o mesmo modelo em todos os steps desta execução.',
+  },
+  {
+    value: 'override_single_agent',
+    label: 'Personalizado por agente',
+    description: 'Permite escolher modelo para agentes específicos da run.',
+  },
+];
 
 const CREATIVE_ASSET_TYPE_LABELS = {
   conceptual_image: 'Imagem conceitual',
@@ -78,6 +124,8 @@ export default function AgencyRequestDetailPage() {
   const [savingLearningAction, setSavingLearningAction] = useState('');
   const [creativeAssets, setCreativeAssets] = useState([]);
   const [savingAssetAction, setSavingAssetAction] = useState('');
+  const [executionModal, setExecutionModal] = useState(null);
+  const [modelSelection, setModelSelection] = useState(defaultModelSelection());
 
   useEffect(() => {
     let active = true;
@@ -163,18 +211,52 @@ export default function AgencyRequestDetailPage() {
     }
   };
 
+  const openExecutionModal = (scope = 'all', agentId = null) => {
+    setExecutionModal({ scope, agentId });
+  };
+
   const runWorkflow = async () => {
+    openExecutionModal('all');
+  };
+
+  const submitAgencyExecution = async () => {
+    if (!executionModal) return;
     setRunningWorkflow(true);
+    setReprocessingAction(executionModal.scope === 'all' ? '' : `${executionModal.scope === 'from' ? 'from' : 'one'}:${executionModal.agentId}`);
     setErrorMsg('');
     try {
-      const res = await fetch(`/api/agency/requests/${requestId}/run-workflow`, { method: 'POST' });
-      const json = await res.json();
+      const cleanSelection = cleanModelSelection(modelSelection, agentFlow);
+      let endpoint = `/api/agency/requests/${requestId}/run-workflow`;
+      let body = { modelSelection: cleanSelection };
+
+      if (executionModal.scope !== 'all') {
+        if (!latestRun?.id || !executionModal.agentId) return;
+        const approvedRequest = request?.status === 'approved';
+        let confirmApproved = false;
+        if (approvedRequest) {
+          confirmApproved = window.confirm('Este pedido já está aprovado. Criar uma nova versão vai manter o histórico, mas mudar o status do pedido. Continuar?');
+          if (!confirmApproved) return;
+        }
+        endpoint = executionModal.scope === 'from'
+          ? `/api/agency/runs/${latestRun.id}/regenerate-from-step`
+          : `/api/agency/runs/${latestRun.id}/regenerate-step`;
+        body = { agentId: executionModal.agentId, confirmApproved, modelSelection: cleanSelection };
+      }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const json = await readJsonOrThrow(res, 'Erro ao rodar Agência IA');
       if (!json.success) throw new Error(json.error || 'Erro ao rodar Agência IA');
+      setExecutionModal(null);
       await loadRequest();
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
       setRunningWorkflow(false);
+      setReprocessingAction('');
     }
   };
 
@@ -252,32 +334,7 @@ export default function AgencyRequestDetailPage() {
 
   const runStepAction = async (action, agentId) => {
     if (!latestRun?.id) return;
-    const approvedRequest = request?.status === 'approved';
-    let confirmApproved = false;
-    if (approvedRequest) {
-      confirmApproved = window.confirm('Este pedido já está aprovado. Criar uma nova versão vai manter o histórico, mas mudar o status do pedido. Continuar?');
-      if (!confirmApproved) return;
-    }
-
-    setReprocessingAction(`${action}:${agentId}`);
-    setErrorMsg('');
-    try {
-      const endpoint = action === 'from'
-        ? 'regenerate-from-step'
-        : 'regenerate-step';
-      const res = await fetch(`/api/agency/runs/${latestRun.id}/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId, confirmApproved }),
-      });
-      const json = await readJsonOrThrow(res, 'Erro ao reprocessar agente');
-      if (!json.success) throw new Error(json.error || 'Erro ao reprocessar agente');
-      await loadRequest();
-    } catch (err) {
-      setErrorMsg(err.message);
-    } finally {
-      setReprocessingAction('');
-    }
+    openExecutionModal(action === 'from' ? 'from' : 'one', agentId);
   };
 
   const createVariation = async () => {
@@ -471,13 +528,15 @@ export default function AgencyRequestDetailPage() {
   const accountStep = currentRunSteps.find((step) => step.agent_id === 'account_director') || null;
   const stepByAgent = new Map(currentRunSteps.map((step) => [step.agent_id, step]));
   const stepsByAgent = groupStepsByAgent(allRunSteps);
-  const agentFlow = [
-    { id: 'account_director', label: 'Atendimento', description: 'Briefing operacional' },
-    { id: 'copywriter', label: 'Copywriter', description: 'Texto e tom' },
-    { id: 'visual_director', label: 'Visual', description: 'Direção de arte' },
-    { id: 'editor', label: 'Editor', description: 'Coerência' },
-    { id: 'approver', label: 'Aprovador', description: 'Gate final' },
-  ];
+  const executionPlan = latestRun?.execution_plan_json || latestRun?.executionPlan || null;
+  const visibleAgentIds = Array.isArray(executionPlan?.agent_sequence) && executionPlan.agent_sequence.length
+    ? executionPlan.agent_sequence
+    : AGENCY_AGENT_ORDER;
+  const agentFlow = visibleAgentIds.map((agentId) => ({
+    id: agentId,
+    label: shortAgentLabel(agentId),
+    description: agentDescription(agentId),
+  }));
   const completedSteps = agentFlow.filter((agent) => stepByAgent.get(agent.id)?.status === 'completed').length;
   const approverStep = stepByAgent.get('approver');
   const approvalDecision = normalizeDecision(getStepPayload(approverStep)?.decisao || getStepPayload(approverStep)?.decision);
@@ -504,6 +563,18 @@ export default function AgencyRequestDetailPage() {
             <div className="glass-card" style={{ padding: '1rem', marginBottom: '1rem', borderColor: 'rgba(239,68,68,0.35)', color: 'var(--brand-red)' }}>
               {errorMsg}
             </div>
+          )}
+
+          {executionModal && (
+            <ExecutionModeModal
+              modal={executionModal}
+              agentFlow={agentFlow}
+              modelSelection={modelSelection}
+              setModelSelection={setModelSelection}
+              running={runningWorkflow}
+              onClose={() => setExecutionModal(null)}
+              onSubmit={submitAgencyExecution}
+            />
           )}
 
           {loading ? (
@@ -667,6 +738,7 @@ export default function AgencyRequestDetailPage() {
                   <DeliveryPanel
                     latestRun={latestRun}
                     copyStep={stepByAgent.get('copywriter')}
+                    channelStep={stepByAgent.get('channel_adapter')}
                     visualStep={stepByAgent.get('visual_director')}
                     editorStep={stepByAgent.get('editor')}
                     approverStep={approverStep}
@@ -676,6 +748,8 @@ export default function AgencyRequestDetailPage() {
                     onSelectImage={setGeneratedImage}
                     onGenerateImage={generateApprovedImage}
                   />
+
+                  <ExecutionProfilePanel run={latestRun} executionPlan={executionPlan} agentFlow={agentFlow} />
 
                   <CreativeAssetsPanel
                     assets={creativeAssets}
@@ -1398,11 +1472,39 @@ function labelAgent(agentId) {
   const labels = {
     account_director: 'Atendimento Estratégico',
     copywriter: 'Copywriter',
+    channel_adapter: 'Channel Adapter',
     visual_director: 'Direção Visual',
     editor: 'Editor de Coerência',
+    brand_compliance: 'Brand Compliance',
     approver: 'Aprovador de Marca',
   };
   return labels[agentId] || agentId;
+}
+
+function shortAgentLabel(agentId) {
+  const labels = {
+    account_director: 'Atendimento',
+    copywriter: 'Copywriter',
+    channel_adapter: 'Canal',
+    visual_director: 'Visual',
+    editor: 'Editor',
+    brand_compliance: 'Compliance',
+    approver: 'Aprovador',
+  };
+  return labels[agentId] || agentId;
+}
+
+function agentDescription(agentId) {
+  const descriptions = {
+    account_director: 'Briefing operacional',
+    copywriter: 'Texto e tom',
+    channel_adapter: 'Adaptação por canal',
+    visual_director: 'Direção de arte',
+    editor: 'Qualidade editorial',
+    brand_compliance: 'Aderência à marca',
+    approver: 'Gate final',
+  };
+  return descriptions[agentId] || 'Etapa da Agência';
 }
 
 function getStepPayload(stepOrOutput) {
@@ -1446,6 +1548,29 @@ function AgentOutput({ agentId, output }) {
     );
   }
 
+  if (agentId === 'channel_adapter') {
+    const adapted = data.adapted_content || {};
+    return (
+      <OutputCard>
+        <OutputLine title="Canal" value={data.channel} />
+        <OutputLine title="Formato" value={data.request_type} />
+        <OutputLine title="Headline" value={adapted.headline} />
+        <OutputLine title="Assunto" value={adapted.subject_line} />
+        <OutputLine title="Preview text" value={adapted.preview_text} />
+        <OutputLine title="Legenda" value={adapted.caption} />
+        <OutputLine title="Corpo adaptado" value={adapted.body || adapted.script} />
+        <OutputList title="Sequência de slides" items={toArray(adapted.slide_sequence).map(formatValue)} />
+        <OutputList title="Seções" items={toArray(adapted.sections).map(formatValue)} />
+        <OutputLine title="CTA" value={data.cta} />
+        <OutputList title="Regras aplicadas" items={data.formatting_rules_applied} />
+        <OutputList title="Notas do canal" items={data.channel_specific_notes} />
+        <OutputList title="Hashtags" items={data.hashtags} />
+        <OutputLine title="UTM sugerida" value={data.utm_suggestion} />
+        <OutputList title="Avisos" items={warnings} muted />
+      </OutputCard>
+    );
+  }
+
   if (agentId === 'visual_director') {
     return (
       <OutputCard>
@@ -1469,6 +1594,26 @@ function AgentOutput({ agentId, output }) {
         <OutputList title="Riscos de incoerência" items={data.riscos_de_incoerencia} muted />
         <OutputQualityPanel metadata={data.quality_metadata} compact />
         <OutputList title="Observações" items={data.observacoes} muted />
+      </OutputCard>
+    );
+  }
+
+  if (agentId === 'brand_compliance') {
+    return (
+      <OutputCard>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
+          <strong>Auditoria de aderência à marca</strong>
+          <span style={{ color: complianceDecisionColor(data.decision), background: 'rgba(255,255,255,0.05)', border: `1px solid ${complianceDecisionBorder(data.decision)}`, borderRadius: 999, padding: '0.22rem 0.65rem', fontSize: '0.78rem', fontWeight: 800 }}>
+            {complianceDecisionLabel(data.decision)}
+          </span>
+        </div>
+        <OutputLine title="Score de aderência" value={typeof data.overall_brand_alignment_score === 'number' ? `${data.overall_brand_alignment_score}/100` : data.overall_brand_alignment_score} />
+        <BrandComplianceChecklist items={data.checklist} />
+        <BrandComplianceViolations items={data.violations} />
+        <OutputList title="Ajustes obrigatórios" items={data.required_adjustments} />
+        <OutputList title="Melhorias opcionais" items={data.optional_improvements} muted />
+        <OutputList title="Slices checados" items={data.brand_memory_slices_checked} muted />
+        <OutputList title="Avisos" items={warnings} muted />
       </OutputCard>
     );
   }
@@ -1500,6 +1645,201 @@ function AgentOutput({ agentId, output }) {
     </OutputCard>
   );
 }
+
+function ExecutionModeModal({
+  modal,
+  agentFlow,
+  modelSelection,
+  setModelSelection,
+  running,
+  onClose,
+  onSubmit,
+}) {
+  const scopeLabel = modal.scope === 'all'
+    ? 'Esteira inteira'
+    : modal.scope === 'from'
+      ? `A partir de ${labelAgent(modal.agentId)}`
+      : `Apenas ${labelAgent(modal.agentId)}`;
+  const selectedSingleModel = getModel(modelSelection.selected_model_id);
+  const usesPremiumForWholeRun = modal.scope === 'all' && (
+    (modelSelection.execution_mode === 'use_single_model_for_run' && isPremiumModel(selectedSingleModel?.model_id))
+    || modelSelection.execution_mode === 'use_agent_defaults'
+  );
+
+  const updateSelection = (patch) => setModelSelection((current) => ({
+    ...current,
+    ...patch,
+  }));
+
+  const setAgentOverride = (agentId, modelId) => {
+    setModelSelection((current) => {
+      const currentOverrides = Array.isArray(current.agent_overrides) ? current.agent_overrides : [];
+      const nextOverrides = [
+        ...currentOverrides.filter((item) => item.agent_id !== agentId),
+        { agent_id: agentId, model_id: modelId },
+      ];
+      return { ...current, agent_overrides: nextOverrides };
+    });
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(1,6,18,0.72)', display: 'grid', placeItems: 'center', padding: '1.25rem' }}>
+      <section className="glass-card" style={{ width: 'min(780px, 100%)', maxHeight: 'min(90vh, 820px)', overflowY: 'auto', borderColor: 'rgba(56,189,248,0.28)', padding: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Execução da Agência</div>
+            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Executar Agência IA</h2>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.35rem 0 0', fontSize: '0.84rem' }}>{scopeLabel}</p>
+          </div>
+          <button type="button" onClick={onClose} disabled={running} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'var(--text-primary)', padding: '0.45rem 0.65rem', cursor: running ? 'wait' : 'pointer', fontWeight: 800 }}>
+            Fechar
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gap: '0.85rem' }}>
+          <section style={modalSectionStyle}>
+            <strong>1. Modo de execução</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.55rem', marginTop: '0.7rem' }}>
+              {EXECUTION_MODE_OPTIONS.map((option) => {
+                const selected = modelSelection.execution_mode === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => updateSelection({ execution_mode: option.value })}
+                    style={{
+                      textAlign: 'left',
+                      background: selected ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.035)',
+                      border: `1px solid ${selected ? 'rgba(56,189,248,0.38)' : 'rgba(255,255,255,0.09)'}`,
+                      borderRadius: 8,
+                      color: 'var(--text-primary)',
+                      padding: '0.72rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ display: 'block', color: selected ? 'var(--accent-blue)' : 'var(--text-primary)', fontWeight: 900, fontSize: '0.84rem' }}>{option.label}</span>
+                    <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.76rem', lineHeight: 1.4, marginTop: '0.25rem' }}>{option.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {modelSelection.execution_mode === 'use_single_model_for_run' && (
+              <label style={modalLabelStyle}>
+                Modelo único
+                <select
+                  value={modelSelection.selected_model_id || 'gemini-3-flash-preview'}
+                  onChange={(event) => updateSelection({ selected_model_id: event.target.value })}
+                  style={modalInputStyle}
+                >
+                  {REAL_AI_MODELS.map((model) => <option key={model.model_id} value={model.model_id}>{model.display_name}</option>)}
+                </select>
+              </label>
+            )}
+
+            {modelSelection.execution_mode === 'override_single_agent' && (
+              <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.75rem' }}>
+                {agentFlow.map((agent) => {
+                  const override = (modelSelection.agent_overrides || []).find((item) => item.agent_id === agent.id);
+                  return (
+                    <label key={agent.id} style={{ ...modalLabelStyle, marginTop: 0 }}>
+                      {agent.label}
+                      <select
+                        value={override?.model_id || DEFAULT_AGENT_MODEL[agent.id] || 'gemini-3-flash-preview'}
+                        onChange={(event) => setAgentOverride(agent.id, event.target.value)}
+                        style={modalInputStyle}
+                      >
+                        {REAL_AI_MODELS.map((model) => <option key={model.model_id} value={model.model_id}>{model.display_name}</option>)}
+                      </select>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          <section style={modalSectionStyle}>
+            <strong>2. Escopo e proteções de custo</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.6rem', marginTop: '0.7rem' }}>
+              <TechMetric label="Escopo" value={scopeLabel} />
+              <label style={{ ...modalLabelStyle, marginTop: 0 }}>
+                Máx. tokens por step
+                <input
+                  type="number"
+                  min="1"
+                  value={modelSelection.max_tokens_per_step || ''}
+                  onChange={(event) => updateSelection({ max_tokens_per_step: event.target.value })}
+                  placeholder="6000"
+                  style={modalInputStyle}
+                />
+              </label>
+              <label style={{ ...modalLabelStyle, marginTop: 0 }}>
+                Máx. custo da run (US$)
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={modelSelection.max_estimated_cost_per_run || ''}
+                  onChange={(event) => updateSelection({ max_estimated_cost_per_run: event.target.value })}
+                  placeholder="opcional"
+                  style={modalInputStyle}
+                />
+              </label>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+              <input
+                type="checkbox"
+                checked={modelSelection.require_confirmation_for_premium !== false}
+                onChange={(event) => updateSelection({ require_confirmation_for_premium: event.target.checked })}
+              />
+              Exigir confirmação para modelos premium
+            </label>
+            {usesPremiumForWholeRun && modelSelection.require_confirmation_for_premium !== false && (
+              <p style={{ margin: '0.75rem 0 0', color: 'var(--warning)', fontSize: '0.82rem', lineHeight: 1.45 }}>
+                Este modo pode consumir mais tokens. Confirme antes de executar.
+              </p>
+            )}
+          </section>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1rem' }}>
+          <button type="button" onClick={onClose} disabled={running} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'var(--text-primary)', padding: '0.65rem 0.9rem', cursor: running ? 'wait' : 'pointer', fontWeight: 800 }}>
+            Cancelar
+          </button>
+          <button type="button" onClick={onSubmit} disabled={running} className="btn-primary" style={{ padding: '0.65rem 0.95rem' }}>
+            {running ? 'Executando...' : 'Confirmar execução'}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const modalSectionStyle = {
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 8,
+  background: 'rgba(255,255,255,0.025)',
+  padding: '0.85rem',
+};
+
+const modalLabelStyle = {
+  display: 'grid',
+  gap: '0.35rem',
+  marginTop: '0.75rem',
+  color: 'var(--text-secondary)',
+  fontSize: '0.78rem',
+  fontWeight: 800,
+};
+
+const modalInputStyle = {
+  width: '100%',
+  borderRadius: 8,
+  border: '1px solid rgba(255,255,255,0.12)',
+  background: 'rgba(255,255,255,0.04)',
+  color: 'var(--text-primary)',
+  padding: '0.62rem',
+  fontWeight: 700,
+};
 
 function StepStatusSummary({ step }) {
   const technicalStatus = getTechnicalStatus(step);
@@ -1581,14 +1921,75 @@ function RunExecutionSummary({ run, steps }) {
   );
 }
 
+function ExecutionProfilePanel({ run, executionPlan, agentFlow }) {
+  if (!run) return null;
+  const profileId = executionPlan?.profile_id || run.execution_profile_id || 'custom';
+  const skipped = toArray(executionPlan?.skipped_agents);
+  const gates = toArray(executionPlan?.required_gates);
+  return (
+    <section style={{ border: '1px solid rgba(56,189,248,0.18)', borderRadius: 8, padding: '0.8rem', marginBottom: '0.85rem', background: 'rgba(56,189,248,0.045)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Perfil de execução</div>
+          <strong>{executionProfileLabel(profileId)}</strong>
+          {executionPlan?.rationale && (
+            <p style={{ margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: 1.45 }}>
+              {executionPlan.rationale}
+            </p>
+          )}
+        </div>
+        <span style={{ color: 'var(--accent-blue)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: 999, padding: '0.22rem 0.58rem', fontSize: '0.74rem', fontWeight: 800 }}>
+          {profileId}
+        </span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem', marginTop: '0.75rem' }}>
+        <div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginBottom: '0.25rem' }}>Modo IA</div>
+          <div style={{ color: 'var(--text-primary)', fontSize: '0.8rem', lineHeight: 1.5 }}>
+            {executionModeLabel(run.execution_mode || run.model_selection_json?.execution_mode)}
+          </div>
+        </div>
+        <div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginBottom: '0.25rem' }}>Sequência</div>
+          <div style={{ color: 'var(--text-primary)', fontSize: '0.8rem', lineHeight: 1.5 }}>
+            {agentFlow.map((agent) => agent.label).join(' → ')}
+          </div>
+        </div>
+        <div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginBottom: '0.25rem' }}>Gates</div>
+          <div style={{ color: 'var(--text-primary)', fontSize: '0.8rem', lineHeight: 1.5 }}>
+            {gates.length ? gates.map(formatGateLabel).join(' · ') : 'Sem gates registrados'}
+          </div>
+        </div>
+      </div>
+      {skipped.length > 0 && (
+        <details style={{ marginTop: '0.7rem' }}>
+          <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.78rem' }}>
+            Agentes pulados ({skipped.length})
+          </summary>
+          <ul style={{ margin: '0.5rem 0 0', paddingLeft: '1rem', color: 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.45 }}>
+            {skipped.map((item, index) => (
+              <li key={`${item.agent_id}-${index}`}>
+                <strong>{labelAgent(item.agent_id)}</strong>: {item.reason}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
+  );
+}
+
 function TechnicalExecutionPanel({ step }) {
-  const meta = step.execution_metadata || {};
+  const meta = step.execution_metadata_json || step.execution_metadata || {};
   const tokens = step.tokens || {
     input: meta.input_tokens,
     output: meta.output_tokens,
     total: meta.total_tokens,
   };
-  const hasMeta = step.model_used || step.prompt_version || step.provider || step.duration_ms || step.attempt_count || step.cost_estimate || step.error || tokens?.total;
+  const isMock = step.is_mock ?? meta.is_mock;
+  const modelId = step.model_id || meta.model_id || step.model_used || meta.model;
+  const hasMeta = modelId || step.prompt_version || step.provider || step.duration_ms || step.attempt_count || step.cost_estimate || step.error || tokens?.total || isMock !== undefined;
   if (!hasMeta) return null;
 
   return (
@@ -1598,7 +1999,8 @@ function TechnicalExecutionPanel({ step }) {
       </summary>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.55rem', marginTop: '0.65rem' }}>
         <TechMetric label="Provider" value={step.provider || meta.provider} />
-        <TechMetric label="Modelo" value={step.model_used || meta.model} />
+        <TechMetric label="Modelo" value={modelDisplayName(modelId)} />
+        <TechMetric label="Mock" value={isMock === undefined ? '' : isMock ? 'sim' : 'não'} />
         <TechMetric label="Prompt" value={step.prompt_version || meta.prompt_version || step.input?.promptPack?.promptVersion} />
         <TechMetric label="Tokens in" value={tokens?.input ?? meta.input_tokens} />
         <TechMetric label="Tokens out" value={tokens?.output ?? meta.output_tokens} />
@@ -1635,15 +2037,17 @@ function MetricPill({ label, value, tone = 'muted' }) {
   );
 }
 
-function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverStep, generatingImage, generatedImage, generatedImages, onSelectImage, onGenerateImage }) {
+function DeliveryPanel({ latestRun, copyStep, channelStep, visualStep, editorStep, approverStep, generatingImage, generatedImage, generatedImages, onSelectImage, onGenerateImage }) {
   const copy = getStepPayload(copyStep);
+  const channel = getStepPayload(channelStep);
   const visual = getStepPayload(visualStep);
   const editor = getStepPayload(editorStep);
   const approver = getStepPayload(approverStep);
   const decision = normalizeDecision(approver.decisao || approver.decision);
   const editorText = extractEditedCopy(editor.versao_editada);
+  const channelText = extractChannelAdaptedText(channel);
   const editorVisual = extractEditedVisual(editor.versao_editada);
-  const hasGeneratedMaterial = !!(copy.copy_principal || editorText || visual.direcao_de_arte || editorVisual);
+  const hasGeneratedMaterial = !!(copy.copy_principal || channelText || editorText || visual.direcao_de_arte || editorVisual);
 
   if (!latestRun) {
     return (
@@ -1683,9 +2087,10 @@ function DeliveryPanel({ latestRun, copyStep, visualStep, editorStep, approverSt
         </p>
       )}
 
-      <OutputLine title="Texto final/editado" value={editorText || copy.copy_principal || copy.legenda} />
+      <OutputLine title="Texto final/editado" value={editorText || channelText || copy.copy_principal || copy.legenda} />
+      <OutputLine title="Adaptação de canal" value={channelText && channelText !== editorText ? channelText : ''} />
       <OutputLine title="Headline" value={copy.headline} />
-      <OutputLine title="CTA" value={copy.cta} />
+      <OutputLine title="CTA" value={channel.cta || copy.cta} />
       <OutputLine title="Direção visual" value={editorVisual || visual.direcao_de_arte} />
       <OutputList title="Ajustes obrigatórios" items={approver.ajustes_obrigatorios} muted={!approved} />
 
@@ -2015,13 +2420,16 @@ function getCreativeAssetWarnings(asset = {}) {
 
 function libraryItemTypeForAgent(agentId, polarity) {
   const positive = polarity === 'positive';
-  if (agentId === 'copywriter' || agentId === 'editor') {
+  if (agentId === 'copywriter' || agentId === 'channel_adapter' || agentId === 'editor') {
     return positive ? 'approved_copy' : 'rejected_copy';
   }
   if (agentId === 'visual_director') {
     return positive ? 'approved_visual_direction' : 'rejected_visual_direction';
   }
   if (agentId === 'approver') {
+    return positive ? 'campaign_example' : 'negative_example';
+  }
+  if (agentId === 'brand_compliance') {
     return positive ? 'campaign_example' : 'negative_example';
   }
   return positive ? 'creative_reference' : 'negative_example';
@@ -2031,8 +2439,10 @@ function defaultLearningTypeForAgent(agentId, step) {
   const payload = getStepPayload(step);
   const decision = normalizeDecision(payload.decisao || payload.decision);
   if (agentId === 'copywriter') return 'voice_preference';
+  if (agentId === 'channel_adapter') return 'channel_rule';
   if (agentId === 'visual_director') return 'visual_preference';
   if (agentId === 'editor') return 'campaign_learning';
+  if (agentId === 'brand_compliance') return 'claim_rule';
   if (agentId === 'approver' && decision === 'rejected') return 'claim_rule';
   if (agentId === 'approver' && decision === 'revision_requested') return 'claim_rule';
   return 'campaign_learning';
@@ -2041,8 +2451,15 @@ function defaultLearningTypeForAgent(agentId, step) {
 function defaultLearningContent(agentId, step) {
   const payload = getStepPayload(step);
   if (agentId === 'copywriter') return payload.racional_de_tom || payload.copy_principal || payload.cta || '';
+  if (agentId === 'channel_adapter') return extractChannelAdaptedText(payload) || payload.cta || '';
   if (agentId === 'visual_director') return payload.direcao_de_arte || payload.composicao || payload.prompt_visual_opcional || '';
   if (agentId === 'editor') return payload.versao_editada || toArray(payload.riscos_de_incoerencia).join('\n') || '';
+  if (agentId === 'brand_compliance') {
+    return toArray(payload.required_adjustments).join('\n')
+      || toArray(payload.violations).map((item) => item?.description || item?.suggested_fix).filter(Boolean).join('\n')
+      || toArray(payload.warnings).join('\n')
+      || '';
+  }
   if (agentId === 'approver') {
     return payload.risco_principal
       || payload.justificativa
@@ -2127,6 +2544,55 @@ function Checklist({ items }) {
   );
 }
 
+function BrandComplianceChecklist({ items }) {
+  const list = toArray(items);
+  if (!list.length) return null;
+  return (
+    <div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.35rem' }}>Checklist de aderência</div>
+      <div style={{ display: 'grid', gap: '0.4rem' }}>
+        {list.map((item, index) => (
+          <div key={`${item?.criterion || 'criterion'}-${index}`} style={{ border: `1px solid ${complianceStatusBorder(item?.status)}`, borderRadius: 8, padding: '0.55rem', background: complianceStatusBackground(item?.status) }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <strong>{complianceCriterionLabel(item?.criterion)}</strong>
+              <span style={{ color: complianceStatusColor(item?.status), fontSize: '0.78rem', fontWeight: 800 }}>{complianceStatusLabel(item?.status)}</span>
+            </div>
+            {item?.observation && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{formatValue(item.observation)}</div>}
+            {item?.required_adjustment && (
+              <div style={{ color: 'var(--warning)', fontSize: '0.8rem', marginTop: '0.25rem', fontWeight: 700 }}>
+                Ajuste: {formatValue(item.required_adjustment)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BrandComplianceViolations({ items }) {
+  const list = toArray(items);
+  if (!list.length) return null;
+  return (
+    <div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', marginBottom: '0.35rem' }}>Violações encontradas</div>
+      <div style={{ display: 'grid', gap: '0.4rem' }}>
+        {list.map((item, index) => (
+          <div key={`${item?.type || 'violation'}-${index}`} style={{ border: `1px solid ${severityBorder(item?.severity)}`, borderRadius: 8, padding: '0.55rem', background: severityBackground(item?.severity) }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <strong>{formatValue(item?.type || 'Violação')}</strong>
+              <span style={{ color: severityColor(item?.severity), fontSize: '0.78rem', fontWeight: 800 }}>{formatValue(item?.severity || 'medium')}</span>
+            </div>
+            {item?.description && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{formatValue(item.description)}</div>}
+            {item?.related_brand_memory_slice && <div style={{ color: 'var(--accent-blue)', fontSize: '0.78rem', marginTop: '0.25rem' }}>Slice: {formatValue(item.related_brand_memory_slice)}</div>}
+            {item?.suggested_fix && <div style={{ color: 'var(--warning)', fontSize: '0.8rem', marginTop: '0.25rem', fontWeight: 700 }}>Correção: {formatValue(item.suggested_fix)}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function decisionLabel(decision) {
   const normalized = normalizeDecision(decision);
   const labels = {
@@ -2156,6 +2622,103 @@ function checklistColor(status) {
   if (normalized === 'pass') return 'var(--success)';
   if (normalized === 'fail') return 'var(--brand-red)';
   return 'var(--warning)';
+}
+
+function complianceDecisionLabel(decision) {
+  const labels = { pass: 'Passou', warning: 'Com ressalvas', fail: 'Falhou' };
+  return labels[decision] || 'Com ressalvas';
+}
+
+function complianceDecisionColor(decision) {
+  if (decision === 'pass') return 'var(--success)';
+  if (decision === 'fail') return 'var(--brand-red)';
+  return 'var(--warning)';
+}
+
+function complianceDecisionBorder(decision) {
+  if (decision === 'pass') return 'rgba(16,185,129,0.35)';
+  if (decision === 'fail') return 'rgba(239,68,68,0.35)';
+  return 'rgba(245,158,11,0.35)';
+}
+
+function complianceCriterionLabel(criterion) {
+  const labels = {
+    strategy: 'Estratégia',
+    positioning: 'Posicionamento',
+    audience: 'Público',
+    voice: 'Tom de voz',
+    forbidden_words: 'Palavras proibidas',
+    visual_identity: 'Identidade visual',
+    communication_plan: 'Plano de comunicação',
+    claims: 'Claims',
+    channel_fit: 'Aderência ao canal',
+    strategic_tensions: 'Tensões estratégicas',
+    executional_readiness: 'Prontidão de execução',
+  };
+  return labels[criterion] || formatValue(criterion || 'Critério');
+}
+
+function complianceStatusLabel(status) {
+  if (status === 'pass') return 'pass';
+  if (status === 'fail') return 'fail';
+  return 'warning';
+}
+
+function complianceStatusColor(status) {
+  if (status === 'pass') return 'var(--success)';
+  if (status === 'fail') return 'var(--brand-red)';
+  return 'var(--warning)';
+}
+
+function complianceStatusBorder(status) {
+  if (status === 'pass') return 'rgba(16,185,129,0.24)';
+  if (status === 'fail') return 'rgba(239,68,68,0.28)';
+  return 'rgba(245,158,11,0.28)';
+}
+
+function complianceStatusBackground(status) {
+  if (status === 'pass') return 'rgba(16,185,129,0.05)';
+  if (status === 'fail') return 'rgba(239,68,68,0.06)';
+  return 'rgba(245,158,11,0.06)';
+}
+
+function severityColor(severity) {
+  if (severity === 'high') return 'var(--brand-red)';
+  if (severity === 'low') return 'var(--accent-blue)';
+  return 'var(--warning)';
+}
+
+function severityBorder(severity) {
+  if (severity === 'high') return 'rgba(239,68,68,0.3)';
+  if (severity === 'low') return 'rgba(56,189,248,0.24)';
+  return 'rgba(245,158,11,0.28)';
+}
+
+function severityBackground(severity) {
+  if (severity === 'high') return 'rgba(239,68,68,0.06)';
+  if (severity === 'low') return 'rgba(56,189,248,0.05)';
+  return 'rgba(245,158,11,0.06)';
+}
+
+function executionProfileLabel(profileId) {
+  const labels = {
+    simple_content: 'Conteúdo simples',
+    channel_adapted_content: 'Conteúdo adaptado por canal',
+    visual_content: 'Conteúdo visual',
+    landing_page_copy: 'Copy de landing page',
+    campaign_light: 'Campanha leve',
+    custom: 'Customizado',
+  };
+  return labels[profileId] || formatValue(profileId || 'Perfil não registrado');
+}
+
+function formatGateLabel(gate) {
+  const labels = {
+    briefing_approval: 'Briefing aprovado',
+    brand_compliance_before_approver: 'Compliance antes do aprovador',
+    human_approval_before_publication: 'Aprovação humana',
+  };
+  return labels[gate] || formatValue(gate);
 }
 
 function hasRenderableValue(value) {
@@ -2280,6 +2843,31 @@ function inferQualityAssessmentFromStep(step, data = {}) {
       assessed_by: 'agent',
     };
   }
+  if (step.agent_id === 'brand_compliance' && data.decision) {
+    const violations = toArray(data.violations);
+    const issues = [
+      ...toArray(data.required_adjustments),
+      ...toArray(data.warnings),
+      ...violations.map((item) => item?.description || item?.suggested_fix),
+    ].map(formatValue).filter(Boolean);
+    const highSeverity = violations.some((item) => item?.severity === 'high');
+    const claimRisk = issues.some((item) => /claim|prova|evid[eê]ncia|sustenta|garant/i.test(item));
+    return {
+      quality_status: data.decision === 'pass'
+        ? 'acceptable'
+        : data.decision === 'fail'
+          ? (highSeverity ? 'rejected' : 'risky')
+          : claimRisk ? 'risky' : 'needs_revision',
+      quality_score: normalizeScore(data.overall_brand_alignment_score),
+      quality_issues: issues,
+      strategic_alignment_score: normalizeScore(data.overall_brand_alignment_score),
+      evidence_risk_score: claimRisk ? 85 : 20,
+      review_reason: data.decision === 'pass'
+        ? 'Brand compliance não encontrou violações relevantes.'
+        : 'Brand compliance encontrou warnings, violações ou ajustes obrigatórios.',
+      assessed_by: 'agent',
+    };
+  }
   return { quality_status: 'not_reviewed', quality_issues: [], assessed_by: 'system' };
 }
 
@@ -2383,6 +2971,22 @@ function extractEditedCopy(value) {
   return String(value);
 }
 
+function extractChannelAdaptedText(value) {
+  const adapted = value?.adapted_content || value;
+  if (!adapted || typeof adapted !== 'object') return '';
+  const parts = [
+    adapted.subject_line ? `Assunto: ${adapted.subject_line}` : '',
+    adapted.preview_text ? `Preview: ${adapted.preview_text}` : '',
+    adapted.headline ? `Headline: ${adapted.headline}` : '',
+    adapted.caption || '',
+    adapted.body || '',
+    adapted.script || '',
+    ...toArray(adapted.slide_sequence).map(formatValue),
+    ...toArray(adapted.sections).map(formatValue),
+  ];
+  return parts.map(formatValue).filter(Boolean).join('\n\n');
+}
+
 function extractEditedVisual(value) {
   if (!value || typeof value !== 'object') return '';
   return value.direcao_visual_final || value.direcao_visual || value.visual || '';
@@ -2444,6 +3048,74 @@ function formatValue(value) {
       .join('\n');
   }
   return String(value);
+}
+
+function defaultModelSelection() {
+  const executionMode = process.env.NEXT_PUBLIC_DEFAULT_AI_EXECUTION_MODE
+    || (process.env.NODE_ENV === 'production' ? 'use_agent_defaults' : 'mock');
+  return {
+    execution_mode: executionMode,
+    selected_model_id: 'gemini-3-flash-preview',
+    agent_overrides: [],
+    max_tokens_per_step: 6000,
+    max_estimated_cost_per_run: '',
+    require_confirmation_for_premium: true,
+  };
+}
+
+function cleanModelSelection(selection = {}, agentFlow = []) {
+  const executionMode = selection.execution_mode || 'mock';
+  const allowedAgentIds = new Set((agentFlow || []).map((agent) => agent.id));
+  const overrides = (selection.agent_overrides || [])
+    .filter((item) => item?.agent_id && item?.model_id && (!allowedAgentIds.size || allowedAgentIds.has(item.agent_id)))
+    .map((item) => ({ agent_id: item.agent_id, model_id: item.model_id }));
+
+  const cleaned = {
+    execution_mode: executionMode,
+    max_tokens_per_step: positiveNumberOrUndefined(selection.max_tokens_per_step),
+    max_estimated_cost_per_run: nonNegativeNumberOrUndefined(selection.max_estimated_cost_per_run),
+    require_confirmation_for_premium: selection.require_confirmation_for_premium !== false,
+  };
+
+  if (executionMode === 'use_single_model_for_run') {
+    cleaned.selected_model_id = selection.selected_model_id || 'gemini-3-flash-preview';
+  }
+  if (executionMode === 'override_single_agent') {
+    cleaned.agent_overrides = overrides;
+  }
+  return cleaned;
+}
+
+function positiveNumberOrUndefined(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? Math.round(numeric) : undefined;
+}
+
+function nonNegativeNumberOrUndefined(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : undefined;
+}
+
+function getModel(modelId) {
+  return AI_MODELS.find((model) => model.model_id === modelId) || null;
+}
+
+function modelDisplayName(modelId) {
+  return getModel(modelId)?.display_name || modelId;
+}
+
+function isPremiumModel(modelId) {
+  return modelId === 'gpt-5.4' || modelId === 'claude-sonnet-4-6';
+}
+
+function executionModeLabel(mode) {
+  return ({
+    mock: 'Simulado sem tokens',
+    economical: 'Econômico',
+    use_agent_defaults: 'Padrão por agente',
+    use_single_model_for_run: 'Modelo único',
+    override_single_agent: 'Personalizado por agente',
+  })[mode] || 'Não registrado';
 }
 
 function humanizeKey(key) {

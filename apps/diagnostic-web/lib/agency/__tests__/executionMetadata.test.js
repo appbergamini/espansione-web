@@ -87,6 +87,33 @@ test('marca output concluído como arriscado quando há claim sem sustentação'
   assert.equal(assessment.evidence_risk_score, 85);
 });
 
+test('brand_compliance converte decisão e violações em quality_assessment', () => {
+  const assessment = buildOutputQualityAssessment({
+    agentId: 'brand_compliance',
+    output: {
+      data: {
+        decision: 'fail',
+        overall_brand_alignment_score: 34,
+        checklist: [{ criterion: 'claims', status: 'fail', observation: 'Claim sem prova.' }],
+        violations: [{
+          type: 'claim_without_proof',
+          description: 'Claim forte sem evidência.',
+          severity: 'high',
+          suggested_fix: 'Remover claim ou adicionar prova.',
+        }],
+        required_adjustments: ['Remover claim sem prova.'],
+        warnings: [],
+      },
+    },
+    assessedAt: '2026-05-18T12:00:00.000Z',
+  });
+
+  assert.equal(assessment.quality_status, 'rejected');
+  assert.equal(assessment.quality_score, 34);
+  assert.equal(assessment.evidence_risk_score, 85);
+  assert.equal(assessment.assessed_by, 'agent');
+});
+
 test('quality_assessment explícito é normalizado e preservado', () => {
   const assessment = buildOutputQualityAssessment({
     agentId: 'editor',
@@ -110,37 +137,86 @@ test('quality_assessment explícito é normalizado e preservado', () => {
 
 test('agency step salva metadata de execução e prompt_version', async () => {
   const db = makeAgencyDb();
-  await runAgencyWorkflow(db, 'request-1', new InstrumentedGateway());
+  await runAgencyWorkflow(db, 'request-1', new InstrumentedGateway(), { modelSelection: { execution_mode: 'use_agent_defaults' } });
 
   const copyStep = db.tables.agency_steps.find((step) => step.agent_id === 'copywriter');
+  const channelStep = db.tables.agency_steps.find((step) => step.agent_id === 'channel_adapter');
+  const editorStep = db.tables.agency_steps.find((step) => step.agent_id === 'editor');
+  const brandComplianceStep = db.tables.agency_steps.find((step) => step.agent_id === 'brand_compliance');
   const run = db.tables.agency_runs.find((item) => item.id === 'run-1');
 
   assert.equal(copyStep.status, 'completed');
   assert.equal(copyStep.technical_status, 'completed');
   assert.equal(copyStep.provider, 'test-provider');
   assert.equal(copyStep.model_used, 'test-model-copywriter');
+  assert.equal(copyStep.model_id, 'claude-sonnet-4-6');
+  assert.equal(copyStep.is_mock, false);
   assert.equal(copyStep.prompt_version, 'copywriter_v1');
   assert.equal(copyStep.tokens.total, 30);
   assert.equal(copyStep.cost_estimate, 0.003);
   assert.equal(copyStep.attempt_count, 1);
   assert.equal(copyStep.execution_metadata.prompt_version, 'copywriter_v1');
-  assert.equal(run.execution_metadata.total_steps, 5);
-  assert.equal(run.execution_metadata.completed_steps, 5);
-  assert.equal(run.execution_metadata.total_tokens, 120);
+  assert.equal(copyStep.execution_metadata_json.model_id, 'claude-sonnet-4-6');
+  assert.equal(channelStep.status, 'completed');
+  assert.equal(channelStep.prompt_version, 'channel_adapter_v1');
+  assert.equal(channelStep.output.data.adapted_content.body, 'Copy adaptada para LinkedIn.');
+  assert.equal(editorStep.input.channelAdapterOutput.adapted_content.body, 'Copy adaptada para LinkedIn.');
+  assert.equal(brandComplianceStep.status, 'completed');
+  assert.equal(brandComplianceStep.prompt_version, 'brand_compliance_v1');
+  assert.equal(brandComplianceStep.input.editorOutput.versao_editada, 'Versão editada');
+  assert.equal(brandComplianceStep.quality_assessment.quality_status, 'risky');
+  assert.equal(run.execution_metadata.total_steps, 7);
+  assert.equal(run.execution_metadata.completed_steps, 7);
+  assert.equal(run.execution_metadata.total_tokens, 180);
+  assert.equal(run.execution_mode, 'use_agent_defaults');
 
-  const editorStep = db.tables.agency_steps.find((step) => step.agent_id === 'editor');
   const approverStep = db.tables.agency_steps.find((step) => step.agent_id === 'approver');
+  assert.equal(approverStep.input.brandComplianceOutput.decision, 'warning');
   assert.equal(editorStep.quality_assessment.quality_status, 'acceptable');
   assert.equal(approverStep.quality_assessment.quality_status, 'risky');
   assert.equal(approverStep.status, 'completed');
   assert.equal(approverStep.technical_status, 'completed');
 });
 
+test('executor respeita agent_sequence do execution_plan', async () => {
+  const db = makeAgencyDb({
+    executionPlan: {
+      profile_id: 'simple_content',
+      request_id: 'request-1',
+      brand_id: 'brand-1',
+      agent_sequence: ['account_director', 'copywriter', 'editor', 'brand_compliance', 'approver'],
+      skipped_agents: [
+        { agent_id: 'channel_adapter', reason: 'Perfil simples não exige adaptação por canal.' },
+        { agent_id: 'visual_director', reason: 'Perfil simples não exige direção visual.' },
+      ],
+      required_gates: ['briefing_approval', 'brand_compliance_before_approver', 'human_approval_before_publication'],
+      rationale: 'Teste de perfil simples.',
+    },
+  });
+
+  await runAgencyWorkflow(db, 'request-1', new InstrumentedGateway(), { modelSelection: { execution_mode: 'use_agent_defaults' } });
+
+  assert.equal(db.tables.agency_steps.some((step) => step.agent_id === 'channel_adapter'), false);
+  assert.equal(db.tables.agency_steps.some((step) => step.agent_id === 'visual_director'), false);
+
+  const editorStep = db.tables.agency_steps.find((step) => step.agent_id === 'editor');
+  const brandComplianceStep = db.tables.agency_steps.find((step) => step.agent_id === 'brand_compliance');
+  const approverStep = db.tables.agency_steps.find((step) => step.agent_id === 'approver');
+  const run = db.tables.agency_runs.find((item) => item.id === 'run-1');
+
+  assert.equal(editorStep.input.channelAdapterOutput, undefined);
+  assert.equal(editorStep.input.visualDirectorOutput, undefined);
+  assert.equal(brandComplianceStep.input.visualDirectorOutput, undefined);
+  assert.equal(approverStep.input.brandComplianceOutput.decision, 'warning');
+  assert.equal(run.execution_metadata.total_steps, 5);
+  assert.equal(run.execution_metadata.completed_steps, 5);
+});
+
 test('erro de modelo registra step failed e run failed sem apagar histórico', async () => {
   const db = makeAgencyDb();
 
   await assert.rejects(
-    () => runAgencyWorkflow(db, 'request-1', new FailingGateway()),
+    () => runAgencyWorkflow(db, 'request-1', new FailingGateway(), { modelSelection: { execution_mode: 'use_agent_defaults' } }),
     /Falha simulada/
   );
 
@@ -156,8 +232,49 @@ test('erro de modelo registra step failed e run failed sem apagar histórico', a
   assert.equal(run.execution_metadata.failed_steps, 1);
 });
 
+test('modo mock não chama provider real e salva custo/tokens zerados', async () => {
+  const db = makeAgencyDb();
+  await runAgencyWorkflow(db, 'request-1', new FailingGateway(), { modelSelection: { execution_mode: 'mock' } });
+
+  const copyStep = db.tables.agency_steps.find((step) => step.agent_id === 'copywriter');
+  const run = db.tables.agency_runs.find((item) => item.id === 'run-1');
+
+  assert.equal(run.execution_mode, 'mock');
+  assert.equal(copyStep.provider, 'mock');
+  assert.equal(copyStep.model_id, 'mock-model');
+  assert.equal(copyStep.is_mock, true);
+  assert.equal(copyStep.tokens.total, 0);
+  assert.equal(copyStep.cost_estimate, 0);
+  assert.equal(copyStep.execution_metadata_json.is_mock, true);
+});
+
+test('modo economical resolve Gemini 3 Flash para os steps', async () => {
+  const db = makeAgencyDb();
+  const gateway = new InstrumentedGateway();
+  await runAgencyWorkflow(db, 'request-1', gateway, { modelSelection: { execution_mode: 'economical' } });
+
+  const copyStep = db.tables.agency_steps.find((step) => step.agent_id === 'copywriter');
+  const run = db.tables.agency_runs.find((item) => item.id === 'run-1');
+
+  assert.equal(run.execution_mode, 'economical');
+  assert.equal(copyStep.provider, 'test-provider');
+  assert.equal(copyStep.input.promptPack.promptVersion, 'copywriter_v1');
+  assert.equal(gateway.calls.find((call) => call.agentId === 'copywriter').modelId, 'gemini-3-flash-preview');
+});
+
+test('UI expõe opção Simular sem gastar tokens', async () => {
+  const fs = await import('node:fs/promises');
+  const path = new URL('../../../pages/adm/[id]/agency/[requestId].js', import.meta.url);
+  const source = await fs.readFile(path, 'utf8');
+
+  assert.match(source, /Simular sem gastar tokens/);
+});
+
 class InstrumentedGateway {
-  async generateStructuredOutput({ agentId, promptPack }) {
+  calls = [];
+
+  async generateStructuredOutput({ agentId, promptPack, provider, modelId }) {
+    this.calls.push({ agentId, provider, modelId });
     return {
       agentId,
       data: outputForAgent(agentId),
@@ -190,6 +307,18 @@ function outputForAgent(agentId) {
       claims_evitar: [],
       warnings: [],
     },
+    channel_adapter: {
+      channel: 'linkedin',
+      request_type: 'social_post',
+      adapted_content: {
+        headline: 'Headline adaptada',
+        body: 'Copy adaptada para LinkedIn.',
+      },
+      channel_specific_notes: ['LinkedIn profissional.'],
+      formatting_rules_applied: ['Parágrafos curtos'],
+      cta: 'Agendar',
+      warnings: [],
+    },
     visual_director: {
       direcao_de_arte: 'Direção',
       regras_visuais: ['Regra'],
@@ -206,17 +335,32 @@ function outputForAgent(agentId) {
       score_aderencia: 90,
       observacoes: [],
     },
+    brand_compliance: {
+      decision: 'warning',
+      overall_brand_alignment_score: 76,
+      checklist: [{ criterion: 'claims', status: 'warning', observation: 'Confirmar prova.' }],
+      violations: [{
+        type: 'claim_without_proof',
+        description: 'Claim precisa de validação.',
+        severity: 'medium',
+        suggested_fix: 'Adicionar evidência.',
+      }],
+      required_adjustments: ['Confirmar claim antes de aprovar.'],
+      optional_improvements: [],
+      brand_memory_slices_checked: ['plataforma_branding', 'voice_profile'],
+      warnings: [],
+    },
     approver: {
-      decisao: 'approved',
-      checklist: [{ criterio: 'Coerência', status: 'pass', observacao: 'ok' }],
-      ajustes_obrigatorios: [],
-      justificativa: 'Aprovado',
+      decisao: 'revision_requested',
+      checklist: [{ criterio: 'Claims com prova', status: 'warning', observacao: 'Confirmar evidência.' }],
+      ajustes_obrigatorios: ['Confirmar claim antes de aprovar.'],
+      justificativa: 'Há risco de claim sem prova.',
     },
   };
   return outputs[agentId];
 }
 
-function makeAgencyDb() {
+function makeAgencyDb({ executionPlan } = {}) {
   const approvedBriefing = makeBriefing('Briefing aprovado');
   return new FakeSupabase({
     agency_requests: [{
@@ -238,6 +382,8 @@ function makeAgencyDb() {
       brand_memory_version_id: 'version-1',
       brand_kernel_snapshot: makeBrandKernel(),
       brand_kernel_version: '2.0',
+      execution_profile_id: executionPlan?.profile_id || null,
+      execution_plan_json: executionPlan || null,
       branch_label: 'Original',
       status: 'pending',
       execution_metadata: {},

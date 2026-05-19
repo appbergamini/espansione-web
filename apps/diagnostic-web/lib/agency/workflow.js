@@ -1,10 +1,23 @@
 import {
   buildApproverPromptPack,
+  buildBrandCompliancePromptPack,
+  buildChannelAdapterPromptPack,
   buildCopywriterPromptPack,
   buildEditorPromptPack,
   buildVisualDirectorPromptPack,
 } from '../../../../packages/agents/src/prompt-packs.ts';
-import { getAgencyModelGateway } from './modelGateway.js';
+import {
+  buildAgencyExecutionPlan,
+  DEFAULT_AGENCY_AGENT_SEQUENCE,
+  getAgencyExecutionProfile,
+  selectAgencyExecutionProfile,
+} from '../../../../packages/agents/src/execution-profiles.ts';
+import {
+  normalizeModelSelection,
+  resolveModelForAgencyStep,
+  validateModelSelection,
+} from '../../../../packages/agents/src/model-registry.ts';
+import { getAgencyModelGateway, MockModelGateway } from './modelGateway.js';
 import { prepareAgencyRun } from './prepareRun.js';
 import { assertBriefingApproved } from './briefingApproval.js';
 import {
@@ -16,66 +29,73 @@ import {
 import { createAgencySignalsFromStep } from './agencySignals.js';
 
 export const AGENCY_AGENT_ORDER = [
-  'account_director',
-  'copywriter',
-  'visual_director',
-  'editor',
-  'approver',
+  ...DEFAULT_AGENCY_AGENT_SEQUENCE,
 ];
 
-export async function runAgencyWorkflow(db, requestId, modelGateway = getAgencyModelGateway()) {
+export async function runAgencyWorkflow(db, requestId, modelGateway = getAgencyModelGateway(), { modelSelection } = {}) {
   const prepared = await getOrPrepareRun(db, requestId);
   const run = prepared.run;
   const accountStep = prepared.step;
   const { brandKernel, agencyRequest } = accountStep.input;
   const { approvedBriefing } = await assertBriefingApproved(db, requestId);
+  const executionPlan = await ensureRunExecutionPlan(db, run, agencyRequest, brandKernel, approvedBriefing);
+  const agentSequence = getRunAgentSequence({ ...run, execution_plan_json: executionPlan });
+  const resolvedModelSelection = await saveRunModelSelection(db, run.id, modelSelection || run.model_selection_json);
 
   try {
-    await db.from('agency_runs').update({ status: 'running', started_at: new Date().toISOString() }).eq('id', run.id);
+    await db.from('agency_runs').update({
+      status: 'running',
+      started_at: new Date().toISOString(),
+      execution_mode: resolvedModelSelection.execution_mode,
+      model_selection_json: resolvedModelSelection,
+      max_tokens_per_step: resolvedModelSelection.max_tokens_per_step || null,
+      max_estimated_cost_per_run: resolvedModelSelection.max_estimated_cost_per_run || null,
+    }).eq('id', run.id);
     await db.from('agency_requests').update({ status: 'generation_running' }).eq('id', requestId);
 
     await ensureApprovedAccountStep(db, accountStep, approvedBriefing);
 
-    const copyOutput = await createAndCompleteStep(db, run.id, 'copywriter', buildStepInput({
-      agentId: 'copywriter',
-      brandKernel,
-      agencyRequest,
-      accountDirectorOutput: approvedBriefing,
-    }), modelGateway, { run, request: agencyRequest });
+    const outputsByAgent = new Map([['account_director', approvedBriefing]]);
+    let approverOutput = null;
+    for (const agentId of agentSequence.filter((item) => item !== 'account_director')) {
+      if (agentId === 'approver') {
+        await db.from('agency_requests').update({ status: 'approval_pending' }).eq('id', requestId);
+      }
+      const output = await createAndCompleteStep(db, run.id, agentId, buildStepInput({
+        agentId,
+        brandKernel,
+        agencyRequest,
+        accountDirectorOutput: approvedBriefing,
+        copywriterOutput: outputsByAgent.get('copywriter'),
+        channelAdapterOutput: outputsByAgent.get('channel_adapter'),
+        visualDirectorOutput: outputsByAgent.get('visual_director'),
+        editorOutput: outputsByAgent.get('editor'),
+        brandComplianceOutput: outputsByAgent.get('brand_compliance'),
+        approvedBriefing,
+      }), modelGateway, {
+        run: { ...run, execution_plan_json: executionPlan, model_selection_json: resolvedModelSelection },
+        request: agencyRequest,
+        modelSelection: resolvedModelSelection,
+      });
+      outputsByAgent.set(agentId, output.data);
+      if (agentId === 'approver') approverOutput = output;
+    }
 
-    const visualOutput = await createAndCompleteStep(db, run.id, 'visual_director', buildStepInput({
-      agentId: 'visual_director',
-      brandKernel,
-      agencyRequest,
-      accountDirectorOutput: approvedBriefing,
-    }), modelGateway, { run, request: agencyRequest });
-
-    const editorOutput = await createAndCompleteStep(db, run.id, 'editor', buildStepInput({
-      agentId: 'editor',
-      brandKernel,
-      agencyRequest,
-      accountDirectorOutput: approvedBriefing,
-      copywriterOutput: copyOutput.data,
-      visualDirectorOutput: visualOutput.data,
-    }), modelGateway, { run, request: agencyRequest });
-
-    await db.from('agency_requests').update({ status: 'approval_pending' }).eq('id', requestId);
-
-    const approverOutput = await createAndCompleteStep(db, run.id, 'approver', buildStepInput({
-      agentId: 'approver',
-      brandKernel,
-      agencyRequest,
-      accountDirectorOutput: approvedBriefing,
-      copywriterOutput: copyOutput.data,
-      visualDirectorOutput: visualOutput.data,
-      editorOutput: editorOutput.data,
-    }), modelGateway, { run, request: agencyRequest });
-
-    const finalDecision = approverOutput.data?.decisao || 'revision_requested';
+    const finalDecision = approverOutput?.data?.decisao || 'revision_requested';
     await completeRunAndRequest(db, run.id, requestId, finalDecision);
 
     const steps = await listRunSteps(db, run.id);
-    return { run: { ...run, status: 'completed', execution_metadata: calculateAgencyRunExecutionSummary(steps) }, steps, finalDecision };
+    return {
+      run: {
+        ...run,
+        execution_profile_id: executionPlan.profile_id,
+        execution_plan_json: executionPlan,
+        status: 'completed',
+        execution_metadata: calculateAgencyRunExecutionSummary(steps),
+      },
+      steps,
+      finalDecision,
+    };
   } catch (error) {
     await failRun(db, run.id, requestId, error);
     throw error;
@@ -87,7 +107,7 @@ export async function regenerateAgencyStep(
   runId,
   agentId,
   modelGateway = getAgencyModelGateway(),
-  { confirmApproved = false } = {}
+  { confirmApproved = false, modelSelection } = {}
 ) {
   assertKnownAgent(agentId);
   const { run, request, steps } = await loadRunContext(db, runId);
@@ -110,13 +130,14 @@ export async function regenerateAgencyStep(
     brandKernel,
     agencyRequest,
     modelGateway,
+    modelSelection: await saveRunModelSelection(db, run.id, modelSelection || run.model_selection_json),
   });
 
   return {
     run: await markRunPartial(db, run.id),
     step: output.step,
     output: output.output,
-    invalidatedAgents: downstreamAgents(agentId),
+    invalidatedAgents: downstreamAgents(agentId, getRunAgentSequence(run)),
   };
 }
 
@@ -125,15 +146,16 @@ export async function regenerateFromAgencyStep(
   runId,
   agentId,
   modelGateway = getAgencyModelGateway(),
-  { confirmApproved = false } = {}
+  { confirmApproved = false, modelSelection } = {}
 ) {
   assertKnownAgent(agentId);
-  const first = await regenerateAgencyStep(db, runId, agentId, modelGateway, { confirmApproved });
+  const first = await regenerateAgencyStep(db, runId, agentId, modelGateway, { confirmApproved, modelSelection });
   if (agentId === 'account_director') return { ...first, steps: await listRunSteps(db, runId) };
 
   const generated = [first.step];
-  const startIndex = AGENCY_AGENT_ORDER.indexOf(agentId);
-  for (const nextAgentId of AGENCY_AGENT_ORDER.slice(startIndex + 1)) {
+  const sequence = getRunAgentSequence(first.run);
+  const startIndex = sequence.indexOf(agentId);
+  for (const nextAgentId of sequence.slice(startIndex + 1)) {
     const { run, request, steps } = await loadRunContext(db, runId);
     const currentByAgent = getCurrentStepMap(steps);
     const accountStep = currentByAgent.get('account_director');
@@ -146,6 +168,7 @@ export async function regenerateFromAgencyStep(
       brandKernel,
       agencyRequest,
       modelGateway,
+      modelSelection: normalizeModelSelection(modelSelection || run.model_selection_json, process.env.NODE_ENV),
       skipDownstreamInvalidation: true,
     });
     generated.push(result.step);
@@ -175,6 +198,12 @@ export async function createAgencyRunVariation(db, runId, label) {
       brand_kernel_version: run.brand_kernel_version || '2.0',
       parent_run_id: run.parent_run_id || run.id,
       branch_label: label || makeVariationLabel(run),
+      execution_profile_id: run.execution_profile_id || null,
+      execution_plan_json: run.execution_plan_json || null,
+      execution_mode: run.execution_mode || null,
+      model_selection_json: run.model_selection_json || null,
+      max_tokens_per_step: run.max_tokens_per_step || null,
+      max_estimated_cost_per_run: run.max_estimated_cost_per_run || null,
       status: 'pending',
     })
     .select('*')
@@ -215,10 +244,10 @@ export function getCurrentStepMap(steps = []) {
   return byAgent;
 }
 
-export function downstreamAgents(agentId) {
-  const index = AGENCY_AGENT_ORDER.indexOf(agentId);
+export function downstreamAgents(agentId, sequence = AGENCY_AGENT_ORDER) {
+  const index = sequence.indexOf(agentId);
   if (index < 0) return [];
-  return AGENCY_AGENT_ORDER.slice(index + 1);
+  return sequence.slice(index + 1);
 }
 
 async function createVersionedStep(db, {
@@ -229,6 +258,7 @@ async function createVersionedStep(db, {
   brandKernel,
   agencyRequest,
   modelGateway,
+  modelSelection,
   skipDownstreamInvalidation = false,
 }) {
   const currentByAgent = getCurrentStepMap(steps);
@@ -269,10 +299,10 @@ async function createVersionedStep(db, {
   }
 
   if (!skipDownstreamInvalidation) {
-    await invalidateDownstreamSteps(db, steps, agentId, step.id);
+    await invalidateDownstreamSteps(db, steps, agentId, step.id, getRunAgentSequence(run));
   }
 
-  const output = await completeStep(db, step, modelGateway, { run, request });
+  const output = await completeStep(db, step, modelGateway, { run, request, modelSelection });
 
   if (agentId === 'account_director') {
     await db
@@ -305,6 +335,8 @@ async function buildVersionedStepInput(db, {
   agencyRequest,
 }) {
   const currentByAgent = getCurrentStepMap(steps);
+  const agentSequence = getRunAgentSequence(run);
+  const legacyWithoutPlan = isLegacyRunWithoutExecutionPlan(run);
   const { approvedBriefing } = agentId === 'account_director'
     ? { approvedBriefing: null }
     : await assertBriefingApproved(db, request.id);
@@ -322,12 +354,36 @@ async function buildVersionedStepInput(db, {
     return buildStepInput({ agentId, brandKernel, agencyRequest, accountDirectorOutput: approvedBriefing });
   }
 
-  if (agentId === 'visual_director') {
-    return buildStepInput({ agentId, brandKernel, agencyRequest, accountDirectorOutput: approvedBriefing });
+  const copywriterOutput = getRequiredStepOutput(currentByAgent, 'copywriter');
+
+  if (agentId === 'channel_adapter') {
+    return buildStepInput({
+      agentId,
+      brandKernel,
+      agencyRequest,
+      accountDirectorOutput: approvedBriefing,
+      copywriterOutput,
+      approvedBriefing,
+    });
   }
 
-  const copywriterOutput = getRequiredStepOutput(currentByAgent, 'copywriter');
-  const visualDirectorOutput = getRequiredStepOutput(currentByAgent, 'visual_director');
+  const channelAdapterOutput = agentSequence.includes('channel_adapter') && !legacyWithoutPlan
+    ? getRequiredStepOutput(currentByAgent, 'channel_adapter')
+    : getOptionalStepOutput(currentByAgent, 'channel_adapter');
+
+  if (agentId === 'visual_director') {
+    return buildStepInput({
+      agentId,
+      brandKernel,
+      agencyRequest,
+      accountDirectorOutput: approvedBriefing,
+      channelAdapterOutput,
+    });
+  }
+
+  const visualDirectorOutput = agentSequence.includes('visual_director') && !legacyWithoutPlan
+    ? getRequiredStepOutput(currentByAgent, 'visual_director')
+    : getOptionalStepOutput(currentByAgent, 'visual_director');
 
   if (agentId === 'editor') {
     return buildStepInput({
@@ -336,20 +392,41 @@ async function buildVersionedStepInput(db, {
       agencyRequest,
       accountDirectorOutput: approvedBriefing,
       copywriterOutput,
+      channelAdapterOutput,
       visualDirectorOutput,
     });
   }
 
-  if (agentId === 'approver') {
-    const editorOutput = getRequiredStepOutput(currentByAgent, 'editor');
+  const editorOutput = getRequiredStepOutput(currentByAgent, 'editor');
+
+  if (agentId === 'brand_compliance') {
     return buildStepInput({
       agentId,
       brandKernel,
       agencyRequest,
       accountDirectorOutput: approvedBriefing,
       copywriterOutput,
+      channelAdapterOutput,
       visualDirectorOutput,
       editorOutput,
+      approvedBriefing,
+    });
+  }
+
+  if (agentId === 'approver') {
+    const brandComplianceOutput = agentSequence.includes('brand_compliance') && !legacyWithoutPlan
+      ? getRequiredStepOutput(currentByAgent, 'brand_compliance')
+      : getOptionalStepOutput(currentByAgent, 'brand_compliance');
+    return buildStepInput({
+      agentId,
+      brandKernel,
+      agencyRequest,
+      accountDirectorOutput: approvedBriefing,
+      copywriterOutput,
+      channelAdapterOutput,
+      visualDirectorOutput,
+      editorOutput,
+      brandComplianceOutput,
     });
   }
 
@@ -362,8 +439,11 @@ function buildStepInput({
   agencyRequest,
   accountDirectorOutput,
   copywriterOutput,
+  channelAdapterOutput,
   visualDirectorOutput,
   editorOutput,
+  brandComplianceOutput,
+  approvedBriefing,
 }) {
   if (agentId === 'copywriter') {
     const promptPack = buildCopywriterPromptPack({ brandKernel, agencyRequest, accountDirectorOutput });
@@ -371,8 +451,24 @@ function buildStepInput({
   }
 
   if (agentId === 'visual_director') {
-    const promptPack = buildVisualDirectorPromptPack({ brandKernel, agencyRequest, accountDirectorOutput });
-    return { brandKernel, agencyRequest, accountDirectorOutput, promptPack };
+    const promptPack = buildVisualDirectorPromptPack({
+      brandKernel,
+      agencyRequest,
+      accountDirectorOutput,
+      channelAdapterOutput,
+    });
+    return { brandKernel, agencyRequest, accountDirectorOutput, channelAdapterOutput, promptPack };
+  }
+
+  if (agentId === 'channel_adapter') {
+    const promptPack = buildChannelAdapterPromptPack({
+      brandKernel,
+      agencyRequest,
+      accountDirectorOutput,
+      copywriterOutput,
+      approvedBriefing,
+    });
+    return { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, approvedBriefing, promptPack };
   }
 
   if (agentId === 'editor') {
@@ -381,9 +477,10 @@ function buildStepInput({
       agencyRequest,
       accountDirectorOutput,
       copywriterOutput,
+      channelAdapterOutput,
       visualDirectorOutput,
     });
-    return { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput, promptPack };
+    return { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, channelAdapterOutput, visualDirectorOutput, promptPack };
   }
 
   if (agentId === 'approver') {
@@ -392,14 +489,42 @@ function buildStepInput({
       agencyRequest,
       accountDirectorOutput,
       copywriterOutput,
+      channelAdapterOutput,
       visualDirectorOutput,
       editorOutput,
+      brandComplianceOutput,
     });
     return {
       brandKernel,
       agencyRequest,
       accountDirectorOutput,
       copywriterOutput,
+      channelAdapterOutput,
+      visualDirectorOutput,
+      editorOutput,
+      brandComplianceOutput,
+      promptPack,
+    };
+  }
+
+  if (agentId === 'brand_compliance') {
+    const promptPack = buildBrandCompliancePromptPack({
+      brandKernel,
+      agencyRequest,
+      approvedBriefing,
+      accountDirectorOutput,
+      copywriterOutput,
+      channelAdapterOutput,
+      visualDirectorOutput,
+      editorOutput,
+    });
+    return {
+      brandKernel,
+      agencyRequest,
+      approvedBriefing,
+      accountDirectorOutput,
+      copywriterOutput,
+      channelAdapterOutput,
       visualDirectorOutput,
       editorOutput,
       promptPack,
@@ -447,6 +572,99 @@ async function getOrPrepareRun(db, requestId) {
   return prepareAgencyRun(db, requestId);
 }
 
+async function saveRunModelSelection(db, runId, selection) {
+  const normalized = normalizeModelSelection(selection, process.env.NODE_ENV);
+  const errors = validateModelSelection(normalized);
+  if (errors.length) {
+    const err = new Error(errors.join(' '));
+    err.statusCode = 400;
+    throw err;
+  }
+
+  await db
+    .from('agency_runs')
+    .update({
+      execution_mode: normalized.execution_mode,
+      model_selection_json: normalized,
+      max_tokens_per_step: normalized.max_tokens_per_step || null,
+      max_estimated_cost_per_run: normalized.max_estimated_cost_per_run || null,
+    })
+    .eq('id', runId);
+
+  return normalized;
+}
+
+async function ensureRunExecutionPlan(db, run, agencyRequest, brandKernel, approvedBriefing) {
+  if (run.execution_plan_json?.agent_sequence?.length) return run.execution_plan_json;
+
+  if (!run.execution_profile_id) {
+    return {
+      profile_id: 'custom',
+      request_id: agencyRequest.id || run.request_id || '',
+      brand_id: agencyRequest.brandId || run.brand_id || '',
+      agent_sequence: DEFAULT_AGENCY_AGENT_SEQUENCE,
+      skipped_agents: [],
+      required_gates: ['briefing_approval', 'brand_compliance_before_approver', 'human_approval_before_publication'],
+      rationale: 'Run legada sem execution_profile_id; usando sequência completa histórica para compatibilidade.',
+      created_at: run.created_at || new Date().toISOString(),
+    };
+  }
+
+  const selectedProfile = getAgencyExecutionProfile(run.execution_profile_id)
+    || selectAgencyExecutionProfile({ agencyRequest });
+  const executionPlan = buildAgencyExecutionPlan({
+    agencyRequest,
+    brandKernel,
+    selectedProfile,
+    approvedBriefing,
+  });
+
+  await db
+    .from('agency_runs')
+    .update({
+      execution_profile_id: executionPlan.profile_id,
+      execution_plan_json: executionPlan,
+    })
+    .eq('id', run.id);
+
+  return executionPlan;
+}
+
+async function assertCostLimits(db, runId, modelSelection, executionUpdate) {
+  const maxTokens = Number(modelSelection?.max_tokens_per_step || 0);
+  const stepTokens = Number(executionUpdate?.tokens?.total || 0);
+  if (maxTokens > 0 && stepTokens > maxTokens) {
+    const err = new Error(`Step excedeu o limite de tokens (${stepTokens}/${maxTokens}).`);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const maxCost = Number(modelSelection?.max_estimated_cost_per_run || 0);
+  if (maxCost <= 0) return;
+
+  const steps = await listRunSteps(db, runId);
+  const currentCost = calculateAgencyRunExecutionSummary(steps).estimated_cost_total || 0;
+  const nextCost = currentCost + Number(executionUpdate?.cost_estimate || 0);
+  if (nextCost > maxCost) {
+    const err = new Error(`Run excederia o limite de custo estimado (${formatCost(nextCost)}/${formatCost(maxCost)}).`);
+    err.statusCode = 400;
+    throw err;
+  }
+}
+
+function formatCost(value) {
+  return `US$ ${Number(value || 0).toFixed(4)}`;
+}
+
+function getRunAgentSequence(run = {}) {
+  const sequence = run.execution_plan_json?.agent_sequence;
+  return Array.isArray(sequence) && sequence.length ? sequence : DEFAULT_AGENCY_AGENT_SEQUENCE;
+}
+
+function isLegacyRunWithoutExecutionPlan(run = {}) {
+  return !run.execution_profile_id && !run.execution_plan_json?.agent_sequence?.length;
+}
+
 async function createAndCompleteStep(db, runId, agentId, input, modelGateway, context = {}) {
   const steps = await listRunSteps(db, runId);
   const existing = getCurrentStepMap(steps).get(agentId);
@@ -476,23 +694,68 @@ async function completeStep(db, step, modelGateway, context = {}) {
 
   const attemptCount = Number(step.attempt_count || 0) + 1;
   const startedAt = Date.now();
-  await db.from('agency_steps').update({ status: 'running', technical_status: 'running', attempt_count: attemptCount }).eq('id', step.id);
+  const modelSelection = normalizeModelSelection(
+    context.modelSelection || context.run?.model_selection_json,
+    process.env.NODE_ENV
+  );
+  const model = resolveModelForAgencyStep({
+    agentId: step.agent_id,
+    modelSelection,
+  });
+  const isMock = model.provider === 'mock' || model.model_id === 'mock-model';
+  const explicitMockGateway = process.env.AGENCY_MODEL_GATEWAY === 'mock';
+  const stepGateway = isMock
+    ? new MockModelGateway()
+    : modelGateway instanceof MockModelGateway && !explicitMockGateway
+      ? getAgencyModelGateway({ forceReal: true })
+      : modelGateway;
+
+  await db.from('agency_steps').update({
+    status: 'running',
+    technical_status: 'running',
+    attempt_count: attemptCount,
+    provider: model.provider,
+    model_id: model.model_id,
+    model_used: model.display_name || model.model_id,
+    is_mock: isMock,
+  }).eq('id', step.id);
   try {
-    const output = await modelGateway.generateStructuredOutput({
+    const output = await stepGateway.generateStructuredOutput({
       agentId: step.agent_id,
       promptPack: step.input?.promptPack,
+      provider: model.provider,
+      modelId: model.model_id,
+      systemPrompt: step.input?.promptPack?.systemPrompt,
+      userPrompt: step.input?.promptPack?.userPrompt,
+      schema: step.input?.promptPack?.expectedOutputSchema,
+      temperature: isMock ? 0 : Number(process.env.AGENCY_MODEL_TEMPERATURE || 0.2),
+      maxTokens: modelSelection.max_tokens_per_step,
+      metadata: {
+        executionMode: modelSelection.execution_mode,
+        agentId: step.agent_id,
+        runId: step.run_id,
+      },
     });
+    const normalizedOutput = {
+      ...output,
+      provider: output?.provider || model.provider,
+      model: output?.model || model.display_name || model.model_id,
+      modelId: output?.modelId || output?.model_id || model.model_id,
+      isMock: output?.isMock ?? output?.is_mock ?? isMock,
+    };
     const executionUpdate = buildStepUpdateFromExecution({
-      output,
+      output: normalizedOutput,
       promptPack: step.input?.promptPack,
       durationMs: Date.now() - startedAt,
       attemptCount,
     });
-    const qualityAssessment = buildOutputQualityAssessment({ agentId: step.agent_id, output });
-    const outputData = output?.data && typeof output.data === 'object' && !Array.isArray(output.data) ? output.data : {};
+    await assertCostLimits(db, step.run_id, modelSelection, executionUpdate);
+
+    const qualityAssessment = buildOutputQualityAssessment({ agentId: step.agent_id, output: normalizedOutput });
+    const outputData = normalizedOutput?.data && typeof normalizedOutput.data === 'object' && !Array.isArray(normalizedOutput.data) ? normalizedOutput.data : {};
     const outputWithAssessment = qualityAssessment
-      ? { ...output, qualityAssessment, data: { ...outputData, quality_assessment: outputData.quality_assessment || qualityAssessment } }
-      : output;
+      ? { ...normalizedOutput, qualityAssessment, data: { ...outputData, quality_assessment: outputData.quality_assessment || qualityAssessment } }
+      : normalizedOutput;
     const { data, error } = await db
       .from('agency_steps')
       .update({
@@ -523,8 +786,10 @@ async function completeStep(db, step, modelGateway, context = {}) {
   } catch (error) {
     const executionUpdate = buildStepUpdateFromExecution({
       output: {
-        model: step.model_used || 'unknown',
-        provider: step.provider,
+        model: step.model_used || model.display_name || model.model_id || 'unknown',
+        modelId: step.model_id || model.model_id,
+        provider: step.provider || model.provider,
+        isMock,
         promptVersion: step.input?.promptPack?.promptVersion || step.prompt_version,
         tokens: step.tokens || { input: 0, output: 0, total: 0 },
         estimatedCost: step.cost_estimate || 0,
@@ -545,8 +810,8 @@ async function completeStep(db, step, modelGateway, context = {}) {
   }
 }
 
-async function invalidateDownstreamSteps(db, steps, agentId, invalidatedByStepId) {
-  const downstream = new Set(downstreamAgents(agentId));
+async function invalidateDownstreamSteps(db, steps, agentId, invalidatedByStepId, sequence = AGENCY_AGENT_ORDER) {
+  const downstream = new Set(downstreamAgents(agentId, sequence));
   const updates = steps
     .filter((step) => step.is_current !== false && downstream.has(step.agent_id))
     .map((step) => db
@@ -665,6 +930,11 @@ function getRequiredStepOutput(currentByAgent, agentId) {
   const data = step?.output?.data || step?.output;
   if (!data) throw new Error(`Step ${agentId} precisa estar concluído antes desta etapa.`);
   return data;
+}
+
+function getOptionalStepOutput(currentByAgent, agentId) {
+  const step = currentByAgent.get(agentId);
+  return step?.output?.data || step?.output || undefined;
 }
 
 function compareStepsForCurrent(a, b) {

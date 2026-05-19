@@ -1,4 +1,9 @@
 import { buildAccountDirectorPromptPack } from '../../../../packages/agents/src/prompt-packs.ts';
+import {
+  buildAgencyExecutionPlan,
+  selectAgencyExecutionProfile,
+} from '../../../../packages/agents/src/execution-profiles.ts';
+import { getDefaultAgencyModelSelection } from '../../../../packages/agents/src/model-registry.ts';
 import { getAgencyReadiness } from './runtime.js';
 import {
   assertActiveBrandMemoryVersion,
@@ -44,6 +49,15 @@ export async function prepareAgencyRun(db, requestId) {
   }
 
   const agencyRequest = mapDbRequestToAgencyRequest(request);
+  const selectedProfile = selectAgencyExecutionProfile({
+    agencyRequest,
+    brandReadiness: readiness,
+  });
+  const executionPlan = buildAgencyExecutionPlan({
+    agencyRequest,
+    brandKernel,
+    selectedProfile,
+  });
   const promptPack = buildAccountDirectorPromptPack({
     brandKernel,
     agencyRequest,
@@ -52,10 +66,12 @@ export async function prepareAgencyRun(db, requestId) {
   const stepInput = {
     brandKernel,
     agencyRequest,
+    executionPlan,
     promptPack,
   };
 
-  const run = await createInitialAgencyRun(db, { request, brandKernel, brandMemoryVersion });
+  const modelSelection = getDefaultAgencyModelSelection(process.env.NODE_ENV);
+  const run = await createInitialAgencyRun(db, { request, brandKernel, brandMemoryVersion, executionPlan, modelSelection });
   const step = await createInitialAgencyStep(db, { run, stepInput });
 
   await db
@@ -63,7 +79,7 @@ export async function prepareAgencyRun(db, requestId) {
     .update({ status: 'briefing_pending', readiness_warnings: readiness.warnings })
     .eq('id', request.id);
 
-  return { request, run, step, promptPack, readiness };
+  return { request, run, step, promptPack, readiness, executionPlan };
 }
 
 export function mapDbRequestToAgencyRequest(row) {
@@ -71,7 +87,7 @@ export function mapDbRequestToAgencyRequest(row) {
     id: row.id,
     brandId: row.brand_id,
     requestType: row.request_type,
-    channel: row.channel,
+    channel: row.request_type === 'landing_page_copy' ? 'website' : row.channel,
     objective: row.objective,
     audienceCluster: row.audience_cluster || undefined,
     offer: row.offer || undefined,

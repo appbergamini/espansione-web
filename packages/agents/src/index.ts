@@ -1,6 +1,8 @@
 import { getBrandMemory } from '@espansione/brand-memory';
 export * from './brand-readiness.ts';
 export * from './prompt-packs.ts';
+export * from './execution-profiles.ts';
+export * from './model-registry.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   AgencyAgentId,
@@ -20,6 +22,9 @@ export type {
   AgencyAgentId,
   AgencyApprovalDecision,
   AgencyChannel,
+  AgencyExecutionPlan,
+  AgencyExecutionProfile,
+  AgencyExecutionProfileId,
   AgencyObjective,
   AgencyOutput,
   AgencyRequest,
@@ -62,8 +67,10 @@ export interface AgencyPromptPackRun {
 export const DEFAULT_AGENCY_AGENT_IDS: AgencyAgentId[] = [
   'account_director',
   'copywriter',
+  'channel_adapter',
   'visual_director',
   'editor',
+  'brand_compliance',
   'approver',
 ];
 
@@ -84,6 +91,14 @@ export const AGENCY_AGENT_SPECS: Record<AgencyAgentId, AgencyAgentSpec> = {
     consumes: ['Agentes 9, 10, 12 e 13'],
     produces: ['copy_principal', 'variacoes', 'cta', 'racional_de_tom'],
   },
+  channel_adapter: {
+    id: 'channel_adapter',
+    name: 'Channel Adapter',
+    role: 'Adapta a copy-mae ao canal e formato solicitados.',
+    mission: 'Transformar a mensagem central em conteudo adequado para LinkedIn, Instagram, WhatsApp, email, website, paid media ou outro canal.',
+    consumes: ['Briefing aprovado', 'Copywriter', 'BrandKernel'],
+    produces: ['adapted_content', 'channel_specific_notes', 'formatting_rules_applied', 'cta'],
+  },
   visual_director: {
     id: 'visual_director',
     name: 'Direcao Visual',
@@ -99,6 +114,14 @@ export const AGENCY_AGENT_SPECS: Record<AgencyAgentId, AgencyAgentSpec> = {
     mission: 'Cortar excesso, alinhar promessa, manter clareza e preservar escolhas da fase 1.',
     consumes: ['Agentes 6, 7, 8, 9, 10 e 13'],
     produces: ['versao_editada', 'ajustes_recomendados', 'riscos_de_incoerencia'],
+  },
+  brand_compliance: {
+    id: 'brand_compliance',
+    name: 'Brand Compliance',
+    role: 'Audita aderencia da peca a Brand Memory.',
+    mission: 'Verificar estrategia, posicionamento, voz, visual, claims, publico, canal e tensoes estrategicas antes do aprovador final.',
+    consumes: ['BrandKernel', 'Briefing aprovado', 'Copywriter', 'Channel Adapter', 'Direcao Visual', 'Editor'],
+    produces: ['decision', 'overall_brand_alignment_score', 'checklist', 'violations', 'required_adjustments'],
   },
   approver: {
     id: 'approver',
@@ -514,6 +537,13 @@ export function buildAgentBrief(
       ...formatList('Palavras proibidas', kernel.voice.forbiddenWords),
       ...formatList('Convencoes de naming', kernel.voice.naming),
     ],
+    channel_adapter: [
+      request.channel ? `Canal alvo: ${request.channel}` : null,
+      request.requestType ? `Formato alvo: ${request.requestType}` : null,
+      ...formatList('Diretrizes por canal', kernel.channelGuidelines),
+      ...formatList('CTAs preferidos', kernel.preferredCTAs),
+      ...formatList('Claims proibidos', kernel.forbiddenClaims),
+    ].filter(isString),
     visual_director: [
       ...formatList('Manter', kernel.visual.keep),
       ...formatList('Perder', kernel.visual.lose),
@@ -530,6 +560,18 @@ export function buildAgentBrief(
       kernel.communication.risk ? `Risco a monitorar: ${kernel.communication.risk}` : null,
       kernel.communication.proprietaryAsset
         ? `Ativo proprietario central: ${kernel.communication.proprietaryAsset}`
+        : null,
+    ].filter(isString),
+    brand_compliance: [
+      kernel.strategy.positioning ? `Posicionamento: ${kernel.strategy.positioning}` : null,
+      ...formatList('Tons de voz', kernel.voice.tones),
+      ...formatList('Palavras proibidas', kernel.voice.forbiddenWords),
+      ...formatList('Claims proibidos', kernel.forbiddenClaims),
+      ...formatList('Diretrizes visuais - fazer', kernel.visual.dos),
+      ...formatList('Diretrizes visuais - nao fazer', kernel.visual.donts),
+      ...formatList('Tensoes estrategicas abertas', kernel.communicationRisksFromTensions),
+      kernel.internal.executionalReadiness
+        ? `Prontidao de execucao: ${kernel.internal.executionalReadiness.summary}`
         : null,
     ].filter(isString),
     approver: buildApprovalChecklist(kernel, request),
@@ -585,11 +627,31 @@ function buildGuardrails(
     ];
   }
 
+  if (agentId === 'channel_adapter') {
+    return [
+      ...base,
+      'Adaptar formato e linguagem ao canal solicitado sem mudar a mensagem central.',
+      'Nao criar plano de midia, publicacao automatica, segmentacao paga ou integracao externa.',
+      ...kernel.voice.forbiddenWords.map((word) => `Evitar palavra/territorio proibido: ${word}`),
+      ...kernel.forbiddenClaims.map((claim) => `Nao usar claim sem sustentacao: ${claim}`),
+    ];
+  }
+
   if (agentId === 'visual_director') {
     return [
       ...base,
       ...kernel.visual.lose.map((item) => `Nao seguir caminho visual marcado como "perder": ${item}`),
       'Toda recomendacao visual deve apontar cor, tipo, imagem ou composicao.',
+    ];
+  }
+
+  if (agentId === 'brand_compliance') {
+    return [
+      ...base,
+      'Auditar aderencia a Brand Memory; nao avaliar apenas beleza, fluidez ou impacto editorial.',
+      'Marcar fail quando houver violacao clara de tom, posicionamento, claim sem prova ou restricao visual critica.',
+      'Marcar warning quando houver duvida, lacuna de evidencia ou tensao estrategica sensivel.',
+      'Nao aprovar publicacao final e nao alterar Brand Memory.',
     ];
   }
 
@@ -613,8 +675,10 @@ function buildOutputContract(agentId: AgencyAgentId): string[] {
       'criterios_de_sucesso',
     ],
     copywriter: ['headline', 'body_copy', 'cta', 'variacoes', 'racional_de_tom'],
+    channel_adapter: ['adapted_content', 'channel_specific_notes', 'formatting_rules_applied', 'cta', 'warnings'],
     visual_director: ['direcao_de_arte', 'layout', 'paleta_aplicada', 'assets_necessarios'],
     editor: ['versao_editada', 'cortes', 'ajustes_de_coerencia', 'riscos_remanescentes'],
+    brand_compliance: ['decision: pass | warning | fail', 'overall_brand_alignment_score', 'checklist', 'violations', 'required_adjustments'],
     approver: ['decisao: approved | revision_requested | rejected', 'checklist', 'ajustes_obrigatorios'],
   };
   return contracts[agentId];

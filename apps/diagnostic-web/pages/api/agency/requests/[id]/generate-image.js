@@ -56,12 +56,14 @@ export default async function handler(req, res) {
     const prompt = buildApprovedArtworkPrompt({
       request,
       copyStep: stepByAgent.get('copywriter'),
+      channelStep: stepByAgent.get('channel_adapter'),
       visualStep: stepByAgent.get('visual_director'),
       editorStep: stepByAgent.get('editor'),
       approverStep: stepByAgent.get('approver'),
     });
     const overlayText = buildApprovedArtworkOverlay({
       copyStep: stepByAgent.get('copywriter'),
+      channelStep: stepByAgent.get('channel_adapter'),
       editorStep: stepByAgent.get('editor'),
     });
 

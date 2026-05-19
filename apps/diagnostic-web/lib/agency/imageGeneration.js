@@ -41,8 +41,9 @@ export function formatValue(value) {
   return String(value);
 }
 
-export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, editorStep, approverStep }) {
+export function buildApprovedArtworkPrompt({ request, copyStep, channelStep, visualStep, editorStep, approverStep }) {
   const copy = getStepPayload(copyStep);
+  const channel = getStepPayload(channelStep);
   const visual = getStepPayload(visualStep);
   const editor = getStepPayload(editorStep);
   const approver = getStepPayload(approverStep);
@@ -54,10 +55,10 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
     throw error;
   }
 
-  const finalCopy = extractEditedCopy(editor.versao_editada) || copy.copy_principal || copy.legenda || '';
+  const finalCopy = extractEditedCopy(editor.versao_editada) || extractChannelAdaptedText(channel) || copy.copy_principal || copy.legenda || '';
   const finalVisual = extractEditedVisual(editor.versao_editada) || visual.direcao_de_arte || '';
   const headline = copy.headline || '';
-  const cta = copy.cta || '';
+  const cta = channel.cta || copy.cta || '';
 
   if (!finalCopy && !finalVisual) {
     const error = new Error('Não encontrei texto ou direção visual aprovada para gerar a arte.');
@@ -97,12 +98,13 @@ export function buildApprovedArtworkPrompt({ request, copyStep, visualStep, edit
   ].filter(Boolean).join('\n');
 }
 
-export function buildApprovedArtworkOverlay({ copyStep, editorStep }) {
+export function buildApprovedArtworkOverlay({ copyStep, channelStep, editorStep }) {
   const copy = getStepPayload(copyStep);
+  const channel = getStepPayload(channelStep);
   const editor = getStepPayload(editorStep);
-  const finalCopy = extractEditedCopy(editor.versao_editada) || copy.copy_principal || copy.legenda || '';
-  const headline = formatValue(copy.headline || firstSentence(finalCopy)).trim();
-  const cta = formatValue(copy.cta || '').trim();
+  const finalCopy = extractEditedCopy(editor.versao_editada) || extractChannelAdaptedText(channel) || copy.copy_principal || copy.legenda || '';
+  const headline = formatValue(channel.adapted_content?.headline || copy.headline || firstSentence(finalCopy)).trim();
+  const cta = formatValue(channel.cta || copy.cta || '').trim();
   const body = finalCopy && finalCopy !== headline ? formatValue(finalCopy).trim() : '';
 
   return {
@@ -110,6 +112,21 @@ export function buildApprovedArtworkOverlay({ copyStep, editorStep }) {
     body: body.length > 220 ? `${body.slice(0, 217).trim()}...` : body,
     cta,
   };
+}
+
+function extractChannelAdaptedText(value) {
+  const adapted = value?.adapted_content || value;
+  if (!adapted || typeof adapted !== 'object') return '';
+  return [
+    adapted.subject_line ? `Assunto: ${adapted.subject_line}` : '',
+    adapted.preview_text ? `Preview: ${adapted.preview_text}` : '',
+    adapted.headline ? `Headline: ${adapted.headline}` : '',
+    adapted.caption || '',
+    adapted.body || '',
+    adapted.script || '',
+    ...(Array.isArray(adapted.slide_sequence) ? adapted.slide_sequence.map(formatValue) : []),
+    ...(Array.isArray(adapted.sections) ? adapted.sections.map(formatValue) : []),
+  ].map(formatValue).filter(Boolean).join('\n\n');
 }
 
 export async function generateApprovedArtwork({ prompt }) {

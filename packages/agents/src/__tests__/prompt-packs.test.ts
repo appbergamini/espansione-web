@@ -3,19 +3,25 @@ import assert from 'node:assert/strict';
 import {
   buildAccountDirectorPromptPack,
   buildApproverPromptPack,
+  buildBrandCompliancePromptPack,
+  buildChannelAdapterPromptPack,
   buildCopywriterPromptPack,
   buildEditorPromptPack,
   buildVisualDirectorPromptPack,
   ACCOUNT_DIRECTOR_PROMPT_VERSION,
+  CHANNEL_ADAPTER_PROMPT_VERSION,
   COPYWRITER_PROMPT_VERSION,
   VISUAL_DIRECTOR_PROMPT_VERSION,
   EDITOR_PROMPT_VERSION,
   APPROVER_PROMPT_VERSION,
+  BRAND_COMPLIANCE_PROMPT_VERSION,
 } from '../prompt-packs.ts';
 import type {
   AccountDirectorOutput,
   AgencyRequest,
   BrandKernel,
+  BrandComplianceOutput,
+  ChannelAdapterOutput,
   CopywriterOutput,
   EditorOutput,
   VisualDirectorOutput,
@@ -192,6 +198,20 @@ const copywriterOutput: CopywriterOutput = {
   warnings: [],
 };
 
+const channelAdapterOutput: ChannelAdapterOutput = {
+  channel: 'linkedin',
+  request_type: 'social_post',
+  adapted_content: {
+    headline: 'Texto adaptado',
+    body: 'Texto principal adaptado para LinkedIn.',
+    caption: 'Legenda adaptada',
+  },
+  channel_specific_notes: ['LinkedIn pede abertura forte e parágrafos curtos.'],
+  formatting_rules_applied: ['Parágrafos curtos', 'CTA claro'],
+  cta: 'Agendar conversa',
+  warnings: [],
+};
+
 const visualDirectorOutput: VisualDirectorOutput = {
   direcao_de_arte: 'Visual limpo',
   regras_visuais: ['Usar azul'],
@@ -210,27 +230,60 @@ const editorOutput: EditorOutput = {
   observacoes: ['Bom ajuste'],
 };
 
+const brandComplianceOutput: BrandComplianceOutput = {
+  decision: 'fail',
+  overall_brand_alignment_score: 42,
+  checklist: [
+    { criterion: 'claims', status: 'fail', observation: 'Claim sem prova.', required_adjustment: 'Remover claim.' },
+    { criterion: 'voice', status: 'warning', observation: 'Tom acima do permitido.' },
+  ],
+  violations: [{
+    type: 'claim_without_proof',
+    description: 'Promessa forte sem evidência sustentada.',
+    severity: 'high',
+    related_brand_memory_slice: 'plataforma_branding',
+    suggested_fix: 'Suavizar promessa ou anexar prova.',
+  }],
+  required_adjustments: ['Remover claim sem prova.'],
+  optional_improvements: ['Aproximar CTA dos CTAs preferidos.'],
+  brand_memory_slices_checked: ['plataforma_branding', 'voice_profile', 'visual_identity'],
+  warnings: ['Exige revisão humana.'],
+};
+
 test('todos os prompt packs sao gerados com input minimo valido', () => {
   const account = buildAccountDirectorPromptPack({ brandKernel, agencyRequest });
   const copy = buildCopywriterPromptPack({ brandKernel, agencyRequest, accountDirectorOutput });
-  const visual = buildVisualDirectorPromptPack({ brandKernel, agencyRequest, accountDirectorOutput });
+  const channel = buildChannelAdapterPromptPack({ brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput });
+  const visual = buildVisualDirectorPromptPack({ brandKernel, agencyRequest, accountDirectorOutput, channelAdapterOutput });
   const editor = buildEditorPromptPack({
     brandKernel,
     agencyRequest,
     accountDirectorOutput,
     copywriterOutput,
+    channelAdapterOutput,
     visualDirectorOutput,
+  });
+  const compliance = buildBrandCompliancePromptPack({
+    brandKernel,
+    agencyRequest,
+    accountDirectorOutput,
+    copywriterOutput,
+    channelAdapterOutput,
+    visualDirectorOutput,
+    editorOutput,
   });
   const approver = buildApproverPromptPack({
     brandKernel,
     agencyRequest,
     accountDirectorOutput,
     copywriterOutput,
+    channelAdapterOutput,
     visualDirectorOutput,
     editorOutput,
+    brandComplianceOutput,
   });
 
-  for (const pack of [account, copy, visual, editor, approver]) {
+  for (const pack of [account, copy, channel, visual, editor, compliance, approver]) {
     assert.equal(typeof pack.systemPrompt, 'string');
     assert.equal(typeof pack.userPrompt, 'string');
     assert.equal(typeof pack.promptVersion, 'string');
@@ -246,12 +299,22 @@ test('todos os prompt packs sao gerados com input minimo valido', () => {
   assert.match(account.userPrompt, /Escala versus profundidade/);
   assert.match(account.userPrompt, /Prometer mais do que entrega/);
   assert.equal(copy.promptVersion, COPYWRITER_PROMPT_VERSION);
+  assert.equal(channel.promptVersion, CHANNEL_ADAPTER_PROMPT_VERSION);
+  assert.match(channel.userPrompt, /copywriterOutput/);
+  assert.match(channel.userPrompt, /LinkedIn/);
+  assert.match(channel.userPrompt, /Não alterar Brand Memory|Nao alterar Brand Memory/i);
   assert.equal(visual.promptVersion, VISUAL_DIRECTOR_PROMPT_VERSION);
   assert.match(visual.userPrompt, /operationalGuidelines/);
   assert.match(visual.userPrompt, /Nao poluir/);
   assert.match(visual.userPrompt, /Visual identity operacional incompleta/);
   assert.equal(editor.promptVersion, EDITOR_PROMPT_VERSION);
+  assert.equal(compliance.promptVersion, BRAND_COMPLIANCE_PROMPT_VERSION);
+  assert.match(compliance.userPrompt, /editorOutput/);
+  assert.match(compliance.userPrompt, /strategicTensions/);
+  assert.match(compliance.userPrompt, /executionalReadiness/);
   assert.equal(approver.promptVersion, APPROVER_PROMPT_VERSION);
+  assert.match(approver.userPrompt, /brandComplianceOutput/);
+  assert.match(approver.userPrompt, /claim_without_proof/);
 });
 
 test('erro quando falta input obrigatorio', () => {
@@ -268,7 +331,7 @@ test('copywriter exige accountDirectorOutput', () => {
   );
 });
 
-test('editor exige copywriterOutput e visualDirectorOutput', () => {
+test('editor exige copywriterOutput e aceita visualDirectorOutput opcional', () => {
   assert.throws(
     () => buildEditorPromptPack({
       brandKernel,
@@ -280,16 +343,100 @@ test('editor exige copywriterOutput e visualDirectorOutput', () => {
     /CopywriterOutput invalido/
   );
 
+  const pack = buildEditorPromptPack({
+    brandKernel,
+    agencyRequest,
+    accountDirectorOutput,
+    copywriterOutput,
+  });
+  assert.match(pack.userPrompt, /visualDirectorOutput nao existir/);
+});
+
+test('channel_adapter exige copywriterOutput', () => {
   assert.throws(
-    () => buildEditorPromptPack({
+    () => buildChannelAdapterPromptPack({
+      brandKernel,
+      agencyRequest,
+      accountDirectorOutput,
+      copywriterOutput: null as any,
+    }),
+    /CopywriterOutput invalido/
+  );
+});
+
+test('channel_adapter inclui regras específicas por canal', () => {
+  const emailPack = buildChannelAdapterPromptPack({
+    brandKernel,
+    agencyRequest: { ...agencyRequest, channel: 'email', requestType: 'email' },
+    accountDirectorOutput,
+    copywriterOutput,
+  });
+  const websitePack = buildChannelAdapterPromptPack({
+    brandKernel,
+    agencyRequest: { ...agencyRequest, channel: 'website', requestType: 'landing_page_copy' },
+    accountDirectorOutput,
+    copywriterOutput,
+  });
+  const instagramPack = buildChannelAdapterPromptPack({
+    brandKernel,
+    agencyRequest: { ...agencyRequest, channel: 'instagram' },
+    accountDirectorOutput,
+    copywriterOutput,
+  });
+
+  assert.match(JSON.stringify(emailPack.expectedOutputSchema), /subject_line/);
+  assert.match(JSON.stringify(emailPack.expectedOutputSchema), /preview_text/);
+  assert.match(JSON.stringify(websitePack.expectedOutputSchema), /sections/);
+  assert.match(JSON.stringify(instagramPack.expectedOutputSchema), /caption/);
+  assert.match(JSON.stringify(instagramPack.expectedOutputSchema), /hashtags/);
+  assert.match(emailPack.userPrompt, /Email:/);
+  assert.match(websitePack.userPrompt, /Website:/);
+  assert.match(instagramPack.userPrompt, /Instagram:/);
+});
+
+test('brand_compliance exige BrandKernel e editorOutput', () => {
+  assert.throws(
+    () => buildBrandCompliancePromptPack({
+      brandKernel: null as any,
+      agencyRequest,
+      accountDirectorOutput,
+      copywriterOutput,
+      channelAdapterOutput,
+      visualDirectorOutput,
+      editorOutput,
+    }),
+    /brandKernel obrigatorio/
+  );
+
+  assert.throws(
+    () => buildBrandCompliancePromptPack({
       brandKernel,
       agencyRequest,
       accountDirectorOutput,
       copywriterOutput,
-      visualDirectorOutput: null as any,
+      channelAdapterOutput,
+      visualDirectorOutput,
+      editorOutput: null as any,
     }),
-    /VisualDirectorOutput invalido/
+    /EditorOutput invalido/
   );
+});
+
+test('approver recebe brandComplianceOutput e considera violacao high severity', () => {
+  const approver = buildApproverPromptPack({
+    brandKernel,
+    agencyRequest,
+    accountDirectorOutput,
+    copywriterOutput,
+    channelAdapterOutput,
+    visualDirectorOutput,
+    editorOutput,
+    brandComplianceOutput,
+  });
+
+  assert.match(approver.userPrompt, /brandComplianceOutput/);
+  assert.match(approver.userPrompt, /severity": "high"|severity.*high/s);
+  assert.match(approver.userPrompt, /revision_requested ou rejected/i);
 });
 
 test('approver exige editorOutput', () => {

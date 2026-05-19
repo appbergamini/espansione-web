@@ -1,9 +1,12 @@
 import type {
   AccountDirectorOutput,
   ApproverOutput,
+  AgencyAgentId,
   AgencyPromptPack,
   AgencyRequest,
+  BrandComplianceOutput,
   BrandKernel,
+  ChannelAdapterOutput,
   CopywriterOutput,
   EditorOutput,
   VisualDirectorOutput,
@@ -16,15 +19,19 @@ interface AccountDirectorPromptPackInput {
 
 export const ACCOUNT_DIRECTOR_PROMPT_VERSION = 'account_director_v1';
 export const COPYWRITER_PROMPT_VERSION = 'copywriter_v1';
+export const CHANNEL_ADAPTER_PROMPT_VERSION = 'channel_adapter_v1';
 export const VISUAL_DIRECTOR_PROMPT_VERSION = 'visual_director_v1';
 export const EDITOR_PROMPT_VERSION = 'editor_v1';
+export const BRAND_COMPLIANCE_PROMPT_VERSION = 'brand_compliance_v1';
 export const APPROVER_PROMPT_VERSION = 'approver_v1';
 
 const PROMPT_VERSION_BY_AGENT = {
   account_director: ACCOUNT_DIRECTOR_PROMPT_VERSION,
   copywriter: COPYWRITER_PROMPT_VERSION,
+  channel_adapter: CHANNEL_ADAPTER_PROMPT_VERSION,
   visual_director: VISUAL_DIRECTOR_PROMPT_VERSION,
   editor: EDITOR_PROMPT_VERSION,
+  brand_compliance: BRAND_COMPLIANCE_PROMPT_VERSION,
   approver: APPROVER_PROMPT_VERSION,
 } as const;
 
@@ -72,6 +79,7 @@ export function buildAccountDirectorPromptPack({
   assertAgencyRequest(agencyRequest);
 
   return {
+    agentId: 'account_director',
     promptVersion: ACCOUNT_DIRECTOR_PROMPT_VERSION,
     systemPrompt: [
       'Voce e o agente account_director da Agencia IA da Espansione.',
@@ -137,10 +145,12 @@ export function buildVisualDirectorPromptPack({
   brandKernel,
   agencyRequest,
   accountDirectorOutput,
+  channelAdapterOutput,
 }: {
   brandKernel: BrandKernel;
   agencyRequest: AgencyRequest;
   accountDirectorOutput: AccountDirectorOutput;
+  channelAdapterOutput?: ChannelAdapterOutput;
 }): AgencyPromptPack {
   assertBrandKernel(brandKernel);
   assertAgencyRequest(agencyRequest);
@@ -157,11 +167,52 @@ export function buildVisualDirectorPromptPack({
       'Indicar assets necessarios, composicao, restricoes visuais e riscos visuais.',
       'Gerar prompt_visual_opcional apenas quando houver direcao suficiente e sem exigir texto embutido.',
       'Se brandKernel.visual.operationalWarnings incluir "Visual identity operacional incompleta.", declarar warning e pedir revisao humana visual.',
+      'Quando channelAdapterOutput existir, considerar o conteudo adaptado ao canal como insumo de formato e hierarquia visual.',
     ],
-    payload: { brandKernel, agencyRequest, accountDirectorOutput },
+    payload: { brandKernel, agencyRequest, accountDirectorOutput, channelAdapterOutput },
     expectedOutputSchema: {
       required: ['direcao_de_arte', 'regras_visuais', 'assets_necessarios', 'composicao', 'estilo_imagem', 'restricoes_visuais', 'warnings'],
     },
+  });
+}
+
+export function buildChannelAdapterPromptPack({
+  brandKernel,
+  agencyRequest,
+  accountDirectorOutput,
+  copywriterOutput,
+  approvedBriefing,
+}: {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+  accountDirectorOutput: AccountDirectorOutput;
+  copywriterOutput: CopywriterOutput;
+  approvedBriefing?: AccountDirectorOutput;
+}): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+  assertAccountDirectorOutput(accountDirectorOutput);
+  assertCopywriterOutput(copywriterOutput);
+
+  return makePromptPack({
+    agent: 'channel_adapter',
+    mission: 'Adaptar a copy-mae ou mensagem central para o canal e formato solicitados, sem publicar.',
+    rules: [
+      'Usar BrandKernel como fonte canonica e respeitar voz, palavras proibidas, proofPoints, forbiddenClaims e restricoes.',
+      'Usar approvedBriefing quando existir; caso contrario, usar accountDirectorOutput como briefing operacional.',
+      'Usar copywriterOutput como copy-mae. Nao substituir estrategia, apenas adaptar linguagem, formato e hierarquia ao canal.',
+      'Nao inventar fatos, numeros, cases, provas ou promessas. Declarar warnings quando faltar prova, contexto ou houver risco de claim.',
+      'LinkedIn: tom profissional, abertura forte, paragrafos curtos, CTA claro e poucas hashtags.',
+      'Instagram: legenda direta, gancho inicial, linguagem fluida, hashtags opcionais e atencao a post/carrossel/reels.',
+      'WhatsApp: texto curto, conversacional, direto, CTA objetivo e sem blocos longos.',
+      'Email: incluir subject_line, preview_text, abertura, desenvolvimento e CTA com clareza de oferta.',
+      'Website: incluir sections com headline/subtitulo/blocos/CTA, foco em clareza e conversao.',
+      'Paid media: variacoes curtas, promessa objetiva, CTA e warnings sobre claims sem prova.',
+      'Other: adaptar de forma generica e registrar warnings de limitacao.',
+      'Nao gerar imagem, nao publicar, nao criar plano de midia e nao alterar Brand Memory.',
+    ],
+    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, approvedBriefing },
+    expectedOutputSchema: CHANNEL_ADAPTER_OUTPUT_SCHEMA,
   });
 }
 
@@ -171,22 +222,23 @@ export function buildEditorPromptPack({
   accountDirectorOutput,
   copywriterOutput,
   visualDirectorOutput,
+  channelAdapterOutput,
 }: {
   brandKernel: BrandKernel;
   agencyRequest: AgencyRequest;
   accountDirectorOutput: AccountDirectorOutput;
   copywriterOutput: CopywriterOutput;
-  visualDirectorOutput: VisualDirectorOutput;
+  visualDirectorOutput?: VisualDirectorOutput;
+  channelAdapterOutput?: ChannelAdapterOutput;
 }): AgencyPromptPack {
   assertBrandKernel(brandKernel);
   assertAgencyRequest(agencyRequest);
   assertAccountDirectorOutput(accountDirectorOutput);
   assertCopywriterOutput(copywriterOutput);
-  assertVisualDirectorOutput(visualDirectorOutput);
 
   return makePromptPack({
     agent: 'editor',
-    mission: 'Ajustar copy e direcao visual para consistencia estrategica.',
+    mission: 'Ajustar copy e, quando existir, direcao visual para consistencia estrategica.',
     rules: [
       'Cortar excessos.',
       'Preservar posicionamento, promessa e criterios do briefing.',
@@ -194,8 +246,10 @@ export function buildEditorPromptPack({
       'Gerar score de aderencia de 0 a 100.',
       'Incluir quality_metadata quando houver riscos, lacunas ou hipóteses relevantes.',
       'Incluir quality_assessment separando qualidade do output de falha técnica.',
+      'Quando channelAdapterOutput existir, editar a versao adaptada ao canal; a copy-mae continua como referencia de origem.',
+      'Quando visualDirectorOutput nao existir, avaliar apenas qualidade editorial, clareza, canal, promessa e riscos de incoerencia textual.',
     ],
-    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput },
+    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, channelAdapterOutput, visualDirectorOutput },
     expectedOutputSchema: {
       required: ['versao_editada', 'ajustes_recomendados', 'riscos_de_incoerencia', 'score_aderencia', 'observacoes'],
       properties: { quality_metadata: qualityMetadataSchema(), quality_assessment: qualityAssessmentSchema() },
@@ -210,19 +264,22 @@ export function buildApproverPromptPack({
   copywriterOutput,
   visualDirectorOutput,
   editorOutput,
+  channelAdapterOutput,
+  brandComplianceOutput,
 }: {
   brandKernel: BrandKernel;
   agencyRequest: AgencyRequest;
   accountDirectorOutput: AccountDirectorOutput;
   copywriterOutput: CopywriterOutput;
-  visualDirectorOutput: VisualDirectorOutput;
+  visualDirectorOutput?: VisualDirectorOutput;
   editorOutput: EditorOutput;
+  channelAdapterOutput?: ChannelAdapterOutput;
+  brandComplianceOutput?: BrandComplianceOutput;
 }): AgencyPromptPack {
   assertBrandKernel(brandKernel);
   assertAgencyRequest(agencyRequest);
   assertAccountDirectorOutput(accountDirectorOutput);
   assertCopywriterOutput(copywriterOutput);
-  assertVisualDirectorOutput(visualDirectorOutput);
   assertEditorOutput(editorOutput);
 
   return makePromptPack({
@@ -232,17 +289,198 @@ export function buildApproverPromptPack({
       'Checar coerencia estrategica, verbal, visual, audiencia, canal, restricoes e risco.',
       'Pedir revisao ou rejeitar se houver violacao da Brand Memory.',
       'Nao aprovar conteudo com claims sem sustentacao.',
+      'Checar se a adaptacao por canal preserva a mensagem central, CTA, restricoes e formato solicitado.',
+      'Considerar brandComplianceOutput como auditoria de aderencia a marca, sem terceirizar a decisao final.',
+      'Se brand_compliance falhar em claims, tom ou posicionamento, nao aprovar sem justificativa explicita.',
+      'Se houver violacao high severity, a decisao recomendada e revision_requested ou rejected.',
       'Decidir entre approved, revision_requested ou rejected.',
       'Incluir quality_metadata para registrar confiança, lacunas de evidência, hipóteses e riscos da decisão.',
       'Incluir quality_assessment final: approved geralmente acceptable, revision_requested geralmente needs_revision ou risky, rejected deve ser rejected.',
     ],
-    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, visualDirectorOutput, editorOutput },
+    payload: { brandKernel, agencyRequest, accountDirectorOutput, copywriterOutput, channelAdapterOutput, visualDirectorOutput, editorOutput, brandComplianceOutput },
     expectedOutputSchema: {
       required: ['decisao', 'checklist', 'ajustes_obrigatorios', 'justificativa'],
       properties: { quality_metadata: qualityMetadataSchema(), quality_assessment: qualityAssessmentSchema() },
     },
   });
 }
+
+export function buildBrandCompliancePromptPack({
+  brandKernel,
+  agencyRequest,
+  approvedBriefing,
+  accountDirectorOutput,
+  copywriterOutput,
+  channelAdapterOutput,
+  visualDirectorOutput,
+  editorOutput,
+}: {
+  brandKernel: BrandKernel;
+  agencyRequest: AgencyRequest;
+  approvedBriefing?: AccountDirectorOutput;
+  accountDirectorOutput: AccountDirectorOutput;
+  copywriterOutput: CopywriterOutput;
+  channelAdapterOutput?: ChannelAdapterOutput;
+  visualDirectorOutput?: VisualDirectorOutput;
+  editorOutput: EditorOutput;
+}): AgencyPromptPack {
+  assertBrandKernel(brandKernel);
+  assertAgencyRequest(agencyRequest);
+  assertAccountDirectorOutput(accountDirectorOutput);
+  assertCopywriterOutput(copywriterOutput);
+  assertEditorOutput(editorOutput);
+
+  return makePromptPack({
+    agent: 'brand_compliance',
+    mission: 'Auditar aderencia da peca a Brand Memory antes do aprovador final.',
+    rules: [
+      'Ser rigoroso na aderencia a Brand Memory. Nao avaliar apenas se a peca esta bonita ou bem escrita.',
+      'Checar estrategia, plataforma de branding, posicionamento, publico/cluster, plano de comunicacao, tom de voz e canal.',
+      'Identificar violacoes de tom de voz, palavras proibidas e claims sem prova.',
+      'Checar diretrizes visuais, restricoes, forbiddenClaims, proofPoints e channelGuidelines.',
+      'Checar strategicTensions: nao permitir que a peca resolva ou ignore tensoes abertas sem autorizacao humana.',
+      'Checar executionalReadiness quando existir: sinalizar desalinhamento entre promessa externa e capacidade interna.',
+      'Nao aprovar publicacao final. A decisao final continua no approver.',
+      'Nao alterar Brand Memory, nao criar nova estrategia e nao inventar dados ausentes.',
+      'Se houver duvida, marcar warning e pedir revisao humana.',
+    ],
+    payload: {
+      brandKernel,
+      agencyRequest,
+      approvedBriefing,
+      accountDirectorOutput,
+      copywriterOutput,
+      channelAdapterOutput,
+      visualDirectorOutput,
+      editorOutput,
+    },
+    expectedOutputSchema: BRAND_COMPLIANCE_OUTPUT_SCHEMA,
+  });
+}
+
+export const BRAND_COMPLIANCE_OUTPUT_SCHEMA = {
+  type: 'object',
+  required: [
+    'decision',
+    'overall_brand_alignment_score',
+    'checklist',
+    'violations',
+    'required_adjustments',
+    'optional_improvements',
+    'brand_memory_slices_checked',
+    'warnings',
+  ],
+  properties: {
+    decision: { type: 'string', enum: ['pass', 'warning', 'fail'] },
+    overall_brand_alignment_score: { type: 'number', minimum: 0, maximum: 100 },
+    checklist: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['criterion', 'status', 'observation'],
+        properties: {
+          criterion: {
+            type: 'string',
+            enum: [
+              'strategy',
+              'positioning',
+              'audience',
+              'voice',
+              'forbidden_words',
+              'visual_identity',
+              'communication_plan',
+              'claims',
+              'channel_fit',
+              'strategic_tensions',
+              'executional_readiness',
+            ],
+          },
+          status: { type: 'string', enum: ['pass', 'warning', 'fail'] },
+          observation: { type: 'string' },
+          required_adjustment: { type: 'string' },
+        },
+      },
+    },
+    violations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['type', 'description', 'severity', 'suggested_fix'],
+        properties: {
+          type: { type: 'string' },
+          description: { type: 'string' },
+          severity: { type: 'string', enum: ['low', 'medium', 'high'] },
+          related_brand_memory_slice: { type: 'string' },
+          suggested_fix: { type: 'string' },
+        },
+      },
+    },
+    required_adjustments: { type: 'array', items: { type: 'string' } },
+    optional_improvements: { type: 'array', items: { type: 'string' } },
+    brand_memory_slices_checked: { type: 'array', items: { type: 'string' } },
+    warnings: { type: 'array', items: { type: 'string' } },
+  },
+} as const satisfies Record<string, unknown>;
+
+export const CHANNEL_ADAPTER_OUTPUT_SCHEMA = {
+  type: 'object',
+  required: [
+    'channel',
+    'request_type',
+    'adapted_content',
+    'channel_specific_notes',
+    'formatting_rules_applied',
+    'cta',
+    'warnings',
+  ],
+  properties: {
+    channel: { type: 'string' },
+    request_type: { type: 'string' },
+    adapted_content: {
+      type: 'object',
+      required: ['body'],
+      properties: {
+        headline: { type: 'string' },
+        body: { type: 'string' },
+        caption: { type: 'string' },
+        subject_line: { type: 'string' },
+        preview_text: { type: 'string' },
+        script: { type: 'string' },
+        slide_sequence: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['slide_number', 'text'],
+            properties: {
+              slide_number: { type: 'number' },
+              title: { type: 'string' },
+              text: { type: 'string' },
+              visual_note: { type: 'string' },
+            },
+          },
+        },
+        sections: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['section_title', 'content'],
+            properties: {
+              section_title: { type: 'string' },
+              content: { type: 'string' },
+              cta: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    channel_specific_notes: { type: 'array', items: { type: 'string' } },
+    formatting_rules_applied: { type: 'array', items: { type: 'string' } },
+    cta: { type: 'string' },
+    hashtags: { type: 'array', items: { type: 'string' } },
+    utm_suggestion: { type: 'string' },
+    warnings: { type: 'array', items: { type: 'string' } },
+  },
+} as const satisfies Record<string, unknown>;
 
 export function assertAccountDirectorOutput(
   output: Partial<AccountDirectorOutput> | null | undefined
@@ -283,13 +521,14 @@ function makePromptPack({
   payload,
   expectedOutputSchema,
 }: {
-  agent: string;
+  agent: AgencyAgentId;
   mission: string;
   rules: string[];
   payload: Record<string, unknown>;
   expectedOutputSchema: unknown;
 }): AgencyPromptPack {
   return {
+    agentId: agent,
     promptVersion: PROMPT_VERSION_BY_AGENT[agent as keyof typeof PROMPT_VERSION_BY_AGENT],
     systemPrompt: [
       `Voce e o agente ${agent} da Agencia IA da Espansione.`,

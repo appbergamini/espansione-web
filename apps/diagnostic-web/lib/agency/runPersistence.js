@@ -7,7 +7,7 @@ export function assertActiveBrandMemoryVersion(brandMemoryVersion, readiness) {
   }
 }
 
-export async function createInitialAgencyRun(db, { request, brandKernel, brandMemoryVersion }) {
+export async function createInitialAgencyRun(db, { request, brandKernel, brandMemoryVersion, executionPlan, modelSelection }) {
   assertActiveBrandMemoryVersion(brandMemoryVersion);
 
   const { data: run, error: runError } = await db
@@ -18,6 +18,12 @@ export async function createInitialAgencyRun(db, { request, brandKernel, brandMe
       brand_memory_version_id: brandMemoryVersion.id,
       brand_kernel_snapshot: brandKernel,
       brand_kernel_version: brandKernel.source?.schemaVersion || '2.0',
+      execution_profile_id: executionPlan?.profile_id || null,
+      execution_plan_json: executionPlan || null,
+      execution_mode: modelSelection?.execution_mode || null,
+      model_selection_json: modelSelection || null,
+      max_tokens_per_step: modelSelection?.max_tokens_per_step || null,
+      max_estimated_cost_per_run: modelSelection?.max_estimated_cost_per_run || null,
       branch_label: 'Original',
       status: 'pending',
     })

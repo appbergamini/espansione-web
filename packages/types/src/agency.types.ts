@@ -176,8 +176,10 @@ export type CreativeAssetStatus =
 export type AgencyAgentId =
   | 'account_director'
   | 'copywriter'
+  | 'channel_adapter'
   | 'visual_director'
   | 'editor'
+  | 'brand_compliance'
   | 'approver';
 
 export type AgencyApprovalDecision =
@@ -185,11 +187,94 @@ export type AgencyApprovalDecision =
   | 'revision_requested'
   | 'rejected';
 
+export type AIExecutionMode =
+  | 'mock'
+  | 'economical'
+  | 'use_agent_defaults'
+  | 'use_single_model_for_run'
+  | 'override_single_agent';
+
+export type AIProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'mock';
+
+export type AIModelId =
+  | 'mock-model'
+  | 'gemini-3-flash-preview'
+  | 'gpt-5.4'
+  | 'claude-sonnet-4-6';
+
+export interface AgencyModelSelection {
+  execution_mode: AIExecutionMode;
+  selected_model_id?: string;
+  agent_overrides?: {
+    agent_id: AgencyAgentId;
+    model_id: string;
+  }[];
+  max_tokens_per_step?: number;
+  max_estimated_cost_per_run?: number;
+  require_confirmation_for_premium?: boolean;
+  save_as_brand_default?: boolean;
+}
+
+export interface AIModelRegistryItem {
+  provider: AIProvider;
+  model_id: string;
+  display_name: string;
+  description?: string;
+  cost_tier: 'zero' | 'low' | 'medium' | 'medium_high' | 'high';
+  speed_tier: 'instant' | 'fast' | 'medium' | 'slow';
+  is_active: boolean;
+  is_mock?: boolean;
+  is_preview?: boolean;
+  recommended_for?: AgencyAgentId[];
+}
+
+export type AgencyExecutionProfileId =
+  | 'simple_content'
+  | 'channel_adapted_content'
+  | 'visual_content'
+  | 'landing_page_copy'
+  | 'campaign_light'
+  | 'custom';
+
 export type BrandReadinessStatus =
   | 'not_ready'
   | 'partial_ready'
   | 'ready_for_content'
   | 'ready_for_campaigns';
+
+export interface AgencyExecutionProfile {
+  id: AgencyExecutionProfileId;
+  name: string;
+  description: string;
+  allowed_request_types: AgencyRequestType[];
+  allowed_channels?: AgencyChannel[];
+  required_agents: AgencyAgentId[];
+  optional_agents: AgencyAgentId[];
+  default_agent_sequence: AgencyAgentId[];
+  requires_briefing_approval: boolean;
+  requires_brand_compliance: boolean;
+  supports_visual_assets: boolean;
+  supports_publication_pack: boolean;
+  max_auto_revision_loops?: number;
+}
+
+export interface AgencyExecutionPlan {
+  profile_id: AgencyExecutionProfileId;
+  request_id: string;
+  brand_id: string;
+  agent_sequence: AgencyAgentId[];
+  skipped_agents: {
+    agent_id: AgencyAgentId;
+    reason: string;
+  }[];
+  required_gates: string[];
+  rationale: string;
+  created_at?: string;
+}
 
 export interface AgencyRequest {
   id?: string;
@@ -216,6 +301,12 @@ export interface AgencyRun {
   brandMemoryVersionId?: string;
   brandKernelSnapshot?: BrandKernel;
   brandKernelVersion?: string;
+  executionProfileId?: AgencyExecutionProfileId;
+  executionPlan?: AgencyExecutionPlan;
+  executionMode?: AIExecutionMode;
+  modelSelection?: AgencyModelSelection;
+  maxTokensPerStep?: number;
+  maxEstimatedCostPerRun?: number;
   parentRunId?: string;
   branchLabel?: string;
   status: AgencyRunStatus;
@@ -245,6 +336,8 @@ export interface AgencyStep {
   modelUsed?: string;
   provider?: string;
   promptVersion?: string;
+  modelId?: string;
+  isMock?: boolean;
   tokens?: {
     input?: number;
     output?: number;
@@ -254,6 +347,7 @@ export interface AgencyStep {
   durationMs?: number;
   attemptCount?: number;
   executionMetadata?: AgentExecutionMetadata;
+  executionMetadataJson?: AgentExecutionMetadata;
   error?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -265,6 +359,19 @@ export interface AgencyOutput {
   warnings?: string[];
   brandMemorySlicesUsed?: string[];
   qualityAssessment?: OutputQualityAssessment;
+  provider?: AIProvider | string;
+  model?: string;
+  modelId?: string;
+  isMock?: boolean;
+  promptVersion?: string;
+  tokens?: {
+    input?: number;
+    output?: number;
+    total?: number;
+  };
+  estimatedCost?: number;
+  temperature?: number;
+  traceId?: string;
 }
 
 export interface OutputQualityAssessment {
@@ -396,6 +503,7 @@ export interface BrandKernel {
 }
 
 export interface AgencyPromptPack {
+  agentId?: AgencyAgentId;
   systemPrompt: string;
   userPrompt: string;
   expectedOutputSchema: unknown;
@@ -405,6 +513,8 @@ export interface AgencyPromptPack {
 export interface AgentExecutionMetadata {
   provider?: string;
   model?: string;
+  model_id?: string;
+  is_mock?: boolean;
   prompt_version?: string;
   input_tokens?: number;
   output_tokens?: number;
@@ -546,6 +656,36 @@ export interface CopywriterOutput {
   warnings: string[];
 }
 
+export interface ChannelAdapterOutput {
+  channel: AgencyChannel;
+  request_type: AgencyRequestType;
+  adapted_content: {
+    headline?: string;
+    body: string;
+    caption?: string;
+    subject_line?: string;
+    preview_text?: string;
+    script?: string;
+    slide_sequence?: {
+      slide_number: number;
+      title?: string;
+      text: string;
+      visual_note?: string;
+    }[];
+    sections?: {
+      section_title: string;
+      content: string;
+      cta?: string;
+    }[];
+  };
+  channel_specific_notes: string[];
+  formatting_rules_applied: string[];
+  cta: string;
+  hashtags?: string[];
+  utm_suggestion?: string;
+  warnings: string[];
+}
+
 export interface VisualDirectorOutput {
   direcao_de_arte: string;
   regras_visuais: string[];
@@ -569,6 +709,39 @@ export interface EditorOutput {
   quality_assessment?: OutputQualityAssessment;
 }
 
+export interface BrandComplianceOutput {
+  decision: 'pass' | 'warning' | 'fail';
+  overall_brand_alignment_score: number;
+  checklist: {
+    criterion:
+      | 'strategy'
+      | 'positioning'
+      | 'audience'
+      | 'voice'
+      | 'forbidden_words'
+      | 'visual_identity'
+      | 'communication_plan'
+      | 'claims'
+      | 'channel_fit'
+      | 'strategic_tensions'
+      | 'executional_readiness';
+    status: 'pass' | 'warning' | 'fail';
+    observation: string;
+    required_adjustment?: string;
+  }[];
+  violations: {
+    type: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high';
+    related_brand_memory_slice?: string;
+    suggested_fix: string;
+  }[];
+  required_adjustments: string[];
+  optional_improvements: string[];
+  brand_memory_slices_checked: string[];
+  warnings: string[];
+}
+
 export interface ApproverOutput {
   decisao: AgencyApprovalDecision;
   checklist: {
@@ -586,6 +759,14 @@ export interface ApproverOutput {
 export interface ModelGatewayInput {
   agentId: AgencyAgentId;
   promptPack: AgencyPromptPack;
+  provider?: AIProvider | string;
+  modelId?: string;
+  systemPrompt?: string;
+  userPrompt?: string;
+  schema?: unknown;
+  temperature?: number;
+  maxTokens?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ModelGateway {

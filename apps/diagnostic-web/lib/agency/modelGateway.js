@@ -2,8 +2,10 @@ import { AIRouter } from '../ai/router.js';
 
 const DEFAULT_AGENCY_MODEL_KEY = 'gemini-flash';
 
-export function getAgencyModelGateway() {
-  const mode = process.env.AGENCY_MODEL_GATEWAY || (process.env.NODE_ENV === 'production' ? 'real' : 'mock');
+export function getAgencyModelGateway({ forceReal = false } = {}) {
+  const mode = forceReal
+    ? 'real'
+    : process.env.AGENCY_MODEL_GATEWAY || (process.env.NODE_ENV === 'production' ? 'real' : 'mock');
   if (mode === 'mock') return new MockModelGateway();
   return new AIRouterModelGateway({
     modelKey: process.env.AGENCY_MODEL_KEY || DEFAULT_AGENCY_MODEL_KEY,
@@ -15,13 +17,28 @@ export class AIRouterModelGateway {
     this.modelKey = modelKey;
   }
 
-  async generateStructuredOutput({ agentId, promptPack }) {
+  async generateStructuredOutput({
+    agentId,
+    promptPack,
+    provider,
+    modelId,
+    systemPrompt: explicitSystemPrompt,
+    userPrompt: explicitUserPrompt,
+    schema,
+    temperature,
+    maxTokens,
+    metadata,
+  }) {
     if (!agentId || !promptPack?.systemPrompt || !promptPack?.userPrompt) {
       throw new Error('ModelGatewayInput incompleto para geração da Agência.');
     }
 
+    if (provider === 'mock' || modelId === 'mock-model') {
+      return new MockModelGateway().generateStructuredOutput({ agentId, promptPack, provider, modelId, metadata });
+    }
+
     const systemPrompt = [
-      promptPack.systemPrompt,
+      explicitSystemPrompt || promptPack.systemPrompt,
       '',
       'CONTRATO DE SAIDA',
       '- Responda somente JSON valido, sem Markdown, sem crases e sem texto fora do JSON.',
@@ -31,30 +48,34 @@ export class AIRouterModelGateway {
     ].join('\n');
 
     const userPrompt = [
-      promptPack.userPrompt,
+      explicitUserPrompt || promptPack.userPrompt,
       '',
       'SCHEMA ESPERADO',
-      JSON.stringify(promptPack.expectedOutputSchema, null, 2),
+      JSON.stringify(schema || promptPack.expectedOutputSchema, null, 2),
     ].join('\n');
 
     const result = await AIRouter.callModel(
       systemPrompt,
       [{ role: 'user', content: userPrompt }],
       {
-        modelKey: this.modelKey,
-        maxTokens: Number(process.env.AGENCY_MODEL_MAX_TOKENS || 6000),
-        temperature: Number(process.env.AGENCY_MODEL_TEMPERATURE || 0.2),
+        model: modelId || undefined,
+        modelKey: modelId ? undefined : this.modelKey,
+        maxTokens: Number(maxTokens || process.env.AGENCY_MODEL_MAX_TOKENS || 6000),
+        temperature: Number(temperature ?? process.env.AGENCY_MODEL_TEMPERATURE ?? 0.2),
       }
     );
 
     const data = parseJsonObject(result.text);
+    const resolvedModel = result.model || modelId || this.modelKey;
     return {
       agentId,
       data,
       warnings: collectWarnings(data),
       brandMemorySlicesUsed: extractSlices(promptPack),
-      provider: inferProvider(result.model),
-      model: result.model,
+      provider: normalizeProvider(provider) || inferProvider(resolvedModel),
+      model: resolvedModel,
+      modelId: resolvedModel,
+      isMock: false,
       promptVersion: promptPack.promptVersion,
       tokens: {
         input: result.tokensIn || 0,
@@ -62,7 +83,7 @@ export class AIRouterModelGateway {
         total: (result.tokensIn || 0) + (result.tokensOut || 0),
       },
       estimatedCost: 0,
-      temperature: Number(process.env.AGENCY_MODEL_TEMPERATURE || 0.2),
+      temperature: Number(temperature ?? process.env.AGENCY_MODEL_TEMPERATURE ?? 0.2),
     };
   }
 }
@@ -114,6 +135,17 @@ export class MockModelGateway {
         claims_evitar: ['Resultados garantidos sem prova'],
         warnings: ['Substituir por geração real quando o gateway seguro for ativado.'],
       },
+      channel_adapter: {
+        channel: request.channel || 'linkedin',
+        request_type: request.requestType || 'social_post',
+        adapted_content: mockAdaptedContent(request),
+        channel_specific_notes: [`Adaptação mockada para ${request.channel || 'linkedin'}.`],
+        formatting_rules_applied: ['Abertura forte', 'Parágrafos curtos', 'CTA claro'],
+        cta: request.desiredCta || 'Agendar conversa',
+        hashtags: request.channel === 'instagram' ? ['#marca', '#estrategia'] : [],
+        utm_suggestion: request.channel === 'paid_media' ? 'utm_source=paid_media&utm_medium=cpc&utm_campaign=mock' : undefined,
+        warnings: ['Adaptação mockada; revisar formato do canal antes de usar.'],
+      },
       visual_director: {
         direcao_de_arte: 'Direção visual mockada baseada no BrandKernel.',
         regras_visuais: ['Usar contraste', 'Evitar excesso visual'],
@@ -151,6 +183,55 @@ export class MockModelGateway {
           assessed_by: 'agent',
         },
       },
+      brand_compliance: {
+        decision: 'warning',
+        overall_brand_alignment_score: 78,
+        checklist: [
+          {
+            criterion: 'strategy',
+            status: 'pass',
+            observation: 'Mensagem preserva a direção estratégica registrada na Brand Memory.',
+          },
+          {
+            criterion: 'voice',
+            status: 'pass',
+            observation: 'Tom mockado permanece claro e proprietário.',
+          },
+          {
+            criterion: 'claims',
+            status: 'warning',
+            observation: 'Confirmar evidências antes da publicação.',
+            required_adjustment: 'Validar prova do claim central ou suavizar a promessa.',
+          },
+          {
+            criterion: 'visual_identity',
+            status: 'warning',
+            observation: 'Direção visual ainda é conceitual e depende de revisão humana.',
+          },
+        ],
+        violations: [
+          {
+            type: 'claim_without_proof',
+            description: 'Há risco de claim sem evidência final por se tratar de saída mockada.',
+            severity: 'medium',
+            related_brand_memory_slice: 'plataforma_branding',
+            suggested_fix: 'Adicionar prova concreta ou suavizar a promessa antes do aprovador final.',
+          },
+        ],
+        required_adjustments: ['Validar sustentação dos claims antes do approver final.'],
+        optional_improvements: ['Aproximar CTA das diretrizes específicas do canal.'],
+        brand_memory_slices_checked: [
+          'decodificacao',
+          'plataforma_branding',
+          'voice_profile',
+          'visual_identity',
+          'experiencia',
+          'plano_comunicacao',
+          'strategic_tensions',
+          'executional_readiness',
+        ],
+        warnings: ['Brand compliance mockado; revisão humana continua obrigatória.'],
+      },
       approver: {
         decisao: 'revision_requested',
         checklist: [
@@ -187,7 +268,9 @@ export class MockModelGateway {
       warnings: [`MockModelGateway usado para ${agentId}.`],
       brandMemorySlicesUsed: extractSlices(promptPack),
       provider: 'mock',
-      model: 'mock',
+      model: 'mock-model',
+      modelId: 'mock-model',
+      isMock: true,
       promptVersion: promptPack?.promptVersion,
       tokens: { input: 0, output: 0, total: 0 },
       estimatedCost: 0,
@@ -237,9 +320,47 @@ function extractAgencyRequest(promptPack) {
   return { channel, requestType, desiredCta };
 }
 
+function mockAdaptedContent(request) {
+  const channel = request.channel || 'linkedin';
+  const body = 'Texto adaptado mockado a partir da copy-mãe, preservando mensagem central e CTA.';
+  if (channel === 'email') {
+    return {
+      subject_line: 'Assunto mockado para campanha',
+      preview_text: 'Prévia mockada com promessa clara e sem claims sem prova.',
+      body,
+    };
+  }
+  if (channel === 'website') {
+    return {
+      headline: 'Headline adaptada mockada',
+      body,
+      sections: [
+        { section_title: 'Abertura', content: 'Bloco inicial mockado para clareza e conversão.', cta: request.desiredCta || 'Agendar conversa' },
+      ],
+    };
+  }
+  if (channel === 'instagram') {
+    return {
+      caption: 'Legenda mockada com gancho inicial e CTA direto.',
+      body,
+    };
+  }
+  return {
+    headline: 'Headline adaptada mockada',
+    body,
+  };
+}
+
 function inferProvider(model = '') {
   const value = String(model || '').toLowerCase();
   if (value.includes('gemini')) return 'google';
   if (value.includes('gpt') || value.includes('openai')) return 'openai';
+  if (value.includes('claude')) return 'anthropic';
+  if (value === 'mock' || value === 'mock-model') return 'mock';
   return 'unknown';
+}
+
+function normalizeProvider(provider) {
+  if (['openai', 'anthropic', 'google', 'mock'].includes(provider)) return provider;
+  return undefined;
 }
