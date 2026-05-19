@@ -185,6 +185,7 @@
 
 .admin-project-grid {
   display: flex;
+  flex-direction: column;
   gap: 1.25rem;
   align-items: start;
   isolation: isolate;
@@ -218,10 +219,10 @@
 }
 
 .admin-project-output-rail {
-  flex: 0 0 clamp(360px, 44%, 580px);
+  flex: 0 0 auto;
   box-sizing: border-box;
-  width: clamp(360px, 44%, 580px);
-  max-width: 580px;
+  width: 100%;
+  max-width: none;
   position: relative;
   z-index: 1;
   overflow: hidden;
@@ -262,15 +263,51 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 1120px) {
-  .admin-project-grid {
-    flex-direction: column;
+.admin-project-sidebar {
+  width: 100%;
+}
+
+.respondentes-card {
+  overflow: hidden;
+}
+
+.respondentes-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(130px, 0.7fr) minmax(130px, 0.7fr) auto;
+}
+
+.respondentes-card .form-input {
+  min-width: 0;
+}
+
+.respondentes-group-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.respondentes-list {
+  overflow-x: auto;
+  padding-bottom: 0.1rem;
+}
+
+.respondentes-row {
+  min-width: 760px;
+}
+
+@media (max-width: 760px) {
+  .admin-project-page {
+    overflow-x: hidden;
   }
 
-  .admin-project-sidebar,
-  .admin-project-output-rail {
-    width: 100%;
-    max-width: none;
+  .respondentes-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .respondentes-group-actions {
+    justify-content: flex-start;
+  }
+
+  .respondentes-row {
+    min-width: 680px;
   }
 }
 

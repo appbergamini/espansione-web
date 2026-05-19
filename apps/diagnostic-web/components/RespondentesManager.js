@@ -225,7 +225,7 @@ export default function RespondentesManager({ projetoId }) {
   if (!projetoId) return null;
 
   return (
-    <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+    <div className="glass-card respondentes-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-secondary)' }}>Respondentes</h3>
         {msg.texto && (
@@ -236,7 +236,7 @@ export default function RespondentesManager({ projetoId }) {
       </div>
 
       {/* Form de adicionar/editar */}
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.8fr auto', gap: '0.5rem', marginBottom: '1rem' }}>
+      <form onSubmit={handleSubmit} className="respondentes-form-grid" style={{ display: 'grid', gap: '0.5rem', marginBottom: '1rem' }}>
         <input className="form-input" style={{ padding: '0.4rem', margin: 0 }} placeholder="Nome" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} required />
         <input className="form-input" style={{ padding: '0.4rem', margin: 0 }} type="email" placeholder="E-mail" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
         <input className="form-input" style={{ padding: '0.4rem', margin: 0 }} placeholder="WhatsApp" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} />
@@ -270,7 +270,7 @@ export default function RespondentesManager({ projetoId }) {
                 <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                   {lista.length} total • {enviados} convidados • {respondidos} respondidos
                 </span>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <div className="respondentes-group-actions" style={{ display: 'flex', gap: '0.4rem' }}>
                   <button onClick={() => { setImportTargetPapel(p.key); fileInputRef.current?.click(); }} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '0.25rem 0.55rem', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.75rem' }}>
                     📎 Importar
                   </button>
@@ -286,9 +286,9 @@ export default function RespondentesManager({ projetoId }) {
               {lista.length === 0 ? (
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.5rem 0' }}>(vazio)</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <div className="respondentes-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                   {lista.map(r => (
-                    <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.4rem 0.6rem', borderRadius: '5px', fontSize: '0.82rem' }}>
+                    <div key={r.id} className="respondentes-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.4rem 0.6rem', borderRadius: '5px', fontSize: '0.82rem' }}>
                       <span style={{ flex: 1, fontWeight: 600 }}>{r.nome}</span>
                       <span style={{ flex: 1.5, color: 'var(--text-secondary)' }}>{r.email}</span>
                       <span style={{ flex: 1, color: 'var(--text-secondary)' }}>{r.whatsapp || '—'}</span>
