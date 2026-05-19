@@ -1342,7 +1342,7 @@ export default function ProjetoDetalhes() {
         <title>Espansione | Painel de Controle</title>
       </Head>
       <div className="page-container">
-        <main className="container">
+        <main className="container admin-project-page">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <Link href="/adm">
               <span style={{ color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '0.9rem' }}>
@@ -1376,7 +1376,7 @@ export default function ProjetoDetalhes() {
             </div>
           </div>
 
-          <section className="glass-card outline-glow" style={{ position: 'sticky', top: '0.75rem', zIndex: 20, padding: '1rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.35)', background: 'rgba(6,12,25,0.92)', backdropFilter: 'blur(18px)' }}>
+          <section className="glass-card outline-glow" style={{ position: 'relative', zIndex: 1, padding: '1rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.35)', background: 'rgba(6,12,25,0.92)', backdropFilter: 'blur(18px)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', alignItems: 'center' }}>
               <div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
