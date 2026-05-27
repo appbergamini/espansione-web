@@ -36,18 +36,51 @@ const OBJECTIVE_LABELS = {
 const CHANNELS = Object.keys(CHANNEL_LABELS);
 const OBJECTIVES = Object.keys(OBJECTIVE_LABELS);
 
-const initialForm = {
-  request_type: '',
-  campaign_mode: 'single_piece',
-  channel: 'linkedin',
-  objective: 'authority',
-  audience_cluster: '',
-  offer: '',
-  context: '',
-  desired_cta: '',
-  restrictions: '',
-  reference_material: '',
+const EXECUTION_PROFILE_LABELS = {
+  auto: 'Automático sugerido',
+  simple_content: 'Conteúdo simples',
+  channel_adapted_content: 'Adaptado por canal',
+  visual_content: 'Conteúdo visual',
+  landing_page_copy: 'Landing page',
+  campaign_light: 'Campanha leve',
 };
+
+const EXECUTION_PROFILE_DESCRIPTIONS = {
+  auto: 'A plataforma escolhe o perfil conforme tipo, canal e contexto.',
+  simple_content: 'Account, copy, editor, compliance e aprovador.',
+  channel_adapted_content: 'Inclui adaptação da copy-mãe para o canal.',
+  visual_content: 'Inclui direção visual e suporte para ativos visuais.',
+  landing_page_copy: 'Estrutura copy para website/landing page.',
+  campaign_light: 'Campanha simples com adaptação, visual, editor, compliance e aprovador.',
+};
+
+const CAMPAIGN_PERIOD_LABELS = {
+  week: 'por semana',
+  month: 'por mês',
+};
+
+function makeInitialForm() {
+  return {
+    request_type: '',
+    campaign_mode: 'single_piece',
+    execution_profile_id: 'auto',
+    channel: 'linkedin',
+    objective: 'authority',
+    audience_cluster: '',
+    offer: '',
+    context: '',
+    desired_cta: '',
+    restrictions: '',
+    reference_material: '',
+    campaign_title: '',
+    campaign_duration_weeks: 4,
+    campaign_blueprint_items: [
+      { request_type: 'social_post', channel: 'linkedin', quantity_per_period: 1, period: 'week' },
+      { request_type: 'social_post', channel: 'instagram', quantity_per_period: 2, period: 'week' },
+      { request_type: 'short_video_script', channel: 'instagram', quantity_per_period: 1, period: 'month' },
+    ],
+  };
+}
 
 const CAMPAIGN_CONTEXT_PREFIX = '[Campanha leve / multicanal]';
 
@@ -70,7 +103,8 @@ export default function AgencyRequestsPage() {
   const [authReady, setAuthReady] = useState(false);
   const [readinessData, setReadinessData] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [form, setForm] = useState(initialForm);
+  const [agencyStats, setAgencyStats] = useState(null);
+  const [form, setForm] = useState(makeInitialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadingBrandMemory, setLoadingBrandMemory] = useState(false);
@@ -119,6 +153,7 @@ export default function AgencyRequestsPage() {
 
       setReadinessData(readinessJson);
       setRequests(requestsJson.requests || []);
+      setAgencyStats(readinessJson.brand?.id ? await loadAgencyStats(readinessJson.brand.id) : null);
       const firstAllowed = readinessJson.readiness?.allowedRequestTypes?.[0] || '';
       setForm((current) => ({
         ...current,
@@ -139,22 +174,69 @@ export default function AgencyRequestsPage() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const updateCampaignItem = (index, patch) => {
+    setForm((current) => ({
+      ...current,
+      campaign_blueprint_items: current.campaign_blueprint_items.map((item, itemIndex) => (
+        itemIndex === index ? { ...item, ...patch } : item
+      )),
+    }));
+  };
+
+  const addCampaignItem = () => {
+    setForm((current) => ({
+      ...current,
+      campaign_blueprint_items: [
+        ...current.campaign_blueprint_items,
+        { request_type: 'social_post', channel: 'linkedin', quantity_per_period: 1, period: 'week' },
+      ],
+    }));
+  };
+
+  const removeCampaignItem = (index) => {
+    setForm((current) => ({
+      ...current,
+      campaign_blueprint_items: current.campaign_blueprint_items.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setErrorMsg('');
     setSuccessMsg('');
     try {
+      const isProgrammedCampaign = form.campaign_mode === 'campaign_programmed';
       const context = buildContextForSubmission(form);
+      const executionProfileId = isProgrammedCampaign
+        ? 'campaign_light'
+        : form.execution_profile_id === 'auto'
+          ? null
+          : form.execution_profile_id;
+      const body = {
+        ...form,
+        context,
+        execution_profile_id: executionProfileId,
+        projeto_id: id,
+        brand_id: brand?.id,
+      };
+      if (isProgrammedCampaign) {
+        body.campaign_blueprint = {
+          duration_weeks: Number(form.campaign_duration_weeks || 4),
+          items: form.campaign_blueprint_items,
+        };
+      }
       const res = await fetch('/api/agency/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, context, projeto_id: id, brand_id: brand?.id }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Erro ao criar pedido');
-      setSuccessMsg('Pedido criado.');
-      setForm({ ...initialForm, request_type: allowedRequestTypes[0] || '' });
+      setSuccessMsg(isProgrammedCampaign
+        ? `Campanha criada com ${json.created_count || 0} pedidos.`
+        : 'Pedido criado.');
+      setForm({ ...makeInitialForm(), request_type: allowedRequestTypes[0] || '' });
       await loadAgencyData();
     } catch (err) {
       setErrorMsg(err.message);
@@ -208,19 +290,6 @@ export default function AgencyRequestsPage() {
                 <p style={{ color: 'var(--text-secondary)', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
                   Pedido estruturado primeiro. Execução dos agentes depois, dentro de cada pedido.
                 </p>
-                {brand?.id && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.65rem' }}>
-                    <Link href={`/adm/${id}/agency/library?brand_id=${brand.id}`} style={{ color: 'var(--success)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
-                      Abrir Biblioteca da Marca
-                    </Link>
-                    <Link href={`/adm/${id}/agency/learnings?brand_id=${brand.id}`} style={{ color: 'var(--accent-blue)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
-                      Aprendizados Sugeridos
-                    </Link>
-                    <Link href={`/adm/${id}/agency/signals?brand_id=${brand.id}`} style={{ color: 'var(--warning)', textDecoration: 'none', fontSize: '0.84rem', fontWeight: 800 }}>
-                      Sinais da Agência
-                    </Link>
-                  </div>
-                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem' }}>
                 {[
@@ -248,6 +317,53 @@ export default function AgencyRequestsPage() {
             <div className="glass-card" style={{ padding: '1rem', marginBottom: '1rem', borderColor: 'rgba(34,197,94,0.35)', color: 'var(--success)' }}>
               {successMsg}
             </div>
+          )}
+
+          {brand?.id && (
+            <section className="agency-module-grid" style={{ marginBottom: '1.25rem' }}>
+              <ModuleCard
+                href={`/adm/${id}/agency/brand-book?brand_id=${brand.id}`}
+                title="Brand Book"
+                value={agencyStats?.brandBook || 0}
+                subtitle="logos, cores, fontes e regras"
+                tone="success"
+              />
+              <ModuleCard
+                href={`/adm/${id}/agency/brand-memory?brand_id=${brand.id}`}
+                title="Brand Memory"
+                value={agencyStats?.brandMemoryVersions || 0}
+                subtitle={agencyStats?.activeBrandMemoryVersion ? `ativa v${agencyStats.activeBrandMemoryVersion}` : 'sem versão ativa'}
+                tone="blue"
+              />
+              <ModuleCard
+                href={`/adm/${id}/agency/assets?brand_id=${brand.id}`}
+                title="Ativos Visuais"
+                value={agencyStats?.assets || 0}
+                subtitle="imagens, prompts e referências"
+                tone="blue"
+              />
+              <ModuleCard
+                href={`/adm/${id}/agency/library?brand_id=${brand.id}`}
+                title="Biblioteca"
+                value={agencyStats?.library || 0}
+                subtitle="exemplos e repertório"
+                tone="success"
+              />
+              <ModuleCard
+                href={`/adm/${id}/agency/learnings?brand_id=${brand.id}`}
+                title="Aprendizados"
+                value={agencyStats?.learnings || 0}
+                subtitle="sugestões pendentes"
+                tone="warning"
+              />
+              <ModuleCard
+                href={`/adm/${id}/agency/signals?brand_id=${brand.id}`}
+                title="Sinais"
+                value={agencyStats?.signals || 0}
+                subtitle="lacunas abertas por slice"
+                tone="warning"
+              />
+            </section>
           )}
 
           {loading ? (
@@ -330,20 +446,104 @@ export default function AgencyRequestsPage() {
                         <button
                           type="button"
                           className={form.campaign_mode === 'single_piece' ? 'active' : ''}
-                          onClick={() => handleChange('campaign_mode', 'single_piece')}
+                          onClick={() => setForm((current) => ({ ...current, campaign_mode: 'single_piece', execution_profile_id: current.execution_profile_id === 'campaign_light' ? 'auto' : current.execution_profile_id }))}
                         >
                           Peça avulsa
                         </button>
                         <button
                           type="button"
                           className={form.campaign_mode === 'campaign_light' ? 'active' : ''}
-                          onClick={() => handleChange('campaign_mode', 'campaign_light')}
+                          onClick={() => setForm((current) => ({ ...current, campaign_mode: 'campaign_light', execution_profile_id: 'campaign_light' }))}
                         >
-                          Campanha leve
+                          Peça com desdobramento
+                        </button>
+                        <button
+                          type="button"
+                          className={form.campaign_mode === 'campaign_programmed' ? 'active' : ''}
+                          onClick={() => setForm((current) => ({ ...current, campaign_mode: 'campaign_programmed', execution_profile_id: 'campaign_light' }))}
+                        >
+                          Campanha programada
                         </button>
                       </div>
                       <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                        Campanha leve ativa o perfil de execução com adaptação por canal, direção visual, editor, compliance e aprovador.
+                        {form.campaign_mode === 'campaign_programmed'
+                          ? 'Cria uma série de pedidos a partir de duração e cadência por canal.'
+                          : form.campaign_mode === 'campaign_light'
+                            ? 'Usa fluxo mais robusto para uma peça com adaptação por canal, direção visual, editor, compliance e aprovador.'
+                            : 'Cria um pedido único, com perfil automático ou manual.'}
+                      </span>
+                    </Field>
+
+                    {form.campaign_mode === 'campaign_programmed' && (
+                      <div style={{ display: 'grid', gap: '0.85rem', padding: '0.9rem', border: '1px solid rgba(16,185,129,0.22)', borderRadius: 8, background: 'rgba(16,185,129,0.05)' }}>
+                        <div style={{ fontWeight: 800, color: 'var(--success)', fontSize: '0.84rem' }}>Plano da campanha</div>
+                        <div className="agency-form-row">
+                          <Field label="Nome da campanha">
+                            <input className="form-input" value={form.campaign_title} onChange={e => handleChange('campaign_title', e.target.value)} placeholder="Ex.: Junho - geração de leads" />
+                          </Field>
+                          <Field label="Duração (semanas)">
+                            <input className="form-input" type="number" min="1" max="52" value={form.campaign_duration_weeks} onChange={e => handleChange('campaign_duration_weeks', e.target.value)} />
+                          </Field>
+                        </div>
+
+                        <div style={{ display: 'grid', gap: '0.65rem' }}>
+                          {form.campaign_blueprint_items.map((item, index) => (
+                            <div key={`${index}-${item.channel}-${item.request_type}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1.1fr) 110px 120px auto', gap: '0.55rem', alignItems: 'end' }}>
+                              <Field label="Tipo">
+                                <select className="form-input" value={item.request_type} onChange={e => updateCampaignItem(index, { request_type: e.target.value })}>
+                                  {allowedRequestTypes.map((type) => (
+                                    <option key={type} value={type}>{REQUEST_TYPE_LABELS[type] || type}</option>
+                                  ))}
+                                </select>
+                              </Field>
+                              <Field label="Canal">
+                                <select className="form-input" value={item.channel} onChange={e => updateCampaignItem(index, { channel: e.target.value })}>
+                                  {CHANNELS.map((channel) => <option key={channel} value={channel}>{CHANNEL_LABELS[channel]}</option>)}
+                                </select>
+                              </Field>
+                              <Field label="Qtd.">
+                                <input className="form-input" type="number" min="0" max="31" value={item.quantity_per_period} onChange={e => updateCampaignItem(index, { quantity_per_period: e.target.value })} />
+                              </Field>
+                              <Field label="Periodicidade">
+                                <select className="form-input" value={item.period} onChange={e => updateCampaignItem(index, { period: e.target.value })}>
+                                  {Object.entries(CAMPAIGN_PERIOD_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                </select>
+                              </Field>
+                              <button
+                                type="button"
+                                onClick={() => removeCampaignItem(index)}
+                                disabled={form.campaign_blueprint_items.length <= 1}
+                                style={{ height: 42, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.24)', borderRadius: 8, color: 'var(--brand-red)', cursor: form.campaign_blueprint_items.length <= 1 ? 'not-allowed' : 'pointer', fontWeight: 800, padding: '0 0.8rem' }}
+                              >
+                                Remover
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <button
+                            type="button"
+                            onClick={addCampaignItem}
+                            style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.28)', borderRadius: 8, color: 'var(--accent-blue)', fontWeight: 800, padding: '0.55rem 0.8rem', cursor: 'pointer' }}
+                          >
+                            Adicionar linha de cadência
+                          </button>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                            Total previsto: {countCampaignPlannedItems(form)} pedidos
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <Field label="Perfil de execução">
+                      <select className="form-input" value={form.execution_profile_id} onChange={e => handleChange('execution_profile_id', e.target.value)} disabled={form.campaign_mode === 'campaign_programmed'}>
+                        {Object.entries(EXECUTION_PROFILE_LABELS).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                        {EXECUTION_PROFILE_DESCRIPTIONS[form.execution_profile_id] || EXECUTION_PROFILE_DESCRIPTIONS.auto}
                       </span>
                     </Field>
 
@@ -414,9 +614,26 @@ export default function AgencyRequestsPage() {
                             <strong>{REQUEST_TYPE_LABELS[request.request_type] || request.request_type}</strong>
                             <span style={{ color: 'var(--accent-blue)', fontSize: '0.78rem' }}>{request.status}</span>
                           </div>
+                          {request.campaign_group_id && (
+                            <div style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 700, marginTop: '0.45rem' }}>
+                              {request.campaign_title || 'Campanha programada'}
+                              {request.campaign_wave_label ? ` · ${request.campaign_wave_label}` : ''}
+                              {Number.isFinite(Number(request.campaign_item_order)) ? ` · item ${request.campaign_item_order}` : ''}
+                            </div>
+                          )}
                           {isCampaignRequestContext(request.context) && (
                             <div style={{ display: 'inline-flex', marginTop: '0.45rem', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 999, padding: '0.16rem 0.5rem', color: 'var(--success)', fontSize: '0.72rem', fontWeight: 800 }}>
                               Campanha leve
+                            </div>
+                          )}
+                          {request.campaign_group_id && (
+                            <div style={{ display: 'inline-flex', marginTop: '0.45rem', marginLeft: '0.35rem', border: '1px solid rgba(56,189,248,0.28)', borderRadius: 999, padding: '0.16rem 0.5rem', color: 'var(--accent-blue)', fontSize: '0.72rem', fontWeight: 800 }}>
+                              Campanha programada
+                            </div>
+                          )}
+                          {request.execution_profile_id && (
+                            <div style={{ display: 'inline-flex', marginTop: '0.45rem', marginLeft: isCampaignRequestContext(request.context) ? '0.35rem' : 0, border: '1px solid rgba(56,189,248,0.28)', borderRadius: 999, padding: '0.16rem 0.5rem', color: 'var(--accent-blue)', fontSize: '0.72rem', fontWeight: 800 }}>
+                              {EXECUTION_PROFILE_LABELS[request.execution_profile_id] || request.execution_profile_id}
                             </div>
                           )}
                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.35rem' }}>
@@ -440,6 +657,12 @@ export default function AgencyRequestsPage() {
               gap: 1.25rem;
               align-items: start;
               width: 100%;
+            }
+
+            .agency-module-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+              gap: 0.75rem;
             }
 
             .agency-panel {
@@ -472,7 +695,7 @@ export default function AgencyRequestsPage() {
 
             .agency-segmented-control {
               display: grid;
-              grid-template-columns: repeat(2, minmax(0, 1fr));
+              grid-template-columns: repeat(3, minmax(0, 1fr));
               gap: 0.4rem;
               padding: 0.3rem;
               border: 1px solid rgba(255, 255, 255, 0.08);
@@ -527,6 +750,10 @@ export default function AgencyRequestsPage() {
               .agency-form-row {
                 grid-template-columns: 1fr;
               }
+
+              .agency-segmented-control {
+                grid-template-columns: 1fr;
+              }
             }
           `}</style>
         </main>
@@ -542,5 +769,76 @@ function Field({ label, children }) {
       {children}
     </label>
   );
+}
+
+function ModuleCard({ href, title, value, subtitle, tone }) {
+  const color = tone === 'success'
+    ? 'var(--success)'
+    : tone === 'warning'
+      ? 'var(--warning)'
+      : 'var(--accent-blue)';
+  return (
+    <Link href={href} style={{ textDecoration: 'none' }}>
+      <article className="glass-card" style={{ padding: '0.9rem', minHeight: 112, borderColor: 'rgba(255,255,255,0.08)', display: 'grid', alignContent: 'space-between' }}>
+        <div>
+          <div style={{ color, fontSize: '1.2rem', fontWeight: 900 }}>{value}</div>
+          <div style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: '0.92rem', marginTop: '0.15rem' }}>{title}</div>
+        </div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', lineHeight: 1.35 }}>{subtitle}</div>
+      </article>
+    </Link>
+  );
+}
+
+function countCampaignPlannedItems(form) {
+  const durationWeeks = Math.max(1, Number(form?.campaign_duration_weeks || 0));
+  return (form?.campaign_blueprint_items || []).reduce((sum, item) => {
+    const quantity = Math.max(0, Number(item?.quantity_per_period || 0));
+    if (item?.period === 'month') return sum + quantity;
+    return sum + (quantity * durationWeeks);
+  }, 0);
+}
+
+async function loadAgencyStats(brandId) {
+  const empty = {
+    library: 0,
+    learnings: 0,
+    signals: 0,
+    assets: 0,
+    brandBook: 0,
+    brandMemoryVersions: 0,
+    activeBrandMemoryVersion: null,
+  };
+  if (!brandId) return empty;
+
+  const urls = {
+    library: `/api/agency/library?brand_id=${brandId}&status=active`,
+    learnings: `/api/agency/learnings?brand_id=${brandId}&status=suggested`,
+    signals: `/api/agency/signals?brand_id=${brandId}&status=open`,
+    assets: `/api/agency/assets?brand_id=${brandId}`,
+    brandBook: `/api/agency/brand-book?brand_id=${brandId}`,
+    versions: `/api/agency/brand-memory-versions?brand_id=${brandId}`,
+  };
+
+  const entries = await Promise.all(Object.entries(urls).map(async ([key, url]) => {
+    try {
+      const res = await fetch(url);
+      const json = await res.json();
+      return [key, json.success ? json : null];
+    } catch {
+      return [key, null];
+    }
+  }));
+  const data = Object.fromEntries(entries);
+
+  return {
+    library: data.library?.items?.length || 0,
+    learnings: data.learnings?.suggestions?.length || 0,
+    signals: data.signals?.signals?.length || 0,
+    assets: data.assets?.assets?.length || 0,
+    brandBook: data.brandBook?.summary?.total || data.brandBook?.items?.length || 0,
+    brandMemoryVersions: data.versions?.versions?.length || 0,
+    activeBrandMemoryVersion: data.versions?.activeVersion?.version_number || null,
+  };
 }
 

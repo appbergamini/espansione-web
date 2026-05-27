@@ -86,6 +86,7 @@ export function mapDbRequestToAgencyRequest(row) {
   return {
     id: row.id,
     brandId: row.brand_id,
+    executionProfileId: row.execution_profile_id || undefined,
     requestType: row.request_type,
     channel: row.request_type === 'landing_page_copy' ? 'website' : row.channel,
     objective: row.objective,

@@ -152,10 +152,14 @@ export default function AgencyRequestDetailPage() {
     setCreativeAssets(json.assets || []);
   };
 
-  const loadRequest = async () => {
+  const loadRequest = async ({ silent = false, preserveError = false } = {}) => {
     if (!requestId) return;
-    setLoading(true);
-    setErrorMsg('');
+    if (!silent) {
+      setLoading(true);
+    }
+    if (!preserveError) {
+      setErrorMsg('');
+    }
     try {
       const res = await fetch(`/api/agency/requests/${requestId}`);
       const json = await res.json();
@@ -164,9 +168,13 @@ export default function AgencyRequestDetailPage() {
       setRuns(json.runs || []);
       await loadCreativeAssets(json.request);
     } catch (err) {
-      setErrorMsg(err.message);
+      if (!silent || !preserveError) {
+        setErrorMsg(err.message);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -221,6 +229,7 @@ export default function AgencyRequestDetailPage() {
 
   const submitAgencyExecution = async () => {
     if (!executionModal) return;
+    let handedOffToBackground = false;
     setRunningWorkflow(true);
     setReprocessingAction(executionModal.scope === 'all' ? '' : `${executionModal.scope === 'from' ? 'from' : 'one'}:${executionModal.agentId}`);
     setErrorMsg('');
@@ -243,20 +252,38 @@ export default function AgencyRequestDetailPage() {
         body = { agentId: executionModal.agentId, confirmApproved, modelSelection: cleanSelection };
       }
 
-      const res = await fetch(endpoint, {
+      setExecutionModal(null);
+      window.setTimeout(() => {
+        loadRequest({ silent: true, preserveError: true });
+      }, 150);
+
+      fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-      });
-      const json = await readJsonOrThrow(res, 'Erro ao rodar Agência IA');
-      if (!json.success) throw new Error(json.error || 'Erro ao rodar Agência IA');
-      setExecutionModal(null);
-      await loadRequest();
+      })
+        .then((res) => readJsonOrThrow(res, 'Erro ao rodar Agência IA'))
+        .then(async (json) => {
+          if (!json.success) throw new Error(json.error || 'Erro ao rodar Agência IA');
+          await loadRequest({ silent: true, preserveError: true });
+        })
+        .catch((err) => {
+          setErrorMsg(err.message);
+        })
+        .finally(() => {
+          setRunningWorkflow(false);
+          setReprocessingAction('');
+          loadRequest({ silent: true, preserveError: true });
+        });
+      handedOffToBackground = true;
+      return;
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
-      setRunningWorkflow(false);
-      setReprocessingAction('');
+      if (!handedOffToBackground) {
+        setRunningWorkflow(false);
+        setReprocessingAction('');
+      }
     }
   };
 
@@ -335,6 +362,19 @@ export default function AgencyRequestDetailPage() {
   const runStepAction = async (action, agentId) => {
     if (!latestRun?.id) return;
     openExecutionModal(action === 'from' ? 'from' : 'one', agentId);
+  };
+
+  const retryFailedStepWithSaferLimits = (step) => {
+    if (!step?.agent_id) return;
+    const suggestedMax = suggestHigherTokenLimit(step?.error);
+    setModelSelection((current) => {
+      const currentMax = Number(current?.max_tokens_per_step || 0);
+      return {
+        ...current,
+        max_tokens_per_step: Math.max(currentMax, suggestedMax),
+      };
+    });
+    openExecutionModal('from', step.agent_id);
   };
 
   const createVariation = async () => {
@@ -544,6 +584,35 @@ export default function AgencyRequestDetailPage() {
   const channelLabel = CHANNEL_LABELS[request?.channel] || request?.channel;
   const objectiveLabel = OBJECTIVE_LABELS[request?.objective] || request?.objective;
   const briefingApproved = isBriefingApprovedRequest(request);
+  const latestFailedStep = currentRunSteps.find((step) => getTechnicalStatus(step) === 'failed') || null;
+  const failedByTokenLimit = /limite de tokens|excedeu o limite de tokens/i.test(latestFailedStep?.error || '');
+  const shouldPollExecution = Boolean(
+    requestId
+    && (
+      runningWorkflow
+      || request?.status === 'generation_running'
+      || request?.status === 'approval_pending'
+      || latestRun?.status === 'running'
+      || currentRunSteps.some((step) => getTechnicalStatus(step) === 'running')
+    )
+  );
+
+  useEffect(() => {
+    if (!shouldPollExecution) return undefined;
+    let cancelled = false;
+
+    const refresh = async () => {
+      if (cancelled) return;
+      await loadRequest({ silent: true, preserveError: true });
+    };
+
+    refresh();
+    const intervalId = window.setInterval(refresh, 2500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [shouldPollExecution, requestId]);
 
   return (
     <>
@@ -598,10 +667,11 @@ export default function AgencyRequestDetailPage() {
                       const step = stepByAgent.get(agent.id);
                       const technicalStatus = getTechnicalStatus(step);
                       const done = technicalStatus === 'completed';
-                      const active = step && !done;
+                      const failed = technicalStatus === 'failed';
+                      const active = step && !done && !failed;
                       return (
-                        <div key={agent.id} title={labelAgent(agent.id)} className="agency-step-pill" style={{ borderColor: done ? 'rgba(16,185,129,0.5)' : active ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.09)', background: done ? 'rgba(16,185,129,0.14)' : active ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.04)' }}>
-                          <div style={{ color: done ? 'var(--success)' : active ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 800 }}>0{index + 1}</div>
+                        <div key={agent.id} title={labelAgent(agent.id)} className="agency-step-pill" style={{ borderColor: done ? 'rgba(16,185,129,0.5)' : failed ? 'rgba(239,68,68,0.45)' : active ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.09)', background: done ? 'rgba(16,185,129,0.14)' : failed ? 'rgba(239,68,68,0.12)' : active ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.04)' }}>
+                          <div style={{ color: done ? 'var(--success)' : failed ? 'var(--brand-red)' : active ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 800 }}>0{index + 1}</div>
                           <div className="agency-step-label">{agent.label}</div>
                         </div>
                       );
@@ -669,6 +739,58 @@ export default function AgencyRequestDetailPage() {
                 </aside>
 
                 <div className="agency-content">
+                {latestRun?.status === 'failed' && latestFailedStep && (
+                  <section
+                    className="glass-card"
+                    style={{
+                      padding: '1rem 1.05rem',
+                      borderColor: 'rgba(239,68,68,0.32)',
+                      background: 'rgba(127,29,29,0.14)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.85rem', alignItems: 'center' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ color: 'var(--brand-red)', fontSize: '0.76rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.3rem' }}>
+                          Execução interrompida
+                        </div>
+                        <strong style={{ display: 'block', fontSize: '1rem' }}>
+                          Travou em {labelAgent(latestFailedStep.agent_id)}
+                        </strong>
+                        <p style={{ margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.84rem', lineHeight: 1.45 }}>
+                          {latestFailedStep.error || 'A run falhou antes de concluir as próximas etapas.'}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => runStepAction('one', latestFailedStep.agent_id)}
+                          disabled={!!reprocessingAction || runningWorkflow}
+                          style={miniActionStyle(reprocessingAction === `one:${latestFailedStep.agent_id}`)}
+                        >
+                          {reprocessingAction === `one:${latestFailedStep.agent_id}` ? 'Regenerando...' : 'Tentar só este agente'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => failedByTokenLimit ? retryFailedStepWithSaferLimits(latestFailedStep) : runStepAction('from', latestFailedStep.agent_id)}
+                          disabled={!!reprocessingAction || runningWorkflow}
+                          style={{
+                            ...miniActionStyle(reprocessingAction === `from:${latestFailedStep.agent_id}`),
+                            background: failedByTokenLimit ? 'rgba(239,68,68,0.12)' : 'rgba(56,189,248,0.08)',
+                            border: failedByTokenLimit ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(56,189,248,0.24)',
+                            color: failedByTokenLimit ? 'var(--brand-red)' : 'var(--accent-blue)',
+                          }}
+                        >
+                          {reprocessingAction === `from:${latestFailedStep.agent_id}`
+                            ? 'Retomando...'
+                            : failedByTokenLimit
+                              ? 'Retomar com limite maior'
+                              : 'Retomar a partir daqui'}
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
                 <BriefingPanel
                   request={request}
                   accountStep={accountStep}
@@ -1683,8 +1805,19 @@ function ExecutionModeModal({
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(1,6,18,0.72)', display: 'grid', placeItems: 'center', padding: '1.25rem' }}>
-      <section className="glass-card" style={{ width: 'min(780px, 100%)', maxHeight: 'min(90vh, 820px)', overflowY: 'auto', borderColor: 'rgba(56,189,248,0.28)', padding: '1rem' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(1,6,18,0.92)', backdropFilter: 'blur(6px)', display: 'grid', placeItems: 'center', padding: '1.25rem' }}>
+      <section
+        style={{
+          width: 'min(780px, 100%)',
+          maxHeight: 'min(90vh, 820px)',
+          overflowY: 'auto',
+          border: '1px solid rgba(56,189,248,0.34)',
+          borderRadius: 12,
+          background: '#070d1b',
+          boxShadow: '0 24px 70px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.035) inset',
+          padding: '1rem',
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
           <div>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Execução da Agência</div>
@@ -1709,7 +1842,7 @@ function ExecutionModeModal({
                     onClick={() => updateSelection({ execution_mode: option.value })}
                     style={{
                       textAlign: 'left',
-                      background: selected ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.035)',
+                      background: selected ? 'rgba(56,189,248,0.18)' : '#101624',
                       border: `1px solid ${selected ? 'rgba(56,189,248,0.38)' : 'rgba(255,255,255,0.09)'}`,
                       borderRadius: 8,
                       color: 'var(--text-primary)',
@@ -1816,9 +1949,9 @@ function ExecutionModeModal({
 }
 
 const modalSectionStyle = {
-  border: '1px solid rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.12)',
   borderRadius: 8,
-  background: 'rgba(255,255,255,0.025)',
+  background: '#0d1322',
   padding: '0.85rem',
 };
 
@@ -1834,8 +1967,8 @@ const modalLabelStyle = {
 const modalInputStyle = {
   width: '100%',
   borderRadius: 8,
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.16)',
+  background: '#151b2a',
   color: 'var(--text-primary)',
   padding: '0.62rem',
   fontWeight: 700,
@@ -3057,10 +3190,19 @@ function defaultModelSelection() {
     execution_mode: executionMode,
     selected_model_id: 'gemini-3-flash-preview',
     agent_overrides: [],
-    max_tokens_per_step: 6000,
+    max_tokens_per_step: 12000,
     max_estimated_cost_per_run: '',
     require_confirmation_for_premium: true,
   };
+}
+
+function suggestHigherTokenLimit(errorMessage) {
+  const match = String(errorMessage || '').match(/Step excedeu o limite de tokens \((\d+)\/(\d+)\)/i);
+  const observedTokens = Number(match?.[1] || 0);
+  if (observedTokens > 0) {
+    return Math.ceil((observedTokens + 1200) / 1000) * 1000;
+  }
+  return 12000;
 }
 
 function cleanModelSelection(selection = {}, agentFlow = []) {

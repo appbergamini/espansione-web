@@ -88,7 +88,7 @@ export function getDefaultAIExecutionMode(env = getRuntimeEnv()): AIExecutionMod
 export function getDefaultAgencyModelSelection(env = getRuntimeEnv()): AgencyModelSelection {
   return {
     execution_mode: getDefaultAIExecutionMode(env),
-    max_tokens_per_step: 6000,
+    max_tokens_per_step: 12000,
     require_confirmation_for_premium: true,
   };
 }

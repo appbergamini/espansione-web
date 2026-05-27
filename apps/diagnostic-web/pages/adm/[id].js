@@ -24,7 +24,10 @@ import {
   canPrepareBrandMemoryBeforeEditorial,
   getPrimaryAdminAction,
 } from '../../lib/agents/adminFlow';
-import { buildBrandMemoryExportReadiness } from '../../lib/brand-memory/exportValidation';
+import {
+  buildBrandMemoryExportReadiness,
+  extractBrandMemoryExportJson,
+} from '../../lib/brand-memory/exportValidation';
 import { extractExecutionalReadinessFromAgent6Output } from '../../lib/executional-readiness/extract';
 import { extractStrategicTensionsFromAgent6Output } from '../../lib/strategic-tensions/extract';
 import {
@@ -324,6 +327,17 @@ function parseTextLines(text) {
   return String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
 }
 
+function hasUsableAgent16BrandMemoryExport(output) {
+  if (!output) return false;
+  if (output.brand_memory_export_json && typeof output.brand_memory_export_json === 'object') return true;
+  try {
+    const parsed = extractBrandMemoryExportJson(output.conteudo || '');
+    return !!(parsed?.espansione_diagnostic || parsed?.schema_version);
+  } catch {
+    return false;
+  }
+}
+
 function CheckpointStructuredNotesPanel({
   checkpoint,
   form,
@@ -341,7 +355,7 @@ function CheckpointStructuredNotesPanel({
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
-    <div style={{ border: '1px solid rgba(245,158,11,0.28)', background: 'rgba(245,158,11,0.05)', borderRadius: 12, padding: '0.9rem', display: 'grid', gap: '0.75rem' }}>
+    <div className="checkpoint-review-panel">
       <div>
         <div style={{ color: 'var(--warning)', fontSize: '0.76rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           Checkpoint {checkpoint.checkpoint_num}
@@ -354,7 +368,7 @@ function CheckpointStructuredNotesPanel({
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0.65rem' }}>
+      <div className="checkpoint-notes-grid">
         <CheckpointTextArea label="Pontos aprovados" value={form.approvedPoints} onChange={(value) => update('approvedPoints', value)} />
         <CheckpointTextArea label="Pontos aprovados com ressalva" value={form.pointsWithReservations} onChange={(value) => update('pointsWithReservations', value)} />
         <CheckpointTextArea label="Ajustes obrigatórios" value={form.requiredAdjustments} onChange={(value) => update('requiredAdjustments', value)} />
@@ -374,7 +388,7 @@ function CheckpointStructuredNotesPanel({
         />
       </label>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
+      <div className="checkpoint-decision-actions">
         <button className="btn-primary" style={{ padding: '0.65rem' }} onClick={() => onDecision(checkpoint.checkpoint_num, 'approved')} disabled={approving}>
           Aprovar
         </button>
@@ -594,6 +608,11 @@ export default function ProjetoDetalhes() {
         }
       }
     }
+    if (Number(agentNum) === 16) {
+      setEngineError('');
+      runAgentWithModel(agentNum);
+      return;
+    }
     setPickerMode('agent');
     setPendingAgentNum(agentNum);
     setShowModelPicker(true);
@@ -658,14 +677,7 @@ export default function ProjetoDetalhes() {
     return { res, raw, json };
   };
 
-  const handleRunWithModel = async (modelKey) => {
-    setShowModelPicker(false);
-    // FIX.22 — picker reusado: dispatcha por mode.
-    if (pickerMode === 'team-report') {
-      await downloadDiscReport(modelKey);
-      return;
-    }
-    const agentNum = pendingAgentNum;
+  const runAgentWithModel = async (agentNum, modelKey) => {
     setRunningAgent(agentNum);
     setEngineError('');
     try {
@@ -696,6 +708,16 @@ export default function ProjetoDetalhes() {
       setRunningAgent(null);
       setEngineStage('');
     }
+  };
+
+  const handleRunWithModel = async (modelKey) => {
+    setShowModelPicker(false);
+    // FIX.22 — picker reusado: dispatcha por mode.
+    if (pickerMode === 'team-report') {
+      await downloadDiscReport(modelKey);
+      return;
+    }
+    await runAgentWithModel(pendingAgentNum, modelKey);
   };
 
   const openTranscritModal = (tipo) => {
@@ -1286,7 +1308,7 @@ export default function ProjetoDetalhes() {
   const brandMemoryExportReadiness = buildBrandMemoryExportReadiness(latestOutputs, { includeEvp: projetoTemEvp });
   const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
   const brandMemoryExportDone = hasAgentOutput(16);
-  const brandMemoryExportValid = !!brandMemoryOutput?.conteudo?.match(/<brand_memory_export>[\s\S]*?<\/brand_memory_export>/i);
+  const brandMemoryExportValid = hasUsableAgent16BrandMemoryExport(brandMemoryOutput);
   const checkpointStrategicTensions = checkpointOutput?.agent_num === 6
     ? extractStrategicTensionsFromAgent6Output(checkpointOutput)
     : null;
@@ -1376,9 +1398,9 @@ export default function ProjetoDetalhes() {
             </div>
           </div>
 
-          <section className="glass-card outline-glow" style={{ position: 'relative', zIndex: 1, padding: '1rem', marginBottom: '1.25rem', borderColor: 'rgba(56,189,248,0.35)', background: 'rgba(6,12,25,0.92)', backdropFilter: 'blur(18px)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', alignItems: 'center' }}>
-              <div>
+          <section className={`glass-card outline-glow admin-flow-card${pendingCkpt ? ' admin-flow-card--checkpoint' : ''}`}>
+            <div className="admin-flow-overview">
+              <div className="admin-flow-status">
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
                   Fluxo principal
                 </div>
@@ -1390,7 +1412,7 @@ export default function ProjetoDetalhes() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${fluxoAgentes.length}, minmax(34px, 1fr))`, gap: '0.35rem', alignItems: 'center', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+              <div className="admin-flow-steps" style={{ gridTemplateColumns: `repeat(${fluxoAgentes.length}, minmax(34px, 1fr))` }}>
                 {fluxoAgentes.map((agent) => {
                   const done = hasAgentOutput(agent.agent_num);
                   const current = !pendingCkpt && (
@@ -1424,7 +1446,7 @@ export default function ProjetoDetalhes() {
                 })}
               </div>
 
-              <div style={{ display: 'grid', gap: '0.55rem' }}>
+              <div className="admin-flow-action">
                 {primaryAction.type === 'approve_checkpoint' ? (
                   <CheckpointStructuredNotesPanel
                     checkpoint={pendingCkpt}
@@ -1481,18 +1503,18 @@ export default function ProjetoDetalhes() {
                     {engineError.includes('Missing fields') ? 'Faltam dados antes de rodar este agente.' : engineError}
                   </div>
                 )}
-                {brandMemoryExportInvalid && !engineError && (
-                  <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
-                    O Agente 16 antigo não tem export válido. Regere antes de usar a Agência.
+                {brandMemoryExportInvalid && primaryAction.type !== 'generate_brand_memory' && !engineError && (
+                  <div style={{ color: 'var(--brand-red)', fontSize: '0.78rem', textAlign: 'center' }}>
+                    A Brand Memory antiga não tem export válido. Regere antes de usar a Agência.
                   </div>
                 )}
                 {!brandMemoryExportReadiness.ready && brandMemoryExportDeps.ok && !engineError && (
-                  <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
+                  <div style={{ color: 'var(--brand-red)', fontSize: '0.78rem', textAlign: 'center' }}>
                     Exports da Brand Memory incompletos. Veja o painel de prontidão antes do Agente 16.
                   </div>
                 )}
                 {showEditorialPendingBrandMemoryNotice && !engineError && (
-                  <div style={{ color: 'var(--warning)', fontSize: '0.78rem', textAlign: 'center' }}>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', textAlign: 'center' }}>
                     Entregável editorial final ainda não foi gerado, mas a Brand Memory já pode ser preparada.
                   </div>
                 )}

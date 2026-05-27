@@ -9,6 +9,14 @@ export function getPrimaryAdminAction({
     return { type: 'approve_checkpoint' };
   }
 
+  if (nextAgent !== null && nextAgent !== undefined && Number(nextAgent) !== 16) {
+    return {
+      type: 'run_agent',
+      agentNum: Number(nextAgent),
+      label: `Executar Agente ${Number(nextAgent)}`,
+    };
+  }
+
   if (brandMemoryExportReady) {
     return {
       type: 'generate_brand_memory',

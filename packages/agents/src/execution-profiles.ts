@@ -121,7 +121,7 @@ export function selectAgencyExecutionProfile({
   brandReadiness,
   availableAgents = DEFAULT_AGENCY_AGENT_SEQUENCE,
 }: {
-  agencyRequest: AgencyRequest;
+  agencyRequest: AgencyRequest & { executionProfileId?: AgencyExecutionProfileId | string | null; execution_profile_id?: string | null };
   brandReadiness?: BrandReadinessResult;
   availableAgents?: AgencyAgentId[];
 }): AgencyExecutionProfile {
@@ -129,6 +129,14 @@ export function selectAgencyExecutionProfile({
   const available = new Set(availableAgents);
   const canUse = (profileId: AgencyExecutionProfileId) =>
     DEFAULT_AGENCY_EXECUTION_PROFILES[profileId].required_agents.every((agentId) => available.has(agentId));
+  const explicitProfileId = agencyRequest.executionProfileId || agencyRequest.execution_profile_id;
+
+  if (explicitProfileId && explicitProfileId in DEFAULT_AGENCY_EXECUTION_PROFILES) {
+    const profile = DEFAULT_AGENCY_EXECUTION_PROFILES[explicitProfileId as AgencyExecutionProfileId];
+    if (canUse(profile.id) && isProfileCompatible(profile, agencyRequest)) {
+      return profile;
+    }
+  }
 
   if (isCampaignRequest(agencyRequest) && canUse('campaign_light')) {
     return DEFAULT_AGENCY_EXECUTION_PROFILES.campaign_light;
@@ -155,6 +163,10 @@ export function selectAgencyExecutionProfile({
   }
 
   return DEFAULT_AGENCY_EXECUTION_PROFILES.simple_content;
+}
+
+export function getCompatibleAgencyExecutionProfiles(agencyRequest: AgencyRequest): AgencyExecutionProfile[] {
+  return Object.values(DEFAULT_AGENCY_EXECUTION_PROFILES).filter((profile) => isProfileCompatible(profile, agencyRequest));
 }
 
 export function buildAgencyExecutionPlan({
@@ -242,6 +254,12 @@ function buildPlanRationale(
 
 function hasSpecificChannel(agencyRequest: AgencyRequest): boolean {
   return Boolean(agencyRequest.channel && agencyRequest.channel !== 'other');
+}
+
+function isProfileCompatible(profile: AgencyExecutionProfile, agencyRequest: AgencyRequest): boolean {
+  if (!profile.allowed_request_types.includes(agencyRequest.requestType)) return false;
+  if (profile.allowed_channels?.length && !profile.allowed_channels.includes(agencyRequest.channel)) return false;
+  return true;
 }
 
 function isCampaignRequest(agencyRequest: AgencyRequest): boolean {

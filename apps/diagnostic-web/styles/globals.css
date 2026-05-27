@@ -205,6 +205,76 @@
   transform: none;
 }
 
+.admin-flow-card {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+  background: rgba(6, 12, 25, 0.92) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.admin-flow-overview {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(360px, 1.4fr) minmax(220px, 0.9fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.admin-flow-card--checkpoint .admin-flow-overview {
+  grid-template-columns: minmax(180px, 0.7fr) minmax(420px, 1.3fr);
+  align-items: start;
+}
+
+.admin-flow-card--checkpoint .admin-flow-action {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.admin-flow-status,
+.admin-flow-action {
+  min-width: 0;
+}
+
+.admin-flow-action {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-flow-steps {
+  display: grid;
+  gap: 0.35rem;
+  align-items: center;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.35rem;
+  scrollbar-color: rgba(163, 176, 198, 0.75) rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+}
+
+.checkpoint-review-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.checkpoint-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.checkpoint-decision-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
 .admin-project-sidebar,
 .admin-project-output-rail {
   min-width: 0;
@@ -298,6 +368,20 @@
     overflow-x: hidden;
   }
 
+  .admin-flow-card {
+    padding: 0.85rem;
+  }
+
+  .admin-flow-overview,
+  .admin-flow-card--checkpoint .admin-flow-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .checkpoint-notes-grid,
+  .checkpoint-decision-actions {
+    grid-template-columns: 1fr;
+  }
+
   .respondentes-form-grid {
     grid-template-columns: 1fr;
   }
@@ -308,6 +392,21 @@
 
   .respondentes-row {
     min-width: 680px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1040px) {
+  .admin-flow-overview,
+  .admin-flow-card--checkpoint .admin-flow-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .checkpoint-notes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkpoint-decision-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

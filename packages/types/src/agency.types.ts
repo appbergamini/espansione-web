@@ -173,6 +173,34 @@ export type CreativeAssetStatus =
   | 'rejected'
   | 'archived';
 
+export type BrandAssetKitItemType =
+  | 'brand_book_file'
+  | 'logo_primary'
+  | 'logo_secondary'
+  | 'logo_symbol'
+  | 'logo_monochrome'
+  | 'color_palette'
+  | 'typography'
+  | 'graphic_element'
+  | 'iconography'
+  | 'image_style_reference'
+  | 'usage_rule'
+  | 'approved_visual_example'
+  | 'rejected_visual_example'
+  | 'other';
+
+export interface BrandAssetKitItem {
+  id?: string;
+  brandId: string;
+  assetType: BrandAssetKitItemType;
+  name: string;
+  description?: string;
+  storageUrl?: string;
+  mimeType?: string;
+  tags?: string[];
+  createdAt?: string;
+}
+
 export type AgencyAgentId =
   | 'account_director'
   | 'copywriter'
@@ -279,6 +307,17 @@ export interface AgencyExecutionPlan {
 export interface AgencyRequest {
   id?: string;
   brandId: string;
+  executionProfileId?: AgencyExecutionProfileId;
+  campaignGroupId?: string;
+  campaignTitle?: string;
+  campaignWaveLabel?: string;
+  campaignItemKey?: string;
+  campaignItemOrder?: number;
+  campaignBlueprint?: {
+    durationWeeks?: number;
+    cadenceSummary?: string[];
+    totalPlannedItems?: number;
+  };
   requestType: AgencyRequestType;
   channel: AgencyChannel;
   objective: AgencyObjective;

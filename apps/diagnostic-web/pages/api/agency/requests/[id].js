@@ -10,6 +10,7 @@ import {
 
 const EDITABLE_FIELDS = [
   'request_type',
+  'execution_profile_id',
   'channel',
   'objective',
   'audience_cluster',

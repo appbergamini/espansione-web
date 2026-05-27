@@ -17,12 +17,81 @@ interface AccountDirectorPromptPackInput {
   agencyRequest: AgencyRequest;
 }
 
+type ArchetypeGuidanceFocus = 'verbal' | 'channel' | 'visual' | 'compliance';
+
+const ARCHETYPE_GUIDANCE: Record<string, {
+  verbal: string[];
+  visual: string[];
+  avoid: string[];
+}> = {
+  mago: {
+    verbal: ['transformacao com clareza', 'revelar possibilidades', 'mudanca guiada por metodo'],
+    visual: ['atmosfera de descoberta', 'contraste sofisticado', 'sinais de transformacao sem fantasia literal'],
+    avoid: ['misticismo vazio', 'promessas milagrosas', 'efeitos visuais espalhafatosos'],
+  },
+  sabio: {
+    verbal: ['clareza intelectual', 'autoridade calma', 'ensino sem pedantismo'],
+    visual: ['ordem visual', 'legibilidade alta', 'hierarquia racional e precisa'],
+    avoid: ['tom professoral arrogante', 'jargao excessivo', 'frieza desumana'],
+  },
+  heroi: {
+    verbal: ['coragem pratica', 'superacao objetiva', 'convite a agir'],
+    visual: ['energia e direcao', 'contraste forte', 'composicao assertiva'],
+    avoid: ['agressividade gratuita', 'triunfalismo vazio', 'promessa de invencibilidade'],
+  },
+  rebelde: {
+    verbal: ['ruptura com criterio', 'franqueza', 'desafio ao padrao gasto'],
+    visual: ['tensao controlada', 'cortes ousados', 'atitude sem caos'],
+    avoid: ['destruicao gratuita', 'cinismo', 'provocacao sem estrategia'],
+  },
+  cuidador: {
+    verbal: ['acolhimento', 'protecao', 'servico confiavel'],
+    visual: ['calor humano', 'proximidade', 'clareza tranquilizadora'],
+    avoid: ['paternalismo', 'tom infantilizado', 'fragilidade excessiva'],
+  },
+  explorador: {
+    verbal: ['abertura ao novo', 'liberdade com direcao', 'descoberta'],
+    visual: ['espaco', 'respiro', 'sensacao de movimento e horizonte'],
+    avoid: ['dispersao', 'falta de foco', 'aventura sem relevancia'],
+  },
+  criador: {
+    verbal: ['originalidade util', 'inventividade', 'expressao autoral'],
+    visual: ['composicao inventiva', 'detalhes proprietarios', 'forma com conceito'],
+    avoid: ['excentricidade gratuita', 'ornamento sem funcao', 'caos visual'],
+  },
+  bobo: {
+    verbal: ['leveza inteligente', 'humor com timing', 'quebra de rigidez'],
+    visual: ['ritmo leve', 'surpresas controladas', 'expressividade sem bagunca'],
+    avoid: ['palhacada', 'deboche da marca', 'piada que enfraquece confianca'],
+  },
+  amante: {
+    verbal: ['conexao', 'encantamento', 'proximidade sensorial'],
+    visual: ['textura', 'intimidade', 'sofisticacao calorosa'],
+    avoid: ['seducao vazia', 'exagero melodramatico', 'apelo apelativo'],
+  },
+  inocente: {
+    verbal: ['simplicidade luminosa', 'otimismo', 'franqueza limpa'],
+    visual: ['leveza', 'respiro', 'limpeza sem ingenuidade boba'],
+    avoid: ['naivete', 'simplificacao infantil', 'falta de densidade'],
+  },
+  governante: {
+    verbal: ['controle sereno', 'seguranca', 'lideranca organizada'],
+    visual: ['estrutura', 'simetria funcional', 'acabamento premium e disciplinado'],
+    avoid: ['autoritarismo', 'rigidez fria', 'distancia excessiva'],
+  },
+  comum: {
+    verbal: ['acessibilidade', 'realismo', 'identificacao imediata'],
+    visual: ['naturalidade', 'cotidiano qualificado', 'proximidade sem banalidade'],
+    avoid: ['mediocridade', 'genericidade', 'falta de personalidade'],
+  },
+};
+
 export const ACCOUNT_DIRECTOR_PROMPT_VERSION = 'account_director_v1';
-export const COPYWRITER_PROMPT_VERSION = 'copywriter_v1';
-export const CHANNEL_ADAPTER_PROMPT_VERSION = 'channel_adapter_v1';
-export const VISUAL_DIRECTOR_PROMPT_VERSION = 'visual_director_v1';
+export const COPYWRITER_PROMPT_VERSION = 'copywriter_v2';
+export const CHANNEL_ADAPTER_PROMPT_VERSION = 'channel_adapter_v2';
+export const VISUAL_DIRECTOR_PROMPT_VERSION = 'visual_director_v2';
 export const EDITOR_PROMPT_VERSION = 'editor_v1';
-export const BRAND_COMPLIANCE_PROMPT_VERSION = 'brand_compliance_v1';
+export const BRAND_COMPLIANCE_PROMPT_VERSION = 'brand_compliance_v2';
 export const APPROVER_PROMPT_VERSION = 'approver_v1';
 
 const PROMPT_VERSION_BY_AGENT = {
@@ -130,6 +199,7 @@ export function buildCopywriterPromptPack({
     mission: 'Criar textos no tom proprietario da marca, a partir do briefing operacional.',
     rules: [
       'Usar voice_profile, tons de voz, territorios verbais e palavras proibidas.',
+      ...buildArchetypeGuidance(brandKernel, 'verbal'),
       'Nao inventar fatos, provas, numeros ou promessas.',
       'Declarar warnings quando houver falta de prova.',
       'Entregar copy, variacoes, CTA e racional de tom.',
@@ -162,6 +232,7 @@ export function buildVisualDirectorPromptPack({
     rules: [
       'Consumir brandKernel.visual.operationalGuidelines quando existir; usar dos, donts, visualRisks e promptGuidelines como restricoes.',
       'Respeitar visual_identity, manter/perder/ganhar, cores, tipografia, fotografia, iconografia e comportamento visual.',
+      ...buildArchetypeGuidance(brandKernel, 'visual'),
       'Gerar direcao de arte, nao arte final.',
       'Evitar caminhos visuais marcados como inadequados.',
       'Indicar assets necessarios, composicao, restricoes visuais e riscos visuais.',
@@ -199,6 +270,7 @@ export function buildChannelAdapterPromptPack({
     mission: 'Adaptar a copy-mae ou mensagem central para o canal e formato solicitados, sem publicar.',
     rules: [
       'Usar BrandKernel como fonte canonica e respeitar voz, palavras proibidas, proofPoints, forbiddenClaims e restricoes.',
+      ...buildArchetypeGuidance(brandKernel, 'channel'),
       'Usar approvedBriefing quando existir; caso contrario, usar accountDirectorOutput como briefing operacional.',
       'Usar copywriterOutput como copy-mae. Nao substituir estrategia, apenas adaptar linguagem, formato e hierarquia ao canal.',
       'Nao inventar fatos, numeros, cases, provas ou promessas. Declarar warnings quando faltar prova, contexto ou houver risco de claim.',
@@ -336,6 +408,7 @@ export function buildBrandCompliancePromptPack({
     rules: [
       'Ser rigoroso na aderencia a Brand Memory. Nao avaliar apenas se a peca esta bonita ou bem escrita.',
       'Checar estrategia, plataforma de branding, posicionamento, publico/cluster, plano de comunicacao, tom de voz e canal.',
+      ...buildArchetypeGuidance(brandKernel, 'compliance'),
       'Identificar violacoes de tom de voz, palavras proibidas e claims sem prova.',
       'Checar diretrizes visuais, restricoes, forbiddenClaims, proofPoints e channelGuidelines.',
       'Checar strategicTensions: nao permitir que a peca resolva ou ignore tensoes abertas sem autorizacao humana.',
@@ -385,6 +458,7 @@ export const BRAND_COMPLIANCE_OUTPUT_SCHEMA = {
               'strategy',
               'positioning',
               'audience',
+              'archetype',
               'voice',
               'forbidden_words',
               'visual_identity',
@@ -545,6 +619,65 @@ function makePromptPack({
     ].join('\n'),
     expectedOutputSchema,
   };
+}
+
+function buildArchetypeGuidance(brandKernel: BrandKernel, focus: ArchetypeGuidanceFocus): string[] {
+  const archetypeKey = normalizeArchetypeKey(brandKernel.strategy?.archetype);
+  const archetypeName = formatArchetypeName(brandKernel.strategy?.archetype);
+  if (!archetypeKey || !archetypeName) {
+    return ['Se o arquétipo da marca estiver ausente ou ambíguo, registrar warning e priorizar positioning, atributos e voz proprietária.'];
+  }
+
+  const guidance = ARCHETYPE_GUIDANCE[archetypeKey];
+  const verbalSignals = guidance?.verbal?.join(', ');
+  const visualSignals = guidance?.visual?.join(', ');
+  const avoidSignals = guidance?.avoid?.join(', ');
+
+  if (focus === 'verbal') {
+    return [
+      `Arquétipo dominante da marca: ${archetypeName}. A copy deve soar compatível com esse arquétipo, sem citar o nome do arquétipo na peça final.`,
+      verbalSignals ? `Sinais verbais esperados para ${archetypeName}: ${verbalSignals}.` : `Usar o arquétipo ${archetypeName} como filtro de tom, enquadramento e CTA.`,
+      avoidSignals ? `Evitar sinais que deturpem o lado sombra de ${archetypeName}: ${avoidSignals}.` : `Evitar sinais que contradigam o arquétipo ${archetypeName}.`,
+    ];
+  }
+
+  if (focus === 'channel') {
+    return [
+      `Preservar o arquétipo ${archetypeName} mesmo ao adaptar para o canal; mudar formato e cadência, não a identidade arquetípica.`,
+      verbalSignals ? `Ao adaptar para o canal, manter estes sinais centrais de ${archetypeName}: ${verbalSignals}.` : `Manter o enquadramento compatível com ${archetypeName}.`,
+      avoidSignals ? `Nao deixar o canal empurrar a marca para sinais contrários ao arquétipo ${archetypeName}: ${avoidSignals}.` : `Evitar desvio arquetípico provocado por clichês do canal.`,
+    ];
+  }
+
+  if (focus === 'visual') {
+    return [
+      `Traduzir o arquétipo ${archetypeName} em direção de arte, composição, clima, ritmo e escolha de assets, sem caricatura literal.`,
+      visualSignals ? `Sinais visuais esperados para ${archetypeName}: ${visualSignals}.` : `Usar o arquétipo ${archetypeName} como filtro de linguagem visual.`,
+      avoidSignals ? `Evitar interpretações visuais que ativem a sombra de ${archetypeName}: ${avoidSignals}.` : `Evitar leitura visual incoerente com ${archetypeName}.`,
+    ];
+  }
+
+  return [
+    `Checar aderência arquetípica explicitamente: a peça deve reforçar ${archetypeName} em linguagem, enquadramento e, quando existir, direção visual.`,
+    `Adicionar um item de checklist sobre arquétipo e registrar violação quando a peça puxar para outro arquétipo dominante incompatível.`,
+    avoidSignals ? `Tratar como warning ou fail sinais de sombra de ${archetypeName}: ${avoidSignals}.` : 'Tratar como warning sinais de desvio arquetípico.',
+  ];
+}
+
+function normalizeArchetypeKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/^o\s+/, '')
+    .replace(/^a\s+/, '')
+    .trim();
+}
+
+function formatArchetypeName(value: string | null | undefined): string | null {
+  const raw = String(value || '').trim();
+  return raw || null;
 }
 
 function qualityMetadataSchema() {
