@@ -43,6 +43,17 @@ export default function FormClientes({ token, respondente, projetoMeta, modoPrev
   const avancar = () => { if (secaoAtual < totalSecoes) setSecaoAtual(s => s + 1); };
   const voltar  = () => { if (secaoAtual > 1) setSecaoAtual(s => s - 1); };
 
+  // Limpa o erro do próprio campo assim que ele é editado (some o destaque vermelho
+  // sem esperar nova validação) — torna o botão de finalizar coerente com o que está na tela.
+  const atualizarCampo = (campo, valor) => {
+    atualizar(campo, valor);
+    setErros(prev => (prev[campo] ? (() => { const n = { ...prev }; delete n[campo]; return n; })() : prev));
+  };
+
+  // Todos os obrigatórios preenchidos → libera finalizar de qualquer seção
+  // (evita ter que reavançar por todas as páginas após corrigir um campo pendente).
+  const podeFinalizar = !modoPreview && validarFormulario(dados).valido;
+
   const navegarParaErro = (erros) => {
     const primeiro = Object.keys(erros)[0];
     if (!primeiro) return;
@@ -133,7 +144,7 @@ export default function FormClientes({ token, respondente, projetoMeta, modoPrev
       <BarraProgresso partes={SECOES} parteAtual={secaoAtual} onClickParte={setSecaoAtual} />
 
       <div style={{ margin: '2rem 0' }}>
-        <ComponenteSecao dados={dados} atualizar={atualizar} erros={erros} projetoMeta={projetoMeta} />
+        <ComponenteSecao dados={dados} atualizar={atualizarCampo} erros={erros} projetoMeta={projetoMeta} />
       </div>
 
       {erroEnvio && (
@@ -152,11 +163,11 @@ export default function FormClientes({ token, respondente, projetoMeta, modoPrev
         )}
         <div style={{ flex: 1 }} />
         {!ehUltima && (
-          <button type="button" onClick={avancar} disabled={enviando} className="btn-primary" style={{ padding: '0.7rem 1.4rem' }}>
+          <button type="button" onClick={avancar} disabled={enviando} style={podeFinalizar ? btnSecondary : { padding: '0.7rem 1.4rem' }} className={podeFinalizar ? undefined : 'btn-primary'}>
             Avançar →
           </button>
         )}
-        {ehUltima && (
+        {(ehUltima || podeFinalizar) && (
           <button
             type="button"
             onClick={submeter}
@@ -165,7 +176,7 @@ export default function FormClientes({ token, respondente, projetoMeta, modoPrev
             style={{ padding: '0.7rem 1.4rem', opacity: modoPreview ? 0.55 : 1 }}
             title={modoPreview ? 'Pré-visualização — envio desabilitado' : undefined}
           >
-            {modoPreview ? 'Envio desabilitado (preview)' : (enviando ? 'Enviando…' : 'Enviar respostas')}
+            {modoPreview ? 'Envio desabilitado (preview)' : (enviando ? 'Enviando…' : (ehUltima ? 'Enviar respostas' : '✓ Finalizar e enviar'))}
           </button>
         )}
       </div>
