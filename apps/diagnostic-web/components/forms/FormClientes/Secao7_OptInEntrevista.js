@@ -24,7 +24,7 @@ export default function Secao7_OptInEntrevista({ dados, atualizar, erros }) {
         </p>
       </div>
 
-      <Campo label="34. Você toparia participar de uma conversa de ~45 minutos?">
+      <Campo label="33. Você toparia participar de uma conversa de ~45 minutos?">
         <RadioGroup
           name="s7_topa_entrevista"
           opcoes={['Sim, podem me convidar', 'No momento não, prefiro apenas as respostas do formulário']}
@@ -37,17 +37,17 @@ export default function Secao7_OptInEntrevista({ dados, atualizar, erros }) {
 
       {topa && (
         <LegendSection titulo="Dados para contato">
-          <Campo label={<>35. Melhor forma de contato <RequiredMark/></>} erro={erros.s7_canal_preferido}>
+          <Campo label={<>34. Melhor forma de contato <RequiredMark/></>} erro={erros.s7_canal_preferido}>
             <RadioGroup name="s7_canal_preferido" opcoes={CANAIS_CONTATO}
               value={dados.s7_canal_preferido} onChange={v => atualizar('s7_canal_preferido', v)} />
           </Campo>
 
-          <Campo id="s7_contato" label={<>36. WhatsApp / e-mail / telefone para contato <RequiredMark/></>} erro={erros.s7_contato}>
+          <Campo id="s7_contato" label={<>35. WhatsApp / e-mail / telefone para contato <RequiredMark/></>} erro={erros.s7_contato}>
             <input className="form-input" type="text" id="s7_contato"
               value={dados.s7_contato || ''} onChange={e => atualizar('s7_contato', e.target.value)} />
           </Campo>
 
-          <Campo label={<>37. Melhor horário para conversar <RequiredMark/></>} erro={erros.s7_horario}>
+          <Campo label={<>36. Melhor horário para conversar <RequiredMark/></>} erro={erros.s7_horario}>
             <RadioGroup name="s7_horario" opcoes={HORARIOS_PREFERIDOS}
               value={dados.s7_horario} onChange={v => atualizar('s7_horario', v)} />
           </Campo>

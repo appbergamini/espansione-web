@@ -137,7 +137,6 @@ export function validarFormulario(dados) {
   // Seção 4
   if (typeof dados.s4_satisfacao !== 'number') erros.s4_satisfacao = 'Dê uma nota de 0 a 10';
   if (!dados.s4_percepcao_preco)    erros.s4_percepcao_preco    = 'Selecione uma opção';
-  if (!dados.s4_mudaria_por_preco)  erros.s4_mudaria_por_preco  = 'Selecione uma opção';
 
   // Seção 5
   if (!dados.s5_marca_uma_palavra || String(dados.s5_marca_uma_palavra).trim() === '') {
