@@ -1,61 +1,6 @@
 import { Campo, LegendSection, RequiredMark, TextArea, TextAreaLongo, TabelaParalela } from './_ui';
-import { ARQUETIPOS } from '../../../lib/forms/socios_v4_schema';
-
-function ArquetipoCards({ value, onChange, incluirNenhum = false }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.55rem', marginTop: '0.4rem' }}>
-      {incluirNenhum && (
-        <button
-          type="button"
-          onClick={() => onChange('')}
-          style={cardStyle(value === '' || !value)}
-        >
-          <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>Nenhuma</div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Só uma energia é suficiente</div>
-        </button>
-      )}
-      {ARQUETIPOS.map(arq => {
-        const selecionado = value === arq.key;
-        return (
-          <button
-            key={arq.key}
-            type="button"
-            onClick={() => onChange(arq.key)}
-            style={cardStyle(selecionado)}
-          >
-            <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>{arq.label}</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{arq.descricao}</div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function cardStyle(selecionado) {
-  return {
-    textAlign: 'left', padding: '0.7rem 0.85rem',
-    border: selecionado ? '1px solid var(--accent-blue, #6BA3FF)' : '1px solid var(--glass-border)',
-    background: selecionado ? 'rgba(107,163,255,0.12)' : 'rgba(255,255,255,0.02)',
-    borderRadius: 8, color: 'inherit', cursor: 'pointer', transition: 'all 0.15s',
-  };
-}
 
 export default function Parte3_PropositoEssencia({ dados, atualizar, erros }) {
-  const setArquetipoPrimario = (k) => {
-    atualizar('p3_arquetipo_primario', k);
-    // se o secundário era igual, limpa
-    if (dados.p3_arquetipo_secundario === k) atualizar('p3_arquetipo_secundario', '');
-  };
-
-  const setArquetipoSecundario = (k) => {
-    if (k && k === dados.p3_arquetipo_primario) {
-      atualizar('p3_arquetipo_secundario', '');
-      return;
-    }
-    atualizar('p3_arquetipo_secundario', k);
-  };
-
   return (
     <section>
       <h2 style={{ fontSize: '1.4rem', marginTop: 0 }}>Parte 3 — Propósito e Essência</h2>
@@ -165,26 +110,6 @@ export default function Parte3_PropositoEssencia({ dados, atualizar, erros }) {
         <Campo id="p3_proposito_declarado" label="16. Sua empresa tem um propósito declarado e comunicado? Se sim, qual é?"
           hint="Cole a frase exata usada.">
           <TextArea id="p3_proposito_declarado" value={dados.p3_proposito_declarado} onChange={v => atualizar('p3_proposito_declarado', v)} rows={3} />
-        </Campo>
-      </LegendSection>
-
-      <LegendSection titulo="3.4 Arquétipo simbólico">
-        <Campo id="p3_marca_personagem" label="17. Se a marca fosse um personagem de filme, livro ou história, qual seria? Por quê?">
-          <TextArea id="p3_marca_personagem" value={dados.p3_marca_personagem} onChange={v => atualizar('p3_marca_personagem', v)} rows={3} />
-        </Campo>
-
-        <Campo label="18. Entre estas figuras arquetípicas, qual melhor traduz a energia da sua marca? Escolha 1 (a mais forte).">
-          <ArquetipoCards value={dados.p3_arquetipo_primario} onChange={setArquetipoPrimario} />
-        </Campo>
-
-        <Campo label="Opcionalmente, escolha uma segunda energia arquetípica secundária."
-          hint="Não pode ser igual à primária.">
-          <ArquetipoCards value={dados.p3_arquetipo_secundario} onChange={setArquetipoSecundario} incluirNenhum />
-          {dados.p3_arquetipo_secundario && dados.p3_arquetipo_secundario === dados.p3_arquetipo_primario && (
-            <small style={{ display: 'block', color: 'var(--brand-red, #dc2626)', marginTop: '0.25rem' }}>
-              O arquétipo secundário não pode ser igual ao primário.
-            </small>
-          )}
         </Campo>
       </LegendSection>
     </section>
