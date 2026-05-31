@@ -13,7 +13,7 @@ export default function Secao3_JornadaAtendimento({ dados, atualizar, erros, pro
       </p>
 
       <LegendSection titulo="Canais de contato">
-        <Campo label={<>16. Por quais canais você já interagiu com {marca}? <RequiredMark/></>}
+        <Campo label={<>14. Por quais canais você já interagiu com {marca}? <RequiredMark/></>}
           hint="Marque todos que se aplicam."
           erro={erros.s3_canais_interacao}>
           <CheckboxGroup
@@ -37,7 +37,7 @@ export default function Secao3_JornadaAtendimento({ dados, atualizar, erros, pro
 
       <LegendSection titulo="Qualidade do atendimento (0-10)">
         <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: 0 }}>
-          17. De 0 a 10, como você avalia nosso atendimento nos seguintes quesitos?
+          15. De 0 a 10, como você avalia nosso atendimento nos seguintes quesitos?
           <br/><small style={{ color: 'var(--text-secondary)' }}>Avalie ao menos 3 das 5 dimensões.</small>
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
@@ -57,11 +57,11 @@ export default function Secao3_JornadaAtendimento({ dados, atualizar, erros, pro
       </LegendSection>
 
       <LegendSection titulo="Diferenças e última comunicação">
-        <Campo id="s3_diferenca_real" label="18. Em qual desses itens você viu diferença real vs outros lugares que já usou?">
+        <Campo id="s3_diferenca_real" label="16. Em qual desses itens você viu diferença real vs outros lugares que já usou?">
           <TextArea id="s3_diferenca_real" value={dados.s3_diferenca_real} onChange={v => atualizar('s3_diferenca_real', v)} rows={3} />
         </Campo>
 
-        <Campo id="s3_ultima_comunicacao" label="19. Qual foi a última vez que você viu algo da marca nos canais (redes, WhatsApp, site, e-mail)? O que você lembra?">
+        <Campo id="s3_ultima_comunicacao" label="17. Qual foi a última vez que você viu algo da marca nos canais (redes, WhatsApp, site, e-mail)? O que você lembra?">
           <TextArea id="s3_ultima_comunicacao" value={dados.s3_ultima_comunicacao} onChange={v => atualizar('s3_ultima_comunicacao', v)} rows={3} />
         </Campo>
       </LegendSection>

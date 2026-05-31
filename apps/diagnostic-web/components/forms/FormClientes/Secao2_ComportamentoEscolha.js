@@ -1,4 +1,4 @@
-import { Campo, LegendSection, TextArea, TextAreaLongo } from './_ui';
+import { Campo, LegendSection, TextArea } from './_ui';
 import RankingDragDrop from '../shared/RankingDragDrop';
 import { FATORES_ESCOLHA } from '../../../lib/forms/clientes_v2_schema';
 
@@ -28,15 +28,7 @@ export default function Secao2_ComportamentoEscolha({ dados, atualizar, erros, p
           <TextArea id="s2_quem_influenciou" value={dados.s2_quem_influenciou} onChange={v => atualizar('s2_quem_influenciou', v)} rows={3} />
         </Campo>
 
-        <Campo id="s2_migracao_fornecedor" label={<>13. Antes de {marca}, você usava outra marca/fornecedor semelhante? Se sim, qual? E por que trocou?</>}>
-          <TextAreaLongo id="s2_migracao_fornecedor" value={dados.s2_migracao_fornecedor} onChange={v => atualizar('s2_migracao_fornecedor', v)} />
-        </Campo>
-
-        <Campo id="s2_quase_desistiu" label={<>14. O que quase te fez desistir de {marca} antes de contratar? E o que te fez decidir pelo sim?</>}>
-          <TextAreaLongo id="s2_quase_desistiu" value={dados.s2_quase_desistiu} onChange={v => atualizar('s2_quase_desistiu', v)} />
-        </Campo>
-
-        <Campo id="s2_outras_marcas_admira" label="15. Quais outras marcas (de qualquer segmento) você admira e consome na sua rotina?">
+        <Campo id="s2_outras_marcas_admira" label="13. Quais outras marcas (de qualquer segmento) você admira e consome na sua rotina?">
           <TextArea id="s2_outras_marcas_admira" value={dados.s2_outras_marcas_admira} onChange={v => atualizar('s2_outras_marcas_admira', v)} rows={3} />
         </Campo>
       </LegendSection>
