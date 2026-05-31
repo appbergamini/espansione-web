@@ -139,12 +139,12 @@ export default function Parte1_Identificacao({ dados, atualizar, erros }) {
         </Campo>
 
         <Campo id="p1_organizacao" label="16. Como a empresa está organizada hoje? (seu papel, o dos sócios, as áreas principais)">
-          <textarea className="form-input" id="p1_organizacao" rows={5}
+          <textarea className="form-input" id="p1_organizacao" rows={5} style={{ width: '100%' }}
             value={dados.p1_organizacao || ''} onChange={e => atualizar('p1_organizacao', e.target.value)} />
         </Campo>
 
         <Campo id="p1_decisoes_12m" label={<>17. Quais decisões mais importantes a empresa precisa tomar nos próximos 12 meses? <RequiredMark/></>} erro={erros.p1_decisoes_12m}>
-          <textarea className="form-input" id="p1_decisoes_12m" rows={5}
+          <textarea className="form-input" id="p1_decisoes_12m" rows={5} style={{ width: '100%' }}
             value={dados.p1_decisoes_12m || ''} onChange={e => atualizar('p1_decisoes_12m', e.target.value)} />
         </Campo>
       </LegendSection>
