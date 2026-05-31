@@ -143,10 +143,6 @@ export function validarFormulario(dados) {
     erros.s5_marca_uma_palavra = 'Defina em uma palavra';
   }
 
-  // Seção 6
-  if (typeof dados.s6_nps !== 'number') erros.s6_nps = 'Dê uma nota de 0 a 10';
-  if (!dados.s6_nps_porque || String(dados.s6_nps_porque).trim() === '') erros.s6_nps_porque = 'Explique sua nota';
-
   // Seção 7 (condicional)
   if (dados.s7_topa_entrevista === 'sim') {
     if (!dados.s7_canal_preferido) erros.s7_canal_preferido = 'Selecione o canal';
