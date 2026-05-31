@@ -16,21 +16,17 @@ export default function Secao5_PersonalidadeMarca({ dados, atualizar, erros, pro
           <TextArea id="s5_marca_pessoa" value={dados.s5_marca_pessoa} onChange={v => atualizar('s5_marca_pessoa', v)} rows={4} />
         </Campo>
 
-        <Campo id="s5_apresentaria_amigo" label={<>26. Como você apresentaria {marca} para um amigo em poucas palavras?</>}>
+        <Campo id="s5_apresentaria_amigo" label={<>26. Você indicaria a {marca}? Se sim, como você apresentaria em poucas palavras?</>}>
           <TextArea id="s5_apresentaria_amigo" value={dados.s5_apresentaria_amigo} onChange={v => atualizar('s5_apresentaria_amigo', v)} rows={3} />
         </Campo>
 
-        <Campo id="s5_vale_a_pena" label="27. Se um amigo te perguntasse &ldquo;vale a pena?&rdquo;, o que você responderia em 2 frases?">
-          <TextArea id="s5_vale_a_pena" value={dados.s5_vale_a_pena} onChange={v => atualizar('s5_vale_a_pena', v)} rows={3} />
-        </Campo>
-
-        <Campo id="s5_palavra_proibida" label="28. Qual palavra você nunca usaria para descrever essa marca?">
+        <Campo id="s5_palavra_proibida" label="27. Qual palavra você nunca usaria para descrever essa marca?">
           <input className="form-input" type="text" id="s5_palavra_proibida"
             value={dados.s5_palavra_proibida || ''}
             onChange={e => atualizar('s5_palavra_proibida', e.target.value)} />
         </Campo>
 
-        <Campo id="s5_marca_uma_palavra" label={<>29. Defina {marca} em uma única palavra. <RequiredMark/></>}
+        <Campo id="s5_marca_uma_palavra" label={<>28. Defina {marca} em uma única palavra. <RequiredMark/></>}
           erro={erros.s5_marca_uma_palavra}>
           <input className="form-input" type="text" id="s5_marca_uma_palavra"
             maxLength={40}
