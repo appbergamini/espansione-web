@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { tokenValido } from '../../../lib/tokens/respondenteToken';
-import { AIRouter } from '../../../lib/ai/router';
+import { callEntrevistaModel, extrairJson } from '../../../lib/ai/entrevistaModel';
 
 // Entrevista guiada por IA — Slice 1.
 // Dado o token de um respondente, monta a lista ordenada de perguntas que a
@@ -48,25 +48,15 @@ const FALLBACK_QUESTIONS = {
 };
 
 function parsePerguntas(rawText) {
-  if (!rawText) return null;
-  // Remove cercas de código e tenta extrair o array/objeto JSON.
-  let t = String(rawText).trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
-  const start = t.indexOf('{');
-  const startArr = t.indexOf('[');
-  const from = startArr !== -1 && (startArr < start || start === -1) ? startArr : start;
-  if (from > 0) t = t.slice(from);
-  try {
-    const parsed = JSON.parse(t);
-    const arr = Array.isArray(parsed) ? parsed : parsed.perguntas;
-    if (!Array.isArray(arr)) return null;
-    return arr
-      .map((p) => (typeof p === 'string'
-        ? { pergunta: p.trim(), hipotese: '' }
-        : { pergunta: String(p.pergunta || '').trim(), hipotese: String(p.hipotese || '').trim() }))
-      .filter((p) => p.pergunta.length > 0);
-  } catch {
-    return null;
-  }
+  const parsed = extrairJson(rawText);
+  if (!parsed) return null;
+  const arr = Array.isArray(parsed) ? parsed : parsed.perguntas;
+  if (!Array.isArray(arr)) return null;
+  return arr
+    .map((p) => (typeof p === 'string'
+      ? { pergunta: p.trim(), hipotese: '' }
+      : { pergunta: String(p.pergunta || '').trim(), hipotese: String(p.hipotese || '').trim() }))
+    .filter((p) => p.pergunta.length > 0);
 }
 
 async function extrairPerguntasDoRoteiro({ conteudo, papel, nome }) {
@@ -93,11 +83,7 @@ async function extrairPerguntasDoRoteiro({ conteudo, papel, nome }) {
     conteudo,
   ].join('\n');
 
-  const { text } = await AIRouter.callModel(system, [{ role: 'user', content: user }], {
-    modelKey: 'gemini-flash',
-    temperature: 0.2,
-    maxTokens: 4000,
-  });
+  const { text } = await callEntrevistaModel(system, user, { temperature: 0.2, maxTokens: 4000 });
   return parsePerguntas(text);
 }
 

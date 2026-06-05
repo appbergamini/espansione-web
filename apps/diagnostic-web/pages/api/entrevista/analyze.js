@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { tokenValido } from '../../../lib/tokens/respondenteToken';
-import { AIRouter } from '../../../lib/ai/router';
+import { callEntrevistaModel, extrairJson } from '../../../lib/ai/entrevistaModel';
 
 // Entrevista guiada por IA — Slice 4.
 // Uma chamada por resposta que faz DUAS coisas:
@@ -66,29 +66,19 @@ export default async function handler(req, res) {
       lista.length ? lista.map((p) => `[${p.i}] ${p.pergunta}`).join('\n') : '(nenhuma)',
     ].filter(Boolean).join('\n');
 
-    const { text } = await AIRouter.callModel(system, [{ role: 'user', content: user }], {
-      modelKey: 'gemini-flash',
-      temperature: 0.3,
-      maxTokens: 700,
-    });
+    const { text } = await callEntrevistaModel(system, user, { temperature: 0.3, maxTokens: 700 });
 
     let followup = null;
     let cobertas = [];
-    try {
-      let t = String(text || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
-      const i = t.indexOf('{');
-      if (i > 0) t = t.slice(i);
-      const parsed = JSON.parse(t);
-      const f = parsed?.followup;
+    const parsed = extrairJson(text);
+    if (parsed) {
+      const f = parsed.followup;
       followup = typeof f === 'string' && f.trim().length > 0 ? f.trim() : null;
-      if (Array.isArray(parsed?.cobertas)) {
+      if (Array.isArray(parsed.cobertas)) {
         cobertas = parsed.cobertas
           .filter((c) => idsValidos.has(c?.i) && typeof c?.reconhecimento === 'string' && c.reconhecimento.trim())
           .map((c) => ({ i: c.i, reconhecimento: c.reconhecimento.trim() }));
       }
-    } catch {
-      followup = null;
-      cobertas = [];
     }
 
     return res.status(200).json({ success: true, followup, cobertas });
