@@ -2149,6 +2149,21 @@ export default function ProjetoDetalhes() {
                 onChange={e => setTranscritNome(e.target.value)}
                 style={{ padding: '0.6rem', margin: 0 }}
               />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8rem', color: 'var(--text-secondary)', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
+                <span style={{ flex: 1 }}>🤖 Ou deixe a IA conduzir: gere o link e envie por WhatsApp/e-mail. O respondente responde (texto ou voz) e a transcrição entra sozinha.</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sel = transcritRespondentes.find(r => r.nome === transcritNome);
+                    if (!sel?.token) { alert('Selecione um respondente cadastrado (com convite gerado) para gerar o link.'); return; }
+                    navigator.clipboard.writeText(`${window.location.origin}/entrevista/${sel.token}`);
+                    alert(`Link de entrevista por IA de ${sel.nome} copiado.`);
+                  }}
+                  style={{ whiteSpace: 'nowrap', padding: '0.45rem 0.8rem', background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '6px', color: '#c4b5fd', cursor: 'pointer', fontSize: '0.8rem' }}
+                >
+                  Copiar link IA
+                </button>
+              </div>
               <textarea
                 className="form-input"
                 placeholder="Cole aqui a transcrição da entrevista..."
