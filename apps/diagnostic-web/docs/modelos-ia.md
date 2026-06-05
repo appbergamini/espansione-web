@@ -33,7 +33,6 @@ Fonte: `lib/ai/router.js`. O `modelKey` é o apelido usado no código; resolve p
 | `gemini-pro` | `gemini-3.1-pro-preview` | Google |
 | `claude-opus-4-7` | `claude-opus-4-7` | Anthropic |
 | `claude-sonnet` | `claude-sonnet-4-6` | Anthropic |
-| `claude-haiku-4-5-20251001` | `claude-haiku-4-5-20251001` | Anthropic |
 | `gpt-5.4` | `gpt-5.4` | OpenAI |
 | `gpt-5.4-mini` | `gpt-5.4-mini` | OpenAI |
 
@@ -69,7 +68,7 @@ Fonte: `lib/ai/pipeline.js` (`runAgent`), `lib/agents/Agent_*.js`.
 |---|---|---|
 | **5 — Visão de Mercado** | `claude-opus-4-7` | deep research via Claude `web_search_20250305` (max_uses 18) + Tavily Extract. Fonte: `Agent_05_BuscaWeb.js`, `lib/ai/deepResearch.js` |
 | **6 — Decodificação** | — (usuário escolhe) | `preferredMaxTokens: 12000`. Fonte: `Agent_06_VisaoGeral.js` |
-| **16 — Coletor Brand Memory** | `claude-haiku-4-5-20251001` | extração pura, baixo custo. Fonte: `Agent_16_BrandMemoryExport.js` |
+| **16 — Coletor Brand Memory** | `gemini-flash` (`gemini-3.5-flash`) | extração pura, baixo custo. Fonte: `Agent_16_BrandMemoryExport.js` |
 | 1, 2, 3, 4, 7–15 | — | sem override; usam o modelo do seletor (ou o default `gemini-3.5-flash`) |
 
 ---
@@ -123,13 +122,13 @@ Fonte: `pages/api/entrevista/*`, `lib/ai/entrevistaModel.js`, `pages/entrevista/
 
 ## 7. Resumo por provedor
 
-- **Anthropic (Claude):** Ag5 deep research (Opus 4.7), Ag16 Brand Memory (Haiku), entrevista questions/analyze (**Sonnet**), agência copywriter/editor (Sonnet 4.6), opções do seletor (Opus/Sonnet).
-- **Google (Gemini):** default da esteira (Flash 3.5), default da agência (Flash 3.5), agência channel_adapter (Flash 3.5), fallback da entrevista (Flash 3.5), opções do seletor (Flash/Pro). **Atualmente bloqueado por billing.**
+- **Anthropic (Claude):** Ag5 deep research (Opus 4.7), entrevista questions/analyze (**Sonnet**), agência copywriter/editor (Sonnet 4.6), opções do seletor (Opus/Sonnet).
+- **Google (Gemini):** default da esteira (Flash 3.5), Ag16 Brand Memory (Flash 3.5), default da agência (Flash 3.5), agência channel_adapter (Flash 3.5), fallback da entrevista (Flash 3.5), opções do seletor (Flash/Pro). **Atualmente bloqueado por billing.**
 - **OpenAI:** Whisper (voz), GPT Image (imagem), agência account_director/visual_director/brand_compliance/approver (GPT-5.4), opções do seletor (GPT-5.4/Mini).
 - **Tavily:** Extract/Search no deep research do Ag5 (não-LLM).
 - **Navegador:** Web Speech API na voz da entrevista (sem custo).
 
-> **Único modelo Haiku restante:** Agente 16 (Brand Memory). Se a diretriz "desconsiderar Haiku" valer também para o pipeline, trocar `preferredModel` em `Agent_16_BrandMemoryExport.js`.
+> Claude Haiku não é mais usado em nenhum ponto do sistema.
 
 ---
 

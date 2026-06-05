@@ -20,8 +20,8 @@ export const Agent_16_BrandMemoryExport = {
   // colhe estrutura já validada upstream.
   consumesContextInUserPrompt: true,
   // Output médio (~15-20k tokens). Trabalho de extração/validação, não
-  // raciocínio profundo — Haiku 4.5 ou modelo similar é suficiente.
-  preferredModel: 'claude-haiku-4-5-20251001',
+  // raciocínio profundo — Gemini Flash 3.5 é suficiente e barato.
+  preferredModel: 'gemini-flash',
   preferredMaxTokens: 16000,
 
   getSystemPrompt() {

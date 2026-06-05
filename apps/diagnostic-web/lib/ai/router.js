@@ -38,7 +38,6 @@ export const AIRouter = {
     "gemini-pro":     { id: "gemini-3.1-pro-preview",      provider: "gemini" },
     "claude-opus-4-7":{ id: "claude-opus-4-7",             provider: "anthropic" },
     "claude-sonnet":  { id: "claude-sonnet-4-6",           provider: "anthropic" },
-    "claude-haiku-4-5-20251001": { id: "claude-haiku-4-5-20251001", provider: "anthropic" },
     "gpt-5.4":        { id: "gpt-5.4",                     provider: "openai" },
     "gpt-5.4-mini":   { id: "gpt-5.4-mini",                provider: "openai" }
   },

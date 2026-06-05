@@ -242,7 +242,7 @@ Catalogo dos agentes em `lib/agents/catalog.js`; slices de export em
 - Funcao: coletar apenas as tags `<brand_memory_export>` dos agentes
   upstream, validar e consolidar no contrato `EspansioneDiagnostic`.
 - Nao interpreta, nao infere, nao resolve divergencias.
-- `preferredModel: claude-haiku-4-5-20251001` (extracao pura, baixo custo).
+- `preferredModel: gemini-flash` (gemini-3.5-flash; extracao pura, baixo custo).
 - Output canonico: `espansione_diagnostic`. Carregado na Brand Memory via
   `loadBrandMemory` apos revisao humana.
 
