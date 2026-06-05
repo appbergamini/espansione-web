@@ -3,12 +3,14 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import Logo from '../../components/Logo';
 
-// Entrevista guiada por IA — Slices 1 + 2.
+// Entrevista guiada por IA — Slices 1 a 4.
 // Página pública acessada pelo respondente via token (mesmo token dos forms).
 // Faz, uma a uma, as perguntas derivadas do roteiro (Agente 1/3). O respondente
-// responde por TEXTO, por VOZ (Web Speech API, grátis no navegador) ou, em
-// devices sem Web Speech (iOS), gravando áudio que o servidor transcreve via
-// Whisper. Após respostas rasas, um follow-up dinâmico aprofunda o ponto.
+// responde por TEXTO, por VOZ (Web Speech API, grátis) ou, em devices sem Web
+// Speech (iOS), gravando áudio que o servidor transcreve via Whisper. Após cada
+// resposta, uma análise (1 chamada) decide um follow-up E detecta quais
+// perguntas seguintes já foram respondidas — que aparecem reformuladas, sem
+// repetir o que a pessoa já disse.
 
 const TIPO_BY_PAPEL = {
   socios: 'entrevista_socios',
@@ -22,8 +24,8 @@ const PAPEL_LABEL = {
   clientes: 'cliente',
 };
 
-const MIN_PARA_FOLLOWUP = 40; // só tenta aprofundar respostas com algum corpo
-const MAX_FOLLOWUPS_TOTAL = 4; // teto global de aprofundamentos por entrevista (controle de tempo)
+const MIN_PARA_ANALISE = 40;     // só analisa respostas com algum corpo
+const MAX_FOLLOWUPS_TOTAL = 4;   // teto global de aprofundamentos (controle de tempo)
 
 export default function EntrevistaPage() {
   const router = useRouter();
@@ -36,15 +38,16 @@ export default function EntrevistaPage() {
   const [perguntas, setPerguntas] = useState([]);
   const [idx, setIdx] = useState(0);
   const [respostas, setRespostas] = useState({});
-  const [followups, setFollowups] = useState({}); // { [idx]: { pergunta, resposta } }
-  const [followsTentados, setFollowsTentados] = useState({}); // { [idx]: true }
-  const [subAtivo, setSubAtivo] = useState(false); // exibindo follow-up da pergunta atual
-  const [carregandoFollow, setCarregandoFollow] = useState(false);
+  const [followups, setFollowups] = useState({});   // { [idx]: { pergunta, resposta } }
+  const [coberturas, setCoberturas] = useState({}); // { [idx]: { reconhecimento } } — já respondida adiantado
+  const [analisados, setAnalisados] = useState({}); // { [idx]: true } — análise já feita
+  const [subAtivo, setSubAtivo] = useState(false);  // exibindo follow-up da pergunta atual
+  const [carregando, setCarregando] = useState(false);
   const [consentido, setConsentido] = useState(false);
 
   const storageKey = token ? `entrevista:${token}` : null;
 
-  // ── Carrega token + perguntas ──────────────────────────────────────
+  // ── Carrega token + sessão (servidor) + perguntas ──────────────────
   useEffect(() => {
     if (!router.isReady || !token) return;
     let active = true;
@@ -104,7 +107,6 @@ export default function EntrevistaPage() {
             return;
           }
           pgs = qj.perguntas || [];
-          // Cria a sessão no servidor (best-effort — não bloqueia a entrevista).
           try {
             await fetch('/api/entrevista/session', {
               method: 'POST',
@@ -118,10 +120,11 @@ export default function EntrevistaPage() {
 
         // Restaura progresso: prefere o servidor (quando tem conteúdo), senão o cache local.
         const sp = serverSession?.progresso;
-        const prog = (sp && (sp.respostas || sp.followups)) ? sp : (local || {});
+        const prog = (sp && (sp.respostas || sp.followups || sp.coberturas)) ? sp : (local || {});
         setRespostas(prog.respostas || {});
         setFollowups(prog.followups || {});
-        setFollowsTentados(local?.followsTentados || {});
+        setCoberturas(prog.coberturas || {});
+        setAnalisados(local?.analisados || {});
         setIdx(Math.min(prog.idx || 0, pgs.length - 1));
         setFase('intro');
       } catch (err) {
@@ -134,17 +137,16 @@ export default function EntrevistaPage() {
     return () => { active = false; };
   }, [router.isReady, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Persiste progresso (inclui perguntas e follow-ups) ─────────────
+  // ── Persiste progresso no device (cache / fallback) ────────────────
   useEffect(() => {
     if (!storageKey || perguntas.length === 0) return;
     if (fase !== 'intro' && fase !== 'entrevista') return;
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify({ idx, respostas, perguntas, followups, followsTentados }));
+      sessionStorage.setItem(storageKey, JSON.stringify({ idx, respostas, perguntas, followups, coberturas, analisados }));
     } catch { /* ignora */ }
-  }, [idx, respostas, perguntas, followups, followsTentados, fase, storageKey]);
+  }, [idx, respostas, perguntas, followups, coberturas, analisados, fase, storageKey]);
 
-  // Salva progresso no servidor a cada NAVEGAÇÃO (não a cada tecla). O endpoint
-  // descarta o conteúdo de respostas de colaboradores (anonimato).
+  // ── Salva progresso no servidor a cada NAVEGAÇÃO (não a cada tecla) ─
   useEffect(() => {
     if (fase !== 'entrevista' || perguntas.length === 0 || !token) return;
     (async () => {
@@ -152,7 +154,7 @@ export default function EntrevistaPage() {
         await fetch('/api/entrevista/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, idx, respostas, followups, status: 'em_andamento' }),
+          body: JSON.stringify({ token, idx, respostas, followups, coberturas, status: 'em_andamento' }),
         });
       } catch { /* offline ok */ }
     })();
@@ -187,11 +189,12 @@ export default function EntrevistaPage() {
 
   const total = perguntas.length;
   const ultimaBase = idx === total - 1;
+  const coberturaAtual = !subAtivo ? coberturas[idx] : null;
 
   const irProxima = () => { if (idx < total - 1) setIdx(idx + 1); else enviar(); };
 
   const avancar = async () => {
-    if (fase === 'enviando' || carregandoFollow) return;
+    if (fase === 'enviando' || carregando) return;
 
     // Concluindo um follow-up → segue para a próxima base (ou envia).
     if (subAtivo) {
@@ -200,39 +203,58 @@ export default function EntrevistaPage() {
       return;
     }
 
-    // Se já existe um follow-up gerado para esta pergunta, exibe-o.
+    // Se já existe follow-up gerado para esta pergunta, exibe-o.
     if (followups[idx]) {
       setSubAtivo(true);
       return;
     }
 
-    // Tenta gerar follow-up uma única vez, quando a resposta tem algum corpo.
     const ans = (respostas[idx] || '').trim();
-    if (!followsTentados[idx] && ans.length >= MIN_PARA_FOLLOWUP && Object.keys(followups).length < MAX_FOLLOWUPS_TOTAL) {
-      setCarregandoFollow(true);
+
+    // Analisa a resposta UMA vez (follow-up + cobertura das perguntas seguintes).
+    // Não analisa perguntas que já vieram marcadas como cobertas.
+    if (!analisados[idx] && !coberturas[idx] && ans.length >= MIN_PARA_ANALISE) {
+      const proximas = [];
+      for (let j = idx + 1; j < total; j++) {
+        if (coberturas[j]) continue;
+        if ((respostas[j] || '').trim()) continue;
+        proximas.push({ i: j, pergunta: perguntas[j].pergunta });
+      }
+      setCarregando(true);
       try {
-        const r = await fetch('/api/entrevista/followup', {
+        const r = await fetch('/api/entrevista/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, pergunta: perguntas[idx]?.pergunta, hipotese: perguntas[idx]?.hipotese, resposta: ans }),
+          body: JSON.stringify({ token, pergunta: perguntas[idx]?.pergunta, hipotese: perguntas[idx]?.hipotese, resposta: ans, proximas }),
         });
         const j = await r.json();
-        setFollowsTentados((prev) => ({ ...prev, [idx]: true }));
-        if (j?.followup) {
+        setAnalisados((prev) => ({ ...prev, [idx]: true }));
+
+        if (Array.isArray(j?.cobertas) && j.cobertas.length) {
+          setCoberturas((prev) => {
+            const next = { ...prev };
+            j.cobertas.forEach((c) => {
+              if (typeof c.i === 'number' && c.i > idx && c.i < total) next[c.i] = { reconhecimento: c.reconhecimento || '' };
+            });
+            return next;
+          });
+        }
+
+        if (j?.followup && Object.keys(followups).length < MAX_FOLLOWUPS_TOTAL) {
           setFollowups((prev) => ({ ...prev, [idx]: { pergunta: j.followup, resposta: '' } }));
           setSubAtivo(true);
-          setCarregandoFollow(false);
+          setCarregando(false);
           return;
         }
-      } catch { /* segue sem follow-up */ }
-      setCarregandoFollow(false);
+      } catch { /* segue sem análise */ }
+      setCarregando(false);
     }
 
     irProxima();
   };
 
   const voltar = () => {
-    if (carregandoFollow) return;
+    if (carregando) return;
     if (subAtivo) { setSubAtivo(false); return; }
     setIdx((i) => Math.max(0, i - 1));
   };
@@ -241,7 +263,12 @@ export default function EntrevistaPage() {
     setFase('enviando');
     const pares = [];
     perguntas.forEach((p, i) => {
-      pares.push({ pergunta: p.pergunta, resposta: (respostas[i] || '').trim() });
+      const ans = (respostas[i] || '').trim();
+      if (!ans && coberturas[i]) {
+        pares.push({ pergunta: p.pergunta, resposta: `(já abordada: ${coberturas[i].reconhecimento || 'coberta em outra resposta'})`, coberta: true });
+      } else {
+        pares.push({ pergunta: p.pergunta, resposta: ans || '(sem resposta)' });
+      }
       const fu = followups[i];
       if (fu && (fu.resposta || '').trim()) {
         pares.push({ pergunta: fu.pergunta, resposta: fu.resposta.trim(), follow_up: true });
@@ -339,11 +366,13 @@ export default function EntrevistaPage() {
 
   // fase === 'entrevista' | 'enviando'
   const enviando = fase === 'enviando';
-  const respondidas = perguntas.filter((_, i) => (respostas[i] || '').trim().length > 0).length;
+  const tratadas = perguntas.filter((_, i) => (respostas[i] || '').trim().length > 0 || coberturas[i]).length;
   const perguntaAtual = subAtivo ? followups[idx]?.pergunta : perguntas[idx]?.pergunta;
   const valorAtual = subAtivo ? (followups[idx]?.resposta || '') : (respostas[idx] || '');
-  const labelAvancar = carregandoFollow ? 'Analisando resposta…'
+  const semResposta = !(respostas[idx] || '').trim();
+  const labelAvancar = carregando ? 'Analisando resposta…'
     : enviando ? 'Enviando…'
+    : (coberturaAtual && semResposta) ? (ultimaBase ? 'Pular e concluir' : 'Pular, já respondi →')
     : ultimaBase ? 'Concluir e enviar'
     : 'Próxima →';
 
@@ -351,7 +380,7 @@ export default function EntrevistaPage() {
     <Shell wide>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>Pergunta {idx + 1} de {total}</span>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>{respondidas} respondida{respondidas === 1 ? '' : 's'}</span>
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>{tratadas} de {total}</span>
       </div>
       <div style={barraOut}>
         <div style={{ ...barraIn, width: `${Math.round(((idx + 1) / total) * 100)}%` }} />
@@ -360,6 +389,11 @@ export default function EntrevistaPage() {
       {subAtivo && (
         <div style={{ ...dica, marginTop: '1rem', marginBottom: 0 }}>↳ Só um aprofundamento rápido:</div>
       )}
+      {coberturaAtual && (
+        <div style={{ ...dica, marginTop: '1rem', marginBottom: 0 }}>
+          ↳ {coberturaAtual.reconhecimento || 'Você já tocou nisso em uma resposta anterior.'} Quer complementar, ou pode pular.
+        </div>
+      )}
 
       <h2 style={{ fontSize: '1.25rem', lineHeight: 1.4, margin: '1.2rem 0 0.8rem' }}>{perguntaAtual}</h2>
 
@@ -367,7 +401,7 @@ export default function EntrevistaPage() {
         className="form-input"
         value={valorAtual}
         onChange={(e) => setCampoAtual(e.target.value)}
-        placeholder="Escreva ou fale sua resposta…"
+        placeholder={coberturaAtual ? 'Se quiser, acrescente algo — ou pule.' : 'Escreva ou fale sua resposta…'}
         disabled={enviando}
         style={{ width: '100%', minHeight: '170px', resize: 'vertical', padding: '0.85rem', fontSize: '1rem', lineHeight: 1.5 }}
       />
@@ -377,10 +411,10 @@ export default function EntrevistaPage() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.6rem', marginTop: '1rem' }}>
-        <button onClick={voltar} disabled={(idx === 0 && !subAtivo) || enviando || carregandoFollow} style={btnGhost((idx === 0 && !subAtivo) || enviando || carregandoFollow)}>
+        <button onClick={voltar} disabled={(idx === 0 && !subAtivo) || enviando || carregando} style={btnGhost((idx === 0 && !subAtivo) || enviando || carregando)}>
           ← Anterior
         </button>
-        <button className="btn-primary" onClick={avancar} disabled={enviando || carregandoFollow}>
+        <button className="btn-primary" onClick={avancar} disabled={enviando || carregando}>
           {labelAvancar}
         </button>
       </div>

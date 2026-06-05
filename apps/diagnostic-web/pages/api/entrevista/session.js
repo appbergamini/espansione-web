@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { perguntas, source, idx, respostas, followups, status } = req.body || {};
+      const { perguntas, source, idx, respostas, followups, coberturas, status } = req.body || {};
 
       const { data: existing } = await db
         .from('entrevista_sessoes')
@@ -68,10 +68,10 @@ export default async function handler(req, res) {
         .eq('respondente_id', resp.id)
         .maybeSingle();
 
-      const temProgresso = typeof idx === 'number' || respostas != null || followups != null;
+      const temProgresso = typeof idx === 'number' || respostas != null || followups != null || coberturas != null;
       const novoProgresso = anonimo
         ? { idx: typeof idx === 'number' ? idx : (existing?.progresso_json?.idx || 0) }
-        : { idx: typeof idx === 'number' ? idx : 0, respostas: respostas || {}, followups: followups || {} };
+        : { idx: typeof idx === 'number' ? idx : 0, respostas: respostas || {}, followups: followups || {}, coberturas: coberturas || {} };
 
       if (existing) {
         const patch = {};
