@@ -1,13 +1,14 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Logo from '../../components/Logo';
 
-// Entrevista guiada por IA — Slice 1.
+// Entrevista guiada por IA — Slices 1 + 2.
 // Página pública acessada pelo respondente via token (mesmo token dos forms).
-// Faz, uma a uma, as perguntas derivadas do roteiro (Agente 1/3); o respondente
-// responde por TEXTO — e pode usar o ditado nativo do teclado (cel/PC) para
-// falar em vez de digitar. Sem transcrição no servidor neste slice.
+// Faz, uma a uma, as perguntas derivadas do roteiro (Agente 1/3). O respondente
+// responde por TEXTO, por VOZ (Web Speech API, grátis no navegador) ou, em
+// devices sem Web Speech (iOS), gravando áudio que o servidor transcreve via
+// Whisper. Após respostas rasas, um follow-up dinâmico aprofunda o ponto.
 
 const TIPO_BY_PAPEL = {
   socios: 'entrevista_socios',
@@ -21,6 +22,8 @@ const PAPEL_LABEL = {
   clientes: 'cliente',
 };
 
+const MIN_PARA_FOLLOWUP = 40; // só tenta aprofundar respostas com algum corpo
+
 export default function EntrevistaPage() {
   const router = useRouter();
   const token = (router.query.token || '').toString();
@@ -32,6 +35,10 @@ export default function EntrevistaPage() {
   const [perguntas, setPerguntas] = useState([]);
   const [idx, setIdx] = useState(0);
   const [respostas, setRespostas] = useState({});
+  const [followups, setFollowups] = useState({}); // { [idx]: { pergunta, resposta } }
+  const [followsTentados, setFollowsTentados] = useState({}); // { [idx]: true }
+  const [subAtivo, setSubAtivo] = useState(false); // exibindo follow-up da pergunta atual
+  const [carregandoFollow, setCarregandoFollow] = useState(false);
   const [consentido, setConsentido] = useState(false);
 
   const storageKey = token ? `entrevista:${token}` : null;
@@ -67,8 +74,8 @@ export default function EntrevistaPage() {
         }
 
         // Retoma snapshot salvo neste device — inclui as perguntas, para
-        // garantir que o índice das respostas continue alinhado no reload
-        // (e evita re-chamar o LLM ao retomar).
+        // garantir que os índices das respostas/follow-ups continuem alinhados
+        // no reload (e evita re-chamar o LLM ao retomar).
         let saved = null;
         try {
           saved = storageKey && JSON.parse(sessionStorage.getItem(storageKey) || 'null');
@@ -78,6 +85,8 @@ export default function EntrevistaPage() {
           if (!active) return;
           setPerguntas(saved.perguntas);
           setRespostas(saved.respostas || {});
+          setFollowups(saved.followups || {});
+          setFollowsTentados(saved.followsTentados || {});
           setIdx(Math.min(saved.idx || 0, saved.perguntas.length - 1));
           setFase('intro');
           return;
@@ -108,25 +117,106 @@ export default function EntrevistaPage() {
     return () => { active = false; };
   }, [router.isReady, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Persiste progresso (inclui perguntas p/ retomar alinhado) ──────
+  // ── Persiste progresso (inclui perguntas e follow-ups) ─────────────
   useEffect(() => {
     if (!storageKey || perguntas.length === 0) return;
     if (fase !== 'intro' && fase !== 'entrevista') return;
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify({ idx, respostas, perguntas }));
+      sessionStorage.setItem(storageKey, JSON.stringify({ idx, respostas, perguntas, followups, followsTentados }));
     } catch { /* ignora */ }
-  }, [idx, respostas, perguntas, fase, storageKey]);
+  }, [idx, respostas, perguntas, followups, followsTentados, fase, storageKey]);
 
-  const setResposta = (i, val) => setRespostas((prev) => ({ ...prev, [i]: val }));
+  // Acrescenta texto (vindo de voz) ao campo atual — base ou follow-up.
+  const appendAoCampo = (txt) => {
+    const limpo = (txt || '').trim();
+    if (!limpo) return;
+    if (subAtivo) {
+      setFollowups((prev) => {
+        const cur = prev[idx]?.resposta || '';
+        const sep = cur && !/\s$/.test(cur) ? ' ' : '';
+        return { ...prev, [idx]: { ...(prev[idx] || { pergunta: '' }), resposta: cur + sep + limpo } };
+      });
+    } else {
+      setRespostas((prev) => {
+        const cur = prev[idx] || '';
+        const sep = cur && !/\s$/.test(cur) ? ' ' : '';
+        return { ...prev, [idx]: cur + sep + limpo };
+      });
+    }
+  };
+
+  const setCampoAtual = (val) => {
+    if (subAtivo) {
+      setFollowups((prev) => ({ ...prev, [idx]: { ...(prev[idx] || { pergunta: '' }), resposta: val } }));
+    } else {
+      setRespostas((prev) => ({ ...prev, [idx]: val }));
+    }
+  };
+
+  const total = perguntas.length;
+  const ultimaBase = idx === total - 1;
+
+  const irProxima = () => { if (idx < total - 1) setIdx(idx + 1); else enviar(); };
+
+  const avancar = async () => {
+    if (fase === 'enviando' || carregandoFollow) return;
+
+    // Concluindo um follow-up → segue para a próxima base (ou envia).
+    if (subAtivo) {
+      setSubAtivo(false);
+      irProxima();
+      return;
+    }
+
+    // Se já existe um follow-up gerado para esta pergunta, exibe-o.
+    if (followups[idx]) {
+      setSubAtivo(true);
+      return;
+    }
+
+    // Tenta gerar follow-up uma única vez, quando a resposta tem algum corpo.
+    const ans = (respostas[idx] || '').trim();
+    if (!followsTentados[idx] && ans.length >= MIN_PARA_FOLLOWUP) {
+      setCarregandoFollow(true);
+      try {
+        const r = await fetch('/api/entrevista/followup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, pergunta: perguntas[idx]?.pergunta, hipotese: perguntas[idx]?.hipotese, resposta: ans }),
+        });
+        const j = await r.json();
+        setFollowsTentados((prev) => ({ ...prev, [idx]: true }));
+        if (j?.followup) {
+          setFollowups((prev) => ({ ...prev, [idx]: { pergunta: j.followup, resposta: '' } }));
+          setSubAtivo(true);
+          setCarregandoFollow(false);
+          return;
+        }
+      } catch { /* segue sem follow-up */ }
+      setCarregandoFollow(false);
+    }
+
+    irProxima();
+  };
+
+  const voltar = () => {
+    if (carregandoFollow) return;
+    if (subAtivo) { setSubAtivo(false); return; }
+    setIdx((i) => Math.max(0, i - 1));
+  };
 
   const enviar = async () => {
     setFase('enviando');
-    const pares = perguntas.map((p, i) => ({
-      pergunta: p.pergunta,
-      resposta: (respostas[i] || '').trim(),
-    }));
+    const pares = [];
+    perguntas.forEach((p, i) => {
+      pares.push({ pergunta: p.pergunta, resposta: (respostas[i] || '').trim() });
+      const fu = followups[i];
+      if (fu && (fu.resposta || '').trim()) {
+        pares.push({ pergunta: fu.pergunta, resposta: fu.resposta.trim(), follow_up: true });
+      }
+    });
     const transcricao = pares
-      .map((p) => `P: ${p.pergunta}\nR: ${p.resposta || '(sem resposta)'}`)
+      .map((p) => `${p.follow_up ? '↳ ' : ''}P: ${p.pergunta}\nR: ${p.resposta || '(sem resposta)'}`)
       .join('\n\n');
 
     try {
@@ -187,28 +277,21 @@ export default function EntrevistaPage() {
   if (fase === 'intro') {
     return (
       <Shell wide>
-        <h1 style={{ marginTop: 0, color: 'var(--accent-purple, #a78bfa)' }}>
-          Conversa sobre {marca}
-        </h1>
+        <h1 style={{ marginTop: 0, color: 'var(--accent-purple, #a78bfa)' }}>Conversa sobre {marca}</h1>
         <p style={txtSec}>
           Olá{respondente?.nome ? `, ${respondente.nome.split(' ')[0]}` : ''}! Vamos fazer uma conversa guiada,
           como {PAPEL_LABEL[respondente?.papel] || 'convidado'}, com {perguntas.length} perguntas. Leva cerca de
           15–25 minutos. Não há resposta certa — quanto mais honesto e concreto, melhor.
         </p>
         <div style={dica}>
-          💡 Você pode <strong>digitar</strong> ou <strong>falar</strong>: toque no ícone de microfone do teclado
-          do seu celular (ou use o ditado por voz no computador) e responda falando.
+          💡 Você pode <strong>digitar</strong> ou <strong>falar</strong>: toque em <strong>🎤 Falar</strong> e
+          responda com a voz (ou use o microfone do teclado do seu celular).
         </div>
         <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', margin: '1.4rem 0', cursor: 'pointer', ...txtSec }}>
           <input type="checkbox" checked={consentido} onChange={(e) => setConsentido(e.target.checked)} style={{ marginTop: '0.2rem' }} />
           <span>Autorizo que minhas respostas sejam registradas e usadas, de forma confidencial, no diagnóstico de marca.</span>
         </label>
-        <button
-          className="btn-primary"
-          disabled={!consentido}
-          onClick={() => setFase('entrevista')}
-          style={{ opacity: consentido ? 1 : 0.5 }}
-        >
+        <button className="btn-primary" disabled={!consentido} onClick={() => setFase('entrevista')} style={{ opacity: consentido ? 1 : 0.5 }}>
           {Object.keys(respostas).length > 0 ? 'Retomar entrevista' : 'Começar'}
         </button>
       </Shell>
@@ -216,59 +299,147 @@ export default function EntrevistaPage() {
   }
 
   // fase === 'entrevista' | 'enviando'
-  const total = perguntas.length;
-  const atual = perguntas[idx];
-  const respondidas = perguntas.filter((_, i) => (respostas[i] || '').trim().length > 0).length;
-  const ultima = idx === total - 1;
   const enviando = fase === 'enviando';
+  const respondidas = perguntas.filter((_, i) => (respostas[i] || '').trim().length > 0).length;
+  const perguntaAtual = subAtivo ? followups[idx]?.pergunta : perguntas[idx]?.pergunta;
+  const valorAtual = subAtivo ? (followups[idx]?.resposta || '') : (respostas[idx] || '');
+  const labelAvancar = carregandoFollow ? 'Analisando resposta…'
+    : enviando ? 'Enviando…'
+    : ultimaBase ? 'Concluir e enviar'
+    : 'Próxima →';
 
   return (
     <Shell wide>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>
-          Pergunta {idx + 1} de {total}
-        </span>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>
-          {respondidas} respondida{respondidas === 1 ? '' : 's'}
-        </span>
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>Pergunta {idx + 1} de {total}</span>
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9aa)' }}>{respondidas} respondida{respondidas === 1 ? '' : 's'}</span>
       </div>
       <div style={barraOut}>
         <div style={{ ...barraIn, width: `${Math.round(((idx + 1) / total) * 100)}%` }} />
       </div>
 
-      <h2 style={{ fontSize: '1.25rem', lineHeight: 1.4, margin: '1.2rem 0 0.8rem' }}>
-        {atual?.pergunta}
-      </h2>
+      {subAtivo && (
+        <div style={{ ...dica, marginTop: '1rem', marginBottom: 0 }}>↳ Só um aprofundamento rápido:</div>
+      )}
+
+      <h2 style={{ fontSize: '1.25rem', lineHeight: 1.4, margin: '1.2rem 0 0.8rem' }}>{perguntaAtual}</h2>
 
       <textarea
         className="form-input"
-        autoFocus
-        value={respostas[idx] || ''}
-        onChange={(e) => setResposta(idx, e.target.value)}
+        value={valorAtual}
+        onChange={(e) => setCampoAtual(e.target.value)}
         placeholder="Escreva ou fale sua resposta…"
         disabled={enviando}
-        style={{ width: '100%', minHeight: '180px', resize: 'vertical', padding: '0.85rem', fontSize: '1rem', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: '170px', resize: 'vertical', padding: '0.85rem', fontSize: '1rem', lineHeight: 1.5 }}
       />
 
+      <div style={{ marginTop: '0.6rem' }}>
+        <BotaoVoz key={`${idx}-${subAtivo}`} token={token} onAppend={appendAoCampo} disabled={enviando} />
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.6rem', marginTop: '1rem' }}>
-        <button
-          onClick={() => setIdx((i) => Math.max(0, i - 1))}
-          disabled={idx === 0 || enviando}
-          style={btnGhost(idx === 0 || enviando)}
-        >
+        <button onClick={voltar} disabled={(idx === 0 && !subAtivo) || enviando || carregandoFollow} style={btnGhost((idx === 0 && !subAtivo) || enviando || carregandoFollow)}>
           ← Anterior
         </button>
-        {ultima ? (
-          <button className="btn-primary" onClick={enviar} disabled={enviando}>
-            {enviando ? 'Enviando…' : 'Concluir e enviar'}
-          </button>
-        ) : (
-          <button className="btn-primary" onClick={() => setIdx((i) => Math.min(total - 1, i + 1))} disabled={enviando}>
-            Próxima →
-          </button>
-        )}
+        <button className="btn-primary" onClick={avancar} disabled={enviando || carregandoFollow}>
+          {labelAvancar}
+        </button>
       </div>
     </Shell>
+  );
+}
+
+// ── Botão de voz: Web Speech (grátis) com fallback MediaRecorder→Whisper ──
+function BotaoVoz({ token, onAppend, disabled }) {
+  const [estado, setEstado] = useState('idle'); // idle | ouvindo | transcrevendo
+  const recRef = useRef(null);
+  const mrRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  const pararTudo = () => {
+    try { recRef.current?.stop(); } catch { /* */ }
+    try { if (mrRef.current?.state === 'recording') mrRef.current.stop(); } catch { /* */ }
+  };
+
+  useEffect(() => () => {
+    pararTudo();
+    try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch { /* */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleWebSpeech = () => {
+    if (estado === 'ouvindo') { pararTudo(); return; }
+    const rec = new SR();
+    rec.lang = 'pt-BR';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (e) => {
+      let final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      }
+      if (final.trim()) onAppend(final);
+    };
+    rec.onerror = () => setEstado('idle');
+    rec.onend = () => setEstado('idle');
+    recRef.current = rec;
+    try { rec.start(); setEstado('ouvindo'); } catch { setEstado('idle'); }
+  };
+
+  const toggleGravacao = async () => {
+    if (estado === 'ouvindo') { pararTudo(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mr = new MediaRecorder(stream);
+      const chunks = [];
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.onstop = async () => {
+        try { stream.getTracks().forEach((t) => t.stop()); } catch { /* */ }
+        const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+        if (!blob.size) { setEstado('idle'); return; }
+        setEstado('transcrevendo');
+        try {
+          const r = await fetch(`/api/entrevista/transcribe?token=${encodeURIComponent(token)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': blob.type },
+            body: blob,
+          });
+          const j = await r.json();
+          if (j?.success && j.text) onAppend(j.text);
+        } catch { /* */ }
+        setEstado('idle');
+      };
+      mrRef.current = mr;
+      mr.start();
+      setEstado('ouvindo');
+    } catch {
+      setEstado('idle');
+    }
+  };
+
+  const onClick = SR ? toggleWebSpeech : toggleGravacao;
+  const label = estado === 'ouvindo' ? '⏹ Parar' : estado === 'transcrevendo' ? '⏳ Transcrevendo…' : '🎤 Falar';
+  const ativo = estado === 'ouvindo';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || estado === 'transcrevendo'}
+      style={{
+        padding: '0.5rem 1rem',
+        borderRadius: 8,
+        border: `1px solid ${ativo ? 'rgba(239,68,68,0.6)' : 'rgba(167,139,250,0.4)'}`,
+        background: ativo ? 'rgba(239,68,68,0.15)' : 'rgba(167,139,250,0.12)',
+        color: ativo ? '#fca5a5' : '#c4b5fd',
+        cursor: disabled ? 'default' : 'pointer',
+        fontSize: '0.9rem',
+      }}
+    >
+      {label}
+    </button>
   );
 }
 
