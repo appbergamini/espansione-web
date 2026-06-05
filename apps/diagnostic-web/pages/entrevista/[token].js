@@ -25,7 +25,7 @@ const PAPEL_LABEL = {
 };
 
 const MIN_PARA_ANALISE = 40;     // só analisa respostas com algum corpo
-const MAX_FOLLOWUPS_TOTAL = 4;   // teto global de aprofundamentos (controle de tempo)
+const MAX_FOLLOWUPS_TOTAL = 2;   // teto global de aprofundamentos (entrevista enxuta)
 
 export default function EntrevistaPage() {
   const router = useRouter();

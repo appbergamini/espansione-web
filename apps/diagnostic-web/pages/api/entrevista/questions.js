@@ -16,7 +16,12 @@ const AGENT_NUM_BY_PAPEL = {
   colaboradores: 1,
 };
 
+// Número de perguntas-base da entrevista. Enxuta de propósito: só as
+// ESSENCIAIS; o aprofundamento fica por conta dos follow-ups dinâmicos. Tunável.
+const NUM_PERGUNTAS = 6;
+
 // Perguntas-base abertas (método Ana Couto) usadas quando não há roteiro.
+// Mantidas nas 6 de maior sinal por papel.
 const FALLBACK_QUESTIONS = {
   clientes: [
     'Como você conheceu a marca e o que te fez decidir pela primeira vez?',
@@ -24,9 +29,7 @@ const FALLBACK_QUESTIONS = {
     'O que você considera os pontos mais fortes da marca?',
     'E onde ela peca? O que te incomoda ou poderia ser melhor?',
     'Se compara com alternativas que você conhece, o que te faz ficar?',
-    'Se a marca fosse uma pessoa, como você a descreveria?',
     'Imagine a marca ideal pra você nessa categoria: como ela seria?',
-    'Você já indicou a marca pra alguém? Em que situação?',
   ],
   socios: [
     'Conte a origem do negócio: o que te moveu a começar e o que ainda te move hoje.',
@@ -34,7 +37,6 @@ const FALLBACK_QUESTIONS = {
     'Onde você sente que existe uma distância entre o que a empresa diz e o que ela entrega?',
     'Qual é a maior tensão interna que vocês vivem hoje?',
     'Qual a ambição para os próximos anos e o que ainda falta para chegar lá?',
-    'Como você descreveria a cultura vivida no dia a dia?',
     'O que não pode mudar de jeito nenhum na marca?',
   ],
   colaboradores: [
@@ -66,11 +68,12 @@ async function extrairPerguntasDoRoteiro({ conteudo, papel, nome }) {
 
   const system = [
     'Você prepara uma entrevista qualitativa de marca (método Ana Couto).',
-    'Recebe um ROTEIRO interno (denso, com temas, tensões e hipóteses) e deve convertê-lo em PERGUNTAS prontas para fazer diretamente ao entrevistado.',
+    'Recebe um ROTEIRO interno (denso, com temas, tensões e hipóteses) e deve destilá-lo nas PERGUNTAS ESSENCIAIS para fazer diretamente ao entrevistado.',
     'Regras das perguntas:',
     '- Abertas, conversacionais, em pt-BR, uma ideia por pergunta.',
     '- Sem jargão de consultoria; soam como uma conversa, não um questionário.',
-    '- Entre 8 e 14 perguntas, na ordem em que faria a conversa.',
+    `- EXATAMENTE ${NUM_PERGUNTAS} perguntas — as de MAIOR SINAL, que destravam o diagnóstico. Cubra as tensões/hipóteses centrais do roteiro; NÃO seja exaustivo. O aprofundamento virá depois, via follow-ups.`,
+    '- Ordene da mais aberta/acolhedora para a mais específica/tensa.',
     '- Cada pergunta carrega a hipótese/tensão que ela investiga (uso interno).',
     'Responda APENAS com JSON válido, sem texto fora dele, no formato:',
     '{ "perguntas": [ { "pergunta": "...", "hipotese": "..." } ] }',
