@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Logo from '../../components/Logo';
 import RespondentesManager from '../../components/RespondentesManager';
 import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
+import EntrevistaIASessoes from '../../components/EntrevistaIASessoes';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import ClustersCard from '../../components/clusters/ClustersCard';
 import ExecutionalReadinessPanel from '../../components/executional/ExecutionalReadinessPanel';
@@ -1755,6 +1756,8 @@ export default function ProjetoDetalhes() {
               <RespondentesManager projetoId={id} />
 
               <OptInEntrevistasManager projetoId={id} />
+
+              <EntrevistaIASessoes projetoId={id} />
 
               {/* Card: Mapeamento Comportamental CIS */}
               <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>

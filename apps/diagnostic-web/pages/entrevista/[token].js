@@ -23,6 +23,7 @@ const PAPEL_LABEL = {
 };
 
 const MIN_PARA_FOLLOWUP = 40; // só tenta aprofundar respostas com algum corpo
+const MAX_FOLLOWUPS_TOTAL = 4; // teto global de aprofundamentos por entrevista (controle de tempo)
 
 export default function EntrevistaPage() {
   const router = useRouter();
@@ -73,39 +74,55 @@ export default function EntrevistaPage() {
           setProjetoMeta(rj.projeto || { nome_marca: r.projeto_nome || 'a marca' });
         }
 
-        // Retoma snapshot salvo neste device — inclui as perguntas, para
-        // garantir que os índices das respostas/follow-ups continuem alinhados
-        // no reload (e evita re-chamar o LLM ao retomar).
-        let saved = null;
+        // Fonte do estado: o SERVIDOR guarda perguntas + progresso (exceto o
+        // conteúdo de colaboradores, anônimo). O sessionStorage é cache de
+        // device / fallback offline e p/ retomar respostas anônimas.
+        let local = null;
+        try { local = storageKey && JSON.parse(sessionStorage.getItem(storageKey) || 'null'); } catch { /* ignora */ }
+
+        let serverSession = null;
         try {
-          saved = storageKey && JSON.parse(sessionStorage.getItem(storageKey) || 'null');
-        } catch { /* ignora */ }
+          const sr = await fetch(`/api/entrevista/session?token=${encodeURIComponent(token)}`);
+          if (sr.ok) { const sj = await sr.json(); serverSession = sj.session || null; }
+        } catch { /* offline ok */ }
 
-        if (saved && Array.isArray(saved.perguntas) && saved.perguntas.length > 0) {
-          if (!active) return;
-          setPerguntas(saved.perguntas);
-          setRespostas(saved.respostas || {});
-          setFollowups(saved.followups || {});
-          setFollowsTentados(saved.followsTentados || {});
-          setIdx(Math.min(saved.idx || 0, saved.perguntas.length - 1));
-          setFase('intro');
-          return;
-        }
+        let pgs = null;
+        if (serverSession?.perguntas?.length) pgs = serverSession.perguntas;
+        else if (local?.perguntas?.length) pgs = local.perguntas;
 
-        const qr = await fetch('/api/entrevista/questions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
-        const qj = await qr.json();
-        if (!qr.ok || !qj.success) {
-          if (!active) return;
-          setErro(qj.error || 'Não foi possível preparar as perguntas.');
-          setFase('erro');
-          return;
+        if (!pgs) {
+          const qr = await fetch('/api/entrevista/questions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          const qj = await qr.json();
+          if (!qr.ok || !qj.success) {
+            if (!active) return;
+            setErro(qj.error || 'Não foi possível preparar as perguntas.');
+            setFase('erro');
+            return;
+          }
+          pgs = qj.perguntas || [];
+          // Cria a sessão no servidor (best-effort — não bloqueia a entrevista).
+          try {
+            await fetch('/api/entrevista/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token, perguntas: pgs, source: qj.source }),
+            });
+          } catch { /* offline ok */ }
         }
         if (!active) return;
-        setPerguntas(qj.perguntas || []);
+        setPerguntas(pgs);
+
+        // Restaura progresso: prefere o servidor (quando tem conteúdo), senão o cache local.
+        const sp = serverSession?.progresso;
+        const prog = (sp && (sp.respostas || sp.followups)) ? sp : (local || {});
+        setRespostas(prog.respostas || {});
+        setFollowups(prog.followups || {});
+        setFollowsTentados(local?.followsTentados || {});
+        setIdx(Math.min(prog.idx || 0, pgs.length - 1));
         setFase('intro');
       } catch (err) {
         if (!active) return;
@@ -125,6 +142,21 @@ export default function EntrevistaPage() {
       sessionStorage.setItem(storageKey, JSON.stringify({ idx, respostas, perguntas, followups, followsTentados }));
     } catch { /* ignora */ }
   }, [idx, respostas, perguntas, followups, followsTentados, fase, storageKey]);
+
+  // Salva progresso no servidor a cada NAVEGAÇÃO (não a cada tecla). O endpoint
+  // descarta o conteúdo de respostas de colaboradores (anonimato).
+  useEffect(() => {
+    if (fase !== 'entrevista' || perguntas.length === 0 || !token) return;
+    (async () => {
+      try {
+        await fetch('/api/entrevista/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, idx, respostas, followups, status: 'em_andamento' }),
+        });
+      } catch { /* offline ok */ }
+    })();
+  }, [idx, subAtivo, fase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Acrescenta texto (vindo de voz) ao campo atual — base ou follow-up.
   const appendAoCampo = (txt) => {
@@ -176,7 +208,7 @@ export default function EntrevistaPage() {
 
     // Tenta gerar follow-up uma única vez, quando a resposta tem algum corpo.
     const ans = (respostas[idx] || '').trim();
-    if (!followsTentados[idx] && ans.length >= MIN_PARA_FOLLOWUP) {
+    if (!followsTentados[idx] && ans.length >= MIN_PARA_FOLLOWUP && Object.keys(followups).length < MAX_FOLLOWUPS_TOTAL) {
       setCarregandoFollow(true);
       try {
         const r = await fetch('/api/entrevista/followup', {
@@ -238,6 +270,13 @@ export default function EntrevistaPage() {
         const e = await res.json().catch(() => ({}));
         throw new Error(e.error || 'Falha ao enviar');
       }
+      try {
+        await fetch('/api/entrevista/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, status: 'concluida' }),
+        });
+      } catch { /* offline ok */ }
       try { if (storageKey) sessionStorage.removeItem(storageKey); } catch { /* ignora */ }
       setFase('concluido');
     } catch (err) {
