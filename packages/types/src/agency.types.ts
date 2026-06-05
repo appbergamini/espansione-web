@@ -230,7 +230,7 @@ export type AIProvider =
 
 export type AIModelId =
   | 'mock-model'
-  | 'gemini-3-flash-preview'
+  | 'gemini-3.5-flash'
   | 'gpt-5.4'
   | 'claude-sonnet-4-6';
 

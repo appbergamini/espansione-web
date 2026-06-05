@@ -6,7 +6,7 @@ import type {
 } from '@espansione/types';
 
 export const MOCK_MODEL_ID = 'mock-model';
-export const ECONOMICAL_MODEL_ID = 'gemini-3-flash-preview';
+export const ECONOMICAL_MODEL_ID = 'gemini-3.5-flash';
 
 export const AI_MODEL_REGISTRY: AIModelRegistryItem[] = [
   {
@@ -21,8 +21,8 @@ export const AI_MODEL_REGISTRY: AIModelRegistryItem[] = [
   },
   {
     provider: 'google',
-    model_id: 'gemini-3-flash-preview',
-    display_name: 'Gemini 3 Flash',
+    model_id: 'gemini-3.5-flash',
+    display_name: 'Gemini 3.5 Flash',
     description: 'Modelo rápido e econômico para testes com saída real.',
     cost_tier: 'low',
     speed_tier: 'fast',
@@ -55,7 +55,7 @@ export const AI_MODEL_REGISTRY: AIModelRegistryItem[] = [
 const DEFAULT_AGENT_MODEL: Record<AgencyAgentId, string> = {
   account_director: 'gpt-5.4',
   copywriter: 'claude-sonnet-4-6',
-  channel_adapter: 'gemini-3-flash-preview',
+  channel_adapter: 'gemini-3.5-flash',
   visual_director: 'gpt-5.4',
   editor: 'claude-sonnet-4-6',
   brand_compliance: 'gpt-5.4',

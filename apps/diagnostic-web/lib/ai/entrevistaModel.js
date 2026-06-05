@@ -1,11 +1,10 @@
 import { AIRouter } from './router';
 
 // Modelo dos endpoints da entrevista guiada por IA (questions/analyze).
-// Tenta o provedor primário e, em falha (ex.: 429 sem crédito), cai no
-// secundário automaticamente. A ordem reflete a realidade de saldo atual
-// (Anthropic funded; Gemini sem crédito) — quando o Gemini for recarregado,
-// basta inverter PRIMARY/FALLBACK para voltar ao modelo mais barato.
-const PRIMARY = 'claude-haiku-4-5-20251001';
+// Tenta o primário e, em falha, cai no secundário automaticamente.
+// PRIMARY = Claude Sonnet (qualidade na destilação/follow-up); FALLBACK =
+// Gemini Flash 3.5 (mais barato, quando o projeto Gemini estiver com saldo).
+const PRIMARY = 'claude-sonnet';
 const FALLBACK = 'gemini-flash';
 
 export async function callEntrevistaModel(system, user, { temperature = 0.3, maxTokens = 1000 } = {}) {

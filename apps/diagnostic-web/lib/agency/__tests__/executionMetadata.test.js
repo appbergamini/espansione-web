@@ -259,7 +259,7 @@ test('modo economical resolve Gemini 3 Flash para os steps', async () => {
   assert.equal(run.execution_mode, 'economical');
   assert.equal(copyStep.provider, 'test-provider');
   assert.equal(copyStep.input.promptPack.promptVersion, 'copywriter_v1');
-  assert.equal(gateway.calls.find((call) => call.agentId === 'copywriter').modelId, 'gemini-3-flash-preview');
+  assert.equal(gateway.calls.find((call) => call.agentId === 'copywriter').modelId, 'gemini-3.5-flash');
 });
 
 test('UI expõe opção Simular sem gastar tokens', async () => {

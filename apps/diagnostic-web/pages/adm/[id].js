@@ -1044,7 +1044,7 @@ export default function ProjetoDetalhes() {
       nl(20);
       doc.setFontSize(8); doc.setTextColor(150, 150, 150);
       const rodape = narratives
-        ? 'Gerado automaticamente por Espansione • Análise por gemini-3-flash-preview'
+        ? 'Gerado automaticamente por Espansione • Análise por gemini-3.5-flash'
         : 'Gerado automaticamente por Espansione • Análise textual indisponível (Gemini falhou) — dados quantitativos íntegros';
       doc.text(rodape, marginX, y);
 

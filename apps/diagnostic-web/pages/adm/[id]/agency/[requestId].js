@@ -38,7 +38,7 @@ const AGENCY_AGENT_ORDER = ['account_director', 'copywriter', 'channel_adapter',
 
 const AI_MODELS = [
   { provider: 'mock', model_id: 'mock-model', display_name: 'Mock / Simulado', cost_tier: 'zero', is_mock: true },
-  { provider: 'google', model_id: 'gemini-3-flash-preview', display_name: 'Gemini 3 Flash', cost_tier: 'low', is_preview: true },
+  { provider: 'google', model_id: 'gemini-3.5-flash', display_name: 'Gemini 3.5 Flash', cost_tier: 'low', is_preview: true },
   { provider: 'openai', model_id: 'gpt-5.4', display_name: 'GPT-5.4', cost_tier: 'medium_high' },
   { provider: 'anthropic', model_id: 'claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6', cost_tier: 'medium_high' },
 ];
@@ -47,7 +47,7 @@ const REAL_AI_MODELS = AI_MODELS.filter((model) => !model.is_mock);
 const DEFAULT_AGENT_MODEL = {
   account_director: 'gpt-5.4',
   copywriter: 'claude-sonnet-4-6',
-  channel_adapter: 'gemini-3-flash-preview',
+  channel_adapter: 'gemini-3.5-flash',
   visual_director: 'gpt-5.4',
   editor: 'claude-sonnet-4-6',
   brand_compliance: 'gpt-5.4',
@@ -1861,7 +1861,7 @@ function ExecutionModeModal({
               <label style={modalLabelStyle}>
                 Modelo único
                 <select
-                  value={modelSelection.selected_model_id || 'gemini-3-flash-preview'}
+                  value={modelSelection.selected_model_id || 'gemini-3.5-flash'}
                   onChange={(event) => updateSelection({ selected_model_id: event.target.value })}
                   style={modalInputStyle}
                 >
@@ -1878,7 +1878,7 @@ function ExecutionModeModal({
                     <label key={agent.id} style={{ ...modalLabelStyle, marginTop: 0 }}>
                       {agent.label}
                       <select
-                        value={override?.model_id || DEFAULT_AGENT_MODEL[agent.id] || 'gemini-3-flash-preview'}
+                        value={override?.model_id || DEFAULT_AGENT_MODEL[agent.id] || 'gemini-3.5-flash'}
                         onChange={(event) => setAgentOverride(agent.id, event.target.value)}
                         style={modalInputStyle}
                       >
@@ -3188,7 +3188,7 @@ function defaultModelSelection() {
     || (process.env.NODE_ENV === 'production' ? 'use_agent_defaults' : 'mock');
   return {
     execution_mode: executionMode,
-    selected_model_id: 'gemini-3-flash-preview',
+    selected_model_id: 'gemini-3.5-flash',
     agent_overrides: [],
     max_tokens_per_step: 12000,
     max_estimated_cost_per_run: '',
@@ -3220,7 +3220,7 @@ function cleanModelSelection(selection = {}, agentFlow = []) {
   };
 
   if (executionMode === 'use_single_model_for_run') {
-    cleaned.selected_model_id = selection.selected_model_id || 'gemini-3-flash-preview';
+    cleaned.selected_model_id = selection.selected_model_id || 'gemini-3.5-flash';
   }
   if (executionMode === 'override_single_agent') {
     cleaned.agent_overrides = overrides;

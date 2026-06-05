@@ -28,13 +28,13 @@ function isTimeoutError(err) {
 
 export const AIRouter = {
   // Configs padrão
-  MODEL_DEFAULT: "gemini-3-flash-preview", // Pode ser ajustado depois
+  MODEL_DEFAULT: "gemini-3.5-flash", // Pode ser ajustado depois
   MAX_OUTPUT_TOKENS: 16000,
   TEMPERATURE_AGENT: 0.3,
 
   // Catalogo de modelos para resolver IDs e Providers
   MODELS: {
-    "gemini-flash":   { id: "gemini-3-flash-preview",      provider: "gemini" },
+    "gemini-flash":   { id: "gemini-3.5-flash",      provider: "gemini" },
     "gemini-pro":     { id: "gemini-3.1-pro-preview",      provider: "gemini" },
     "claude-opus-4-7":{ id: "claude-opus-4-7",             provider: "anthropic" },
     "claude-sonnet":  { id: "claude-sonnet-4-6",           provider: "anthropic" },

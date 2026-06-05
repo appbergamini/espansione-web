@@ -56,7 +56,7 @@ Retorne EXCLUSIVAMENTE este JSON (sem markdown, sem comentário):
     try {
       const response = await fetch(
         // FIX.20 — atualiza modelo pro catálogo atual do projeto.
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

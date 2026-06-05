@@ -407,7 +407,7 @@ agentes pulados, gates e racional.
 `model-registry.ts` resolve o modelo por step. Modos
 (`getDefaultAIExecutionMode`): `mock`, `economical`, `use_agent_defaults`,
 `use_single_model_for_run`, `override_single_agent`. Modelos registrados:
-`mock-model`, `gemini-3-flash-preview` (economico), `gpt-5.4`,
+`mock-model`, `gemini-3.5-flash` (economico), `gpt-5.4`,
 `claude-sonnet-4-6`.
 
 ### Ciclo de Vida do Pedido
