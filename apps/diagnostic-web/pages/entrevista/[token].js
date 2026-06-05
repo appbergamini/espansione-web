@@ -428,16 +428,20 @@ function BotaoVoz({ token, onAppend, disabled }) {
   const recRef = useRef(null);
   const mrRef = useRef(null);
   const streamRef = useRef(null);
+  const querOuvirRef = useRef(false); // intenção do usuário de continuar ouvindo
 
   const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
   const pararTudo = () => {
+    querOuvirRef.current = false;
     try { recRef.current?.stop(); } catch { /* */ }
     try { if (mrRef.current?.state === 'recording') mrRef.current.stop(); } catch { /* */ }
   };
 
   useEffect(() => () => {
-    pararTudo();
+    querOuvirRef.current = false;
+    try { recRef.current?.stop(); } catch { /* */ }
+    try { if (mrRef.current?.state === 'recording') mrRef.current.stop(); } catch { /* */ }
     try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch { /* */ }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -450,14 +454,29 @@ function BotaoVoz({ token, onAppend, disabled }) {
     rec.onresult = (e) => {
       let final = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += `${e.results[i][0].transcript} `;
       }
-      if (final.trim()) onAppend(final);
+      if (final.trim()) onAppend(final.trim());
     };
-    rec.onerror = () => setEstado('idle');
-    rec.onend = () => setEstado('idle');
+    rec.onerror = (ev) => {
+      // Erros fatais (permissão/rede/captura) encerram; 'no-speech'/'aborted'
+      // são transitórios e deixam o onend reiniciar.
+      if (['not-allowed', 'service-not-allowed', 'audio-capture', 'network'].includes(ev?.error)) {
+        querOuvirRef.current = false;
+        setEstado('idle');
+      }
+    };
+    rec.onend = () => {
+      // O Chrome encerra sozinho no silêncio — reinicia enquanto o usuário não parou.
+      if (querOuvirRef.current) {
+        try { rec.start(); } catch { /* já reiniciando */ }
+      } else {
+        setEstado('idle');
+      }
+    };
     recRef.current = rec;
-    try { rec.start(); setEstado('ouvindo'); } catch { setEstado('idle'); }
+    querOuvirRef.current = true;
+    try { rec.start(); setEstado('ouvindo'); } catch { querOuvirRef.current = false; setEstado('idle'); }
   };
 
   const toggleGravacao = async () => {
