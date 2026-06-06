@@ -202,10 +202,14 @@ export const AIRouter = {
     const payload = {
       model: modelId,
       max_tokens: maxTokens,
-      temperature: temperature,
       messages: messages || [],
       stream: true,
     };
+    // Alguns modelos Claude (ex.: opus-4-7) deprecaram `temperature` e retornam
+    // 400 se o parâmetro for enviado. Só incluímos quando o modelo suporta.
+    if (typeof temperature === 'number' && !/opus-4-7/.test(modelId)) {
+      payload.temperature = temperature;
+    }
 
     if (systemPrompt) {
       // cache_control: ephemeral preservado — reduz custo em re-execuções.
