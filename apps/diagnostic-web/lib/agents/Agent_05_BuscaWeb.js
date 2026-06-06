@@ -1,11 +1,12 @@
 // lib/agents/Agent_05_BuscaWeb.js
 //
-// Agente 5 v2 — Visão de Mercado (Deep Research com Claude + Tavily Extract).
-// Reescrita substancial da versão anterior. O research principal é feito
-// pelo próprio Claude via web_search nativo (lib/ai/deepResearch.js);
-// conteúdo bruto dos sites dos 5 concorrentes principais é capturado
-// via Tavily Extract (lib/ai/tavilyExtract.js) e consumido como voz
-// literal nas fichas de concorrentes.
+// Agente 5 v3 — Visão de Mercado (Direção A: pesquisa determinística).
+// O research é busca multi-query via Tavily Search
+// (lib/ai/tavilyResearch.js: researchVisaoMercado) — rápido, determinístico,
+// sem o timeout do web_search agêntico (que estourava 120s e perdia tudo).
+// O conteúdo bruto dos sites dos concorrentes é capturado via Tavily Extract
+// (lib/ai/tavilyExtract.js) e consumido como voz literal nas fichas. A
+// síntese roda no AIRouter no modelo preferido/escolhido (opus por default).
 //
 // O nome do arquivo (Agent_05_BuscaWeb) é preservado para não quebrar
 // imports em lib/agents/index.js e lib/ai/pipeline.js; o export pública
@@ -14,7 +15,7 @@
 // Substituição direta de tavilyResearch.js (que fica DEPRECATED no repo).
 
 import { AC_PRINCIPIOS, AC_REGRA_SEM_HTML, AC_REGRA_FINDINGS } from './_anaCoutoKB';
-import { deepResearchViaClaude } from '../ai/deepResearch';
+import { researchVisaoMercado, formatDeepResearchForPrompt } from '../ai/tavilyResearch';
 import { tavilyExtract, formatarExtractParaPrompt } from '../ai/tavilyExtract';
 
 export const Agent_05_BuscaWeb = {
@@ -29,14 +30,8 @@ export const Agent_05_BuscaWeb = {
 
   async enrichContext(context) {
     const projeto = context.projeto || {};
-    const output2 = context.previousOutputs?.[2];
-    const output6 = context.previousOutputs?.[6];
 
-    const contextoProjeto = construirContextoProjeto(projeto, output2, output6, context);
-
-    // Timeouts explícitos por sub-chamada — garante que nenhuma segure
-    // a função serverless inteira (300s) e deixe o Vercel matar sem
-    // resposta, o que aparece no frontend como "Failed to fetch".
+    // Timeouts explícitos por sub-chamada — nenhuma segura a função inteira.
     const withTimeout = (promise, ms, label) => Promise.race([
       promise,
       new Promise((_, reject) => setTimeout(
@@ -44,51 +39,53 @@ export const Agent_05_BuscaWeb = {
       )),
     ]);
 
-    // 1. Deep research via Claude (orçamento: 120s)
-    // Deep research usa Sonnet 4.6 por default — 2-3x mais rápido que
-    // Opus 4.7 com web_search, mantendo qualidade adequada para as 4
-    // lentes. A síntese final (no AIRouter) continua respeitando o
-    // modelo escolhido pelo usuário na UI.
-    console.log('[Agente 5 v2] Iniciando deep research via Claude web_search…');
-    let research = null;
+    const concorrentesNomes = extrairNomesConcorrentes(context);
+    const urlsIntake = extrairUrlsDoIntake(context);
+    const site = urlsIntake[0] || null;
+
+    // 1. Pesquisa de mercado DETERMINÍSTICA via Tavily Search (Direção A).
+    // Multi-query (categoria, concorrentes, tendências) em paralelo — segundos,
+    // sem loop agêntico, sem o timeout do web_search que estourava 120s e
+    // perdia tudo. A síntese (AIRouter) continua no modelo escolhido/preferido.
+    console.log('[Agente 5 v3] Pesquisa de mercado via Tavily Search…');
+    let research;
     try {
       research = await withTimeout(
-        deepResearchViaClaude({
-          contextoProjeto,
-          maxBuscas: 4,
-          modelo: 'claude-sonnet-4-6',
+        researchVisaoMercado({
+          cliente: projeto.cliente || projeto.nome,
+          segmento: projeto.segmento,
+          geografia: 'Brasil',
+          concorrentes: concorrentesNomes,
+          site,
         }),
-        120_000,
-        'deepResearch',
+        90_000,
+        'tavilyResearch',
       );
-      console.log(`[Agente 5 v2] Deep research completo: ${research.buscas_realizadas} buscas, ${research.citacoes.length} citações.`);
+      const nConc = (research?.concorrentes || []).length;
+      console.log(`[Agente 5 v3] Pesquisa Tavily completa (${nConc} concorrentes + categoria + tendências).`);
     } catch (err) {
-      console.error('[Agente 5 v2] Erro no deep research:', err.message);
-      research = { erro: err.message, texto_research: '', citacoes: [], urls_uteis: [], concorrentes_descobertos: [], buscas_realizadas: 0 };
+      console.error('[Agente 5 v3] Erro na pesquisa Tavily:', err.message);
+      research = { available: false, reason: err.message };
     }
 
-    // 2. Consolidar URLs dos concorrentes (intake + research)
-    const urlsIntake = extrairUrlsDoIntake(context);
-    const urlsParaExtract = consolidarUrlsConcorrentes(urlsIntake, research?.concorrentes_descobertos || [], research?.urls_uteis || []);
+    // 2. URLs institucionais p/ captura literal (intake + descobertas na pesquisa).
+    const urlsResearch = coletarUrlsDoResearch(research);
+    const urlsParaExtract = consolidarUrlsConcorrentes(urlsIntake, [], urlsResearch);
 
-    // 3. Tavily Extract nos 5 principais (orçamento: 30s)
-    console.log(`[Agente 5 v2] Tavily Extract em ${Math.min(urlsParaExtract.length, 5)} URLs de concorrentes…`);
+    // 3. Tavily Extract nos principais (voz literal dos sites).
+    console.log(`[Agente 5 v3] Tavily Extract em ${Math.min(urlsParaExtract.length, 5)} URLs…`);
     let extract;
     try {
-      extract = await withTimeout(
-        tavilyExtract(urlsParaExtract.slice(0, 5)),
-        30_000,
-        'tavilyExtract',
-      );
+      extract = await withTimeout(tavilyExtract(urlsParaExtract.slice(0, 5)), 30_000, 'tavilyExtract');
     } catch (err) {
-      console.error('[Agente 5 v2] Tavily Extract timeout/erro:', err.message);
+      console.error('[Agente 5 v3] Tavily Extract timeout/erro:', err.message);
       extract = { results: [], failed_results: [] };
     }
-    console.log(`[Agente 5 v2] Extract completo: ${extract?.results?.length || 0} páginas capturadas.`);
+    console.log(`[Agente 5 v3] Extract completo: ${extract?.results?.length || 0} páginas.`);
 
     return {
       ...context,
-      deepResearch: research,
+      mercadoResearch: research,
       tavilyExtract: extract,
     };
   },
@@ -109,7 +106,7 @@ export const Agent_05_BuscaWeb = {
       'CONTEXTO DO MÉTODO',
       'Você é o agente de Visão de Mercado do método Ana Couto. Alimenta o Agente 6 (Decodificação), que vai curar seu material editorialmente para o entregável final. Seu output precisa ser DENSO e CITÁVEL — com toda afirmação ancorada em fonte.',
       '',
-      'Você NÃO faz a pesquisa sozinho — recebe como input o resultado de um DEEP RESEARCH já executado (via Claude com web_search) e captura literal dos sites dos concorrentes principais (via Tavily Extract). Sua responsabilidade é SINTETIZAR esse material nas 4 lentes do método.',
+      'Você NÃO faz a pesquisa sozinho — recebe como input o resultado de uma PESQUISA DE MERCADO (busca multi-query determinística via Tavily) e a captura literal dos sites dos concorrentes principais (via Tavily Extract). Sua responsabilidade é SINTETIZAR esse material nas 4 lentes do método.',
       '',
       'PRINCÍPIOS INVIOLÁVEIS',
       '',
@@ -284,7 +281,7 @@ export const Agent_05_BuscaWeb = {
   getUserPrompt(context) {
     const parts = [];
     const projeto = context.projeto || {};
-    const research = context.deepResearch;
+    const research = context.mercadoResearch;
     const extract = context.tavilyExtract;
     const hoje = new Date().toISOString().slice(0, 10);
 
@@ -307,25 +304,13 @@ export const Agent_05_BuscaWeb = {
       parts.push('');
     }
 
-    parts.push('=== DEEP RESEARCH EXECUTADO (Claude web_search) ===');
-    if (research && !research.erro) {
-      parts.push(`Buscas realizadas: ${research.buscas_realizadas}`);
-      parts.push(`Citações coletadas: ${research.citacoes?.length || 0}`);
-      parts.push(`Concorrentes descobertos: ${(research.concorrentes_descobertos || []).join(', ') || 'nenhum além dos listados'}`);
+    parts.push('=== PESQUISA DE MERCADO (Tavily Search — multi-query determinística) ===');
+    if (research?.available) {
+      parts.push('Resultado de buscas sobre categoria, concorrentes e tendências. Cada item traz título, URL, data e trecho — USE como fonte citável [N] no bloco <fontes>.');
       parts.push('');
-      parts.push('--- TEXTO COMPLETO DO RESEARCH (com citações inline) ---');
-      parts.push(research.texto_research);
-      parts.push('');
-      if (research.citacoes?.length) {
-        parts.push('--- CITAÇÕES ESTRUTURADAS ---');
-        research.citacoes.forEach((cit, i) => {
-          parts.push(`[${i + 1}] ${cit.titulo || cit.url}`);
-          parts.push(`    URL: ${cit.url}`);
-          if (cit.trecho_citado) parts.push(`    Trecho: "${cit.trecho_citado.substring(0, 300)}…"`);
-        });
-      }
+      parts.push(formatDeepResearchForPrompt(research));
     } else {
-      parts.push(`NÃO DISPONÍVEL — ${research?.erro ? `erro: ${research.erro}` : 'research não executado'}. Sinalize limitação severa na confiança.`);
+      parts.push(`NÃO DISPONÍVEL — ${research?.reason ? `motivo: ${research.reason}` : 'pesquisa não executada'}. Sinalize limitação severa na confiança.`);
     }
     parts.push('');
 
@@ -352,7 +337,7 @@ export const Agent_05_BuscaWeb = {
     }
 
     parts.push('=== INSTRUÇÕES DE EXECUÇÃO ===');
-    parts.push('- Sintetize o DEEP RESEARCH e o EXTRACT nas 4 seções + IDA da VM. Fontes vão SOMENTE no bloco <fontes> dedicado.');
+    parts.push('- Sintetize a PESQUISA DE MERCADO e o EXTRACT nas 4 seções + IDA da VM. Fontes vão SOMENTE no bloco <fontes> dedicado.');
     parts.push('- FICHAS DE CONCORRENTES precisam ter CITAÇÕES LITERAIS (entre aspas, com URL) do conteúdo extraído. Isso alimenta o Agente 10 (Verbal) no futuro.');
     parts.push('- Concorrentes listados pelo cliente e descobertos pelo research ficam em subseções separadas (2.1 e 2.2).');
     parts.push('- Tendências: para cada uma, nomear a PONTE com este cliente específico.');
@@ -380,29 +365,30 @@ export const Agent_05_BuscaWeb = {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function construirContextoProjeto(projeto, output2, output6, context) {
-  const partes = [];
-  partes.push(`Empresa: ${projeto.cliente || projeto.nome || '(sem nome)'}`);
-  partes.push(`Segmento: ${projeto.segmento || '(não informado)'}`);
-  partes.push(`Estágio do negócio: ${projeto.estagio || projeto.momento || '(não informado)'}`);
-
+function extrairNomesConcorrentes(context) {
   const socios = (context.formularios || []).filter(f => f.tipo === 'intake_socios');
-  if (socios.length > 0) {
-    const r = socios[0].respostas_json || {};
-    if (r.p2_oferta_cliente)      partes.push(`O que vendem: ${String(r.p2_oferta_cliente).substring(0, 400)}`);
-    if (r.p2_concorrentes_analise) partes.push(`Concorrentes listados pelo sócio: ${String(r.p2_concorrentes_analise).substring(0, 400)}`);
-    else if (r.p3_concorrentes)    partes.push(`Concorrentes listados pelo sócio: ${String(r.p3_concorrentes).substring(0, 400)}`);
-    if (r.p5_visao_marca)         partes.push(`Visão/ambição: ${String(r.p5_visao_marca).substring(0, 400)}`);
-    if (r.p1_faturamento)         partes.push(`Porte (faturamento): ${r.p1_faturamento}`);
+  const nomes = new Set();
+  for (const s of socios) {
+    const r = s.respostas_json || {};
+    const texto = `${r.p2_concorrentes_analise || ''}\n${r.p3_concorrentes || ''}`;
+    texto
+      .split(/[\n,;•|]+|\s-\s/)
+      .map((t) => t.replace(/https?:\/\/\S+/g, '').trim())
+      .filter((t) => t.length >= 2 && t.length <= 60 && /[a-zA-ZÀ-ÿ]/.test(t))
+      .forEach((t) => nomes.add(t));
   }
+  return [...nomes].slice(0, 4);
+}
 
-  if (output2?.resumo_executivo) {
-    partes.push(`\nLeitura interna consolidada (Agente 2):\n${output2.resumo_executivo}`);
-  }
-  if (output6?.resumo_executivo) {
-    partes.push(`\nDecodificação preliminar (Agente 6):\n${output6.resumo_executivo}`);
-  }
-  return partes.join('\n');
+function coletarUrlsDoResearch(research) {
+  if (!research?.available) return [];
+  const urls = new Set();
+  const colher = (block) => (block?.results || []).forEach((r) => { if (r.url) urls.add(r.url); });
+  colher(research.marca_projeto);
+  (research.concorrentes || []).forEach((c) => Object.values(c.queries || {}).forEach(colher));
+  Object.values(research.categoria || {}).forEach(colher);
+  Object.values(research.tendencias || {}).forEach(colher);
+  return [...urls].filter(ehUrlInstitucional);
 }
 
 function extrairUrlsDoIntake(context) {

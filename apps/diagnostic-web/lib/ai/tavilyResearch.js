@@ -1,12 +1,9 @@
 // =====================================================================
-// DEPRECATED — TASK 5.1 (Agente 5 v2)
-// Este módulo fazia o research custom do Agente 5 pré-v2 com queries
-// Tavily Search determinísticas. Substituído por:
-//   - lib/ai/deepResearch.js  → deep research via Claude web_search nativo
-//   - lib/ai/tavilyExtract.js → captura literal do conteúdo bruto dos sites
-//
-// Mantido no repo para referência histórica. Pode ser removido após
-// validação do Agente 5 v2 em 2-3 projetos reais.
+// Research determinístico do Agente 5 (Visão de Mercado) — REATIVADO na
+// Direção A. `researchVisaoMercado` faz busca multi-query via Tavily Search
+// (categoria + concorrentes + tendências, em paralelo) — rápido e
+// determinístico, sem o timeout do web_search agêntico do Claude.
+// Pareado com lib/ai/tavilyExtract.js (captura literal dos sites).
 // =====================================================================
 
 const TAVILY_ENDPOINT = 'https://api.tavily.com/search';
