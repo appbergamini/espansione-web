@@ -31,6 +31,9 @@ export default function CockpitPage() {
   const [authOk, setAuthOk] = useState(false);
   const [page, setPage] = useState('overview');
   const [fadeKey, setFadeKey] = useState(0);
+  const [projetos, setProjetos] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
   // Auth gate (mesmo padrão das telas admin).
   useEffect(() => {
@@ -52,6 +55,31 @@ export default function CockpitPage() {
     try { const p = localStorage.getItem('esp-cockpit-page'); if (p && VIEWS[p]) setPage(p); } catch { /* */ }
   }, []);
 
+  // Carrega projetos (marcas) após auth e resolve a seleção atual.
+  useEffect(() => {
+    if (!authOk) return undefined;
+    let active = true;
+    (async () => {
+      try {
+        const r = await fetch('/api/adm/projetos');
+        const j = await r.json();
+        if (!active || !j.success) return;
+        const list = j.projetos || [];
+        setProjetos(list);
+        let stored = null;
+        try { stored = localStorage.getItem('esp-cockpit-projeto'); } catch { /* */ }
+        setSelectedId(stored && list.some(p => p.id === stored) ? stored : (list[0]?.id || null));
+      } catch { /* */ }
+    })();
+    return () => { active = false; };
+  }, [authOk]);
+
+  const escolherProjeto = (pid) => {
+    setSelectedId(pid);
+    setSelectorOpen(false);
+    try { localStorage.setItem('esp-cockpit-projeto', pid); } catch { /* */ }
+  };
+
   const navigate = (key) => {
     setPage(key);
     setFadeKey(k => k + 1);
@@ -67,6 +95,7 @@ export default function CockpitPage() {
   }
 
   const ViewComponent = VIEWS[page] || ViewOverview;
+  const selectedProjeto = projetos.find(p => p.id === selectedId) || null;
 
   return (
     <>
@@ -88,15 +117,38 @@ export default function CockpitPage() {
             </div>
           </div>
 
-          {/* Seletor de marca/cliente (placeholder — será ligado aos projetos) */}
-          <Hoverable
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', margin: '0 0 14px', background: P.card, borderRadius: P.radius, border: `1px solid ${P.border}` }}
-            hoverStyle={{ borderColor: P.textDim }}
-          >
-            <div style={{ width: 24, height: 24, borderRadius: '50%', background: P.accent, fontSize: 11, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>M</div>
-            <span style={{ fontSize: 12, color: P.text, flex: 1 }}>Marca Alpha</span>
-            <span style={{ fontSize: 10, color: P.textDim }}>▾</span>
-          </Hoverable>
+          {/* Seletor de marca/cliente — projetos reais */}
+          <div style={{ position: 'relative', margin: '0 0 14px' }}>
+            <Hoverable
+              onClick={() => setSelectorOpen(o => !o)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: P.card, borderRadius: P.radius, border: `1px solid ${selectorOpen ? P.accent : P.border}` }}
+              hoverStyle={{ borderColor: P.textDim }}
+            >
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: P.accent, fontSize: 11, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+                {(selectedProjeto?.cliente || selectedProjeto?.nome || '?').charAt(0).toUpperCase()}
+              </div>
+              <span style={{ fontSize: 12, color: P.text, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {selectedProjeto?.cliente || selectedProjeto?.nome || 'Selecione a marca'}
+              </span>
+              <span style={{ fontSize: 10, color: P.textDim }}>▾</span>
+            </Hoverable>
+            {selectorOpen && (
+              <div className="cockpit-scroll" style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, maxHeight: 280, overflowY: 'auto', background: P.card, border: `1px solid ${P.border}`, borderRadius: P.radius, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.45)' }}>
+                {projetos.length === 0 && <div style={{ padding: '10px 12px', fontSize: 12, color: P.textDim }}>Nenhum projeto.</div>}
+                {projetos.map(p => (
+                  <Hoverable
+                    key={p.id}
+                    onClick={() => escolherProjeto(p.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', fontSize: 12, color: p.id === selectedId ? P.accent : P.textSec }}
+                    hoverStyle={{ background: P.borderLt, color: P.text }}
+                  >
+                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.cliente || p.nome || p.id}</span>
+                    {p.id === selectedId && <span style={{ fontSize: 10 }}>✓</span>}
+                  </Hoverable>
+                ))}
+              </div>
+            )}
+          </div>
 
           {NAV_ITEMS.map(item => (
             <PSideItem key={item.key} icon={item.icon} label={item.label} count={item.count} active={page === item.key} onClick={() => navigate(item.key)} />
@@ -135,7 +187,7 @@ export default function CockpitPage() {
           </div>
 
           <div key={fadeKey} className="cockpit-scroll" style={{ flex: 1, padding: '24px 28px', overflowY: 'auto', overflowX: 'hidden', animation: 'cockpitFadeIn .25s ease-out forwards' }}>
-            <ViewComponent navigate={navigate} />
+            <ViewComponent navigate={navigate} projeto={selectedProjeto} />
           </div>
         </div>
       </div>

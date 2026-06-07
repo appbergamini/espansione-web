@@ -1,7 +1,8 @@
 // Cockpit — as 6 views, portadas do handoff. Fase 1: dados de exemplo no
 // Conteúdo/Pautas/Agenda (sem backend ainda); Revisão e IA serão ligadas a
 // dados reais na sequência. Visual fiel ao protótipo.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import {
   P, Hoverable, PBadge, PMetric, PContentCard, PTaskRow, PReviewItem,
   PTabBar, PSearch, PBtn, PSection, PCalStrip, PPanel, PProgress, PEmpty,
@@ -307,42 +308,84 @@ export function ViewAI() {
   );
 }
 
-export function ViewReview() {
+// Revisão ligada à CURADORIA real (analysis_blocks) do projeto selecionado.
+const statusLabelCockpit = (s) => (s === 'aprovado' ? 'Aprovado' : s === 'pendente_revisao' ? 'Pendente' : 'Em análise');
+
+export function ViewReview({ projeto }) {
+  const router = useRouter();
   const [tab, setTab] = useState(0);
   const [search, setSearch] = useState('');
-  const tabFilters = ['todos', 'Aprovado', 'Pendente', 'Em análise'];
-  const filtered = REVIEWS_DATA.filter(r => {
-    const matchTab = tab === 0 || r.status === tabFilters[tab];
-    const matchSearch = !search || r.title.toLowerCase().includes(search.toLowerCase());
+  const [blocks, setBlocks] = useState([]);
+  const [counts, setCounts] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!projeto?.id) { setBlocks([]); setCounts({}); return undefined; }
+    let active = true;
+    setLoading(true);
+    fetch(`/api/analysis-blocks?projeto_id=${encodeURIComponent(projeto.id)}`)
+      .then(r => r.json())
+      .then(j => { if (active && j.success) { setBlocks(j.blocks || []); setCounts(j.counts || {}); } })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [projeto?.id]);
+
+  if (!projeto) {
+    return <PEmpty icon="✎" message="Selecione uma marca na barra lateral para ver a curadoria." />;
+  }
+
+  const total = blocks.length;
+  const aprovados = counts.aprovado || 0;
+  const pendentes = counts.pendente_revisao || 0;
+  const emAnalise = Math.max(0, total - aprovados - pendentes);
+
+  const tabKey = [null, 'aprovado', 'pendente_revisao', 'analise'][tab];
+  const filtered = blocks.filter(b => {
+    const matchTab = !tabKey
+      || (tabKey === 'analise' ? (b.status !== 'aprovado' && b.status !== 'pendente_revisao') : b.status === tabKey);
+    const title = (b.edited_titulo || b.titulo || '').toLowerCase();
+    const matchSearch = !search || title.includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
-  const approved = REVIEWS_DATA.filter(r => r.status === 'Aprovado').length;
-  const pending = REVIEWS_DATA.filter(r => r.status === 'Pendente').length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 22, fontWeight: 700, color: P.text }}>Saídas de Revisão</span>
-          <PBadge label={`${REVIEWS_DATA.length} itens`} color="purple" />
-          <PBadge label="dados de exemplo" color="gray" size="xs" />
+          <span style={{ fontSize: 22, fontWeight: 700, color: P.text }}>Revisão · Curadoria</span>
+          <PBadge label={projeto.cliente || projeto.nome || 'projeto'} color="blue" />
+          {total > 0 && <PBadge label={`${total} achados`} color="purple" />}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <PSearch placeholder="Buscar revisão..." value={search} onChange={setSearch} width={200} />
-          <PBtn label="Nova revisão" primary icon="+" />
+          <PSearch placeholder="Buscar achado..." value={search} onChange={setSearch} width={200} />
+          <PBtn label="Abrir curadoria completa →" onClick={() => router.push(`/adm/${projeto.id}/curadoria`)} />
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-        <PMetric value={approved} label="Aprovados" icon="◉" />
-        <PMetric value={pending} label="Pendentes" icon="◔" />
-        <PMetric value={REVIEWS_DATA.length - approved - pending} label="Em análise" icon="◧" />
+        <PMetric value={aprovados} label="Aprovados" icon="◉" />
+        <PMetric value={pendentes} label="Pendentes" icon="◔" />
+        <PMetric value={emAnalise} label="Em análise / outros" icon="◧" />
+        <PMetric value={counts.incluidos || 0} label="No relatório" icon="📌" />
       </div>
 
       <PTabBar tabs={['Todas', 'Aprovadas', 'Pendentes', 'Em análise']} active={tab} onSelect={setTab} />
 
       <PPanel>
-        {filtered.length > 0 ? filtered.map(r => <PReviewItem key={r.id} number={r.id} {...r} />) : <PEmpty icon="✎" message="Nenhuma revisão encontrada" />}
+        {loading
+          ? <PEmpty icon="◔" message="Carregando achados…" />
+          : filtered.length > 0
+            ? filtered.map(b => (
+                <PReviewItem
+                  key={b.id}
+                  number={b.agent_num}
+                  title={b.edited_titulo || b.titulo || '(sem título)'}
+                  status={statusLabelCockpit(b.status)}
+                  onClick={() => router.push(`/adm/${projeto.id}/curadoria`)}
+                />
+              ))
+            : <PEmpty icon="✎" message={total === 0 ? 'Nenhum achado de curadoria para esta marca ainda.' : 'Nada com esse filtro.'} />}
       </PPanel>
     </div>
   );
