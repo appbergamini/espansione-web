@@ -36,7 +36,7 @@ export default function CuradoriaPage() {
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
-  const [filtroStatus, setFiltroStatus] = useState('');
+  const [filtroStatus, setFiltroStatus] = useState('pendente_revisao');
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroAgente, setFiltroAgente] = useState('');
   const [busca, setBusca] = useState('');
@@ -167,15 +167,19 @@ export default function CuradoriaPage() {
             </p>
           </div>
 
-          {/* Métricas */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-            <Metric label="Total" value={counts.total || 0} />
-            <Metric label="Aguardando" value={totalPendentes} cor={STATUS_COR.pendente_revisao} />
-            <Metric label="Aprovados" value={counts.aprovado || 0} cor={STATUS_COR.aprovado} />
-            <Metric label="Editados" value={counts.editado || 0} cor={STATUS_COR.editado} />
-            <Metric label="Em discussão" value={counts.levar_discussao || 0} cor={STATUS_COR.levar_discussao} />
-            <Metric label="Excluídos" value={counts.excluido || 0} cor={STATUS_COR.excluido} />
-            <Metric label="No relatório" value={totalIncluidos} cor={STATUS_COR.aprovado} />
+          {/* Métricas — barra fina */}
+          <div style={{ display: 'flex', gap: '1.4rem', flexWrap: 'wrap', alignItems: 'baseline', marginBottom: '1.25rem', padding: '0.55rem 0.9rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            {[
+              ['Total', counts.total || 0, 'var(--text-primary)'],
+              ['Aguardando', totalPendentes, STATUS_COR.pendente_revisao?.fg],
+              ['Aprovados', counts.aprovado || 0, STATUS_COR.aprovado?.fg],
+              ['Editados', counts.editado || 0, STATUS_COR.editado?.fg],
+              ['Em discussão', counts.levar_discussao || 0, STATUS_COR.levar_discussao?.fg],
+              ['Excluídos', counts.excluido || 0, STATUS_COR.excluido?.fg],
+              ['No relatório', totalIncluidos, '#10b981'],
+            ].map(([label, value, cor]) => (
+              <span key={label}><strong style={{ color: cor || 'var(--text-primary)', fontWeight: 800, fontSize: '0.98rem' }}>{value}</strong> {label}</span>
+            ))}
           </div>
 
           {/* Backfill quando vazio */}
@@ -234,8 +238,8 @@ export default function CuradoriaPage() {
           {/* Lista agrupada por agente */}
           {blocks.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-              {agruparPorAgente(blocks).map(({ agentNum, items }) => (
-                <AgenteSection key={agentNum} agentNum={agentNum} items={items} onChange={refreshBlocks} />
+              {agruparPorAgente(blocks).map(({ agentNum, items }, i) => (
+                <AgenteSection key={agentNum} agentNum={agentNum} items={items} onChange={refreshBlocks} defaultOpen={i === 0} />
               ))}
             </div>
           ) : (counts.total || 0) > 0 ? (
@@ -275,7 +279,8 @@ function agruparPorAgente(blocks) {
     .map(([agentNum, items]) => ({ agentNum, items }));
 }
 
-function AgenteSection({ agentNum, items, onChange }) {
+function AgenteSection({ agentNum, items, onChange, defaultOpen = false }) {
+  const [aberto, setAberto] = useState(defaultOpen);
   const meta = getAgenteByNum(agentNum);
   const aprovados = items.filter(b => b.status === 'aprovado').length;
   const pendentes = items.filter(b => b.status === 'pendente_revisao').length;
@@ -283,41 +288,38 @@ function AgenteSection({ agentNum, items, onChange }) {
 
   return (
     <section>
+      {/* Cabeçalho do agente — clicável, colapsa/expande o grupo. */}
       <header
+        onClick={() => setAberto(v => !v)}
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
-          padding: '0.75rem 1rem',
+          gap: '0.7rem',
+          padding: '0.65rem 0.9rem',
           background: 'rgba(107,163,255,0.06)',
           border: '1px solid rgba(107,163,255,0.18)',
           borderRadius: '10px',
-          marginBottom: '0.75rem',
+          marginBottom: aberto ? '0.6rem' : 0,
+          cursor: 'pointer',
+          userSelect: 'none',
         }}
       >
+        <span style={{ color: 'var(--accent-blue)', fontSize: '0.8rem', width: '12px', flexShrink: 0 }}>{aberto ? '▾' : '▸'}</span>
         <span
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            background: 'rgba(107,163,255,0.15)',
-            color: 'var(--accent-blue)',
-            fontWeight: 700,
-            fontSize: '0.85rem',
-            letterSpacing: '0.04em',
-            flexShrink: 0,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: 'rgba(107,163,255,0.15)', color: 'var(--accent-blue)',
+            fontWeight: 700, fontSize: '0.8rem', flexShrink: 0,
           }}
         >
           A{String(agentNum).padStart(2, '0')}
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', lineHeight: 1.25 }}>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {meta?.nome_exibicao || `Agente ${agentNum}`}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
             {items.length} {items.length === 1 ? 'bloco' : 'blocos'}
             {pendentes > 0 && <> · <span style={{ color: STATUS_COR.pendente_revisao.fg }}>{pendentes} aguardando</span></>}
             {aprovados > 0 && <> · <span style={{ color: STATUS_COR.aprovado.fg }}>{aprovados} aprovados</span></>}
@@ -325,19 +327,14 @@ function AgenteSection({ agentNum, items, onChange }) {
           </div>
         </div>
       </header>
-      {/* FIX.27 — grid de 2 colunas por agente. Recolhe pra 1 coluna em telas pequenas. */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))',
-          gap: '0.75rem',
-          alignItems: 'start',
-        }}
-      >
-        {items.map(b => (
-          <BlockRow key={b.id} block={b} onChange={onChange} />
-        ))}
-      </div>
+      {/* Fila enxuta: 1 coluna; só renderiza quando o grupo está aberto. */}
+      {aberto && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+          {items.map(b => (
+            <BlockRow key={b.id} block={b} onChange={onChange} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -503,7 +500,7 @@ function BlockRow({ block, onChange }) {
             {tituloEfetivo}
           </div>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <StatusBadge status={block.status} />
+            {block.status !== 'pendente_revisao' && <StatusBadge status={block.status} />}
             <ConfiancaPill confianca={block.ai_confianca} />
             {block.incluir_no_relatorio && (
               <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 700 }}>📌 NO RELATÓRIO</span>
