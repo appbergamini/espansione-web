@@ -567,7 +567,7 @@ function BlockRow({ block, onChange }) {
             <>
               <div style={{ marginBottom: '0.85rem' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>Título</label>
-                <input value={titulo} onChange={e => setTitulo(e.target.value)} className="form-input" style={{ marginTop: '0.35rem', fontSize: '0.95rem' }} />
+                <input value={titulo} onChange={e => setTitulo(e.target.value)} className="form-input" style={{ marginTop: '0.35rem', fontSize: '0.95rem', width: '100%', boxSizing: 'border-box' }} />
               </div>
               <CamadaEdit label="Fato / Evidência" subtitle="O que se observa nos dados — citação literal, número, padrão repetido." value={evidencia} onChange={setEvidencia} />
               <CamadaEdit label="Interpretação sugerida" subtitle="O que esse fato sugere estrategicamente. Hipótese, não verdade." value={interpretacao} onChange={setInterpretacao} />
@@ -613,7 +613,7 @@ function CamadaEdit({ label, subtitle, value, onChange }) {
     <div style={{ marginBottom: '0.9rem' }}>
       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{label}</label>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0.4rem' }}>{subtitle}</p>
-      <textarea value={value || ''} onChange={e => onChange(e.target.value)} rows={4} className="form-input" style={{ fontSize: '0.85rem' }} />
+      <textarea value={value || ''} onChange={e => onChange(e.target.value)} rows={4} className="form-input" style={{ fontSize: '0.85rem', width: '100%', boxSizing: 'border-box', resize: 'vertical' }} />
     </div>
   );
 }
