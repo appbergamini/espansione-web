@@ -745,7 +745,7 @@ function AcoesSecundarias({ block, onChange }) {
               onBlur={salvarNotas}
               rows={2}
               className="form-input"
-              style={{ fontSize: '0.85rem' }}
+              style={{ fontSize: '0.85rem', width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
               placeholder="Visível só pra equipe Espansione, nunca aparece no relatório."
             />
           </div>
