@@ -7,6 +7,7 @@ import {
   P, Hoverable, PBadge, PMetric, PContentCard, PTaskRow, PReviewItem,
   PTabBar, PSearch, PBtn, PSection, PCalStrip, PPanel, PProgress, PEmpty,
 } from './ui';
+import { CATALOGO_AGENTES, podeExecutar } from '../../lib/agents/catalog';
 
 export const CONTENT_DATA = [
   { id: 1, title: 'Consolidação de Perfis Existentes', type: 'Post Blog', status: 'Publicado', statusColor: 'green', date: '04 Jun', cat: 'publicados' },
@@ -50,6 +51,137 @@ export const REVIEWS_DATA = [
   { id: 13, title: 'Analytics Inc. — perfil e saída (Norte)', status: 'Em análise' },
   { id: 14, title: 'Briefing Vídeo — Trabalho da Marca', status: 'Pendente' },
 ];
+
+// ══════════════════════════════════
+// VIEW: Diagnóstico — passo a passo (desde o Agente 1), com status REAL.
+// ══════════════════════════════════
+const STAGE_LABEL = {
+  pre_diagnostico: 'Pré-diagnóstico',
+  diagnostico_interno: 'Visão Interna',
+  diagnostico_externo: 'Visão Externa',
+  sintese: 'Síntese',
+  estrategia: 'Estratégia',
+  visual_verbal: 'Identidade',
+  cx: 'Experiência',
+  comunicacao: 'Comunicação',
+  marca_empregadora: 'Marca Empregadora',
+  encerramento: 'Encerramento',
+};
+
+export function ViewDiagnostico({ projeto }) {
+  const router = useRouter();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!projeto?.id) { setData(null); return undefined; }
+    let active = true;
+    setLoading(true);
+    fetch(`/api/adm/${encodeURIComponent(projeto.id)}`)
+      .then(r => r.json())
+      .then(j => { if (active && j.success) setData(j.data); })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [projeto?.id]);
+
+  if (!projeto) return <PEmpty icon="⚑" message="Selecione uma marca na barra lateral para ver o diagnóstico." />;
+  if (loading || !data) return <PEmpty icon="◔" message="Carregando diagnóstico…" />;
+
+  const outputs = data.outputs || [];
+  const doneNums = [...new Set(outputs.map(o => o.agent_num))];
+  const confByNum = {};
+  outputs.forEach(o => { if (confByNum[o.agent_num] == null) confByNum[o.agent_num] = o.confianca; });
+  const pendingCkpt = new Set((data.pendingCheckpoints || []).map(c => c.checkpoint_num));
+  const temEvp = !!data.projeto?.tem_evp;
+  const isDone = (n) => doneNums.includes(n);
+
+  const agentes = CATALOGO_AGENTES.filter(a => a.agent_num !== 14 || temEvp);
+
+  let currentNum = null;
+  for (const a of agentes) {
+    if (!isDone(a.agent_num) && podeExecutar(a.agent_num, doneNums).ok) { currentNum = a.agent_num; break; }
+  }
+  const statusOf = (a) => {
+    if (isDone(a.agent_num)) return 'done';
+    if (a.agent_num === currentNum) return 'current';
+    if (!podeExecutar(a.agent_num, doneNums).ok) return 'blocked';
+    return 'pending';
+  };
+
+  const coreDone = agentes.filter(a => !a.modular && isDone(a.agent_num)).length;
+  const coreTotal = agentes.filter(a => !a.modular).length;
+  const ckptAprovados = [1, 2, 3, 4].filter(n => {
+    const creator = CATALOGO_AGENTES.find(a => a.checkpoint === n);
+    return creator && isDone(creator.agent_num) && !pendingCkpt.has(n);
+  }).length;
+
+  const dot = { done: P.green, current: P.accent, blocked: P.textDim, pending: P.textSec };
+  const badge = { done: ['Concluído', 'green'], current: ['Agora', 'blue'], blocked: ['Bloqueado', 'gray'], pending: ['Pendente', 'gray'] };
+
+  const ckptChip = (n) => {
+    const creator = CATALOGO_AGENTES.find(a => a.checkpoint === n);
+    const reached = creator && isDone(creator.agent_num);
+    const st = pendingCkpt.has(n) ? 'pendente' : (reached ? 'aprovado' : 'locked');
+    const cor = st === 'aprovado' ? P.green : st === 'pendente' ? P.orange : P.textDim;
+    const label = st === 'aprovado' ? `Checkpoint ${n} · aprovado` : st === 'pendente' ? `Checkpoint ${n} · pendente — aprovar` : `Checkpoint ${n}`;
+    return (
+      <div key={`ck${n}`} onClick={() => st === 'pendente' && router.push(`/adm/${projeto.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px 7px 40px', fontSize: 12, color: cor, cursor: st === 'pendente' ? 'pointer' : 'default', borderBottom: `1px solid ${P.borderLt}` }}>
+        <span>⛒</span><span style={{ fontWeight: 600 }}>{label}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: P.text }}>Diagnóstico — passo a passo</span>
+          <PBadge label={projeto.cliente || projeto.nome || 'projeto'} color="blue" />
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <PBtn label="Orquestrador →" onClick={() => router.push(`/adm/${projeto.id}`)} />
+          <PBtn label="Entregável →" onClick={() => router.push(`/adm/${projeto.id}/deliverable`)} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        <PMetric value={`${coreDone}/${coreTotal}`} label="Agentes concluídos" icon="⚑" />
+        <PMetric value={`${ckptAprovados}/4`} label="Checkpoints aprovados" icon="⛒" />
+        <PMetric value={currentNum ? `Agente ${currentNum}` : '✓ completo'} label="Próximo passo" icon="▶" />
+      </div>
+
+      <PPanel style={{ padding: 0, overflow: 'hidden' }}>
+        {agentes.map((a) => {
+          const st = statusOf(a);
+          const [blab, bcol] = badge[st];
+          const conf = confByNum[a.agent_num];
+          const out = [
+            <Hoverable
+              key={a.agent_num}
+              onClick={() => router.push(isDone(a.agent_num) ? `/adm/${projeto.id}/outputs/${a.agent_num}` : `/adm/${projeto.id}`)}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderBottom: `1px solid ${P.borderLt}` }}
+              hoverStyle={{ background: P.borderLt }}
+            >
+              <span style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: st === 'done' ? '#06210f' : '#fff', background: dot[st] }}>
+                {st === 'done' ? '✓' : a.agent_num}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: P.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {a.nome_exibicao}{a.modular && <span style={{ color: P.textDim, fontWeight: 400 }}> · modular</span>}
+                </div>
+                <div style={{ fontSize: 11, color: P.textDim }}>{STAGE_LABEL[a.stage] || a.stage}{conf ? ` · confiança ${conf}` : ''}</div>
+              </div>
+              <PBadge label={blab} color={bcol} size="xs" />
+            </Hoverable>,
+          ];
+          if (a.checkpoint) out.push(ckptChip(a.checkpoint));
+          return out;
+        })}
+      </PPanel>
+    </div>
+  );
+}
 
 export function ViewOverview({ navigate }) {
   const [calDay, setCalDay] = useState(2);

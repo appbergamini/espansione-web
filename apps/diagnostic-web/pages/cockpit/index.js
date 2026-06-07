@@ -6,30 +6,32 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { P, Hoverable, PSideItem, PBadge, PProgress } from '../../components/cockpit/ui';
-import { ViewOverview, ViewContent, ViewTasks, ViewSchedule, ViewAI, ViewReview } from '../../components/cockpit/views';
+import { ViewDiagnostico, ViewOverview, ViewContent, ViewTasks, ViewSchedule, ViewAI, ViewReview } from '../../components/cockpit/views';
 
 const NAV_ITEMS = [
+  { key: 'diagnostico', icon: '⚑', label: 'Diagnóstico' },
+  { key: 'review', icon: '✎', label: 'Revisão' },
   { key: 'overview', icon: '◫', label: 'Visão Geral' },
-  { key: 'content', icon: '◧', label: 'Conteúdo', count: 12 },
-  { key: 'tasks', icon: '☰', label: 'Pautas', count: 6 },
+  { key: 'content', icon: '◧', label: 'Conteúdo' },
+  { key: 'tasks', icon: '☰', label: 'Pautas' },
   { key: 'schedule', icon: '◷', label: 'Agenda' },
   { key: 'ai', icon: '⬡', label: 'IA' },
-  { key: 'review', icon: '✎', label: 'Revisão', count: 14 },
 ];
 
 const VIEWS = {
+  diagnostico: ViewDiagnostico,
+  review: ViewReview,
   overview: ViewOverview,
   content: ViewContent,
   tasks: ViewTasks,
   schedule: ViewSchedule,
   ai: ViewAI,
-  review: ViewReview,
 };
 
 export default function CockpitPage() {
   const router = useRouter();
   const [authOk, setAuthOk] = useState(false);
-  const [page, setPage] = useState('overview');
+  const [page, setPage] = useState('diagnostico');
   const [fadeKey, setFadeKey] = useState(0);
   const [projetos, setProjetos] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -172,8 +174,8 @@ export default function CockpitPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 28px', borderBottom: `1px solid ${P.border}`, flexShrink: 0, background: P.bg }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: P.textSec }}>
-              <span style={{ cursor: 'pointer' }} onClick={() => navigate('overview')}>Home</span>
-              {page !== 'overview' && (
+              <span style={{ cursor: 'pointer' }} onClick={() => navigate('diagnostico')}>Home</span>
+              {page !== 'diagnostico' && (
                 <>
                   <span style={{ color: P.textDim }}>/</span>
                   <span style={{ color: P.text, fontWeight: 600 }}>{NAV_ITEMS.find(n => n.key === page)?.label}</span>
