@@ -7,7 +7,7 @@ import {
   P, Hoverable, PBadge, PMetric, PContentCard, PTaskRow, PReviewItem,
   PTabBar, PSearch, PBtn, PSection, PCalStrip, PPanel, PProgress, PEmpty,
 } from './ui';
-import { CATALOGO_AGENTES, podeExecutar } from '../../lib/agents/catalog';
+import { CATALOGO_AGENTES, podeExecutar, getNomeAdmin } from '../../lib/agents/catalog';
 
 export const CONTENT_DATA = [
   { id: 1, title: 'Consolidação de Perfis Existentes', type: 'Post Blog', status: 'Publicado', statusColor: 'green', date: '04 Jun', cat: 'publicados' },
@@ -168,7 +168,7 @@ export function ViewDiagnostico({ projeto }) {
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, color: P.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {a.nome_exibicao}{a.modular && <span style={{ color: P.textDim, fontWeight: 400 }}> · modular</span>}
+                  {getNomeAdmin(a.agent_num)}{a.modular && <span style={{ color: P.textDim, fontWeight: 400 }}> · modular</span>}
                 </div>
                 <div style={{ fontSize: 11, color: P.textDim }}>{STAGE_LABEL[a.stage] || a.stage}{conf ? ` · confiança ${conf}` : ''}</div>
               </div>

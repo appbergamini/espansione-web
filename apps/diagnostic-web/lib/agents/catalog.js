@@ -19,7 +19,12 @@
  * @property {number}   agent_num
  * @property {string}   key                  Chave estável (snake_case)
  * @property {string}   nome_curto           Ex.: "Agente 2"
- * @property {string}   nome_exibicao        Nome editorial usado em UI
+ * @property {string}   nome_exibicao        Nome técnico/longo (espelho do Agent_XX.name)
+ * @property {string}   [nome_metodo]        Termo do método, legenda limpa (ex.: "Visão Interna").
+ *                                           Fallback para nome_exibicao quando ausente.
+ * @property {string|null} [nome_cliente]    Nome do entregável voltado ao CLIENTE
+ *                                           (ex.: "Quem Somos"). `null` em etapas internas
+ *                                           sem entregável (roteiros, export Brand Memory).
  * @property {string}   stage                Coincide com stage do pipeline
  * @property {boolean}  modular              Opcional no entregável
  * @property {number}   ordem_exibicao
@@ -45,6 +50,7 @@ export const CATALOGO_AGENTES = [
     key: 'roteiros_vi',
     nome_curto: 'Agente 1',
     nome_exibicao: 'Roteiros VI — Entrevistas Internas',
+    nome_cliente: null,
     stage: 'pre_diagnostico',
     modular: false,
     ordem_exibicao: 1,
@@ -56,6 +62,8 @@ export const CATALOGO_AGENTES = [
     key: 'consolidado_vi',
     nome_curto: 'Agente 2',
     nome_exibicao: 'Consolidado da Visão Interna (VI)',
+    nome_metodo: 'Visão Interna',
+    nome_cliente: 'Quem Somos',
     stage: 'diagnostico_interno',
     modular: false,
     ordem_exibicao: 2,
@@ -67,6 +75,7 @@ export const CATALOGO_AGENTES = [
     key: 'roteiros_ve',
     nome_curto: 'Agente 3',
     nome_exibicao: 'Roteiros VE — Entrevistas Cliente',
+    nome_cliente: null,
     stage: 'diagnostico_externo',
     modular: false,
     ordem_exibicao: 3,
@@ -78,6 +87,8 @@ export const CATALOGO_AGENTES = [
     key: 'consolidado_ve',
     nome_curto: 'Agente 4',
     nome_exibicao: 'Consolidado da Visão Externa (VE)',
+    nome_metodo: 'Visão Externa',
+    nome_cliente: 'Como Nos Veem',
     stage: 'diagnostico_externo',
     modular: false,
     ordem_exibicao: 4,
@@ -89,6 +100,8 @@ export const CATALOGO_AGENTES = [
     key: 'visao_mercado',
     nome_curto: 'Agente 5',
     nome_exibicao: 'Visão de Mercado (VM)',
+    nome_metodo: 'Visão de Mercado',
+    nome_cliente: 'Onde Estamos',
     stage: 'diagnostico_externo',
     modular: false,
     ordem_exibicao: 5,
@@ -100,6 +113,8 @@ export const CATALOGO_AGENTES = [
     key: 'decodificacao',
     nome_curto: 'Agente 6',
     nome_exibicao: 'Decodificação e Direcionamento Estratégico',
+    nome_metodo: 'Decodificação e Direcionamento',
+    nome_cliente: 'O Que Precisamos Decidir',
     stage: 'sintese',
     modular: false,
     ordem_exibicao: 6,
@@ -111,6 +126,8 @@ export const CATALOGO_AGENTES = [
     key: 'valores_atributos',
     nome_curto: 'Agente 7',
     nome_exibicao: 'Valores e Atributos',
+    nome_metodo: 'Valores',
+    nome_cliente: 'No Que Acreditamos',
     stage: 'estrategia',
     modular: false,
     ordem_exibicao: 7,
@@ -122,6 +139,8 @@ export const CATALOGO_AGENTES = [
     key: 'diretrizes',
     nome_curto: 'Agente 8',
     nome_exibicao: 'Diretrizes Estratégicas',
+    nome_metodo: 'Diretrizes Estratégicas',
+    nome_cliente: 'O Que Nos Guia',
     stage: 'estrategia',
     modular: false,
     ordem_exibicao: 8,
@@ -133,6 +152,8 @@ export const CATALOGO_AGENTES = [
     key: 'plataforma_marca',
     nome_curto: 'Agente 9',
     nome_exibicao: 'Plataforma de Branding',
+    nome_metodo: 'Plataforma de Branding',
+    nome_cliente: 'Por Que Existimos',
     stage: 'estrategia',
     modular: false,
     ordem_exibicao: 9,
@@ -144,6 +165,8 @@ export const CATALOGO_AGENTES = [
     key: 'identidade_verbal',
     nome_curto: 'Agente 10',
     nome_exibicao: 'Identidade Verbal (UVV)',
+    nome_metodo: 'Identidade Verbal',
+    nome_cliente: 'Como Falamos',
     stage: 'visual_verbal',
     modular: false,
     ordem_exibicao: 10,
@@ -155,6 +178,8 @@ export const CATALOGO_AGENTES = [
     key: 'one_page_visual',
     nome_curto: 'Agente 11',
     nome_exibicao: 'One Page de Personalidade (Visual)',
+    nome_metodo: 'Identidade Visual',
+    nome_cliente: 'Como Aparecemos',
     stage: 'visual_verbal',
     modular: false,
     ordem_exibicao: 11,
@@ -166,6 +191,8 @@ export const CATALOGO_AGENTES = [
     key: 'one_page_experiencia',
     nome_curto: 'Agente 12',
     nome_exibicao: 'One Page de Experiência',
+    nome_metodo: 'Experiência',
+    nome_cliente: 'Como Nos Relacionamos',
     stage: 'cx',
     modular: false,
     ordem_exibicao: 12,
@@ -177,6 +204,8 @@ export const CATALOGO_AGENTES = [
     key: 'comunicacao',
     nome_curto: 'Agente 13',
     nome_exibicao: 'Plano de Comunicação — A Marca Fala',
+    nome_metodo: 'Plano de Comunicação',
+    nome_cliente: 'Para Onde Vamos',
     stage: 'comunicacao',
     modular: false,
     ordem_exibicao: 13,
@@ -188,6 +217,8 @@ export const CATALOGO_AGENTES = [
     key: 'evp',
     nome_curto: 'Agente 14',
     nome_exibicao: 'Plataforma de Marca Empregadora (EVP)',
+    nome_metodo: 'EVP / Marca Empregadora',
+    nome_cliente: 'Por Que Trabalhar Conosco',
     stage: 'marca_empregadora',
     modular: true,   // só roda se o projeto contratou escopo EVP
     ordem_exibicao: 14,
@@ -199,6 +230,8 @@ export const CATALOGO_AGENTES = [
     key: 'editorial',
     nome_curto: 'Agente 15',
     nome_exibicao: 'Consolidador Editorial do Entregável Final',
+    nome_metodo: 'Editorial Final',
+    nome_cliente: 'A Nossa Marca',
     stage: 'encerramento',
     modular: false,
     ordem_exibicao: 15,
@@ -214,6 +247,7 @@ export const CATALOGO_AGENTES = [
     key: 'brand_memory_export',
     nome_curto: 'Agente 16',
     nome_exibicao: 'Exportador para Brand Memory',
+    nome_cliente: null,
     stage: 'encerramento',
     modular: true,
     ordem_exibicao: 16,
@@ -277,8 +311,51 @@ export function calcularProgresso(agentNumsCompletos = [], incluiEvp = false) {
   return { completos, total, pct, proximoAgente };
 }
 
+// ─── Nomenclatura cliente × método ─────────────────────────────────
+// Regra: o CLIENTE vê apenas o nome do entregável (`nome_cliente`); o
+// ADMIN vê os dois ("Nome do Cliente · Termo do Método"). Etapas internas
+// sem entregável (roteiros, export Brand Memory) não têm `nome_cliente` —
+// caem no termo do método.
+
 /**
- * Formata rótulo de documento para a UI do dashboard do cliente.
+ * Termo do método (legenda limpa). Fallback para o nome técnico longo.
+ * @param {number} agentNum
+ * @returns {string}
+ */
+export function getNomeMetodo(agentNum) {
+  const meta = getAgenteByNum(agentNum);
+  if (!meta) return `Agente ${agentNum}`;
+  return meta.nome_metodo || meta.nome_exibicao;
+}
+
+/**
+ * Nome voltado ao cliente. Quando a etapa não tem entregável próprio
+ * (`nome_cliente` null/ausente), cai no termo do método.
+ * @param {number} agentNum
+ * @returns {string}
+ */
+export function getNomeCliente(agentNum) {
+  const meta = getAgenteByNum(agentNum);
+  if (!meta) return `Agente ${agentNum}`;
+  return meta.nome_cliente || getNomeMetodo(agentNum);
+}
+
+/**
+ * Rótulo para superfícies de ADMIN: "Nome do Cliente · Termo do Método".
+ * Quando não há nome de cliente, mostra só o termo do método.
+ * @param {number} agentNum
+ * @returns {string}
+ */
+export function getNomeAdmin(agentNum) {
+  const meta = getAgenteByNum(agentNum);
+  if (!meta) return `Agente ${agentNum}`;
+  const metodo = getNomeMetodo(agentNum);
+  return meta.nome_cliente ? `${meta.nome_cliente} · ${metodo}` : metodo;
+}
+
+/**
+ * Formata rótulo de documento para a UI do dashboard do CLIENTE.
+ * Mostra só o nome do entregável (sem o termo técnico do método).
  * `agent_num` já é o número canônico — NÃO adicionar +1 (o bug que
  * a FIX.3 corrige em dashboard/projetos/[id].js:285).
  *
@@ -289,12 +366,12 @@ export function formatarRotuloDocumento(agentNum) {
   const meta = getAgenteByNum(agentNum);
   const numeroFormatado = String(agentNum).padStart(2, '0');
   if (!meta) return `Documento nº ${numeroFormatado}`;
-  return `Documento nº ${numeroFormatado} · ${meta.nome_exibicao}`;
+  return `Documento nº ${numeroFormatado} · ${getNomeCliente(agentNum)}`;
 }
 
 /**
  * Formato curto usado em cabeçalhos de listas de outputs no painel
- * admin, que até então mostrava "02. Consolidado da Visão Interna (VI)".
+ * ADMIN. Mostra os dois nomes: "02. Quem Somos · Visão Interna".
  * Preserva o prefixo numérico zero-padded pra ordenação visual.
  *
  * @param {number} agentNum
@@ -304,7 +381,7 @@ export function formatarTituloAdmin(agentNum) {
   const meta = getAgenteByNum(agentNum);
   const numeroFormatado = String(agentNum).padStart(2, '0');
   if (!meta) return `${numeroFormatado}. Agente ${agentNum}`;
-  return `${numeroFormatado}. ${meta.nome_exibicao}`;
+  return `${numeroFormatado}. ${getNomeAdmin(agentNum)}`;
 }
 
 // ─── Grafo de dependências (FIX.4) ─────────────────────────────────

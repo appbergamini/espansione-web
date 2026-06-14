@@ -20,6 +20,7 @@ import {
   calcularProgresso,
   podeExecutar,
   formatarTituloAdmin,
+  getNomeAdmin,
 } from '../../lib/agents/catalog';
 import {
   canPrepareBrandMemoryBeforeEditorial,
@@ -72,7 +73,7 @@ function BrandMemoryExportReadinessPanel({ readiness }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0.65rem' }}>
         {readiness.items.map((item) => {
           const meta = statusMeta[item.status] || statusMeta.not_applicable;
-          const agentName = getAgenteByNum(item.agent_num)?.nome_exibicao || `Agente ${item.agent_num}`;
+          const agentName = getNomeAdmin(item.agent_num);
           const problems = [...(item.errors || []), ...(item.warnings || [])].filter(Boolean);
           return (
             <article key={item.agent_num} style={{ border: `1px solid ${item.blocking ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.08)'}`, background: 'rgba(255,255,255,0.025)', borderRadius: 8, padding: '0.8rem', minWidth: 0 }}>
@@ -1437,7 +1438,7 @@ export default function ProjetoDetalhes() {
                   return (
                     <div
                       key={agent.agent_num}
-                      title={`${agent.nome_curto} · ${agent.nome_exibicao}`}
+                      title={`${agent.nome_curto} · ${getNomeAdmin(agent.agent_num)}`}
                       style={{ minWidth: '34px', height: '36px', display: 'grid', placeItems: 'center', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color: done ? 'var(--success)' : current ? 'var(--accent-blue)' : 'var(--text-secondary)', fontWeight: 800, fontSize: '0.78rem', position: 'relative' }}
                     >
                       {isMemory ? 'BM' : agent.agent_num}
@@ -1894,7 +1895,7 @@ export default function ProjetoDetalhes() {
                         <div style={{ minWidth: 0 }}>
                           <h3 style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.35 }}>
                             <span style={{ color: 'var(--accent-blue)', marginRight: '0.45rem', fontWeight: 800 }}>A{out.agent_num}</span>
-                            {getAgenteByNum(out.agent_num)?.nome_exibicao || `Agente ${out.agent_num}`}
+                            {getNomeAdmin(out.agent_num)}
                           </h3>
                           {out.resumo_executivo ? (
                             <p style={{ margin: '0.28rem 0 0', color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -1966,7 +1967,7 @@ export default function ProjetoDetalhes() {
                   <div key={out.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '8px', padding: '0.6rem 1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: 700, minWidth: '2.5rem' }}>A{out.agent_num}</span>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{getAgenteByNum(out.agent_num)?.nome_exibicao || `Agente ${out.agent_num}`}</span>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{getNomeAdmin(out.agent_num)}</span>
                     </div>
                     <button
                       onClick={() => handleDeleteOutput(out.agent_num)}
@@ -2080,7 +2081,7 @@ export default function ProjetoDetalhes() {
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
                 {pickerMode === 'team-report'
                   ? `Relatório Comportamental Consolidado — ${data?.cisAssessments?.length || 0} respondente(s)`
-                  : `Agente ${pendingAgentNum} — ${getAgenteByNum(pendingAgentNum)?.nome_exibicao || ''}`}
+                  : `Agente ${pendingAgentNum} — ${getNomeAdmin(pendingAgentNum)}`}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {AI_MODELS.map(m => (

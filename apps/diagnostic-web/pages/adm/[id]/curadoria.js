@@ -25,7 +25,7 @@ import {
   STATUS_COR,
   getEffectiveField,
 } from '../../../lib/curadoria/labels';
-import { getAgenteByNum, CATALOGO_AGENTES } from '../../../lib/agents/catalog';
+import { getAgenteByNum, CATALOGO_AGENTES, getNomeAdmin } from '../../../lib/agents/catalog';
 
 export default function CuradoriaPage() {
   const router = useRouter();
@@ -210,7 +210,7 @@ export default function CuradoriaPage() {
                 <option value="">Todos os agentes</option>
                 {CATALOGO_AGENTES.map(a => (
                   <option key={a.agent_num} value={a.agent_num}>
-                    A{String(a.agent_num).padStart(2, '0')} — {a.nome_exibicao}
+                    A{String(a.agent_num).padStart(2, '0')} — {getNomeAdmin(a.agent_num)}
                   </option>
                 ))}
               </select>
@@ -317,7 +317,7 @@ function AgenteSection({ agentNum, items, onChange, defaultOpen = false }) {
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {meta?.nome_exibicao || `Agente ${agentNum}`}
+            {getNomeAdmin(agentNum)}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
             {items.length} {items.length === 1 ? 'bloco' : 'blocos'}

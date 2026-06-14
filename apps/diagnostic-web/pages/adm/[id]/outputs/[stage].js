@@ -34,28 +34,13 @@ import { validarTokenPdf } from '../../../../lib/pdf/pdfToken';
 import { extractStrategicTensionsFromAgent6Output } from '../../../../lib/strategic-tensions/extract';
 import { extractExecutionalReadinessFromAgent6Output } from '../../../../lib/executional-readiness/extract';
 import { extractVisualOperationalSliceFromAgent11Output } from '../../../../lib/visual-identity/operational';
+import { formatarTituloAdmin } from '../../../../lib/agents/catalog';
 
-const AGENT_NAMES = [
-  null,
-  '01. Roteiros VI — Entrevistas Internas',
-  '02. Consolidado da Visão Interna (VI)',
-  '03. Roteiros VE — Entrevistas Cliente',
-  '04. Consolidado da Visão Externa (VE)',
-  '05. Visão de Mercado (VM)',
-  '06. Decodificação e Direcionamento Estratégico',
-  '07. Valores e Atributos',
-  '08. Diretrizes Estratégicas',
-  '09. Plataforma de Branding',
-  '10. Identidade Verbal (UVV)',
-  '11. One Page de Personalidade',
-  '12. One Page de Experiência',
-  '13. Plano de Comunicação',
-];
-
+// Página admin → mostra os dois nomes ("02. Quem Somos · Visão Interna").
+// Fonte única: lib/agents/catalog.js (cobre os 16 agentes; o array
+// hardcoded antigo só tinha 13 e ficava obsoleto a cada mudança).
 function nomeAgente(num) {
-  const n = Number(num);
-  if (!Number.isFinite(n) || n < 1 || n >= AGENT_NAMES.length) return `Agente ${num}`;
-  return AGENT_NAMES[n];
+  return formatarTituloAdmin(num);
 }
 
 export async function getServerSideProps({ params, query, req, res }) {
