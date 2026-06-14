@@ -23,9 +23,12 @@ export const Agent_06_VisaoGeral = {
   checkpoint: 1,
   // FIX.12 — getUserPrompt injeta VI/VE/VM manualmente via dumpOutputLean.
   consumesContextInUserPrompt: true,
-  // FIX.12 — síntese pesada; cap acima do default 16000 gasta contexto
-  // sem benefício. 12k cabe ~10k palavras (limite pedido no prompt).
-  preferredMaxTokens: 12000,
+  // FIX.32 — síntese pesada: o Agente 6 emite DOIS documentos (PARTE A
+  // Analítico + PARTE B Devolutiva). Com 12k a PARTE B truncava no meio
+  // (modelos Gemini 3.x ainda gastam parte do orçamento com tokens de
+  // raciocínio). Subido para 16k (= cap default) para dar folga à PARTE B.
+  // Se ainda truncar, o guard de completude em pipeline.runAgent aborta.
+  preferredMaxTokens: 16000,
 
   getSystemPrompt() {
     return [

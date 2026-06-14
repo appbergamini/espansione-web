@@ -124,12 +124,14 @@ export const AIRouter = {
       let tokensIn = body?.usageMetadata?.promptTokenCount || 0;
       let tokensOut = body?.usageMetadata?.candidatesTokenCount || 0;
 
+      let finishReason = null;
       if (body.candidates && body.candidates.length > 0) {
-        let parts = body.candidates[0].content.parts;
+        finishReason = body.candidates[0].finishReason || null;
+        let parts = body.candidates[0].content?.parts || [];
         parts.forEach(p => { if (p.text) text += p.text; });
       }
 
-      return { text, tokensIn, tokensOut, model: modelId };
+      return { text, tokensIn, tokensOut, model: modelId, finishReason };
     });
   },
 
@@ -182,8 +184,9 @@ export const AIRouter = {
       let text = (body.choices && body.choices.length > 0) ? body.choices[0].message.content : "";
       let tokensIn = body.usage?.prompt_tokens || 0;
       let tokensOut = body.usage?.completion_tokens || 0;
+      let finishReason = body.choices?.[0]?.finish_reason || null;
 
-      return { text, tokensIn, tokensOut, model: body.model || modelId };
+      return { text, tokensIn, tokensOut, model: body.model || modelId, finishReason };
     });
   },
 
@@ -261,6 +264,7 @@ export const AIRouter = {
       let tokensOut = 0;
       let sawMessageStop = false;
       let streamError = null;
+      let stopReason = null;
 
       try {
         while (true) {
@@ -308,6 +312,8 @@ export const AIRouter = {
                 if (typeof evt.usage?.input_tokens === 'number' && evt.usage.input_tokens > tokensIn) {
                   tokensIn = evt.usage.input_tokens;
                 }
+                // stop_reason chega no message_delta ('end_turn' | 'max_tokens' | ...).
+                if (evt.delta?.stop_reason) stopReason = evt.delta.stop_reason;
                 break;
               case 'message_stop':
                 sawMessageStop = true;
@@ -329,7 +335,7 @@ export const AIRouter = {
         throw new Error('Claude stream: conexão fechou antes de message_stop');
       }
 
-      return { text, tokensIn, tokensOut, model: modelId };
+      return { text, tokensIn, tokensOut, model: modelId, finishReason: stopReason };
     });
   },
 

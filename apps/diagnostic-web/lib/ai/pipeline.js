@@ -339,6 +339,33 @@ export const Pipeline = {
       throw error;
     }
 
+    // FIX.32 — Guard de completude. O Agente 6 (e outros densos) já saiu
+    // truncado salvando como "ok" silenciosamente (PARTE B cortada no meio).
+    // Detectamos saída incompleta por dois sinais e abortamos ANTES de salvar:
+    //   (a) finish_reason de limite de tokens (Gemini MAX_TOKENS / OpenAI
+    //       length / Claude max_tokens);
+    //   (b) envelope <conteudo> aberto e nunca fechado (geração interrompida).
+    {
+      const rawOut = response.text || '';
+      const finish = String(response.finishReason || '').toUpperCase();
+      const truncadoPorLimite = ['MAX_TOKENS', 'LENGTH'].includes(finish);
+      const envelopeAberto = rawOut.includes('<conteudo>') && !rawOut.includes('</conteudo>');
+      if (truncadoPorLimite || envelopeAberto) {
+        const motivo = truncadoPorLimite
+          ? `o modelo atingiu o limite de tokens de saída (finish_reason=${finish})`
+          : 'o texto terminou sem fechar a seção <conteudo> (geração interrompida)';
+        const msg = `Agente ${agentNum}: saída truncada/incompleta — ${motivo}. Rode novamente, de preferência com um modelo maior ou com mais tokens.`;
+        await db.logExecution(projetoId, agentNum, {
+          status: 'truncado',
+          error: msg,
+          tokensIn: response.tokensIn,
+          tokensOut: response.tokensOut,
+          model: response.model,
+        });
+        throw new Error(msg);
+      }
+    }
+
     const parsed = prompts.agent.parseOutput(response.text);
     if (AGENTS_WITH_QUALITY_METADATA.has(agentNum)) {
       parsed.quality_metadata = parseQualityMetadataFromRaw(response.text);
