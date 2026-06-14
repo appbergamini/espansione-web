@@ -67,7 +67,7 @@ export default function Parte6Ativacao({ outputsByAgent, vizDataPorAgent }) {
 
       {!temAlgo && (
         <div className="empty-part-fallback">
-          A Ativação ainda não foi consolidada — aguardando o Agente 13.
+          A Ativação ainda não foi consolidada.
         </div>
       )}
     </section>

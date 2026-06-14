@@ -46,7 +46,7 @@ export default function Parte5Vivencia({ outputsByAgent, vizDataPorAgent, temEvp
 
       {!temAlgo && (
         <div className="empty-part-fallback">
-          A Vivência ainda não foi consolidada — aguardando Agentes 12 {temEvp && 'e 14'}.
+          A Vivência ainda não foi consolidada.
         </div>
       )}
     </section>

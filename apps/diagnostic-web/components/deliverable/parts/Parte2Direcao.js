@@ -61,7 +61,7 @@ export default function Parte2Direcao({ outputsByAgent, vizDataPorAgent }) {
 
       {!temAlgo && (
         <div className="empty-part-fallback">
-          A Direção ainda não foi consolidada — aguardando outputs dos Agentes 6, 7 e 8.
+          A Direção ainda não foi consolidada.
         </div>
       )}
     </section>

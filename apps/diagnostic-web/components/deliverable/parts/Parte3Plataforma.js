@@ -63,7 +63,7 @@ export default function Parte3Plataforma({ outputsByAgent, vizDataPorAgent }) {
 
       {!plataformaSemManifesto && !manifesto && (
         <div className="empty-part-fallback">
-          A Plataforma ainda não foi consolidada — aguardando o Agente 9.
+          A Plataforma ainda não foi consolidada.
         </div>
       )}
     </section>

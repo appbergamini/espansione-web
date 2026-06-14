@@ -44,7 +44,7 @@ export default function Parte4Expressao({ outputsByAgent, vizDataPorAgent }) {
 
       {!temAlgo && (
         <div className="empty-part-fallback">
-          A Expressão ainda não foi consolidada — aguardando Agentes 10 e 11.
+          A Expressão ainda não foi consolidada.
         </div>
       )}
     </section>
