@@ -47,12 +47,6 @@ export const TEXTOS = {
     3: 'Planejamento e acompanhamento acontecem com boa frequência, com espaço para antecipar desvios e ganhar escalabilidade.',
     4: 'A empresa transforma prioridades em planos claros, acompanha a execução, antecipa riscos e absorve crescimento sem perder o controle.',
   },
-  DP: {
-    1: 'A empresa ainda não tem clareza sobre como escolhe competir — eficiência, proximidade ou diferenciação aparecem de forma difusa, sem uma aposta consciente.',
-    2: 'Há sinais de uma direção competitiva, mas ela ainda não é deliberada nem sustentada com consistência nas decisões.',
-    3: 'A empresa já tem uma direção competitiva razoavelmente clara, com espaço para torná-la mais explícita e coerente em toda a operação.',
-    4: 'A empresa sabe como escolhe competir e sustenta essa aposta com consistência — seja por eficiência, proximidade, diferenciação ou inovação.',
-  },
 };
 
 export function getTextoInterpretativo(pillarCode, level) {
