@@ -13,20 +13,41 @@ export default function AdminPanel() {
 
   useEffect(() => {
     let active = true;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!active) return;
-      if (!session) { router.push('/login'); return; }
+    let settled = false;
 
+    async function decidir() {
+      if (!active || settled) return;
+      // getUser() revalida via cookie/refresh — mais robusto que getSession()
+      // logo após o login (evita falso "sem sessão" por timing de hidratação).
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!active) return;
+      if (!user) return; // ainda não assentou; o evento/timeout abaixo decidem
+      settled = true;
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
       if (!active) return;
-      if (profile?.role !== 'master' && profile?.role !== 'admin') { router.replace('/dashboard'); return; }
-    })();
-    return () => { active = false; };
+      if (profile?.role !== 'master' && profile?.role !== 'admin') router.replace('/dashboard');
+    }
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (event === 'SIGNED_OUT') { router.replace('/login'); return; }
+      if (session) decidir();
+    });
+
+    // primeira checagem após um tick (deixa o cookie hidratar); se em ~2s não
+    // houver usuário, aí sim manda pro login.
+    decidir();
+    const t = setTimeout(async () => {
+      if (!active || settled) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (active && !user) router.replace('/login');
+    }, 2000);
+
+    return () => { active = false; clearTimeout(t); sub?.subscription?.unsubscribe?.(); };
   }, [router]);
 
   useEffect(() => {
