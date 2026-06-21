@@ -9,6 +9,7 @@ import EntrevistaIASessoes from '../../components/EntrevistaIASessoes';
 import MapaMaturidadeCard from '../../components/MapaMaturidadeCard';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import ClustersCard from '../../components/clusters/ClustersCard';
+import { CompanyHeader, JourneyStepper, AdminTabs, VisaoGeral, FormulariosTab, PessoasTab, EntregaveisTab, PlaceholderTab } from '../../components/admin-cockpit/Cockpit';
 import ExecutionalReadinessPanel from '../../components/executional/ExecutionalReadinessPanel';
 import OutputQualityPanel from '../../components/output/OutputQualityPanel';
 import StrategicTensionsPanel from '../../components/strategic/StrategicTensionsPanel';
@@ -502,6 +503,10 @@ export default function ProjetoDetalhes() {
   const [transcritNome, setTranscritNome] = useState('');
   const [transcritSaving, setTranscritSaving] = useState(false);
 
+  // Cockpit da jornada (redesign por abas)
+  const [tab, setTab] = useState('visao');
+  const [cockpit, setCockpit] = useState(null);
+
   // Modal de envio de link por email
 
   // Busca todos os dados do BD via nossa rota central
@@ -513,6 +518,7 @@ export default function ProjetoDetalhes() {
       const json = await res.json();
       if (json.success) {
         setData(json.data);
+        fetch(`/api/adm/cockpit/${id}`).then((r) => r.json()).then((j) => { if (j.success) setCockpit(j.cockpit); }).catch(() => {});
       } else {
         setErrorMsg(json.error || 'Erro ao carregar dados');
       }
@@ -1361,6 +1367,25 @@ export default function ProjetoDetalhes() {
     return text.split('\n').map((line, i) => <span key={i}>{line}<br/></span>);
   };
 
+  const COCKPIT_TABS = [
+    { key: 'visao', label: 'Visão Geral' },
+    { key: 'esteira', label: 'Diagnóstico (esteira)' },
+    { key: 'formularios', label: 'Formulários' },
+    { key: 'pessoas', label: 'Pessoas' },
+    { key: 'entregaveis', label: 'Entregáveis' },
+    { key: 'trilhas', label: 'Trilhas' },
+    { key: 'historico', label: 'Histórico' },
+    { key: 'observacoes', label: 'Observações' },
+    { key: 'logs', label: 'Logs' },
+  ];
+  function onCockpitAction(action) {
+    const m = action?.module;
+    if (m === 'identity') { window.open(`/mapa-identidade/${id}`, '_blank'); return; }
+    if (m === 'disc') { setTab('esteira'); return; }
+    if (m === 'report') { setTab('entregaveis'); return; }
+    setTab('visao');
+  }
+
   return (
     <>
       <Head>
@@ -1395,12 +1420,27 @@ export default function ProjetoDetalhes() {
             </div>
           </div>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
-            <div style={{ flex: '1 1 100%' }}>
-              <h1 style={{ marginBottom: '1rem', fontSize: '2rem' }}>{projeto.cliente}</h1>
-            </div>
-          </div>
+          {cockpit ? (
+            <>
+              <CompanyHeader company={cockpit.company} nextAction={cockpit.summary?.next_action} onAction={onCockpitAction} />
+              <JourneyStepper journey={cockpit.journey} current={cockpit.current_step} />
+            </>
+          ) : (
+            <h1 style={{ marginBottom: '1rem', fontSize: '2rem' }}>{projeto.cliente}</h1>
+          )}
 
+          <AdminTabs active={tab} onChange={setTab} tabs={COCKPIT_TABS} />
+
+          {cockpit && tab === 'visao' && <VisaoGeral cockpit={cockpit} projetoId={id} onAction={onCockpitAction} />}
+          {cockpit && tab === 'formularios' && <FormulariosTab cockpit={cockpit} projetoId={id} />}
+          {cockpit && tab === 'pessoas' && <PessoasTab cockpit={cockpit} />}
+          {cockpit && tab === 'entregaveis' && <EntregaveisTab cockpit={cockpit} projetoId={id} />}
+          {tab === 'trilhas' && <PlaceholderTab titulo="Trilhas de Aprofundamento" texto="Liberadas quando o relatório indicar recomendações. Contextos: Sócio e Líder. (Em construção)" />}
+          {tab === 'historico' && <PlaceholderTab titulo="Histórico" texto="Linha do tempo da jornada da empresa. (Em construção)" />}
+          {tab === 'observacoes' && <PlaceholderTab titulo="Observações internas" texto="Notas da equipe Espansione sobre este cliente. (Em construção)" />}
+          {tab === 'logs' && <PlaceholderTab titulo="Logs" texto="Automações, geração de PDF, chamadas de IA e eventos do sistema. (Em construção)" />}
+
+          {tab === 'esteira' && (<>
           <section className={`glass-card outline-glow admin-flow-card${pendingCkpt ? ' admin-flow-card--checkpoint' : ''}`}>
             <div className="admin-flow-overview">
               <div className="admin-flow-status">
@@ -1994,6 +2034,7 @@ export default function ProjetoDetalhes() {
               </div>
             )}
           </details>
+          </>)}
         </main>
 
         {/* FIX.4 — Modal de confirmação de exclusão com preview de cascata */}
