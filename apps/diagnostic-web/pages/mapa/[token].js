@@ -270,22 +270,27 @@ function Resultado({ result, cliente, token }) {
   const radarData = result.pillars.map((p) => ({ eixo: encurtar(p.name), valor: p.percentage_score }));
   return (
     <Card wide>
-      <h1 style={sx.h1}>Mapa de Maturidade</h1>
-      {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.4rem' }}>{cliente}</p>}
+      <div style={sx.eyebrow}>Resultado · Mapa de Maturidade</div>
+      <h1 style={sx.h1}>{cliente || 'Mapa de Maturidade'}</h1>
+      <p style={{ ...sx.txtSec, marginTop: '-0.1rem', fontSize: '0.9rem' }}>Diagnóstico de maturidade organizacional</p>
 
       {/* Índice geral */}
       <div style={sx.indiceBox}>
-        <div style={sx.indiceNum}>{result.general_score}</div>
-        <div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary,#9aa)' }}>Índice Geral Espansione</div>
-          <div style={{ fontSize: '1.15rem', fontWeight: 700 }}>{result.general_level}</div>
+        <div style={sx.indiceAccent} />
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+          <span style={sx.indiceNum}>{result.general_score}</span>
+          <span style={{ fontSize: '1rem', color: 'var(--text-secondary,#9aa)' }}>/100</span>
+          <span style={{ marginLeft: 'auto', fontSize: '1.05rem', fontWeight: 700 }}>{result.general_level}</span>
         </div>
+        <div style={sx.gaugeOut}><div style={{ ...sx.gaugeIn, width: `${result.general_score}%` }} /></div>
+        <div style={sx.eyebrow}>Índice Geral Espansione</div>
       </div>
 
       {result.alert && <div style={sx.alerta}>⚠ {result.alert}</div>}
 
+      <div style={sx.sectionLabel}>Panorama dos 6 pilares</div>
       {/* Radar */}
-      <div style={{ width: '100%', height: 320, marginTop: '1rem' }}>
+      <div style={{ width: '100%', height: 320 }}>
         <ResponsiveContainer>
           <RadarChart data={radarData} outerRadius="72%">
             <PolarGrid stroke="rgba(255,255,255,0.12)" />
@@ -297,7 +302,8 @@ function Resultado({ result, cliente, token }) {
       </div>
 
       {/* Cards por pilar */}
-      <div style={{ marginTop: '1.4rem', display: 'grid', gap: '0.9rem' }}>
+      <div style={sx.sectionLabel}>Leitura por pilar</div>
+      <div style={{ display: 'grid', gap: '0.9rem' }}>
         {result.pillars.map((p) => (
           <div key={p.code} style={sx.pilarCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
@@ -321,7 +327,7 @@ function Resultado({ result, cliente, token }) {
       {/* Prioridades / trilhas */}
       {result.recommendations?.length > 0 && (
         <>
-          <h3 style={{ marginTop: '1.8rem', marginBottom: '0.6rem' }}>Prioridades recomendadas</h3>
+          <div style={sx.sectionLabel}>Prioridades recomendadas</div>
           <div style={{ display: 'grid', gap: '0.6rem' }}>
             {result.recommendations.map((rec) => (
               <div key={rec.pillar_code} style={sx.recCard}>
@@ -446,17 +452,21 @@ const sx = {
     cursor: 'pointer',
     transition: 'all 0.15s ease',
   }),
+  eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600 },
+  sectionLabel: { fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, margin: '1.7rem 0 0.7rem' },
   indiceBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    padding: '1rem 1.2rem',
-    borderRadius: 12,
+    position: 'relative',
+    overflow: 'hidden',
+    padding: '1.2rem 1.3rem',
+    borderRadius: 14,
     background: 'rgba(218,49,68,0.10)',
     border: '1px solid rgba(218,49,68,0.25)',
-    marginTop: '1rem',
+    marginTop: '1.1rem',
   },
-  indiceNum: { fontSize: '2.6rem', fontWeight: 800, color: '#Da3144', lineHeight: 1 },
+  indiceAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' },
+  indiceNum: { fontSize: '3rem', fontWeight: 800, color: '#Da3144', lineHeight: 1 },
+  gaugeOut: { height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden', margin: '0.6rem 0 0.45rem' },
+  gaugeIn: { height: '100%', background: 'linear-gradient(90deg, #Da3144, #f0667a)', borderRadius: 99 },
   alerta: {
     marginTop: '0.9rem',
     padding: '0.7rem 0.9rem',

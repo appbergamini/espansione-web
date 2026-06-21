@@ -119,29 +119,32 @@ function Resultado({ r, cliente }) {
   ].sort((a, b) => b.pct - a.pct);
   return (
     <Card wide>
-      <h1 style={sx.h1}>Território Estratégico de Valor</h1>
-      {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.4rem' }}>{cliente}</p>}
+      <div style={sx.eyebrow}>Resultado · Território de Valor</div>
+      <h1 style={sx.h1}>{cliente || 'Território Estratégico de Valor'}</h1>
+      <p style={{ ...sx.txtSec, marginTop: '-0.1rem', fontSize: '0.9rem' }}>Onde está o principal território de valor do negócio</p>
 
       <div style={sx.domBox}>
-        <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary,#9aa)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Território dominante</div>
-        <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#Da3144' }}>{r.dominant}</div>
-        {r.is_hybrid && <p style={{ ...sx.txtSec, fontSize: '0.86rem', margin: '0.4rem 0 0' }}>⚠ {r.tensao}</p>}
+        <div style={sx.domAccent} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={sx.eyebrow}>Território dominante</div>
+          {r.is_hybrid && <span style={sx.hibridoTag}>Híbrido</span>}
+        </div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#Da3144', marginTop: '0.2rem' }}>{r.dominant}</div>
+        {r.is_hybrid && <p style={{ ...sx.txtSec, fontSize: '0.86rem', margin: '0.5rem 0 0' }}>⚠ {r.tensao}</p>}
       </div>
 
-      <div style={{ marginTop: '1.2rem', display: 'grid', gap: '0.7rem' }}>
-        {linhas.map((l) => (
+      <div style={sx.sectionLabel}>Os três territórios</div>
+      <div style={{ display: 'grid', gap: '0.85rem' }}>
+        {linhas.map((l, i) => (
           <div key={l.code}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-              <span>{TERRITORIOS[l.code].nome}</span><span style={{ color: 'var(--text-secondary,#9aa)' }}>{l.pct}%</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+              <span><span style={sx.rank}>{i + 1}º</span> {TERRITORIOS[l.code].nome}</span>
+              <b style={{ color: i === 0 ? '#fca5b0' : 'var(--text-secondary,#9aa)' }}>{l.pct}%</b>
             </div>
-            <div style={sx.barOut}><div style={{ ...sx.barIn, width: `${l.pct}%` }} /></div>
+            <div style={sx.barOut}><div style={{ ...sx.barIn, width: `${l.pct}%`, opacity: i === 0 ? 1 : 0.55 }} /></div>
           </div>
         ))}
       </div>
-
-      <p style={{ ...sx.txtSec, fontSize: '0.86rem', marginTop: '1.4rem' }}>
-        Dominante: <b>{r.dominant}</b> · Secundário: <b>{r.secondary}</b> · Menos desenvolvido: <b>{r.weakest}</b>.
-      </p>
     </Card>
   );
 }
@@ -178,7 +181,12 @@ const sx = {
     color: ativo ? '#fca5b0' : 'var(--text-secondary, #9aa)', fontSize: '0.85rem', cursor: 'pointer',
   }),
   navRow: { display: 'flex', justifyContent: 'space-between', gap: '0.6rem', marginTop: '1.6rem' },
-  domBox: { marginTop: '1rem', padding: '1rem 1.2rem', borderRadius: 12, background: 'rgba(218,49,68,0.10)', border: '1px solid rgba(218,49,68,0.25)' },
+  eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600 },
+  sectionLabel: { fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, margin: '1.7rem 0 0.7rem' },
+  domBox: { position: 'relative', overflow: 'hidden', marginTop: '1.1rem', padding: '1.1rem 1.3rem', borderRadius: 14, background: 'rgba(218,49,68,0.10)', border: '1px solid rgba(218,49,68,0.25)' },
+  domAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' },
+  hibridoTag: { fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.55rem', borderRadius: 99, color: '#fde68a', background: 'rgba(234,179,8,0.16)', whiteSpace: 'nowrap' },
+  rank: { color: '#fca5b0', fontWeight: 700, fontSize: '0.82rem', marginRight: '0.2rem' },
   barOut: { height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
   barIn: { height: '100%', background: '#Da3144', borderRadius: 99 },
 };
