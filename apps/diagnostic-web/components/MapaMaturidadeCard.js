@@ -9,6 +9,7 @@ export default function MapaMaturidadeCard({ projetoId }) {
   const [resumo, setResumo] = useState(null); // { general_score, general_level }
   const [erro, setErro] = useState(null);
   const [copiado, setCopiado] = useState(false);
+  const [pdf, setPdf] = useState('idle'); // idle|gerando|erro
 
   useEffect(() => {
     if (!projetoId) return;
@@ -53,6 +54,27 @@ export default function MapaMaturidadeCard({ projetoId }) {
     setTimeout(() => setCopiado(false), 1800);
   }
 
+  async function baixarPdf() {
+    if (!assessment) return;
+    setPdf('gerando');
+    try {
+      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(assessment.token)}`);
+      if (!r.ok) throw new Error('falha');
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mapa-de-maturidade.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setPdf('idle');
+    } catch {
+      setPdf('erro');
+    }
+  }
+
   return (
     <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(218,49,68,0.25)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
@@ -88,6 +110,15 @@ export default function MapaMaturidadeCard({ projetoId }) {
           >
             {assessment.status === 'concluido' ? 'Ver resultado →' : 'Abrir →'}
           </a>
+          {assessment.status === 'concluido' && (
+            <button
+              onClick={baixarPdf}
+              disabled={pdf === 'gerando'}
+              style={{ background: 'rgba(0,50,109,0.18)', border: '1px solid rgba(0,50,109,0.4)', color: '#9bb8e0', borderRadius: 8, padding: '0.5rem 0.9rem', cursor: pdf === 'gerando' ? 'default' : 'pointer', fontSize: '0.85rem', opacity: pdf === 'gerando' ? 0.6 : 1 }}
+            >
+              {pdf === 'gerando' ? 'Gerando…' : pdf === 'erro' ? 'Erro — repetir' : '⬇ Baixar PDF'}
+            </button>
+          )}
         </div>
       )}
     </div>

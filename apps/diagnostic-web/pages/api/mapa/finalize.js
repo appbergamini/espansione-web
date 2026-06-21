@@ -5,7 +5,7 @@
 // resultado consolidado e marca a avaliação como concluída.
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
-import { PERGUNTAS_OBRIGATORIAS } from '../../../lib/mapa-maturidade/pilares';
+import { PERGUNTAS_TODAS } from '../../../lib/mapa-maturidade/pilares';
 import { buildResult } from '../../../lib/mapa-maturidade/scoring';
 
 export default async function handler(req, res) {
@@ -39,8 +39,8 @@ export default async function handler(req, res) {
   const answers = {};
   for (const r of rows || []) answers[r.question_code] = r.value;
 
-  // valida completude das 30 obrigatórias
-  const faltando = PERGUNTAS_OBRIGATORIAS.filter((q) => typeof answers[q.code] !== 'number').map(
+  // valida completude das 48 (todas obrigatórias)
+  const faltando = PERGUNTAS_TODAS.filter((q) => typeof answers[q.code] !== 'number').map(
     (q) => q.code
   );
   if (faltando.length) {

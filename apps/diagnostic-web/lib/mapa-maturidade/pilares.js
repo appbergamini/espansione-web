@@ -22,8 +22,13 @@ export const ESCALA = [
 
 export const VALOR_NUNCA = 0;
 export const MAX_POR_PERGUNTA = 3;
-export const PERGUNTAS_POR_PILAR = 5;
-export const MAX_SCORE_PILAR = PERGUNTAS_POR_PILAR * MAX_POR_PERGUNTA; // 15
+// Decisão 2026-06-21: cada pilar tem 5 afirmações-base + 3 de aprofundamento =
+// 8 perguntas, TODAS obrigatórias e TODAS contando no score (não há mais etapa
+// adaptativa). Pontuação máxima por pilar = 8 × 3 = 24.
+export const PERGUNTAS_BASE_POR_PILAR = 5;
+export const PERGUNTAS_APROFUNDAMENTO_POR_PILAR = 3;
+export const PERGUNTAS_POR_PILAR = PERGUNTAS_BASE_POR_PILAR + PERGUNTAS_APROFUNDAMENTO_POR_PILAR; // 8
+export const MAX_SCORE_PILAR = PERGUNTAS_POR_PILAR * MAX_POR_PERGUNTA; // 24
 
 // label legível a partir do valor numérico
 export function labelDaResposta(value) {
@@ -179,12 +184,29 @@ export const PILAR_BY_CODE = Object.fromEntries(PILARES.map((p) => [p.code, p]))
 
 export const PILARES_ORDENADOS = [...PILARES].sort((a, b) => a.order - b.order);
 
-// todas as perguntas obrigatórias, em ordem de pilar
+// as 8 perguntas de um pilar (5 base + 3 aprofundamento), na ordem de exibição.
+// Todas pontuam. `is_deepening` distingue só para agrupamento de UI / IA.
+export function perguntasDoPilar(code) {
+  const p = PILAR_BY_CODE[code];
+  if (!p) return [];
+  return [
+    ...p.perguntas.map((q, i) => ({ ...q, pillar_code: code, is_deepening: false, ordem: i + 1 })),
+    ...p.aprofundamento.map((q, i) => ({
+      ...q,
+      pillar_code: code,
+      is_deepening: true,
+      ordem: p.perguntas.length + i + 1,
+    })),
+  ];
+}
+
+// todas as 48 perguntas (8 × 6), em ordem de pilar — usado para validar completude
+export const PERGUNTAS_TODAS = PILARES_ORDENADOS.flatMap((p) => perguntasDoPilar(p.code));
+
+// só as 30 afirmações-base (compat) e o aprofundamento indexado por pilar
 export const PERGUNTAS_OBRIGATORIAS = PILARES_ORDENADOS.flatMap((p) =>
   p.perguntas.map((q) => ({ ...q, pillar_code: p.code, is_deepening: false }))
 );
-
-// todas as perguntas de aprofundamento, indexadas por pilar
 export const APROFUNDAMENTO_BY_PILAR = Object.fromEntries(
   PILARES.map((p) => [
     p.code,
@@ -198,6 +220,16 @@ export const PERGUNTA_PILAR = (() => {
   for (const p of PILARES) {
     for (const q of p.perguntas) map[q.code] = p.code;
     for (const q of p.aprofundamento) map[q.code] = p.code;
+  }
+  return map;
+})();
+
+// code -> texto da afirmação (todas as 48); usado no relatório IA/PDF
+export const PERGUNTA_TEXTO = (() => {
+  const map = {};
+  for (const p of PILARES) {
+    for (const q of p.perguntas) map[q.code] = q.text;
+    for (const q of p.aprofundamento) map[q.code] = q.text;
   }
   return map;
 })();

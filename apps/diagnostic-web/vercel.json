@@ -12,6 +12,9 @@
     "pages/api/engine/run.js": {
       "maxDuration": 300
     },
+    "pages/api/mapa/report.js": {
+      "maxDuration": 120
+    },
     "pages/api/agency/requests/[id]/prepare-run.js": {
       "maxDuration": 300
     },

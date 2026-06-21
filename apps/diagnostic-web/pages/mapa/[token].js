@@ -14,14 +14,14 @@ import {
   PILARES_ORDENADOS,
   PILAR_BY_CODE,
   ESCALA,
-  APROFUNDAMENTO_BY_PILAR,
+  PERGUNTAS_BASE_POR_PILAR,
+  perguntasDoPilar,
 } from '../../lib/mapa-maturidade/pilares';
-import { buildResult } from '../../lib/mapa-maturidade/scoring';
 
 // =====================================================================
 // Mapa de Maturidade Espansione — página pública (acesso por token)
-// Fluxo: intro → 30 obrigatórias (1 pilar por tela) → aprofundamento
-// adaptativo (só pilares Nível 1/2) → resultado.
+// Fluxo: intro → 6 pilares (8 afirmações cada: 5 base + 3 aprofundamento,
+// TODAS obrigatórias e contando no score) → resultado.
 // O score exibido é o AUTORITATIVO devolvido por /api/mapa/finalize
 // (recomputado no servidor a partir das respostas persistidas).
 // =====================================================================
@@ -33,11 +33,8 @@ export default function MapaMaturidadePage() {
   const [fase, setFase] = useState('loading'); // loading|erro|intro|quiz|aprofundamento|enviando|resultado
   const [erro, setErro] = useState(null);
   const [cliente, setCliente] = useState('');
-  const [answers, setAnswers] = useState({}); // obrigatórias {code:value}
-  const [deepAnswers, setDeepAnswers] = useState({}); // aprofundamento {code:value}
+  const [answers, setAnswers] = useState({}); // todas as 48 {code:value}
   const [pilarIdx, setPilarIdx] = useState(0);
-  const [deepList, setDeepList] = useState([]); // pilares selecionados p/ aprofundar
-  const [deepIdx, setDeepIdx] = useState(0);
   const [result, setResult] = useState(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -59,10 +56,9 @@ export default function MapaMaturidadePage() {
           setFase('resultado');
           return;
         }
-        setAnswers(data.answers || {});
-        setDeepAnswers(data.deepening_answers || {});
-        const temRespostas = Object.keys(data.answers || {}).length > 0;
-        setFase(temRespostas ? 'quiz' : 'intro');
+        const merged = { ...(data.answers || {}), ...(data.deepening_answers || {}) };
+        setAnswers(merged);
+        setFase(Object.keys(merged).length > 0 ? 'quiz' : 'intro');
       } catch (e) {
         setErro('Não foi possível abrir o diagnóstico.');
         setFase('erro');
@@ -83,11 +79,12 @@ export default function MapaMaturidadePage() {
     }
   }
 
-  // ── quiz obrigatório (pilar por pilar) ───────────────────────────
+  // ── quiz (pilar por pilar, 8 afirmações cada) ────────────────────
   const pilar = PILARES_ORDENADOS[pilarIdx];
+  const perguntasPilar = useMemo(() => (pilar ? perguntasDoPilar(pilar.code) : []), [pilar]);
   const pilarCompleto = useMemo(
-    () => (pilar ? pilar.perguntas.every((q) => typeof answers[q.code] === 'number') : false),
-    [pilar, answers]
+    () => perguntasPilar.length > 0 && perguntasPilar.every((q) => typeof answers[q.code] === 'number'),
+    [perguntasPilar, answers]
   );
 
   function responder(code, value) {
@@ -97,25 +94,15 @@ export default function MapaMaturidadePage() {
   async function proximoPilar() {
     setSalvando(true);
     const lote = {};
-    for (const q of pilar.perguntas) lote[q.code] = answers[q.code];
+    for (const q of perguntasPilar) lote[q.code] = answers[q.code];
     await salvarRespostas(lote);
     setSalvando(false);
 
     if (pilarIdx < PILARES_ORDENADOS.length - 1) {
       setPilarIdx((i) => i + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    // última etapa obrigatória → decide aprofundamento (client-side, prévia)
-    const previa = buildResult(answers);
-    const selecionados = previa.deepening_pillars || [];
-    if (selecionados.length === 0) {
-      await finalizar();
     } else {
-      setDeepList(selecionados);
-      setDeepIdx(0);
-      setFase('aprofundamento');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      await finalizar();
     }
   }
 
@@ -123,30 +110,6 @@ export default function MapaMaturidadePage() {
     if (pilarIdx > 0) {
       setPilarIdx((i) => i - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  // ── aprofundamento ───────────────────────────────────────────────
-  const deepPilarCode = deepList[deepIdx];
-  const deepPerguntas = deepPilarCode ? APROFUNDAMENTO_BY_PILAR[deepPilarCode] || [] : [];
-  const deepCompleto = deepPerguntas.every((q) => typeof deepAnswers[q.code] === 'number');
-
-  function responderDeep(code, value) {
-    setDeepAnswers((prev) => ({ ...prev, [code]: value }));
-  }
-
-  async function proximoDeep() {
-    setSalvando(true);
-    const lote = {};
-    for (const q of deepPerguntas) lote[q.code] = deepAnswers[q.code];
-    await salvarRespostas(lote);
-    setSalvando(false);
-
-    if (deepIdx < deepList.length - 1) {
-      setDeepIdx((i) => i + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      await finalizar();
     }
   }
 
@@ -225,14 +188,16 @@ export default function MapaMaturidadePage() {
             {pilar.description && <p style={{ ...sx.txtSec, fontSize: '0.9rem' }}>{pilar.description}</p>}
 
             <div style={{ marginTop: '1.4rem' }}>
-              {pilar.perguntas.map((q, i) => (
-                <Afirmacao
-                  key={q.code}
-                  numero={i + 1}
-                  texto={q.text}
-                  valor={answers[q.code]}
-                  onSelect={(v) => responder(q.code, v)}
-                />
+              {perguntasPilar.map((q, i) => (
+                <div key={q.code}>
+                  {i === PERGUNTAS_BASE_POR_PILAR && <p style={sx.subdiv}>Aprofundamento</p>}
+                  <Afirmacao
+                    numero={i + 1}
+                    texto={q.text}
+                    valor={answers[q.code]}
+                    onSelect={(v) => responder(q.code, v)}
+                  />
+                </div>
               ))}
             </div>
 
@@ -241,37 +206,7 @@ export default function MapaMaturidadePage() {
                 ← Voltar
               </button>
               <button className="btn-primary" onClick={proximoPilar} disabled={!pilarCompleto || salvando} style={{ opacity: pilarCompleto && !salvando ? 1 : 0.5 }}>
-                {pilarIdx < PILARES_ORDENADOS.length - 1 ? 'Próximo pilar →' : 'Concluir etapa →'}
-              </button>
-            </div>
-          </Card>
-        )}
-
-        {fase === 'aprofundamento' && deepPilarCode && (
-          <Card wide>
-            <Progresso atual={deepIdx + 1} total={deepList.length} rotulo="Aprofundamento" />
-            <p style={sx.txtSec}>
-              Alguns pilares precisam de uma leitura mais precisa. Responda às próximas afirmações
-              para aprofundar o diagnóstico.
-            </p>
-            <h2 style={sx.h2}>{PILAR_BY_CODE[deepPilarCode]?.name}</h2>
-
-            <div style={{ marginTop: '1.2rem' }}>
-              {deepPerguntas.map((q, i) => (
-                <Afirmacao
-                  key={q.code}
-                  numero={i + 1}
-                  texto={q.text}
-                  valor={deepAnswers[q.code]}
-                  onSelect={(v) => responderDeep(q.code, v)}
-                />
-              ))}
-            </div>
-
-            <div style={sx.navRow}>
-              <span />
-              <button className="btn-primary" onClick={proximoDeep} disabled={!deepCompleto || salvando} style={{ opacity: deepCompleto && !salvando ? 1 : 0.5 }}>
-                {deepIdx < deepList.length - 1 ? 'Próximo →' : 'Ver resultado →'}
+                {pilarIdx < PILARES_ORDENADOS.length - 1 ? 'Próximo pilar →' : 'Ver resultado →'}
               </button>
             </div>
           </Card>
@@ -283,7 +218,7 @@ export default function MapaMaturidadePage() {
           </Card>
         )}
 
-        {fase === 'resultado' && result && <Resultado result={result} cliente={cliente} />}
+        {fase === 'resultado' && result && <Resultado result={result} cliente={cliente} token={token} />}
       </div>
     </>
   );
@@ -331,7 +266,7 @@ function Progresso({ atual, total, rotulo }) {
   );
 }
 
-function Resultado({ result, cliente }) {
+function Resultado({ result, cliente, token }) {
   const radarData = result.pillars.map((p) => ({ eixo: encurtar(p.name), valor: p.percentage_score }));
   return (
     <Card wide>
@@ -402,14 +337,44 @@ function Resultado({ result, cliente }) {
       )}
 
       <div style={{ ...sx.navRow, marginTop: '1.8rem' }}>
-        <button style={sx.btnGhost(true)} disabled title="Em breve">
-          Baixar relatório (em breve)
-        </button>
+        <BaixarPdf token={token} />
         <button style={sx.btnGhost(true)} disabled title="Em breve">
           Mapa de Identidade Estratégica (em breve)
         </button>
       </div>
     </Card>
+  );
+}
+
+// Baixa o relatório detalhado em PDF (gerado por IA no servidor). A primeira
+// geração chama o modelo e pode levar alguns segundos; depois fica em cache.
+function BaixarPdf({ token }) {
+  const [estado, setEstado] = useState('idle'); // idle|gerando|erro
+
+  async function baixar() {
+    setEstado('gerando');
+    try {
+      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(token)}`);
+      if (!r.ok) throw new Error('falha');
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mapa-de-maturidade.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setEstado('idle');
+    } catch {
+      setEstado('erro');
+    }
+  }
+
+  return (
+    <button className="btn-primary" onClick={baixar} disabled={estado === 'gerando'} style={{ opacity: estado === 'gerando' ? 0.6 : 1 }}>
+      {estado === 'gerando' ? 'Gerando relatório…' : estado === 'erro' ? 'Erro — tentar de novo' : '⬇ Baixar relatório (PDF)'}
+    </button>
   );
 }
 
@@ -441,6 +406,15 @@ const sx = {
   h2: { fontSize: '1.25rem', margin: '0.4rem 0 0.2rem' },
   txtSec: { color: 'var(--text-secondary, #9aa)', lineHeight: 1.6 },
   progLabel: { fontSize: '0.78rem', color: 'var(--text-secondary, #9aa)' },
+  subdiv: {
+    margin: '0.8rem 0 0',
+    paddingTop: '0.8rem',
+    borderTop: '1px solid rgba(218,49,68,0.25)',
+    fontSize: '0.78rem',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    color: '#fca5b0',
+  },
   barraOut: { height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
   barraIn: { height: '100%', background: '#Da3144', transition: 'width 0.3s ease' },
   navRow: { display: 'flex', justifyContent: 'space-between', gap: '0.6rem', marginTop: '1.6rem' },

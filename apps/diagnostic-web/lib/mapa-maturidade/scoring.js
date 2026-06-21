@@ -10,21 +10,23 @@
 //   no MVP (seção 5 do spec); ficam guardadas para interpretação futura.
 
 import {
-  PILARES,
   PILARES_ORDENADOS,
   PILAR_BY_CODE,
-  ORDEM_DESEMPATE,
   MAX_SCORE_PILAR,
   VALOR_NUNCA,
+  perguntasDoPilar,
 } from './pilares';
 import { getTextoInterpretativo } from './textos';
 
-// ── Níveis de maturidade por pilar (pontuação bruta) ────────────────
+// ── Níveis de maturidade por pilar (pontuação bruta, 0–24) ──────────
+// Recalibrado em 2026-06-21 quando o aprofundamento passou a contar (8
+// perguntas, max 24). Os cortes mantêm quase exatamente as faixas % do
+// modelo original de 15 pontos (29% / 54% / 79% / 100%).
 export const NIVEIS = [
-  { level: 1, name: 'Reativo', min: 0, max: 4 },
-  { level: 2, name: 'Em estruturação', min: 5, max: 8 },
-  { level: 3, name: 'Em consolidação', min: 9, max: 12 },
-  { level: 4, name: 'Integrado', min: 13, max: 15 },
+  { level: 1, name: 'Reativo', min: 0, max: 7 },
+  { level: 2, name: 'Em estruturação', min: 8, max: 13 },
+  { level: 3, name: 'Em consolidação', min: 14, max: 19 },
+  { level: 4, name: 'Integrado', min: 20, max: 24 },
 ];
 
 // ── Faixas do Índice Geral Espansione ───────────────────────────────
@@ -43,18 +45,16 @@ const ALERTA_MATURIDADE_DESIGUAL =
 
 // ── helpers internos ────────────────────────────────────────────────
 
-// valores das 5 obrigatórias de um pilar, na ordem definida (ignora ausentes)
-function valoresObrigatorios(answers, pillarCode) {
-  const pilar = PILAR_BY_CODE[pillarCode];
-  if (!pilar) return [];
-  return pilar.perguntas
+// valores das 8 perguntas de um pilar (base + aprofundamento), ignora ausentes
+function valoresDoPilar(answers, pillarCode) {
+  return perguntasDoPilar(pillarCode)
     .map((q) => answers[q.code])
     .filter((v) => typeof v === 'number');
 }
 
-// ── seção 6: score bruto do pilar ───────────────────────────────────
+// ── score bruto do pilar (soma das 8) ───────────────────────────────
 export function calculatePillarScore(answers, pillarCode) {
-  return valoresObrigatorios(answers, pillarCode).reduce((sum, v) => sum + v, 0);
+  return valoresDoPilar(answers, pillarCode).reduce((sum, v) => sum + v, 0);
 }
 
 // score percentual = bruto / 15 * 100 (inteiro)
@@ -81,10 +81,10 @@ export function classifyPillarLevel(rawScore, pillarAnswerValues = []) {
   return { level, name, criticalGap, nuncaCount };
 }
 
-// resultado completo de um pilar (estrutura PillarResult, seção 11/12)
+// resultado completo de um pilar (estrutura PillarResult)
 export function computePillarResult(answers, pillarCode) {
   const pilar = PILAR_BY_CODE[pillarCode];
-  const values = valoresObrigatorios(answers, pillarCode);
+  const values = valoresDoPilar(answers, pillarCode);
   const raw = values.reduce((sum, v) => sum + v, 0);
   const { level, name, criticalGap, nuncaCount } = classifyPillarLevel(raw, values);
   return {
@@ -97,7 +97,6 @@ export function computePillarResult(answers, pillarCode) {
     level_name: name,
     critical_gap: criticalGap,
     nunca_count: nuncaCount,
-    deepening_required: false, // definido após selectDeepeningPillars
   };
 }
 
@@ -119,23 +118,7 @@ export function classifyGeneralLevel(generalScore) {
   return faixa.name;
 }
 
-// ── seção 5: seleção de pilares para aprofundamento ─────────────────
-// Candidatos: pilares em Nível 1 ou 2 (raw 0–8). Se mais de 3 candidatos,
-// leva os 3 PIORES (menor raw). Empate → ORDEM_DESEMPATE.
-export function selectDeepeningPillars(pillarResults) {
-  const candidatos = pillarResults.filter((p) => p.level <= 2);
-  const prioridade = (code) => {
-    const i = ORDEM_DESEMPATE.indexOf(code);
-    return i === -1 ? ORDEM_DESEMPATE.length : i;
-  };
-  const ordenados = [...candidatos].sort((a, b) => {
-    if (a.raw_score !== b.raw_score) return a.raw_score - b.raw_score; // pior primeiro
-    return prioridade(a.code) - prioridade(b.code);
-  });
-  return ordenados.slice(0, 3).map((p) => p.code);
-}
-
-// ── seção 9: recomendações de trilhas ───────────────────────────────
+// ── recomendações de trilhas ────────────────────────────────────────
 // Os 3 pilares com menor score percentual viram recomendação.
 function prioridadePorNivel(level) {
   if (level <= 2) return 'Alta';
@@ -173,16 +156,13 @@ export function generateRecommendations(pillarResults) {
   });
 }
 
-// ── orquestração: resultado completo (objeto JSON da seção 12) ──────
-// `answers` = obrigatórias (+ aprofundamento, ignorado no score).
+// ── orquestração: resultado completo ────────────────────────────────
+// `answers` = todas as 48 (base + aprofundamento), todas contando no score.
 // `meta` opcional = { assessment_id, projeto_id, company_id }.
 export function buildResult(answers, meta = {}) {
   const pillars = computeAllPillars(answers);
 
-  // marca quais pilares pedem aprofundamento (após o cap de 3)
-  const aprofundar = new Set(selectDeepeningPillars(pillars));
   for (const p of pillars) {
-    p.deepening_required = aprofundar.has(p.code);
     p.interpretation = getTextoInterpretativo(p.code, p.level);
   }
 
@@ -211,7 +191,6 @@ export function buildResult(answers, meta = {}) {
     pillars,
     critical_pillars: criticos,
     strong_pillars: fortes,
-    deepening_pillars: [...aprofundar],
     alert: alerta,
     recommendations: generateRecommendations(pillars),
   };
