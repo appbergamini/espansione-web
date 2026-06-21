@@ -15,26 +15,44 @@ export default function ResetPassword() {
   const [noSession, setNoSession] = useState(false);
 
   useEffect(() => {
-    // O cliente @supabase/ssr consome o token do hash (#access_token=...&type=recovery)
-    // automaticamente e dispara um evento PASSWORD_RECOVERY. Esperamos ele, mas também
-    // checamos sessão direto pra casos em que o evento já passou antes do listener montar.
+    // O app usa PKCE: o link de recuperação volta com `?code=` (não `#access_token`).
+    // O cliente @supabase/ssr troca o code por sessão automaticamente (detectSessionInUrl)
+    // e dispara PASSWORD_RECOVERY/SIGNED_IN. Tratamos os 3 cenários: erro (link
+    // expirado/consumido), code/token presente (aguardar troca) e sem nada (link inválido).
     let cancelled = false;
+    const q = new URLSearchParams(window.location.search);
+    const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const temErro = q.get('error') || q.get('error_code') || h.get('error') || h.get('error_code');
+    const temCode = !!q.get('code');
+    const temHashToken = window.location.hash.includes('access_token');
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    if (temErro) { setNoSession(true); return; }
+
+    const marcarPronto = () => { if (!cancelled) setReady(true); };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true);
-      }
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || session) marcarPronto();
     });
 
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
-      if (data?.session) setReady(true);
-      else if (!window.location.hash.includes('access_token')) setNoSession(true);
+      if (data?.session) marcarPronto();
+      else if (!temCode && !temHashToken) setNoSession(true); // sem sessão e sem token → inválido
+      // com code/token: o cliente troca sozinho; aguardamos o evento (+ fallback abaixo).
     });
+
+    // fallback: se a troca não resolver em 7s (code consumido/inválido), mostra erro amigável
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      supabase.auth.getSession().then(({ data }) => {
+        if (!cancelled && !data?.session) setNoSession(true);
+      });
+    }, 7000);
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
       sub?.subscription?.unsubscribe?.();
     };
   }, []);
