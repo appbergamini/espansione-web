@@ -14,7 +14,7 @@ import {
   PILARES_ORDENADOS,
   PILAR_BY_CODE,
   ESCALA,
-  PERGUNTAS_BASE_POR_PILAR,
+  OPCAO_NAO_SEI,
   perguntasDoPilar,
 } from '../../lib/mapa-maturidade/pilares';
 
@@ -190,15 +190,13 @@ export default function MapaMaturidadePage() {
 
             <div style={{ marginTop: '1.4rem' }}>
               {perguntasPilar.map((q, i) => (
-                <div key={q.code}>
-                  {i === PERGUNTAS_BASE_POR_PILAR && <p style={sx.subdiv}>Aprofundamento</p>}
-                  <Afirmacao
-                    numero={i + 1}
-                    texto={q.text}
-                    valor={answers[q.code]}
-                    onSelect={(v) => responder(q.code, v)}
-                  />
-                </div>
+                <Afirmacao
+                  key={q.code}
+                  numero={i + 1}
+                  texto={q.text}
+                  valor={answers[q.code]}
+                  onSelect={(v) => responder(q.code, v)}
+                />
               ))}
             </div>
 
@@ -247,6 +245,13 @@ function Afirmacao({ numero, texto, valor, onSelect }) {
             </button>
           );
         })}
+        <button
+          onClick={() => onSelect(OPCAO_NAO_SEI.value)}
+          style={sx.opcaoNaoSei(valor === OPCAO_NAO_SEI.value)}
+          type="button"
+        >
+          {OPCAO_NAO_SEI.label}
+        </button>
       </div>
     </div>
   );
@@ -268,7 +273,7 @@ function Progresso({ atual, total, rotulo }) {
 }
 
 function Resultado({ result, cliente, token }) {
-  const radarData = result.pillars.map((p) => ({ eixo: encurtar(p.name), valor: p.percentage_score }));
+  const radarData = result.pillars.map((p) => ({ eixo: encurtar(p.name), valor: p.percentage_score ?? 0 }));
   return (
     <Card wide>
       <div style={sx.eyebrow}>Resultado · Mapa de Maturidade</div>
@@ -309,16 +314,20 @@ function Resultado({ result, cliente, token }) {
           <div key={p.code} style={sx.pilarCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
               <strong style={{ fontSize: '1.02rem' }}>{p.name}</strong>
-              <span style={sx.nivelTag(p.level)}>Nível {p.level} — {p.level_name}</span>
+              {p.evaluated
+                ? <span style={sx.nivelTag(p.level)}>Nível {p.level} — {p.level_name}</span>
+                : <span style={{ ...sx.nivelTag(2), background: 'rgba(255,255,255,0.06)', color: '#9aa3ad' }}>Não avaliado</span>}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.5rem 0' }}>
-              <div style={sx.miniBarOut}>
-                <div style={{ ...sx.miniBarIn, width: `${p.percentage_score}%` }} />
+            {p.evaluated && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.5rem 0' }}>
+                <div style={sx.miniBarOut}>
+                  <div style={{ ...sx.miniBarIn, width: `${p.percentage_score}%` }} />
+                </div>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary,#9aa)', whiteSpace: 'nowrap' }}>
+                  {p.percentage_score}% · {p.raw_score}/{p.max_score}{p.unknown_count ? ` · ${p.unknown_count} "não sei"` : ''}
+                </span>
               </div>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary,#9aa)', whiteSpace: 'nowrap' }}>
-                {p.percentage_score}% · {p.raw_score}/{p.max_score}
-              </span>
-            </div>
+            )}
             <p style={{ ...sx.txtSec, fontSize: '0.9rem', margin: 0 }}>{p.interpretation}</p>
             {p.critical_gap && <p style={sx.lacuna}>Lacunas críticas identificadas neste pilar.</p>}
           </div>
@@ -451,6 +460,17 @@ const sx = {
     background: ativo ? 'rgba(218,49,68,0.18)' : 'rgba(255,255,255,0.03)',
     color: ativo ? '#fca5b0' : 'var(--text-secondary, #9aa)',
     fontSize: '0.88rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  }),
+  opcaoNaoSei: (ativo) => ({
+    flex: '0 0 auto',
+    padding: '0.55rem 0.9rem',
+    borderRadius: 8,
+    border: ativo ? '1px dashed #9aa3ad' : '1px dashed rgba(255,255,255,0.16)',
+    background: ativo ? 'rgba(255,255,255,0.08)' : 'transparent',
+    color: ativo ? '#cbd5e1' : 'var(--text-secondary, #9aa)',
+    fontSize: '0.82rem',
     cursor: 'pointer',
     transition: 'all 0.15s ease',
   }),

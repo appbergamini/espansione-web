@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         if (!pillar) {
           return res.status(400).json({ success: false, error: `Pergunta desconhecida: ${code}` });
         }
-        if (![0, 1, 2, 3].includes(value)) {
+        if (![-1, 0, 1, 2, 3].includes(value)) {
           return res.status(400).json({ success: false, error: `Valor inválido para ${code}` });
         }
         rows.push({

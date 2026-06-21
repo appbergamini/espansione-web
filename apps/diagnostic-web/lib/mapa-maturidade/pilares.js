@@ -21,6 +21,8 @@ export const ESCALA = [
 ];
 
 export const VALOR_NUNCA = 0;
+export const VALOR_NAO_SEI = -1; // "Não sei" — NÃO conta no score (excluído do pilar)
+export const OPCAO_NAO_SEI = { value: VALOR_NAO_SEI, label: 'Não sei' };
 export const MAX_POR_PERGUNTA = 3;
 // Decisão 2026-06-21: cada pilar tem 5 afirmações-base + 3 de aprofundamento =
 // 8 perguntas, TODAS obrigatórias e TODAS contando no score (não há mais etapa
@@ -32,6 +34,7 @@ export const MAX_SCORE_PILAR = PERGUNTAS_POR_PILAR * MAX_POR_PERGUNTA; // 24
 
 // label legível a partir do valor numérico
 export function labelDaResposta(value) {
+  if (value === VALOR_NAO_SEI) return 'Não sei';
   const item = ESCALA.find((e) => e.value === value);
   return item ? item.label : null;
 }

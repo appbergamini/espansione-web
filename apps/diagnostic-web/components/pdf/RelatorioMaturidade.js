@@ -107,14 +107,16 @@ export default function RelatorioMaturidade({ cliente, result, narrativa = {}, l
             <View style={s.pilarCard} key={p.code} wrap={false}>
               <View style={s.pilarHead}>
                 <Text style={s.pilarNome}>{p.name}</Text>
-                <Text style={[s.nivelTag, { backgroundColor: cor }]}>Nível {p.level} — {p.level_name}</Text>
+                <Text style={[s.nivelTag, { backgroundColor: p.evaluated === false ? CINZA : cor }]}>{p.evaluated === false ? 'Não avaliado' : `Nível ${p.level} — ${p.level_name}`}</Text>
               </View>
-              <View style={s.barRow}>
-                <View style={s.barOut}>
-                  <View style={[s.barIn, { width: `${p.percentage_score}%`, backgroundColor: cor }]} />
+              {p.evaluated !== false && (
+                <View style={s.barRow}>
+                  <View style={s.barOut}>
+                    <View style={[s.barIn, { width: `${p.percentage_score ?? 0}%`, backgroundColor: cor }]} />
+                  </View>
+                  <Text style={s.barLabel}>{p.percentage_score}% · {p.raw_score}/{p.max_score}</Text>
                 </View>
-                <Text style={s.barLabel}>{p.percentage_score}% · {p.raw_score}/{p.max_score}</Text>
-              </View>
+              )}
               <Paragrafos texto={n.analise || p.interpretation} />
               {n.destaques && n.destaques.length ? (
                 <>

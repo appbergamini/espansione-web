@@ -12,8 +12,9 @@
 import {
   PILARES_ORDENADOS,
   PILAR_BY_CODE,
-  MAX_SCORE_PILAR,
+  MAX_POR_PERGUNTA,
   VALOR_NUNCA,
+  VALOR_NAO_SEI,
   perguntasDoPilar,
 } from './pilares';
 import { getTextoInterpretativo } from './textos';
@@ -45,58 +46,61 @@ const ALERTA_MATURIDADE_DESIGUAL =
 
 // ── helpers internos ────────────────────────────────────────────────
 
-// valores das 8 perguntas de um pilar (base + aprofundamento), ignora ausentes
+// valores 0–3 de um pilar (8 perguntas), EXCLUINDO "Não sei" (-1) e ausentes
 function valoresDoPilar(answers, pillarCode) {
   return perguntasDoPilar(pillarCode)
     .map((q) => answers[q.code])
-    .filter((v) => typeof v === 'number');
+    .filter((v) => typeof v === 'number' && v >= 0 && v <= 3);
 }
 
-// ── score bruto do pilar (soma das 8) ───────────────────────────────
+function contarNaoSei(answers, pillarCode) {
+  return perguntasDoPilar(pillarCode).filter((q) => answers[q.code] === VALOR_NAO_SEI).length;
+}
+
+// ── score bruto do pilar (soma das respostas avaliadas) ─────────────
 export function calculatePillarScore(answers, pillarCode) {
   return valoresDoPilar(answers, pillarCode).reduce((sum, v) => sum + v, 0);
 }
 
-// score percentual = bruto / 15 * 100 (inteiro)
-export function pillarPercentage(rawScore) {
-  return Math.round((rawScore / MAX_SCORE_PILAR) * 100);
-}
-
-// ── seção 7: nível do pilar (com regra dos 2+ "Nunca") ──────────────
-// `pillarAnswerValues`: array dos valores das 5 obrigatórias do pilar
-// (use valoresObrigatorios ou passe os valores direto). Necessário para
-// contar quantas respostas foram "Nunca".
-export function classifyPillarLevel(rawScore, pillarAnswerValues = []) {
-  const base = NIVEIS.find((n) => rawScore >= n.min && rawScore <= n.max) || NIVEIS[0];
-  const nuncaCount = pillarAnswerValues.filter((v) => v === VALOR_NUNCA).length;
-  const criticalGap = nuncaCount >= 2;
-
-  // 2+ "Nunca" impede passar do Nível 2, mesmo que a soma indique Nível 3+.
-  let level = base.level;
-  let name = base.name;
-  if (criticalGap && level > 2) {
-    level = 2;
-    name = NIVEIS[1].name; // Em estruturação
-  }
-  return { level, name, criticalGap, nuncaCount };
+// nível a partir do percentual. As faixas reproduzem exatamente os cortes
+// brutos (0-7/8-13/14-19/20-24 sobre 24 = 29/54/79/100%) quando tudo é
+// respondido; com "Não sei", o denominador encolhe e o percentual segue justo.
+export function levelFromPercentage(pct) {
+  if (pct == null) return null;
+  if (pct < 31) return 1;
+  if (pct < 58) return 2;
+  if (pct < 83) return 3;
+  return 4;
 }
 
 // resultado completo de um pilar (estrutura PillarResult)
 export function computePillarResult(answers, pillarCode) {
   const pilar = PILAR_BY_CODE[pillarCode];
   const values = valoresDoPilar(answers, pillarCode);
+  const naoSei = contarNaoSei(answers, pillarCode);
   const raw = values.reduce((sum, v) => sum + v, 0);
-  const { level, name, criticalGap, nuncaCount } = classifyPillarLevel(raw, values);
+  const maxAvaliado = values.length * MAX_POR_PERGUNTA;
+  const percentage = maxAvaliado > 0 ? Math.round((raw / maxAvaliado) * 100) : null;
+
+  const nuncaCount = values.filter((v) => v === VALOR_NUNCA).length;
+  const criticalGap = nuncaCount >= 2;
+  let level = levelFromPercentage(percentage);
+  if (criticalGap && level && level > 2) level = 2; // 2+ "Nunca" trava no Nível 2
+  const nivel = level ? NIVEIS.find((n) => n.level === level) : null;
+
   return {
     code: pillarCode,
     name: pilar ? pilar.name : pillarCode,
     raw_score: raw,
-    max_score: MAX_SCORE_PILAR,
-    percentage_score: pillarPercentage(raw),
+    max_score: maxAvaliado,
+    answered: values.length,
+    unknown_count: naoSei,
+    percentage_score: percentage,
     level,
-    level_name: name,
+    level_name: nivel ? nivel.name : null,
     critical_gap: criticalGap,
     nunca_count: nuncaCount,
+    evaluated: percentage !== null,
   };
 }
 
@@ -105,11 +109,12 @@ export function computeAllPillars(answers) {
   return PILARES_ORDENADOS.map((p) => computePillarResult(answers, p.code));
 }
 
-// ── seção 8: índice geral (média simples dos percentuais) ───────────
+// ── índice geral (média dos percentuais dos pilares AVALIADOS) ──────
 export function calculateGeneralScore(pillarResults) {
-  if (!pillarResults.length) return 0;
-  const soma = pillarResults.reduce((s, p) => s + p.percentage_score, 0);
-  return Math.round(soma / pillarResults.length);
+  const avaliados = pillarResults.filter((p) => p.percentage_score != null);
+  if (!avaliados.length) return 0;
+  const soma = avaliados.reduce((s, p) => s + p.percentage_score, 0);
+  return Math.round(soma / avaliados.length);
 }
 
 export function classifyGeneralLevel(generalScore) {
@@ -140,10 +145,12 @@ function razaoPorNivel(level, levelName) {
 }
 
 export function generateRecommendations(pillarResults) {
-  const porScore = [...pillarResults].sort((a, b) => {
-    if (a.percentage_score !== b.percentage_score) return a.percentage_score - b.percentage_score;
-    return a.raw_score - b.raw_score;
-  });
+  const porScore = pillarResults
+    .filter((p) => p.percentage_score != null) // só pilares avaliados
+    .sort((a, b) => {
+      if (a.percentage_score !== b.percentage_score) return a.percentage_score - b.percentage_score;
+      return a.raw_score - b.raw_score;
+    });
   return porScore.slice(0, 3).map((p) => {
     const pilar = PILAR_BY_CODE[p.code];
     return {
@@ -163,14 +170,16 @@ export function buildResult(answers, meta = {}) {
   const pillars = computeAllPillars(answers);
 
   for (const p of pillars) {
-    p.interpretation = getTextoInterpretativo(p.code, p.level);
+    p.interpretation = p.level
+      ? getTextoInterpretativo(p.code, p.level)
+      : 'Não foi possível avaliar este pilar — predominaram respostas "Não sei".';
   }
 
   const generalScore = calculateGeneralScore(pillars);
   const generalLevel = classifyGeneralLevel(generalScore);
 
   const criticos = pillars
-    .filter((p) => p.level <= 2)
+    .filter((p) => p.level && p.level <= 2)
     .sort((a, b) => a.percentage_score - b.percentage_score)
     .map((p) => p.name);
 
