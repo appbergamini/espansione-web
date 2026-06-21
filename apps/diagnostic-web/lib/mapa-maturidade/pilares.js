@@ -42,6 +42,9 @@ export const PILARES = [
     description:
       'Clareza de direção, prioridades e coerência entre ambição de crescimento e estrutura.',
     trilha: 'Clareza Estratégica e Modelo de Crescimento',
+    // metadado p/ interpretação (IA/relatório); não afeta o cálculo
+    mede: ['clareza de direção', 'foco', 'escolhas estratégicas', 'modelo de crescimento', 'coerência entre ambição e estrutura'],
+    subdimensoes: ['foco', 'alinhamento', 'renúncia estratégica', 'disciplina de escolha'],
     perguntas: [
       { code: 'DE_01', text: 'As decisões importantes da empresa são tomadas com base em prioridades estratégicas claras.' },
       { code: 'DE_02', text: 'A empresa tem clareza sobre onde quer chegar nos próximos meses e quais escolhas precisa fazer para isso.' },
@@ -62,6 +65,8 @@ export const PILARES = [
     description:
       'Autonomia das lideranças, clareza de responsabilidades, delegação e desenvolvimento de pessoas.',
     trilha: 'Liderança que Gera Autonomia',
+    mede: ['autonomia', 'delegação', 'clareza de papéis', 'desenvolvimento de líderes', 'tomada de decisão', 'maturidade de gestão'],
+    subdimensoes: ['desenvolvimento de pessoas', 'autonomia real', 'prevenção de conflitos', 'maturidade de gestão'],
     perguntas: [
       { code: 'LI_01', text: 'As lideranças conseguem tomar decisões sem depender constantemente da aprovação dos sócios, fundadores ou direção.' },
       { code: 'LI_02', text: 'As responsabilidades de cada líder ou gestor são claras para a equipe.' },
@@ -82,6 +87,8 @@ export const PILARES = [
     description:
       'Comportamentos esperados, valores na prática, colaboração e atração/retenção de pessoas alinhadas.',
     trilha: 'Cultura Viva e Comportamento Organizacional',
+    mede: ['cultura viva', 'comportamento coletivo', 'engajamento', 'colaboração', 'retenção', 'coerência interna', 'marca empregadora'],
+    subdimensoes: ['coerência cultural', 'marca empregadora interna', 'integração', 'gestão de comportamentos'],
     perguntas: [
       { code: 'CP_01', text: 'Os comportamentos esperados das pessoas são claros e reforçados na rotina da empresa.' },
       { code: 'CP_02', text: 'Os valores da empresa aparecem nas decisões, nas atitudes da liderança e na forma como a equipe trabalha.' },
@@ -102,6 +109,8 @@ export const PILARES = [
     description:
       'Clareza e coerência de posicionamento, marca e experiência entregue ao cliente.',
     trilha: 'Identidade Estratégica e Posicionamento',
+    mede: ['marca', 'posicionamento', 'diferenciação', 'narrativa', 'coerência simbólica', 'experiência', 'percepção de mercado'],
+    subdimensoes: ['diferenciação', 'narrativa', 'coerência simbólica', 'expressão prática da identidade'],
     perguntas: [
       { code: 'IE_01', text: 'A empresa comunica com clareza o que faz, para quem existe e por que é diferente.' },
       { code: 'IE_02', text: 'A marca se expressa de forma coerente nos canais de comunicação, no atendimento e na experiência entregue ao cliente.' },
@@ -122,6 +131,8 @@ export const PILARES = [
     description:
       'Rotina comercial estruturada, acompanhamento de oportunidades, discurso de valor e indicadores.',
     trilha: 'Comercial com Coerência',
+    mede: ['geração de demanda', 'rotina comercial', 'conversão', 'previsibilidade', 'discurso de venda', 'relacionamento', 'dependência comercial'],
+    subdimensoes: ['inteligência comercial', 'proposta de valor', 'conversão', 'relacionamento', 'fidelização'],
     perguntas: [
       { code: 'CO_01', text: 'A empresa possui uma rotina comercial estruturada para gerar novas oportunidades.' },
       { code: 'CO_02', text: 'As oportunidades comerciais são acompanhadas de forma organizada até a conversão ou perda.' },
@@ -142,6 +153,8 @@ export const PILARES = [
     description:
       'Transformação de prioridades em planos, acompanhamento da execução, processos e escalabilidade.',
     trilha: 'Planejamento, Execução e Escalabilidade',
+    mede: ['organização', 'execução', 'rotina de gestão', 'acompanhamento', 'processos essenciais', 'produtividade', 'escalabilidade'],
+    subdimensoes: ['priorização', 'rotina de gestão', 'execução', 'aprendizagem operacional', 'melhoria contínua'],
     perguntas: [
       { code: 'PL_01', text: 'As prioridades da empresa são transformadas em planos claros, com responsáveis e prazos definidos.' },
       { code: 'PL_02', text: 'A execução dos planos é acompanhada regularmente pela liderança.' },
