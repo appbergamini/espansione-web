@@ -71,8 +71,9 @@ export default function TerritorioForm() {
 
         {fase === 'intro' && (
           <Card>
+            <div style={sx.eyebrow}>Mapa de Identidade · Etapa 2</div>
             <h1 style={sx.h1}>{FORM_TERRITORIO.titulo}</h1>
-            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.4rem' }}>{cliente}</p>}
+            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>Avalie o quanto cada afirmação reflete a realidade e a estratégia da empresa. O objetivo é identificar onde está o principal território de valor do negócio.</p>
             <p style={{ ...sx.txtSec, fontSize: '0.9rem' }}>{total} afirmações · {FORM_TERRITORIO.tempo}.</p>
             <button className="btn-primary" onClick={() => setFase('form')} style={{ marginTop: '0.6rem' }}>Iniciar</button>
@@ -162,7 +163,12 @@ function Progresso({ atual, total }) {
 }
 
 function Card({ children, wide }) {
-  return <div className="glass-card" style={{ maxWidth: wide ? 700 : 540, width: '100%', padding: '2rem' }}>{children}</div>;
+  return (
+    <div className="glass-card" style={{ maxWidth: wide ? 700 : 540, width: '100%', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={sx.domAccent} />
+      {children}
+    </div>
+  );
 }
 
 const sx = {
@@ -188,5 +194,5 @@ const sx = {
   hibridoTag: { fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.55rem', borderRadius: 99, color: '#fde68a', background: 'rgba(234,179,8,0.16)', whiteSpace: 'nowrap' },
   rank: { color: '#fca5b0', fontWeight: 700, fontSize: '0.82rem', marginRight: '0.2rem' },
   barOut: { height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
-  barIn: { height: '100%', background: '#Da3144', borderRadius: 99 },
+  barIn: { height: '100%', background: 'linear-gradient(90deg, #Da3144, #f0667a)', borderRadius: 99 },
 };

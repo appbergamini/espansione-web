@@ -101,8 +101,9 @@ export default function EssenciaForm() {
 
         {fase === 'intro' && (
           <Card>
+            <div style={sx.eyebrow}>Mapa de Identidade · Etapa 1</div>
             <h1 style={sx.h1}>{FORM_ESSENCIA.titulo}</h1>
-            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.4rem' }}>{cliente}</p>}
+            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>Esta etapa capta a visão da liderança sobre a essência, a diferenciação, o propósito, a cultura e as tensões estratégicas da marca. Responda com honestidade — não há resposta certa.</p>
             <p style={{ ...sx.txtSec, fontSize: '0.9rem' }}>{FORM_ESSENCIA.respondente} · {FORM_ESSENCIA.tempo} · você pode salvar e continuar depois.</p>
             <button className="btn-primary" onClick={() => setFase('form')} style={{ marginTop: '0.6rem' }}>Iniciar</button>
@@ -139,8 +140,9 @@ export default function EssenciaForm() {
         {fase === 'enviando' && <Card><p style={sx.txtSec}>Salvando suas respostas…</p></Card>}
         {fase === 'concluido' && (
           <Card>
-            <h2 style={{ marginTop: 0, color: '#86efac' }}>Formulário concluído 🙌</h2>
-            <p style={sx.txtSec}>Obrigado. Suas respostas sobre a essência da marca foram registradas e vão alimentar o Mapa de Identidade Estratégica.</p>
+            <div style={sx.selo}>✓</div>
+            <h2 style={{ margin: '0 0 0.3rem', textAlign: 'center' }}>Formulário concluído</h2>
+            <p style={{ ...sx.txtSec, textAlign: 'center' }}>Obrigado. Suas respostas sobre a essência da marca foram registradas e vão alimentar o Mapa de Identidade Estratégica.</p>
           </Card>
         )}
       </div>
@@ -168,7 +170,9 @@ function Campo({ campo, valor, onChange, erro }) {
       {campo.type === 'single' && (
         <div style={sx.opcoes}>
           {campo.options.map((opt) => (
-            <button key={opt} type="button" onClick={() => onChange(opt)} style={sx.opcao(valor === opt)}>{opt}</button>
+            <button key={opt} type="button" onClick={() => onChange(opt)} style={sx.opcao(valor === opt)}>
+              {valor === opt ? '✓ ' : ''}{opt}
+            </button>
           ))}
         </div>
       )}
@@ -235,17 +239,25 @@ function Progresso({ atual, total }) {
 }
 
 function Card({ children, wide }) {
-  return <div className="glass-card" style={{ maxWidth: wide ? 700 : 540, width: '100%', padding: '2rem' }}>{children}</div>;
+  return (
+    <div className="glass-card" style={{ maxWidth: wide ? 700 : 540, width: '100%', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={sx.accent} />
+      {children}
+    </div>
+  );
 }
 
 const sx = {
   page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 1rem' },
+  accent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' },
+  eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, marginBottom: '0.3rem' },
+  selo: { width: 52, height: 52, borderRadius: 99, margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', color: '#86efac', background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.4)' },
   h1: { marginTop: 0, fontSize: '1.5rem' },
   h2: { fontSize: '1.2rem', margin: '0.4rem 0 0.2rem' },
   txtSec: { color: 'var(--text-secondary, #9aa)', lineHeight: 1.6 },
   prog: { fontSize: '0.78rem', color: 'var(--text-secondary, #9aa)' },
   barraOut: { height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
-  barraIn: { height: '100%', background: '#Da3144', transition: 'width 0.3s ease' },
+  barraIn: { height: '100%', background: 'linear-gradient(90deg, #Da3144, #f0667a)', transition: 'width 0.3s ease' },
   campo: { padding: '0.9rem 0', borderTop: '1px solid rgba(255,255,255,0.07)' },
   label: { display: 'block', marginBottom: '0.55rem', lineHeight: 1.45, fontSize: '0.96rem' },
   opc: { color: 'var(--text-secondary, #9aa)', fontSize: '0.82rem' },

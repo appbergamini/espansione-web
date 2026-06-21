@@ -59,8 +59,9 @@ export default function EspelhoSurvey({ formDef, slug }) {
 
         {fase === 'intro' && (
           <Card>
+            <div style={sx.eyebrow}>Mapa de Identidade · Pesquisa</div>
             <h1 style={sx.h1}>{formDef.titulo}</h1>
-            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.4rem' }}>{cliente}</p>}
+            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>{formDef.intro}</p>
             {formDef.anonimo && <div style={sx.anon}>🔒 Pesquisa anônima — não coletamos nome, e-mail ou telefone.</div>}
             <p style={{ ...sx.txtSec, fontSize: '0.9rem' }}>Leva cerca de {formDef.tempo}.</p>
@@ -91,8 +92,9 @@ export default function EspelhoSurvey({ formDef, slug }) {
         {fase === 'enviando' && <Card><p style={sx.txtSec}>Enviando…</p></Card>}
         {fase === 'concluido' && (
           <Card>
-            <h2 style={{ marginTop: 0, color: '#86efac' }}>Respostas enviadas 🙌</h2>
-            <p style={sx.txtSec}>Obrigado por compartilhar sua percepção. Sua contribuição ajuda a empresa a enxergar a si mesma com mais clareza.</p>
+            <div style={sx.selo}>✓</div>
+            <h2 style={{ margin: '0 0 0.3rem', textAlign: 'center' }}>Respostas enviadas</h2>
+            <p style={{ ...sx.txtSec, textAlign: 'center' }}>Obrigado por compartilhar sua percepção. Sua contribuição ajuda a empresa a enxergar a si mesma com mais clareza.</p>
           </Card>
         )}
       </div>
@@ -101,11 +103,19 @@ export default function EspelhoSurvey({ formDef, slug }) {
 }
 
 function Card({ children, wide }) {
-  return <div className="glass-card" style={{ maxWidth: wide ? 680 : 540, width: '100%', padding: '2rem' }}>{children}</div>;
+  return (
+    <div className="glass-card" style={{ maxWidth: wide ? 680 : 540, width: '100%', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={sx.accent} />
+      {children}
+    </div>
+  );
 }
 
 const sx = {
   page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 1rem' },
+  accent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' },
+  eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, marginBottom: '0.3rem' },
+  selo: { width: 52, height: 52, borderRadius: 99, margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', color: '#86efac', background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.4)' },
   h1: { marginTop: 0, fontSize: '1.5rem' },
   h2: { fontSize: '1.12rem', margin: '1rem 0 0.2rem', color: '#fca5b0' },
   txtSec: { color: 'var(--text-secondary, #9aa)', lineHeight: 1.6 },

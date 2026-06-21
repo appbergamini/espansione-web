@@ -164,8 +164,9 @@ export default function MapaMaturidadePage() {
 
         {fase === 'intro' && (
           <Card>
+            <div style={sx.eyebrow}>Diagnóstico · Mapa de Maturidade</div>
             <h1 style={sx.h1}>Mapa de Maturidade Espansione</h1>
-            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.4rem' }}>{cliente}</p>}
+            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>
               Responda às afirmações considerando a realidade atual da empresa. O objetivo é
               identificar o estágio de maturidade nos pilares que sustentam o crescimento.
@@ -386,7 +387,8 @@ function BaixarPdf({ token }) {
 
 function Card({ children, wide }) {
   return (
-    <div className="glass-card" style={{ maxWidth: wide ? 720 : 540, width: '100%', padding: '2rem' }}>
+    <div className="glass-card" style={{ maxWidth: wide ? 720 : 540, width: '100%', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={sx.indiceAccent} />
       {children}
     </div>
   );
@@ -422,7 +424,7 @@ const sx = {
     color: '#fca5b0',
   },
   barraOut: { height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
-  barraIn: { height: '100%', background: '#Da3144', transition: 'width 0.3s ease' },
+  barraIn: { height: '100%', background: 'linear-gradient(90deg, #Da3144, #f0667a)', transition: 'width 0.3s ease' },
   navRow: { display: 'flex', justifyContent: 'space-between', gap: '0.6rem', marginTop: '1.6rem' },
   btnGhost: (disabled) => ({
     background: 'none',

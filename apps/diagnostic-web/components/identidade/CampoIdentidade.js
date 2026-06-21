@@ -23,7 +23,9 @@ export default function CampoIdentidade({ campo, valor, onChange, erro }) {
       {campo.type === 'single' && (
         <div style={sx.opcoes}>
           {campo.options.map((opt) => (
-            <button key={opt} type="button" onClick={() => onChange(opt)} style={sx.opcao(valor === opt)}>{opt}</button>
+            <button key={opt} type="button" onClick={() => onChange(opt)} style={sx.opcao(valor === opt)}>
+              {valor === opt ? '✓ ' : ''}{opt}
+            </button>
           ))}
         </div>
       )}
@@ -52,7 +54,7 @@ export default function CampoIdentidade({ campo, valor, onChange, erro }) {
         <div style={sx.opcoes}>
           {ESCALA_FREQUENCIA.map((opt) => (
             <button key={opt.value} type="button" onClick={() => onChange(opt.value)} style={{ ...sx.opcao(valor === opt.value), flex: '1 1 auto', minWidth: 120 }}>
-              {opt.label}
+              {valor === opt.value ? '✓ ' : ''}{opt.label}
             </button>
           ))}
         </div>
