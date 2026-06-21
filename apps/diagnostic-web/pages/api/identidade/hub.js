@@ -114,7 +114,15 @@ export default async function handler(req, res) {
     const forms = FORMS_IDENTIDADE.map((f) => {
       const link = `/form/identidade/${f.slug}?token=${tokenDoForm(f.type)}`;
       if (!f.shared) {
-        return { ...f, link, status: statusByType[f.type] || 'not_started' };
+        let status;
+        if (f.combines) {
+          const sts = f.combines.map((t) => statusByType[t] || 'not_started');
+          status = sts.every((s) => s === 'completed') ? 'completed'
+            : sts.some((s) => s === 'completed' || s === 'in_progress') ? 'in_progress' : 'not_started';
+        } else {
+          status = statusByType[f.type] || 'not_started';
+        }
+        return { ...f, link, status };
       }
       const ag = f.type === FORM_TYPES.ESPELHO_INTERNO ? result.internal_mirror : result.external_mirror;
       return {

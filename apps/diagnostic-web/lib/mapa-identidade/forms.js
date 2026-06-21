@@ -246,10 +246,9 @@ export const FORM_ESPELHO_EXTERNO = {
   ],
 };
 
-// ── Metadados dos 4 cards do hub ────────────────────────────────────
+// ── Metadados dos cards do hub (Essência+Território consolidados num só) ──
 export const FORMS_IDENTIDADE = [
-  { type: FORM_TYPES.ESSENCIA, slug: 'essencia', titulo: 'Essência e Direção da Marca', respondente: 'Fundador / sócio / direção', tempo: '20 a 30 min', obrigatorio: true, shared: false },
-  { type: FORM_TYPES.TERRITORIO, slug: 'territorio', titulo: 'Território Estratégico de Valor', respondente: 'Fundador / sócio / direção', tempo: '5 a 8 min', obrigatorio: true, shared: false },
+  { type: 'lideranca', slug: 'lideranca', titulo: 'Essência + Território de Valor', respondente: 'Fundador / sócio / direção', tempo: '25 a 35 min', obrigatorio: true, shared: false, combines: [FORM_TYPES.ESSENCIA, FORM_TYPES.TERRITORIO] },
   { type: FORM_TYPES.ESPELHO_INTERNO, slug: 'espelho-interno', titulo: 'Espelho Interno', respondente: 'Colaboradores (anônimo)', tempo: '5 min', obrigatorio: false, condicional: true, shared: true, anonimo: true },
   { type: FORM_TYPES.ESPELHO_EXTERNO, slug: 'espelho-externo', titulo: 'Espelho Externo', respondente: 'Clientes / parceiros', tempo: '5 min', obrigatorio: false, condicional: true, shared: true, anonimo: false },
 ];
