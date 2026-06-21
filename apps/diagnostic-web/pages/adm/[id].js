@@ -1763,6 +1763,14 @@ export default function ProjetoDetalhes() {
 
               <MapaMaturidadeCard projetoId={id} />
 
+              <a href={`/mapa-identidade/${id}`} target="_blank" rel="noreferrer" className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderColor: 'rgba(218,49,68,0.25)', textDecoration: 'none', color: 'inherit' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1rem' }}>🧬 Mapa de Identidade Estratégica</h3>
+                  <p style={{ margin: '0.3rem 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Essência, território de valor, espelho interno e externo</p>
+                </div>
+                <span style={{ color: 'var(--text-secondary)' }}>→</span>
+              </a>
+
               {/* Card: Mapeamento Comportamental CIS */}
               <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
