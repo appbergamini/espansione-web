@@ -30,6 +30,8 @@ export const FORM_ESSENCIA = {
       id: 1,
       titulo: 'Contexto',
       campos: [
+        { code: 'ED_RESP_NOME', type: 'short', required: true, label: 'Nome completo (de quem está respondendo).' },
+        { code: 'ED_RESP_NASC', type: 'short', required: true, label: 'Data de nascimento (DD/MM/AA).' },
         { code: 'ED_01', type: 'short', required: true, label: 'Nome da empresa ou marca.' },
         { code: 'ED_02', type: 'short', required: true, label: 'Site, Instagram ou principal canal digital.' },
         {
