@@ -92,28 +92,43 @@ export default function MapaIdentidadeHub() {
           <div style={{ display: 'grid', gap: '0.9rem', marginTop: '1.2rem' }}>
             {data?.forms?.map((f) => {
               const st = STATUS_LABEL[f.status] || STATUS_LABEL.not_started;
-              const fase2 = f.fase === 2;
+              const badge = f.shared
+                ? (f.responses_count ? { txt: `${f.responses_count} resposta${f.responses_count === 1 ? '' : 's'}`, cor: '#86efac', bg: 'rgba(34,197,94,0.16)' } : { txt: 'Aguardando respostas', cor: '#9aa3ad', bg: 'rgba(255,255,255,0.06)' })
+                : st;
               return (
-                <div key={f.type} className="glass-card" style={{ padding: '1.1rem 1.25rem', opacity: fase2 ? 0.7 : 1 }}>
+                <div key={f.type} className="glass-card" style={{ padding: '1.1rem 1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{f.titulo}</h3>
-                    <span style={{ ...sx.badge, color: st.cor, background: st.bg }}>{st.txt}</span>
+                    <span style={{ ...sx.badge, color: badge.cor, background: badge.bg }}>{badge.txt}</span>
                   </div>
                   <p style={{ ...sx.txtSec, fontSize: '0.85rem', margin: '0.35rem 0 0.8rem' }}>
                     {f.respondente} · {f.tempo}{f.obrigatorio ? ' · obrigatório' : ' · recomendado'}
                   </p>
-                  {fase2 ? (
-                    <span style={{ ...sx.txtSec, fontSize: '0.82rem' }}>Disponível na próxima fase.</span>
-                  ) : (
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <a href={f.link} target="_blank" rel="noreferrer" className="btn-primary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', textDecoration: 'none' }}>
-                        {f.status === 'completed' ? 'Revisar →' : f.status === 'in_progress' ? 'Continuar →' : 'Iniciar →'}
-                      </a>
-                      <button onClick={() => copiar(f.link, f.type)} style={sx.btnGhost}>
-                        {copiado === f.type ? '✓ Copiado' : '🔗 Copiar link'}
-                      </button>
-                    </div>
+                  {f.shared && f.responses_count > 0 && typeof f.indicator === 'number' && (
+                    <p style={{ margin: '0 0 0.7rem', fontSize: '0.85rem' }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>{f.indicator_label}: </span>
+                      <b style={{ color: f.indicator >= 0 ? '#86efac' : '#fca5a5' }}>{f.indicator}</b>
+                    </p>
                   )}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {f.shared ? (
+                      <>
+                        <button onClick={() => copiar(f.link, f.type)} className="btn-primary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                          {copiado === f.type ? '✓ Link copiado' : '🔗 Copiar link da pesquisa'}
+                        </button>
+                        <a href={f.link} target="_blank" rel="noreferrer" style={{ ...sx.btnGhost, textDecoration: 'none' }}>Abrir →</a>
+                      </>
+                    ) : (
+                      <>
+                        <a href={f.link} target="_blank" rel="noreferrer" className="btn-primary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', textDecoration: 'none' }}>
+                          {f.status === 'completed' ? 'Revisar →' : f.status === 'in_progress' ? 'Continuar →' : 'Iniciar →'}
+                        </a>
+                        <button onClick={() => copiar(f.link, f.type)} style={sx.btnGhost}>
+                          {copiado === f.type ? '✓ Copiado' : '🔗 Copiar link'}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               );
             })}

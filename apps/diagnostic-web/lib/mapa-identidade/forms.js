@@ -135,16 +135,159 @@ export const FORM_TERRITORIO = {
   ],
 };
 
-// ── Metadados dos 4 cards do hub (3 e 4 entram na Fase 2) ───────────
-export const FORMS_IDENTIDADE = [
-  { type: FORM_TYPES.ESSENCIA, slug: 'essencia', titulo: 'Essência e Direção da Marca', respondente: 'Fundador / sócio / direção', tempo: '20 a 30 min', obrigatorio: true, fase: 1 },
-  { type: FORM_TYPES.TERRITORIO, slug: 'territorio', titulo: 'Território Estratégico de Valor', respondente: 'Fundador / sócio / direção', tempo: '5 a 8 min', obrigatorio: true, fase: 1 },
-  { type: FORM_TYPES.ESPELHO_INTERNO, slug: 'espelho-interno', titulo: 'Espelho Interno', respondente: 'Colaboradores (anônimo)', tempo: '5 min', obrigatorio: false, condicional: true, fase: 2 },
-  { type: FORM_TYPES.ESPELHO_EXTERNO, slug: 'espelho-externo', titulo: 'Espelho Externo', respondente: 'Clientes / parceiros', tempo: '5 min', obrigatorio: false, condicional: true, fase: 2 },
+// ── Escala de frequência (Espelho Interno, EI_05–EI_14) ─────────────
+export const ESCALA_FREQUENCIA = [
+  { value: 1, label: 'Nunca' },
+  { value: 2, label: 'Poucas vezes' },
+  { value: 3, label: 'Muitas vezes' },
+  { value: 4, label: 'Sempre' },
 ];
 
-export const FORM_BY_TYPE = { [FORM_ESSENCIA.type]: FORM_ESSENCIA, [FORM_TERRITORIO.type]: FORM_TERRITORIO };
-export const FORM_BY_SLUG = { essencia: FORM_ESSENCIA, territorio: FORM_TERRITORIO };
+// ── Formulário 3 — Espelho Interno (anônimo, multi-respondente) ──────
+// Campos de escala: scale4 (frequência 1–4) e scale10 (0–10, eNPS).
+export const FORM_ESPELHO_INTERNO = {
+  type: FORM_TYPES.ESPELHO_INTERNO,
+  slug: 'espelho-interno',
+  titulo: 'Espelho Interno',
+  respondente: 'Colaboradores (anônimo)',
+  tempo: '5 min',
+  obrigatorio: false,
+  anonimo: true,
+  intro: 'Esta pesquisa é anônima. Não coletamos nome, e-mail ou telefone. Responda com sinceridade — o objetivo é entender como a cultura é vivida de verdade no dia a dia.',
+  blocos: [
+    {
+      id: 1,
+      titulo: 'Sobre você (não identificável)',
+      campos: [
+        { code: 'EI_01', type: 'single', required: true, label: 'Em qual área você atua?', options: ['Administrativo', 'Financeiro', 'Comercial/Vendas', 'Marketing/Comunicação', 'Operação/Entrega', 'Atendimento/Relacionamento', 'Tecnologia/Produto', 'Pessoas/RH', 'Gestão/Liderança', 'Outro', 'Prefiro não informar'] },
+        { code: 'EI_02', type: 'single', required: true, label: 'Há quanto tempo você está na empresa?', options: ['Menos de 6 meses', '6 a 12 meses', '1 a 3 anos', '3 a 5 anos', 'Mais de 5 anos', 'Prefiro não informar'] },
+      ],
+    },
+    {
+      id: 2,
+      titulo: 'Palavras-espelho',
+      campos: [
+        { code: 'EI_03', type: 'words3', required: true, label: 'Quando você pensa na empresa, quais são as 3 primeiras palavras que vêm à sua mente?' },
+        { code: 'EI_04', type: 'words3', required: false, label: 'Como é trabalhar aqui, em 3 palavras?' },
+      ],
+    },
+    {
+      id: 3,
+      titulo: 'Cultura vivida',
+      escala: 'frequencia',
+      campos: [
+        { code: 'EI_05', type: 'scale4', required: true, label: 'Eu conheço o propósito e os valores da empresa.' },
+        { code: 'EI_06', type: 'scale4', required: true, label: 'Os valores da empresa são vividos nas decisões e atitudes do dia a dia.' },
+        { code: 'EI_07', type: 'scale4', required: true, label: 'Os comportamentos esperados das pessoas são claros.' },
+        { code: 'EI_08', type: 'scale4', required: true, label: 'Minha opinião é ouvida e considerada.' },
+        { code: 'EI_09', type: 'scale4', required: true, label: 'Eu me sinto seguro para discordar ou apontar problemas sem medo de retaliação.' },
+        { code: 'EI_10', type: 'scale4', required: true, label: 'A liderança orienta, desenvolve e dá feedback de forma consistente.' },
+        { code: 'EI_11', type: 'scale4', required: true, label: 'A colaboração entre áreas ou pessoas funciona bem.' },
+        { code: 'EI_12', type: 'scale4', required: true, label: 'A empresa reconhece atitudes alinhadas à cultura desejada.' },
+        { code: 'EI_13', type: 'scale4', required: true, label: 'Eu sinto orgulho de trabalhar aqui.' },
+        { code: 'EI_14', type: 'scale4', required: true, label: 'O que a empresa comunica para fora combina com o que é vivido internamente.' },
+      ],
+    },
+    {
+      id: 4,
+      titulo: 'Síntese',
+      campos: [
+        { code: 'EI_15', type: 'short', required: false, label: 'O que mais fortalece a cultura da empresa hoje?' },
+        { code: 'EI_16', type: 'short', required: false, label: 'O que mais enfraquece a cultura da empresa hoje?' },
+        { code: 'EI_17', type: 'scale10', required: true, label: 'De 0 a 10, o quanto você recomendaria esta empresa como um bom lugar para trabalhar?' },
+      ],
+    },
+  ],
+};
+
+// ── Formulário 4 — Espelho Externo (clientes, identificável) ────────
+export const FORM_ESPELHO_EXTERNO = {
+  type: FORM_TYPES.ESPELHO_EXTERNO,
+  slug: 'espelho-externo',
+  titulo: 'Espelho Externo',
+  respondente: 'Clientes / parceiros',
+  tempo: '5 min',
+  obrigatorio: false,
+  anonimo: false,
+  intro: 'Queremos entender a sua percepção real sobre a marca — não é uma avaliação de atendimento. Suas respostas ajudam a empresa a enxergar como é vista de fora.',
+  blocos: [
+    {
+      id: 1,
+      titulo: 'Você e a marca',
+      campos: [
+        { code: 'EE_01', type: 'short', required: false, label: 'Nome ou identificação do respondente.' },
+        { code: 'EE_02', type: 'short', required: false, label: 'Cargo, profissão ou relação com a empresa.' },
+        { code: 'EE_03', type: 'single', required: true, label: 'Há quanto tempo você conhece ou é cliente da empresa?', options: ['Menos de 3 meses', '3 a 12 meses', '1 a 3 anos', 'Mais de 3 anos', 'Ainda não sou cliente, mas conheço a marca'] },
+        { code: 'EE_04', type: 'single', required: true, label: 'Como você chegou até a empresa?', options: ['Indicação', 'Google', 'Instagram', 'LinkedIn', 'WhatsApp', 'Site', 'Evento', 'Prospecção ativa', 'Parceria', 'Cliente antigo', 'Networking', 'Outro'] },
+      ],
+    },
+    {
+      id: 2,
+      titulo: 'Decisão e valor percebido',
+      campos: [
+        { code: 'EE_05', type: 'multi', required: true, max: 3, label: 'O que mais influenciou sua decisão de escolher ou considerar esta empresa? (máx. 3)', options: ['Confiança', 'Reputação', 'Atendimento', 'Qualidade técnica', 'Especialização', 'Resultado esperado', 'Indicação', 'Relacionamento', 'Clareza da proposta', 'Preço', 'Conveniência', 'Experiência anterior positiva', 'Outro'] },
+        { code: 'EE_06', type: 'long', required: true, label: 'Que problema, necessidade ou desejo fez você procurar por esse tipo de solução?' },
+        { code: 'EE_07', type: 'scale10', required: true, label: 'De 0 a 10, o quanto você está satisfeito com a experiência ou resultado entregue pela empresa?' },
+        { code: 'EE_08', type: 'single', required: true, label: 'Como você percebe o preço em relação ao benefício entregue?', options: ['Preço justo pelo valor entregue', 'Preço elevado, mas vale o investimento', 'Preço abaixo do que a entrega vale', 'Preço alto para a entrega atual', 'Não sei avaliar'] },
+      ],
+    },
+    {
+      id: 3,
+      titulo: 'Percepção de marca',
+      campos: [
+        { code: 'EE_09', type: 'long', required: true, label: 'Na sua visão, qual é o maior diferencial desta empresa em relação a outras opções?' },
+        { code: 'EE_10', type: 'long', required: true, label: 'Se essa empresa fosse uma pessoa, como você descreveria a personalidade dela?' },
+        { code: 'EE_11', type: 'short', required: true, label: 'Defina esta empresa em uma única palavra.' },
+        { code: 'EE_12', type: 'short', required: false, label: 'Qual palavra você nunca usaria para descrever esta empresa?' },
+        { code: 'EE_13', type: 'scale10', required: true, label: 'De 0 a 10, o quanto você recomendaria esta empresa para alguém?' },
+        { code: 'EE_14', type: 'long', required: false, label: 'Como você apresentaria esta empresa em poucas palavras para alguém da sua rede?' },
+      ],
+    },
+  ],
+};
+
+// ── Metadados dos 4 cards do hub ────────────────────────────────────
+export const FORMS_IDENTIDADE = [
+  { type: FORM_TYPES.ESSENCIA, slug: 'essencia', titulo: 'Essência e Direção da Marca', respondente: 'Fundador / sócio / direção', tempo: '20 a 30 min', obrigatorio: true, shared: false },
+  { type: FORM_TYPES.TERRITORIO, slug: 'territorio', titulo: 'Território Estratégico de Valor', respondente: 'Fundador / sócio / direção', tempo: '5 a 8 min', obrigatorio: true, shared: false },
+  { type: FORM_TYPES.ESPELHO_INTERNO, slug: 'espelho-interno', titulo: 'Espelho Interno', respondente: 'Colaboradores (anônimo)', tempo: '5 min', obrigatorio: false, condicional: true, shared: true, anonimo: true },
+  { type: FORM_TYPES.ESPELHO_EXTERNO, slug: 'espelho-externo', titulo: 'Espelho Externo', respondente: 'Clientes / parceiros', tempo: '5 min', obrigatorio: false, condicional: true, shared: true, anonimo: false },
+];
+
+export const FORM_BY_TYPE = {
+  [FORM_ESSENCIA.type]: FORM_ESSENCIA,
+  [FORM_TERRITORIO.type]: FORM_TERRITORIO,
+  [FORM_ESPELHO_INTERNO.type]: FORM_ESPELHO_INTERNO,
+  [FORM_ESPELHO_EXTERNO.type]: FORM_ESPELHO_EXTERNO,
+};
+export const FORM_BY_SLUG = {
+  essencia: FORM_ESSENCIA,
+  territorio: FORM_TERRITORIO,
+  'espelho-interno': FORM_ESPELHO_INTERNO,
+  'espelho-externo': FORM_ESPELHO_EXTERNO,
+};
+
+// valida um formulário de blocos (Espelhos) — devolve códigos faltando
+export function validateSurvey(formDef, answers) {
+  const faltando = [];
+  for (const bloco of formDef.blocos || []) {
+    for (const campo of bloco.campos) {
+      if (!campo.required) continue;
+      const v = answers[campo.code];
+      if (campo.type === 'words3') {
+        const n = Array.isArray(v) ? v.filter((w) => w && w.trim()).length : 0;
+        if (n < 2) faltando.push(campo.code);
+      } else if (campo.type === 'multi') {
+        if (!Array.isArray(v) || v.length === 0) faltando.push(campo.code);
+      } else if (campo.type === 'scale4' || campo.type === 'scale10') {
+        if (typeof v !== 'number') faltando.push(campo.code);
+      } else if (!v || !String(v).trim()) {
+        faltando.push(campo.code);
+      }
+    }
+  }
+  return faltando;
+}
 
 // valida um bloco do Formulário 1 (campos obrigatórios preenchidos)
 export function validarBlocoEssencia(bloco, answers) {

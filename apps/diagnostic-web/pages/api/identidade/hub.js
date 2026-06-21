@@ -7,7 +7,7 @@
 import crypto from 'crypto';
 import { getServerUser } from '../../../lib/getServerUser';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
-import { FORMS_IDENTIDADE } from '../../../lib/mapa-identidade/forms';
+import { FORMS_IDENTIDADE, FORM_TYPES } from '../../../lib/mapa-identidade/forms';
 
 function gerarToken() {
   return crypto.randomBytes(24).toString('hex');
@@ -66,9 +66,10 @@ export default async function handler(req, res) {
     const matContext = contextoMaturidade(mat);
 
     // get-or-create assessment
+    const COLS = 'id, token, internal_token, external_token, status, maturity_assessment_id, result_json';
     let { data: assessment } = await db
       .from('identity_assessments')
-      .select('id, token, status, maturity_assessment_id')
+      .select(COLS)
       .eq('projeto_id', projeto_id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -77,15 +78,20 @@ export default async function handler(req, res) {
     if (!assessment) {
       const { data: nova, error } = await db
         .from('identity_assessments')
-        .insert([{ projeto_id, token: gerarToken(), status: 'not_started', maturity_assessment_id: mat?.id || null }])
-        .select('id, token, status, maturity_assessment_id')
+        .insert([{ projeto_id, token: gerarToken(), internal_token: gerarToken(), external_token: gerarToken(), status: 'not_started', maturity_assessment_id: mat?.id || null }])
+        .select(COLS)
         .single();
       if (error) throw error;
       assessment = nova;
-    } else if (mat?.id && assessment.maturity_assessment_id !== mat.id) {
-      // mantém o vínculo de maturidade atualizado
-      await db.from('identity_assessments').update({ maturity_assessment_id: mat.id }).eq('id', assessment.id);
-      assessment.maturity_assessment_id = mat.id;
+    } else {
+      const patch = {};
+      if (mat?.id && assessment.maturity_assessment_id !== mat.id) patch.maturity_assessment_id = mat.id;
+      if (!assessment.internal_token) patch.internal_token = gerarToken();
+      if (!assessment.external_token) patch.external_token = gerarToken();
+      if (Object.keys(patch).length) {
+        await db.from('identity_assessments').update(patch).eq('id', assessment.id);
+        Object.assign(assessment, patch);
+      }
     }
 
     // status por formulário
@@ -99,11 +105,27 @@ export default async function handler(req, res) {
       if (s.status === 'completed' || !statusByType[s.form_type]) statusByType[s.form_type] = s.status;
     }
 
-    const forms = FORMS_IDENTIDADE.map((f) => ({
-      ...f,
-      status: statusByType[f.type] || (f.fase === 2 ? 'not_applicable' : 'not_started'),
-      link: f.fase === 1 ? `/form/identidade/${f.slug}?token=${assessment.token}` : null,
-    }));
+    const result = assessment.result_json || {};
+    const tokenDoForm = (type) =>
+      type === FORM_TYPES.ESPELHO_INTERNO ? assessment.internal_token
+      : type === FORM_TYPES.ESPELHO_EXTERNO ? assessment.external_token
+      : assessment.token;
+
+    const forms = FORMS_IDENTIDADE.map((f) => {
+      const link = `/form/identidade/${f.slug}?token=${tokenDoForm(f.type)}`;
+      if (!f.shared) {
+        return { ...f, link, status: statusByType[f.type] || 'not_started' };
+      }
+      const ag = f.type === FORM_TYPES.ESPELHO_INTERNO ? result.internal_mirror : result.external_mirror;
+      return {
+        ...f,
+        link,
+        status: ag?.respondents_count ? 'in_progress' : 'not_started',
+        responses_count: ag?.respondents_count || 0,
+        indicator_label: f.type === FORM_TYPES.ESPELHO_INTERNO ? 'eNPS' : 'NPS',
+        indicator: f.type === FORM_TYPES.ESPELHO_INTERNO ? ag?.enps : ag?.nps,
+      };
+    });
 
     return res.status(200).json({
       success: true,
