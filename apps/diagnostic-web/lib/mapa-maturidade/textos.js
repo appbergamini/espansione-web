@@ -1,50 +1,60 @@
 // =====================================================================
 // Mapa de Maturidade Espansione — textos interpretativos por pilar × nível
 // =====================================================================
-// Conteúdo client-facing. Tom estratégico, claro, profissional e NÃO
-// alarmista. Não citar metodologias, ferramentas ou marcas de terceiros.
-// 6 pilares × 4 níveis = 24 textos. Indexado por código de pilar e nível (1–4).
+// 8 pilares × 4 níveis = 32 textos. Tom estratégico, claro, não alarmista,
+// client-facing. Não citar metodologias, ferramentas ou marcas de terceiros.
 
 export const TEXTOS = {
   DE: {
-    1: 'A empresa ainda opera com baixa clareza de direção, tomando decisões de forma mais reativa do que estratégica. O crescimento tende a depender de oportunidades pontuais, urgências ou decisões concentradas em poucas pessoas.',
-    2: 'A empresa já apresenta sinais de direção estratégica, mas ainda falta consistência na definição e sustentação das prioridades. O foco pode se perder diante de demandas, oportunidades ou pressões da rotina.',
-    3: 'A empresa possui direção e prioridades com boa frequência, mas ainda pode apresentar oscilações na disciplina de escolha, comunicação estratégica ou coerência entre ambição e estrutura.',
-    4: 'A direção estratégica está incorporada à rotina decisória. A empresa demonstra clareza sobre prioridades, foco e coerência entre crescimento, estrutura e escolhas.',
+    1: 'A empresa ainda opera com baixa clareza de direção, decidindo mais por urgência do que por prioridade. O foco se dispersa e o crescimento tende a depender de oportunidades pontuais.',
+    2: 'A empresa já apresenta sinais de direção, mas falta consistência em definir e sustentar prioridades. O foco se perde diante de demandas e pressões da rotina.',
+    3: 'A empresa decide com base em prioridades na maior parte do tempo, com algumas oscilações na disciplina de escolha e na visão de futuro.',
+    4: 'A direção estratégica está incorporada à rotina decisória — prioridades claras, foco protegido e tempo dedicado a pensar o futuro do negócio.',
   },
   LI: {
-    1: 'A liderança ainda está muito concentrada na direção ou nos sócios, e as decisões dependem com frequência de aprovação. A operação tende a sobrecarregar poucas pessoas e a autonomia das equipes é limitada.',
-    2: 'A empresa já distribui responsabilidades, mas a delegação ainda é inconsistente e a autonomia varia conforme a situação. Conversas de alinhamento e desenvolvimento de pessoas acontecem de forma irregular.',
-    3: 'As lideranças assumem decisões e responsabilidades com boa frequência, embora ainda haja espaço para fortalecer a delegação, o desenvolvimento de pessoas e a antecipação de conflitos.',
-    4: 'A liderança opera com autonomia e clareza de papéis, delega com confiança e desenvolve pessoas de forma consistente. Decisões e conversas difíceis acontecem no tempo certo, sem depender da direção.',
+    1: 'A liderança ainda está concentrada na direção ou nos sócios, e as decisões dependem de aprovação. A delegação é frágil e as pessoas são pouco desenvolvidas.',
+    2: 'A empresa já distribui responsabilidades, mas a autonomia e a delegação variam, e as conversas de desenvolvimento acontecem de forma irregular.',
+    3: 'As lideranças decidem e desenvolvem pessoas com boa frequência, com espaço para fortalecer a delegação e a antecipação de conflitos.',
+    4: 'A liderança opera com autonomia e clareza de papéis, delega com confiança, desenvolve pessoas e tem suas decisões respeitadas pela direção.',
   },
   CP: {
-    1: 'Os comportamentos esperados e os valores ainda não estão claros nem reforçados na rotina, e a cultura se forma mais por hábito do que por intenção. Atrair e reter pessoas alinhadas tende a ser difícil.',
-    2: 'A empresa já reconhece seus valores e comportamentos desejados, mas eles ainda não aparecem de forma consistente nas decisões e na rotina. O reforço da cultura depende de pessoas ou momentos específicos.',
-    3: 'A cultura está presente nas decisões e na liderança com boa frequência, embora ainda haja oscilações em como os comportamentos são orientados, corrigidos e reconhecidos. A colaboração entre áreas pode ser fortalecida.',
-    4: 'A cultura é viva e orienta atitudes, decisões e a forma de trabalhar. A empresa reforça comportamentos com coerência e consegue atrair, engajar e reter pessoas alinhadas ao seu jeito de ser.',
+    1: 'Comportamentos esperados e valores ainda não são claros nem reforçados, e a cultura se forma por hábito. Atrair e reter pessoas alinhadas tende a ser difícil.',
+    2: 'A empresa reconhece seus valores, mas eles ainda não aparecem de forma consistente nas decisões e na rotina; o reforço depende de pessoas específicas.',
+    3: 'A cultura está presente nas decisões e na liderança com boa frequência, com espaço para padronizar como comportamentos são orientados e reconhecidos.',
+    4: 'A cultura é viva e coerente: orienta atitudes e decisões, é reforçada com consistência, e a empresa atrai, engaja e retém pessoas alinhadas.',
   },
-  IE: {
-    1: 'A empresa ainda comunica de forma genérica o que faz e por que é diferente, e a identidade aparece de maneira inconsistente nos pontos de contato. A promessa de marca e a experiência entregue nem sempre conversam.',
-    2: 'A empresa já tem elementos de posicionamento, mas a identidade ainda não é usada de forma consistente como referência de comunicação e decisão. A coerência entre marca, atendimento e experiência varia.',
-    3: 'A identidade estratégica está clara e é percebida com boa frequência por clientes e equipe, embora ainda haja espaço para reforçar a diferenciação e a coerência em todos os pontos de contato.',
-    4: 'A identidade é clara, diferenciada e coerente entre o que a empresa promete e o que entrega. Equipe, clientes e mercado percebem o posicionamento de forma consistente, e ele orienta decisões e comunicação.',
+  PM: {
+    1: 'A empresa comunica de forma genérica o que faz e por que é diferente, e o posicionamento não orienta decisões. A diferença frente aos concorrentes é pouco percebida.',
+    2: 'Há elementos de posicionamento, mas ainda não são usados como referência consistente; a diferenciação percebida pelo cliente varia.',
+    3: 'O posicionamento está claro e é percebido com boa frequência por time e clientes, com espaço para reforçar a diferença frente aos concorrentes.',
+    4: 'O posicionamento é claro, diferenciado e coerente entre promessa e entrega — usado como referência interna e percebido nitidamente pelo mercado.',
   },
-  CO: {
-    1: 'A geração de receita ainda depende fortemente de indicações, do relacionamento dos sócios ou de esforços pontuais, sem uma rotina comercial estruturada. O acompanhamento de oportunidades e indicadores é incipiente.',
-    2: 'A empresa já tem iniciativas comerciais, mas a rotina de geração e acompanhamento de oportunidades ainda é irregular. O discurso de valor e o uso de indicadores precisam ganhar consistência.',
-    3: 'A área comercial opera com estrutura e acompanhamento na maior parte do tempo, com discurso alinhado ao posicionamento, mas ainda há espaço para fortalecer indicadores e reduzir a dependência de poucos canais.',
-    4: 'A empresa tem rotina comercial estruturada, acompanha oportunidades e indicadores e comunica valor de forma alinhada ao posicionamento. A geração de receita é previsível e não depende de esforços isolados.',
+  EC: {
+    1: 'A experiência entregue é inconsistente e depende de quem atende. Feedbacks de clientes raramente viram melhoria e a confiança é frágil.',
+    2: 'A empresa já se preocupa com a experiência, mas a consistência e o uso de feedbacks ainda são irregulares.',
+    3: 'A experiência é consistente na maior parte do tempo e reforça o posicionamento, com espaço para sistematizar a escuta e a geração de valor percebido.',
+    4: 'A experiência é consistente, reforça a marca e supera expectativas; a empresa escuta o cliente e transforma isso em valor e fidelização.',
   },
-  PL: {
-    1: 'As prioridades ainda raramente viram planos com responsáveis e prazos, e a execução é acompanhada de forma reativa. A operação depende muito de pessoas específicas e absorve mal o crescimento.',
-    2: 'A empresa já transforma parte das prioridades em planos, mas o acompanhamento e a antecipação de riscos ainda são irregulares. Processos essenciais dependem de pessoas e o crescimento gera sobrecarga.',
-    3: 'O planejamento e o acompanhamento da execução acontecem com boa frequência, embora ainda haja espaço para antecipar desvios, formalizar processos e ganhar escalabilidade diante de novas demandas.',
-    4: 'A empresa transforma prioridades em planos claros, acompanha a execução e antecipa riscos com consistência. Os processos essenciais estão documentados e a operação absorve crescimento sem gerar caos.',
+  DC: {
+    1: 'A geração de oportunidades é reativa e depende de poucas pessoas; as conversas comerciais se apoiam muito no preço e as objeções desestabilizam o processo.',
+    2: 'Há iniciativa comercial, mas a escuta do cliente e a comunicação de valor ainda são irregulares, com dependência do preço como argumento.',
+    3: 'A equipe cria oportunidades e comunica valor com boa frequência, com espaço para fortalecer o trato de objeções e reduzir a dependência de preço.',
+    4: 'A área comercial age com iniciativa, entende o cliente antes de propor, conduz conversas por valor e lida bem com objeções e perdas.',
+  },
+  GE: {
+    1: 'Prioridades raramente viram planos com responsáveis e prazos; o acompanhamento é reativo e o crescimento gera caos e sobrecarga.',
+    2: 'A empresa já transforma parte das prioridades em planos, mas o acompanhamento e a antecipação de riscos ainda são irregulares.',
+    3: 'Planejamento e acompanhamento acontecem com boa frequência, com espaço para antecipar desvios e ganhar escalabilidade.',
+    4: 'A empresa transforma prioridades em planos claros, acompanha a execução, antecipa riscos e absorve crescimento sem perder o controle.',
+  },
+  DP: {
+    1: 'A empresa ainda não tem clareza sobre como escolhe competir — eficiência, proximidade ou diferenciação aparecem de forma difusa, sem uma aposta consciente.',
+    2: 'Há sinais de uma direção competitiva, mas ela ainda não é deliberada nem sustentada com consistência nas decisões.',
+    3: 'A empresa já tem uma direção competitiva razoavelmente clara, com espaço para torná-la mais explícita e coerente em toda a operação.',
+    4: 'A empresa sabe como escolhe competir e sustenta essa aposta com consistência — seja por eficiência, proximidade, diferenciação ou inovação.',
   },
 };
 
-// Texto interpretativo de um pilar para um nível (1–4). Fallback seguro.
 export function getTextoInterpretativo(pillarCode, level) {
   const porPilar = TEXTOS[pillarCode];
   if (!porPilar) return '';

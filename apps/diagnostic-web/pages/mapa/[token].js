@@ -14,9 +14,10 @@ import {
   PILARES_ORDENADOS,
   PILAR_BY_CODE,
   ESCALA,
-  OPCAO_NAO_SEI,
+  OPCAO_NA,
   perguntasDoPilar,
 } from '../../lib/mapa-maturidade/pilares';
+import { pilaresInsuficientes } from '../../lib/mapa-maturidade/scoring';
 
 // =====================================================================
 // Mapa de Maturidade Espansione — página pública (acesso por token)
@@ -37,6 +38,7 @@ export default function MapaMaturidadePage() {
   const [pilarIdx, setPilarIdx] = useState(0);
   const [result, setResult] = useState(null);
   const [salvando, setSalvando] = useState(false);
+  const [revisao, setRevisao] = useState([]); // pilares com 2+ "Não se aplica"
 
   // ── carga inicial ────────────────────────────────────────────────
   useEffect(() => {
@@ -115,6 +117,14 @@ export default function MapaMaturidadePage() {
 
   // ── finalização (resultado autoritativo) ─────────────────────────
   async function finalizar() {
+    // bloqueio: pilar com 2+ "Não se aplica" impede leitura confiável
+    const insuf = pilaresInsuficientes(answers);
+    if (insuf.length) {
+      setRevisao(insuf);
+      setFase('revisao');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setFase('enviando');
     try {
       const r = await fetch('/api/mapa/finalize', {
@@ -174,6 +184,11 @@ export default function MapaMaturidadePage() {
             <p style={{ ...sx.txtSec, fontSize: '0.9rem' }}>
               São {PILARES_ORDENADOS.length} pilares, com afirmações objetivas. Leva poucos minutos.
             </p>
+            <div style={sx.aviso}>
+              Use <b>"Não se aplica"</b> apenas quando a afirmação não fizer sentido para a estrutura
+              atual da empresa. Se a prática existe pouco, não existe ou ainda não foi estruturada,
+              escolha <b>"Nunca"</b> ou <b>"Poucas vezes"</b>.
+            </div>
             <button className="btn-primary" onClick={() => setFase('quiz')} style={{ marginTop: '0.6rem' }}>
               Iniciar diagnóstico
             </button>
@@ -217,6 +232,30 @@ export default function MapaMaturidadePage() {
           </Card>
         )}
 
+        {fase === 'revisao' && (
+          <Card>
+            <h2 style={{ marginTop: 0, color: '#fde68a' }}>Revise antes de concluir</h2>
+            <p style={sx.txtSec}>
+              Alguns pilares têm muitas respostas marcadas como <b>"Não se aplica"</b>, o que impede
+              uma leitura confiável. Revise as respostas destes pilares antes de finalizar:
+            </p>
+            <ul style={{ ...sx.txtSec, margin: '0.6rem 0 1rem', paddingLeft: '1.2rem' }}>
+              {revisao.map((nome) => <li key={nome}><b style={{ color: '#fff' }}>{nome}</b></li>)}
+            </ul>
+            <button
+              className="btn-primary"
+              onClick={() => {
+                const idx = PILARES_ORDENADOS.findIndex((p) => p.name === revisao[0]);
+                setPilarIdx(idx >= 0 ? idx : 0);
+                setFase('quiz');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              Revisar respostas →
+            </button>
+          </Card>
+        )}
+
         {fase === 'resultado' && result && <Resultado result={result} cliente={cliente} token={token} />}
       </div>
     </>
@@ -246,11 +285,12 @@ function Afirmacao({ numero, texto, valor, onSelect }) {
           );
         })}
         <button
-          onClick={() => onSelect(OPCAO_NAO_SEI.value)}
-          style={sx.opcaoNaoSei(valor === OPCAO_NAO_SEI.value)}
+          onClick={() => onSelect(OPCAO_NA.value)}
+          style={sx.opcaoNaoSei(valor === OPCAO_NA.value)}
           type="button"
+          title="Esta opção não reduz nem aumenta a pontuação. Ela apenas remove esta afirmação do cálculo quando ela realmente não se aplica à estrutura da empresa."
         >
-          {OPCAO_NAO_SEI.label}
+          {OPCAO_NA.label}
         </button>
       </div>
     </div>
@@ -324,7 +364,7 @@ function Resultado({ result, cliente, token }) {
                   <div style={{ ...sx.miniBarIn, width: `${p.percentage_score}%` }} />
                 </div>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary,#9aa)', whiteSpace: 'nowrap' }}>
-                  {p.percentage_score}% · {p.raw_score}/{p.max_score}{p.unknown_count ? ` · ${p.unknown_count} "não sei"` : ''}
+                  {p.percentage_score}% · {p.raw_score}/{p.max_score}{p.na_answers_count ? ` · ${p.na_answers_count} N/A` : ''}
                 </span>
               </div>
             )}
@@ -475,6 +515,7 @@ const sx = {
     transition: 'all 0.15s ease',
   }),
   eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600 },
+  aviso: { marginTop: '0.9rem', padding: '0.75rem 0.9rem', borderRadius: 8, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', color: 'var(--text-secondary, #9aa)', fontSize: '0.84rem', lineHeight: 1.55 },
   sectionLabel: { fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, margin: '1.7rem 0 0.7rem' },
   indiceBox: {
     position: 'relative',

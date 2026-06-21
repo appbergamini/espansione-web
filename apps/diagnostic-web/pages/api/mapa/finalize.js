@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   const answers = {};
   for (const r of rows || []) answers[r.question_code] = r.value;
 
-  // valida completude das 48 (todas obrigatórias)
+  // valida completude (todas obrigatórias; "Não se aplica" = -1 também conta)
   const faltando = PERGUNTAS_TODAS.filter((q) => typeof answers[q.code] !== 'number').map(
     (q) => q.code
   );
@@ -53,6 +53,15 @@ export default async function handler(req, res) {
     assessment_id: assessment.id,
     projeto_id: assessment.projeto_id,
   });
+
+  // bloqueia conclusão se algum pilar tiver dados insuficientes (2+ "Não se aplica")
+  if (result.has_insufficient_data) {
+    return res.status(422).json({
+      success: false,
+      error: 'Pilares com dados insuficientes — revise as respostas "Não se aplica".',
+      pillars_to_review: result.pillars_to_review,
+    });
+  }
 
   const { error: upErr } = await db
     .from('mapa_assessments')
