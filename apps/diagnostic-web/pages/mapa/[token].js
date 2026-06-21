@@ -18,6 +18,7 @@ import {
   perguntasDoPilar,
 } from '../../lib/mapa-maturidade/pilares';
 import { pilaresInsuficientes } from '../../lib/mapa-maturidade/scoring';
+import { CONTEXTO_PERGUNTAS, validarContexto, CONTEXTO_OUTRO_VALOR } from '../../lib/mapa-maturidade/contexto';
 
 // =====================================================================
 // Mapa de Maturidade Espansione — página pública (acesso por token)
@@ -39,6 +40,8 @@ export default function MapaMaturidadePage() {
   const [result, setResult] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [revisao, setRevisao] = useState([]); // pilares com 2+ "Não se aplica"
+  const [contexto, setContexto] = useState({}); // Contexto da Empresa (Etapa 1)
+  const [contextoTentou, setContextoTentou] = useState(false);
 
   // ── carga inicial ────────────────────────────────────────────────
   useEffect(() => {
@@ -53,6 +56,7 @@ export default function MapaMaturidadePage() {
           return;
         }
         setCliente(data.cliente || '');
+        setContexto(data.context?.raw || {});
         if (data.status === 'concluido' && data.result) {
           setResult(data.result);
           setFase('resultado');
@@ -60,6 +64,8 @@ export default function MapaMaturidadePage() {
         }
         const merged = { ...(data.answers || {}), ...(data.deepening_answers || {}) };
         setAnswers(merged);
+        // Contexto da Empresa é obrigatório antes do Mapa de Maturidade
+        if (!data.context) { setFase('contexto'); return; }
         setFase(Object.keys(merged).length > 0 ? 'quiz' : 'intro');
       } catch (e) {
         setErro('Não foi possível abrir o diagnóstico.');
@@ -81,7 +87,26 @@ export default function MapaMaturidadePage() {
     }
   }
 
-  // ── quiz (pilar por pilar, 8 afirmações cada) ────────────────────
+  // ── Contexto da Empresa (Etapa 1 de 2) ───────────────────────────
+  const contextoCompleto = useMemo(() => validarContexto(contexto).length === 0, [contexto]);
+  function setCtx(code, v) { setContexto((p) => ({ ...p, [code]: v })); }
+  async function avancarContexto() {
+    if (!contextoCompleto) { setContextoTentou(true); return; }
+    setSalvando(true);
+    try {
+      const r = await fetch('/api/mapa/session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, context: contexto }),
+      });
+      const j = await r.json();
+      if (!j.success) { setErro(j.error || 'Erro ao salvar contexto'); setFase('erro'); setSalvando(false); return; }
+    } catch { /* best-effort; o GET valida na retomada */ }
+    setSalvando(false);
+    setFase('intro');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── quiz (pilar por pilar) ───────────────────────────────────────
   const pilar = PILARES_ORDENADOS[pilarIdx];
   const perguntasPilar = useMemo(() => (pilar ? perguntasDoPilar(pilar.code) : []), [pilar]);
   const pilarCompleto = useMemo(
@@ -172,9 +197,36 @@ export default function MapaMaturidadePage() {
           </Card>
         )}
 
+        {fase === 'contexto' && (
+          <Card wide>
+            <div style={sx.eyebrow}>Etapa 1 de 2 · Contexto da Empresa</div>
+            <h1 style={sx.h1}>Contexto da Empresa</h1>
+            {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
+            <p style={sx.txtSec}>
+              Antes de iniciar o Mapa de Maturidade, precisamos entender o contexto atual da empresa.
+              Essas informações não entram no score, mas ajudam a interpretar os resultados com mais
+              precisão e, futuramente, comparar empresas com características semelhantes.
+            </p>
+            <p style={{ ...sx.txtSec, fontSize: '0.9rem' }}>Tempo estimado: 2 a 3 minutos.</p>
+            <div style={{ marginTop: '1.2rem' }}>
+              {CONTEXTO_PERGUNTAS.map((q) => (
+                <ContextoCampo key={q.code} q={q} ctx={contexto} onChange={setCtx} erro={contextoTentou} />
+              ))}
+            </div>
+            <div style={{ marginTop: '1.6rem', textAlign: 'right' }}>
+              <button className="btn-primary" onClick={avancarContexto} disabled={salvando} style={{ opacity: contextoCompleto && !salvando ? 1 : 0.6 }}>
+                Continuar para o Mapa de Maturidade →
+              </button>
+            </div>
+            {contextoTentou && !contextoCompleto && (
+              <p style={{ color: '#fca5a5', fontSize: '0.82rem', marginTop: '0.6rem' }}>Responda todas as perguntas obrigatórias para continuar.</p>
+            )}
+          </Card>
+        )}
+
         {fase === 'intro' && (
           <Card>
-            <div style={sx.eyebrow}>Diagnóstico · Mapa de Maturidade</div>
+            <div style={sx.eyebrow}>Etapa 2 de 2 · Mapa de Maturidade</div>
             <h1 style={sx.h1}>Mapa de Maturidade Espansione</h1>
             {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>
@@ -293,6 +345,46 @@ function Afirmacao({ numero, texto, valor, onSelect }) {
           {OPCAO_NA.label}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ContextoCampo({ q, ctx, onChange, erro }) {
+  const val = ctx[q.code];
+  const vazio = q.type === 'short' ? !(val || '').trim() : !val;
+  const faltaOutro = q.outro && val === CONTEXTO_OUTRO_VALOR && !(ctx[`${q.code}_outro`] || '').trim();
+  const borda = (cond) => (erro && cond ? '1px solid #Da3144' : '1px solid rgba(255,255,255,0.16)');
+  return (
+    <div style={sx.ctxCampo}>
+      <label style={sx.ctxLabel}>{q.label} <span style={{ color: '#Da3144' }}>*</span></label>
+      {q.type === 'short' ? (
+        <input
+          value={val || ''}
+          onChange={(e) => onChange(q.code, e.target.value)}
+          placeholder={q.placeholder || ''}
+          style={{ ...sx.ctxInput, border: borda(vazio) }}
+        />
+      ) : (
+        <div style={sx.opcoes}>
+          {q.options.map((opt) => {
+            const ativo = val === opt;
+            const hint = q.hints?.[opt];
+            return (
+              <button key={opt} type="button" onClick={() => onChange(q.code, opt)} style={sx.opcao(ativo)} title={hint || ''}>
+                {ativo ? '✓ ' : ''}{opt}{hint ? <span style={{ opacity: 0.7, fontWeight: 400 }}> — {hint}</span> : ''}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {q.outro && val === CONTEXTO_OUTRO_VALOR && (
+        <input
+          value={ctx[`${q.code}_outro`] || ''}
+          onChange={(e) => onChange(`${q.code}_outro`, e.target.value)}
+          placeholder={q.outroLabel}
+          style={{ ...sx.ctxInput, marginTop: '0.5rem', border: borda(faltaOutro) }}
+        />
+      )}
     </div>
   );
 }
@@ -516,6 +608,9 @@ const sx = {
   }),
   eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600 },
   aviso: { marginTop: '0.9rem', padding: '0.75rem 0.9rem', borderRadius: 8, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', color: 'var(--text-secondary, #9aa)', fontSize: '0.84rem', lineHeight: 1.55 },
+  ctxCampo: { padding: '0.9rem 0', borderTop: '1px solid rgba(255,255,255,0.07)' },
+  ctxLabel: { display: 'block', marginBottom: '0.55rem', lineHeight: 1.45, fontSize: '0.96rem' },
+  ctxInput: { width: '100%', boxSizing: 'border-box', padding: '0.7rem 0.85rem', fontSize: '0.95rem', borderRadius: 8, background: 'rgba(255,255,255,0.03)', color: 'inherit', fontFamily: 'inherit' },
   sectionLabel: { fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, margin: '1.7rem 0 0.7rem' },
   indiceBox: {
     position: 'relative',

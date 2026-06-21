@@ -10,6 +10,7 @@
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { PERGUNTA_PILAR, labelDaResposta } from '../../../lib/mapa-maturidade/pilares';
+import { validarContexto, buildContextSnapshot } from '../../../lib/mapa-maturidade/contexto';
 
 function isDeepeningCode(code) {
   return /_AP_/.test(code);
@@ -18,7 +19,7 @@ function isDeepeningCode(code) {
 async function resolveAssessment(db, token) {
   const { data } = await db
     .from('mapa_assessments')
-    .select('id, projeto_id, status, result_json, started_at')
+    .select('id, projeto_id, status, result_json, context_json, started_at')
     .eq('token', token)
     .maybeSingle();
   return data || null;
@@ -61,6 +62,7 @@ export default async function handler(req, res) {
       answers,
       deepening_answers: deepeningAnswers,
       result: assessment.result_json || null,
+      context: assessment.context_json || null,
     });
   }
 
@@ -69,7 +71,24 @@ export default async function handler(req, res) {
     if (assessment.status === 'concluido') {
       return res.status(409).json({ success: false, error: 'Avaliação já concluída' });
     }
-    const { answers, status } = req.body || {};
+    const { answers, status, context } = req.body || {};
+
+    // Contexto da Empresa (perfil, fora do score) — snapshot por medição
+    if (context && typeof context === 'object') {
+      const faltando = validarContexto(context);
+      if (faltando.length) {
+        return res.status(422).json({ success: false, error: 'Contexto da Empresa incompleto', faltando });
+      }
+      const { error } = await db
+        .from('mapa_assessments')
+        .update({ context_json: buildContextSnapshot(context) })
+        .eq('id', assessment.id);
+      if (error) {
+        console.error('[mapa/session] context', error);
+        return res.status(500).json({ success: false, error: 'Erro ao salvar contexto' });
+      }
+    }
+
     if (answers && typeof answers === 'object') {
       const rows = [];
       for (const [code, raw] of Object.entries(answers)) {

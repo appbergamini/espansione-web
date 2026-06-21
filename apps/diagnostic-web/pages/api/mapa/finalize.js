@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   const { data: assessment } = await db
     .from('mapa_assessments')
-    .select('id, projeto_id, status')
+    .select('id, projeto_id, status, context_json')
     .eq('token', token)
     .maybeSingle();
   if (!assessment) return res.status(404).json({ success: false, error: 'Link inválido' });
@@ -53,6 +53,8 @@ export default async function handler(req, res) {
     assessment_id: assessment.id,
     projeto_id: assessment.projeto_id,
   });
+  // referência ao snapshot de Contexto da Empresa daquela medição (fora do score)
+  result.context = assessment.context_json || null;
 
   // bloqueia conclusão se algum pilar tiver dados insuficientes (2+ "Não se aplica")
   if (result.has_insufficient_data) {

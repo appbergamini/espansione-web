@@ -34,18 +34,9 @@ export const FORM_ESSENCIA = {
         { code: 'ED_RESP_NASC', type: 'short', required: true, label: 'Data de nascimento (DD/MM/AA).' },
         { code: 'ED_01', type: 'short', required: true, label: 'Nome da empresa ou marca.' },
         { code: 'ED_02', type: 'short', required: true, label: 'Site, Instagram ou principal canal digital.' },
-        {
-          code: 'ED_03', type: 'single', required: true, label: 'Estágio atual da empresa.',
-          options: ['Estruturação', 'Crescimento', 'Reposicionamento', 'Consolidação', 'Sucessão', 'Virada ou correção de rota'],
-        },
-        {
-          code: 'ED_04', type: 'single', required: true, label: 'Número de colaboradores.',
-          options: ['Apenas eu', '2 a 10', '11 a 50', '51 a 100', 'Mais de 100'],
-        },
-        {
-          code: 'ED_05', type: 'single', required: true, label: 'Faixa de faturamento anual.',
-          options: ['Até R$ 120 mil', 'R$ 120 mil a R$ 500 mil', 'R$ 500 mil a R$ 2 milhões', 'R$ 2 milhões a R$ 6 milhões', 'R$ 6 milhões a R$ 12 milhões', 'Mais de R$ 12 milhões', 'Prefiro não informar'],
-        },
+        // ED_03 (estágio), ED_04 (colaboradores) e ED_05 (faturamento) foram
+        // removidos: agora são capturados na etapa "Contexto da Empresa" do
+        // Mapa de Maturidade (sem duplicar com o cliente).
       ],
     },
     {
