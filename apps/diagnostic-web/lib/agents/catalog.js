@@ -1,18 +1,16 @@
 // lib/agents/catalog.js
 //
-// TASK FIX.3 — catálogo canônico dos 15 agentes do pipeline Espansione.
+// TASK FIX.3 — catálogo canônico dos agentes do pipeline Espansione.
 // FONTE ÚNICA para UI (painel admin, dashboard do cliente, entregável
-// consolidado). Nomes batem com `AGENT_CONFIGS` de lib/ai/pipeline.js
-// e com os `name` exportados por lib/agents/Agent_XX_*.js — espelho
-// do código, não memória.
+// consolidado) e para a configuração estrutural do pipeline.
 //
 // Regras:
 //   - Não hardcodar 13, 14 ou 15 em lugar nenhum da UI. Usar
 //     TOTAL_AGENTES / TOTAL_AGENTES_NAO_MODULARES.
 //   - Não duplicar este catálogo. Qualquer componente que precise
 //     de metadados de agente importa daqui.
-//   - Ao adicionar/remover agente: editar este arquivo + o registro
-//     em AGENTS_MAP/AGENT_CONFIGS/pipeline, nada mais.
+//   - Ao adicionar/remover agente: editar este arquivo e o registro em
+//     AGENTS_MAP. O pipeline deriva AGENT_CONFIGS daqui.
 
 /**
  * @typedef {Object} AgenteMeta
@@ -29,12 +27,9 @@
  * @property {boolean}  modular              Opcional no entregável
  * @property {number}   ordem_exibicao
  * @property {number[]} inputs               Agent_nums consumidos (FIX.4).
- *                                           ESPELHO de AGENT_CONFIGS em
- *                                           lib/ai/pipeline.js — se mudar
- *                                           um, mudar o outro. Diverge
- *                                           propositalmente do que a spec
- *                                           escrita escritura — código
- *                                           real venceu.
+ *                                           Fonte canônica para dependências
+ *                                           e para o contexto estrutural do
+ *                                           pipeline.
  * @property {number[]} [inputs_opcionais]   Subconjunto de `inputs` que
  *                                           pode faltar sem bloquear a
  *                                           execução (ex.: Agente 15 aceita
@@ -283,6 +278,55 @@ export function getAgenteByNum(num) {
  */
 export function getAgenteByKey(key) {
   return CATALOGO_AGENTES.find(a => a.key === key) || null;
+}
+
+function uniqueNums(nums = []) {
+  const vistos = new Set();
+  const out = [];
+  for (const num of nums) {
+    const parsed = Number(num);
+    if (!Number.isFinite(parsed) || vistos.has(parsed)) continue;
+    vistos.add(parsed);
+    out.push(parsed);
+  }
+  return out;
+}
+
+/**
+ * Constrói a configuração usada pelo pipeline a partir do catálogo.
+ *
+ * `inputs_opcionais` do catálogo representam dependências que podem faltar
+ * sem bloquear a execução. `optionalInputs` exportado por um Agent_NN é
+ * contexto extra de execução, como o Agente 5 lendo o output 6 quando existe
+ * em reprocessamentos, mas sem torná-lo dependência formal.
+ *
+ * @param {Record<number|string, object>} [agentsMap]
+ * @returns {Record<number, { name: string, stage: string, inputs: number[], optionalInputs?: number[], checkpoint: number|null, modular?: boolean }>}
+ */
+export function buildAgentConfigs(agentsMap = {}) {
+  return CATALOGO_AGENTES.reduce((configs, meta) => {
+    const agent = agentsMap[meta.agent_num] || {};
+    const optionalInputs = uniqueNums([
+      ...(meta.inputs_opcionais || []),
+      ...(agent.optionalInputs || []),
+      ...(agent.inputs_opcionais || []),
+    ]);
+    const optionalSet = new Set(optionalInputs);
+    const requiredInputs = uniqueNums(meta.inputs || [])
+      .filter(input => !optionalSet.has(input));
+
+    const config = {
+      name: meta.nome_exibicao,
+      stage: meta.stage,
+      inputs: requiredInputs,
+      checkpoint: meta.checkpoint ?? null,
+    };
+    if (optionalInputs.length > 0) config.optionalInputs = optionalInputs;
+    if (meta.modular) config.modular = true;
+
+    configs[meta.agent_num] = config;
+    return configs;
+  }, {});
 }
 
 /**

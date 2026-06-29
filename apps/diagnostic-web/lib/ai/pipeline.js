@@ -1,7 +1,11 @@
 import { db } from '../db';
 import { AIRouter } from './router';
 import { AGENTS_MAP } from '../agents';
-import { podeExecutar } from '../agents/catalog';
+import {
+  CATALOGO_AGENTES,
+  buildAgentConfigs,
+  podeExecutar,
+} from '../agents/catalog';
 import { parseFindingsFromRaw, materializarFindings } from '../curadoria/extractFindings';
 import { supabaseAdmin } from '../supabaseAdmin';
 import {
@@ -20,48 +24,32 @@ import {
   getRelevantCheckpointApprovalRecords,
 } from '../checkpoints/structuredNotes';
 
-export const AGENT_CONFIGS = {
-  1:  { name: 'Roteiros VI — Entrevistas Internas',      stage: 'pre_diagnostico',      inputs: [],            checkpoint: null },
-  2:  { name: 'Consolidado da Visão Interna (VI)',        stage: 'diagnostico_interno',  inputs: [1],           checkpoint: null },
-  3:  { name: 'Roteiros VE — Entrevistas Cliente',        stage: 'diagnostico_externo',  inputs: [2],           checkpoint: null },
-  4:  { name: 'Consolidado da Visão Externa (VE)',        stage: 'diagnostico_externo',  inputs: [3],           checkpoint: null },
-  5:  { name: 'Visão de Mercado (VM)',                    stage: 'diagnostico_externo',  inputs: [2],           optionalInputs: [6], checkpoint: null },
-  6:  { name: 'Decodificação e Direcionamento Estratégico', stage: 'sintese',            inputs: [2, 4, 5],     checkpoint: 1    },
-  7:  { name: 'Valores e Atributos',                      stage: 'estrategia',           inputs: [6],           checkpoint: null },
-  8:  { name: 'Diretrizes Estratégicas',                  stage: 'estrategia',           inputs: [6, 7],        checkpoint: null },
-  9:  { name: 'Plataforma de Branding',                   stage: 'estrategia',           inputs: [6, 7, 8],     checkpoint: 2    },
-  10: { name: 'Identidade Verbal (UVV)',                  stage: 'visual_verbal',        inputs: [6, 9],        checkpoint: null },
-  11: { name: 'One Page de Personalidade (Visual)',       stage: 'visual_verbal',        inputs: [6, 9, 10],    checkpoint: 3    },
-  12: { name: 'One Page de Experiência',                  stage: 'cx',                   inputs: [6, 9],        checkpoint: null },
-  13: { name: 'Plano de Comunicação — A Marca Fala',      stage: 'comunicacao',          inputs: [6, 7, 8, 9, 10, 11, 12], checkpoint: 4 },
-  // Modular — só roda se o projeto contratou escopo de Marca Empregadora.
-  // Sem checkpoint próprio; aprovação acompanha o CKPT 4 (Agente 13).
-  // Flag `modular` consumida pela UI (decide se exibe botão) e pela
-  // TASK 4.4 (decide se inclui Parte 5.2 do entregável final).
-  14: { name: 'Plataforma de Marca Empregadora (EVP)',    stage: 'marca_empregadora',    inputs: [2, 6, 7, 9], checkpoint: null, modular: true },
-  // Último agente do pipeline editorial. Roda APÓS CKPT 4 aprovado —
-  // a lógica de bloqueio em Pipeline.runAgent já garante isso:
-  // agentNum=15 > 13 (que criou CKPT 4), então pending CKPT 4 bloqueia.
-  // Consome apenas resumo_executivo + conclusoes dos demais (context
-  // window tratável). Gera Carta de Abertura + Sumário Executivo para
-  // a Parte 0 do entregável final (TASK 4.4).
-  15: { name: 'Consolidador Editorial do Entregável Final', stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], optionalInputs: [14], checkpoint: null },
-  // Agente 16 — Exportador para Brand Memory. Modular, disparo manual.
-  16: { name: 'Exportador para Brand Memory',              stage: 'encerramento',       inputs: [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], optionalInputs: [14], checkpoint: null, modular: true },
+export const AGENT_CONFIGS = buildAgentConfigs(AGENTS_MAP);
+
+const STAGE_METADATA = {
+  pre_diagnostico: { label: 'Pré-Diagnóstico' },
+  diagnostico_interno: { label: 'Diagnóstico Interno' },
+  diagnostico_externo: { label: 'Diagnóstico Externo' },
+  sintese: { label: 'Síntese' },
+  estrategia: { label: 'Estratégia' },
+  visual_verbal: { label: 'Visual & Verbal' },
+  cx: { label: 'CX' },
+  comunicacao: { label: 'Comunicação' },
+  marca_empregadora: { label: 'Marca Empregadora (EVP)', modular: true },
+  encerramento: { label: 'Encerramento Editorial' },
 };
 
-export const STAGES = {
-  pre_diagnostico:     { agents: [1],               label: 'Pré-Diagnóstico' },
-  diagnostico_interno: { agents: [2],               label: 'Diagnóstico Interno' },
-  diagnostico_externo: { agents: [3, 4, 5],         label: 'Diagnóstico Externo' },
-  sintese:             { agents: [6],               label: 'Síntese' },
-  estrategia:          { agents: [7, 8, 9],         label: 'Estratégia' },
-  visual_verbal:       { agents: [10, 11],          label: 'Visual & Verbal' },
-  cx:                  { agents: [12],              label: 'CX' },
-  comunicacao:         { agents: [13],              label: 'Comunicação' },
-  marca_empregadora:   { agents: [14],              label: 'Marca Empregadora (EVP)', modular: true },
-  encerramento:        { agents: [15, 16],          label: 'Encerramento Editorial' },
-};
+export const STAGES = Object.fromEntries(
+  Object.entries(STAGE_METADATA).map(([stage, metadata]) => [
+    stage,
+    {
+      ...metadata,
+      agents: CATALOGO_AGENTES
+        .filter(agent => agent.stage === stage)
+        .map(agent => agent.agent_num),
+    },
+  ]),
+);
 
 const AGENT_FORM_TYPES = {
   1: ['intake_socios', 'intake_colaboradores', 'posicionamento_estrategico'],
@@ -85,15 +73,18 @@ const AGENT_FORM_TYPES = {
 const AGENTS_WITH_CIS = new Set([1, 2, 6]);
 const AGENTS_WITH_QUALITY_METADATA = new Set([6, 9, 11, 12, 13]);
 
-async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}) {
+async function loadAgentContext(projetoId, agentNum, {
+  includeCheckpointRecords = false,
+  includePipelineExtras = false,
+} = {}) {
   const agent = AGENTS_MAP[agentNum];
   if (!agent) throw new Error(`Agente ${agentNum} não implementado no AGENTS_MAP`);
 
   const config = AGENT_CONFIGS[agentNum];
-
   const inputs = config.inputs || [];
   const optionalInputs = config.optionalInputs || [];
   const contextInputs = [...new Set([...inputs, ...optionalInputs])];
+
   const context = {
     projeto: await db.getProject(projetoId),
     intake: await db.getIntake(projetoId),
@@ -119,7 +110,7 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
     context.cisAssessments = await db.getCisAssessmentsByProjeto?.(projetoId) || [];
   }
 
-  if (supabaseAdmin) {
+  if (includeCheckpointRecords && supabaseAdmin) {
     try {
       context.checkpointApprovalRecords = await getRelevantCheckpointApprovalRecords(
         supabaseAdmin,
@@ -137,7 +128,7 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
   // (Persona ≠ Cluster).
   // FIX.33 — apenas clusters com ativo=true entram no input. O
   // consultor seleciona quais usar via checkbox no painel.
-  if (agentNum === 13 && supabaseAdmin) {
+  if (includePipelineExtras && agentNum === 13 && supabaseAdmin) {
     try {
       const { data: clusters } = await supabaseAdmin
         .from('clusters_comunicacao')
@@ -153,7 +144,7 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
     }
   }
 
-  if (agentNum === 6 && supabaseAdmin) {
+  if (includePipelineExtras && agentNum === 6 && supabaseAdmin) {
     try {
       context.curatedEvidencePack = await getReadyCuratedEvidencePack(supabaseAdmin, projetoId);
     } catch (e) {
@@ -166,7 +157,7 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
   // curadoria como insumo prioritário. Filtra apenas o que entra no
   // relatório final (incluir_no_relatorio = true E status entre os
   // aprovados/editados/validados).
-  if (agentNum === 15 && supabaseAdmin) {
+  if (includePipelineExtras && agentNum === 15 && supabaseAdmin) {
     try {
       const { data: blocks } = await supabaseAdmin
         .from('analysis_blocks')
@@ -182,6 +173,15 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
       context.curatedBlocks = [];
     }
   }
+
+  return { agent, config, context, inputs, optionalInputs };
+}
+
+async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}) {
+  const { agent, context, inputs } = await loadAgentContext(projetoId, agentNum, {
+    includeCheckpointRecords: true,
+    includePipelineExtras: true,
+  });
 
   let finalContext = context;
   // Se o frontend passou enrichment pré-computado (caso do split em 2
@@ -238,34 +238,9 @@ export const Pipeline = {
   // no caso do 5). Retorna o payload pro frontend injetar na chamada
   // de síntese. Usado pra split de agentes caros em 2 etapas.
   async enrichOnly(projetoId, agentNum) {
-    const agent = AGENTS_MAP[agentNum];
-    if (!agent) throw new Error(`Agente ${agentNum} não implementado no AGENTS_MAP`);
+    const { agent, context } = await loadAgentContext(projetoId, agentNum);
     if (typeof agent.enrichContext !== 'function') {
       return {}; // nada a enriquecer — agent não precisa de etapa prévia
-    }
-
-    const config = AGENT_CONFIGS[agentNum];
-    const inputs = config.inputs || [];
-    const optionalInputs = config.optionalInputs || [];
-    const contextInputs = [...new Set([...inputs, ...optionalInputs])];
-    const context = {
-      projeto: await db.getProject(projetoId),
-      intake: await db.getIntake(projetoId),
-      previousOutputs: contextInputs.length > 0 ? await db.getOutputs(projetoId, contextInputs) : {},
-      formularios: [],
-      cisAssessments: [],
-      _agentInputs: inputs,
-      _agentOptionalInputs: optionalInputs,
-    };
-
-    const formTypes = AGENT_FORM_TYPES[agentNum] || [];
-    if (formTypes.length > 0) {
-      const results = await Promise.all(formTypes.map(t => db.getFormularios(projetoId, t)));
-      context.formularios = results.flat();
-    }
-
-    if (AGENTS_WITH_CIS.has(agentNum)) {
-      context.cisAssessments = await db.getCisAssessmentsByProjeto?.(projetoId) || [];
     }
 
     const enriched = await agent.enrichContext(context);
