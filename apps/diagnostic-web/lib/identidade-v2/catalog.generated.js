@@ -2,7 +2,7 @@
 // GERADO AUTOMATICAMENTE — NÃO EDITAR À MÃO.
 // Fonte: data/identidade/banco_mvp_v1.xlsx (aba Banco_Completo_Anotado).
 // Regenerar: node scripts/build-identidade-catalog.cjs
-// Total de perguntas: 233
+// Total de perguntas: 231
 // =====================================================================
 
 /** @typedef {Object} PerguntaIdentidade */
@@ -5083,7 +5083,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 54,
+    "ordem_core": 52,
     "response_type": "multipla_ate3",
     "pergunta": "Quais temas devem receber mais atenção nos próximos 12 meses? (escolha até 3)",
     "opcoes": [
@@ -5119,7 +5119,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 36,
+    "ordem_core": 34,
     "response_type": "escala4_frequencia",
     "pergunta": "As informações necessárias chegam às pessoas com clareza e no momento adequado.",
     "opcoes": [
@@ -5165,7 +5165,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 37,
+    "ordem_core": 35,
     "response_type": "escala4_frequencia",
     "pergunta": "Decisões, mudanças e prioridades são comunicadas com transparência.",
     "opcoes": [
@@ -5346,7 +5346,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 38,
+    "ordem_core": 36,
     "response_type": "escala4_concordancia",
     "pergunta": "A comunicação externa explica com clareza o que a empresa faz, para quem e por que é diferente.",
     "opcoes": [
@@ -5392,7 +5392,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 39,
+    "ordem_core": 37,
     "response_type": "escala4_frequencia",
     "pergunta": "A mensagem e a identidade da empresa são consistentes nos diferentes canais e pontos de contato.",
     "opcoes": [
@@ -5484,7 +5484,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 40,
+    "ordem_core": 38,
     "response_type": "escala4_frequencia",
     "pergunta": "A equipe comercial comunica valor com clareza, sem depender principalmente do preço como argumento.",
     "opcoes": [
@@ -5530,7 +5530,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 41,
+    "ordem_core": 39,
     "response_type": "escala4_frequencia",
     "pergunta": "Propostas, apresentações e conversas comerciais deixam claro o problema resolvido, a entrega e o valor esperado.",
     "opcoes": [
@@ -5576,7 +5576,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 42,
+    "ordem_core": 40,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa coleta feedbacks de clientes de forma sistemática e intencional.",
     "opcoes": [
@@ -5622,7 +5622,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 43,
+    "ordem_core": 41,
     "response_type": "escala4_frequencia",
     "pergunta": "Os feedbacks de clientes são transformados em melhorias de processos, comunicação e experiência.",
     "opcoes": [
@@ -5809,7 +5809,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 18,
+    "ordem_core": 16,
     "response_type": "escala4_concordancia",
     "pergunta": "O propósito da empresa está claramente definido e orienta decisões importantes.",
     "opcoes": [
@@ -5907,7 +5907,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 19,
+    "ordem_core": 17,
     "response_type": "escala4_frequencia",
     "pergunta": "Os valores da empresa orientam de forma consistente as decisões e os comportamentos do dia a dia.",
     "opcoes": [
@@ -6042,7 +6042,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 20,
+    "ordem_core": 18,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa possui um diferencial claro, consistente e fácil de explicar.",
     "opcoes": [
@@ -6088,7 +6088,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 21,
+    "ordem_core": 19,
     "response_type": "escala4_frequencia",
     "pergunta": "O posicionamento da marca é utilizado como referência para decisões de oferta, atendimento, comunicação e crescimento.",
     "opcoes": [
@@ -6244,7 +6244,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 22,
+    "ordem_core": 20,
     "response_type": "escala4_concordancia",
     "pergunta": "Existe coerência entre o que a empresa diz, o que entrega ao mercado e o que vive internamente.",
     "opcoes": [
@@ -6340,7 +6340,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 23,
+    "ordem_core": 21,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa possui uma reputação forte e coerente com o posicionamento que deseja ocupar.",
     "opcoes": [
@@ -6439,7 +6439,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 24,
+    "ordem_core": 22,
     "response_type": "escala4_frequencia",
     "pergunta": "A personalidade da marca (tom, jeito de se comunicar e de se relacionar) é clara e aplicada de forma consistente.",
     "opcoes": [
@@ -6485,7 +6485,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 25,
+    "ordem_core": 23,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa cumpre, de forma consistente, a promessa que faz ao mercado.",
     "opcoes": [
@@ -6606,7 +6606,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 26,
+    "ordem_core": 24,
     "response_type": "escala4_concordancia",
     "pergunta": "A proposta de valor da empresa é clara, relevante para o cliente e sustentável para o negócio.",
     "opcoes": [
@@ -6652,7 +6652,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 27,
+    "ordem_core": 25,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa possui objetivos estratégicos claros para os próximos três anos.",
     "opcoes": [
@@ -6698,7 +6698,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 28,
+    "ordem_core": 26,
     "response_type": "escala4_frequencia",
     "pergunta": "As prioridades estratégicas são definidas e protegidas mesmo diante das urgências da rotina.",
     "opcoes": [
@@ -7016,7 +7016,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 29,
+    "ordem_core": 27,
     "response_type": "escala4_concordancia",
     "pergunta": "A entrega possui padrões suficientes para garantir consistência, qualidade e capacidade de crescimento.",
     "opcoes": [
@@ -7062,7 +7062,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 30,
+    "ordem_core": 28,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa consegue crescer sem aumentar na mesma proporção a dependência dos sócios, os custos e a complexidade operacional.",
     "opcoes": [
@@ -7108,7 +7108,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 31,
+    "ordem_core": 29,
     "response_type": "escala4_frequencia",
     "pergunta": "As prioridades são transformadas em planos com responsáveis, prazos e critérios de acompanhamento.",
     "opcoes": [
@@ -7154,7 +7154,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 32,
+    "ordem_core": 30,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa acompanha indicadores confiáveis para orientar decisões e corrigir desvios.",
     "opcoes": [
@@ -7379,7 +7379,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 33,
+    "ordem_core": 31,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa conhece bem seus concorrentes e o que a diferencia diante das alternativas do mercado.",
     "opcoes": [
@@ -7425,7 +7425,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 34,
+    "ordem_core": 32,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa tem clareza sobre quais perfis de clientes são prioritários e direciona esforços a eles.",
     "opcoes": [
@@ -7471,7 +7471,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 35,
+    "ordem_core": 33,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa entrega resultados financeiros consistentes e sustentáveis para sustentar o crescimento.",
     "opcoes": [
@@ -7588,37 +7588,6 @@ export const CATALOGO_IDENTIDADE = [
     "observacao": ""
   },
   {
-    "id": "SD-PER-004",
-    "publico": "socios",
-    "subperfil": "todos",
-    "sistema": "Perfil",
-    "objetivo": "Contexto",
-    "indicador": "Porte",
-    "indicador_canonico": null,
-    "anchor_cobertura": null,
-    "score_family": "none",
-    "tier_mvp": "Core",
-    "produto": "Identidade (pago)",
-    "is_free": false,
-    "is_paid_core": true,
-    "is_paid_extra": false,
-    "usar_no_calculo_v1": false,
-    "obrigatoria": true,
-    "ordem_core": 4,
-    "response_type": "selecao_unica",
-    "pergunta": "Quantas pessoas trabalham atualmente na empresa?",
-    "opcoes": [
-      "1 a 4",
-      "5 a 10",
-      "11 a 30",
-      "31 a 100",
-      "Mais de 100"
-    ],
-    "max_escolhas": null,
-    "regra_condicional": null,
-    "observacao": ""
-  },
-  {
     "id": "SD-PER-005",
     "publico": "socios",
     "subperfil": "todos",
@@ -7635,34 +7604,9 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 5,
+    "ordem_core": 4,
     "response_type": "numero",
     "pergunta": "Quantos sócios participam atualmente da empresa?",
-    "opcoes": [],
-    "max_escolhas": null,
-    "regra_condicional": null,
-    "observacao": ""
-  },
-  {
-    "id": "SD-PER-006",
-    "publico": "socios",
-    "subperfil": "todos",
-    "sistema": "Perfil",
-    "objetivo": "Contexto",
-    "indicador": "Segmento",
-    "indicador_canonico": null,
-    "anchor_cobertura": null,
-    "score_family": "none",
-    "tier_mvp": "Core",
-    "produto": "Identidade (pago)",
-    "is_free": false,
-    "is_paid_core": true,
-    "is_paid_extra": false,
-    "usar_no_calculo_v1": false,
-    "obrigatoria": true,
-    "ordem_core": 6,
-    "response_type": "texto_curto",
-    "pergunta": "Qual é o principal segmento de atuação da empresa?",
     "opcoes": [],
     "max_escolhas": null,
     "regra_condicional": null,
@@ -7685,7 +7629,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 7,
+    "ordem_core": 5,
     "response_type": "selecao_unica",
     "pergunta": "Há quanto tempo sua empresa existe?",
     "opcoes": [
@@ -7716,7 +7660,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 8,
+    "ordem_core": 6,
     "response_type": "numero",
     "pergunta": "Qual é a sua idade?",
     "opcoes": [],
@@ -7741,7 +7685,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 9,
+    "ordem_core": 7,
     "response_type": "texto_curto",
     "pergunta": "Cidade",
     "opcoes": [],
@@ -7766,7 +7710,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 10,
+    "ordem_core": 8,
     "response_type": "selecao_unica",
     "pergunta": "Estado (UF)",
     "opcoes": [
@@ -7819,7 +7763,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 11,
+    "ordem_core": 9,
     "response_type": "selecao_unica",
     "pergunta": "Sexo",
     "opcoes": [
@@ -7848,7 +7792,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 12,
+    "ordem_core": 10,
     "response_type": "selecao_unica",
     "pergunta": "Grau de escolaridade",
     "opcoes": [
@@ -7878,7 +7822,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 13,
+    "ordem_core": 11,
     "response_type": "selecao_unica",
     "pergunta": "Número de colaboradores",
     "opcoes": [
@@ -7908,7 +7852,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 14,
+    "ordem_core": 12,
     "response_type": "selecao_unica",
     "pergunta": "Qual o segmento de atuação do seu negócio?",
     "opcoes": [
@@ -7938,7 +7882,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": false,
-    "ordem_core": 15,
+    "ordem_core": 13,
     "response_type": "selecao_unica",
     "pergunta": "Se for serviço, qual o tipo?",
     "opcoes": [
@@ -7984,7 +7928,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": false,
-    "ordem_core": 16,
+    "ordem_core": 14,
     "response_type": "selecao_unica",
     "pergunta": "Se for comércio, qual o tipo?",
     "opcoes": [
@@ -8027,7 +7971,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": false,
-    "ordem_core": 17,
+    "ordem_core": 15,
     "response_type": "selecao_unica",
     "pergunta": "Se for indústria, qual o tipo?",
     "opcoes": [
@@ -8065,7 +8009,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 44,
+    "ordem_core": 42,
     "response_type": "escala4_concordancia",
     "pergunta": "Papéis, responsabilidades e níveis de decisão estão claramente definidos.",
     "opcoes": [
@@ -8111,7 +8055,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 45,
+    "ordem_core": 43,
     "response_type": "escala4_frequencia",
     "pergunta": "As decisões são tomadas no nível adequado, sem dependência excessiva dos sócios ou da direção.",
     "opcoes": [
@@ -8249,7 +8193,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 46,
+    "ordem_core": 44,
     "response_type": "escala4_frequencia",
     "pergunta": "Os líderes orientam prioridades, acompanham entregas e corrigem desvios com consistência.",
     "opcoes": [
@@ -8295,7 +8239,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 47,
+    "ordem_core": 45,
     "response_type": "escala4_frequencia",
     "pergunta": "A direção oferece feedback periódico e estruturado aos líderes sobre sua atuação.",
     "opcoes": [
@@ -8341,7 +8285,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 48,
+    "ordem_core": 46,
     "response_type": "escala4_frequencia",
     "pergunta": "Os líderes desenvolvem as pessoas por meio de orientação, feedback, delegação e acompanhamento.",
     "opcoes": [
@@ -8525,7 +8469,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 49,
+    "ordem_core": 47,
     "response_type": "escala4_concordancia",
     "pergunta": "As competências atuais da equipe são suficientes para sustentar o crescimento planejado.",
     "opcoes": [
@@ -8571,7 +8515,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 50,
+    "ordem_core": 48,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa desenvolve de forma contínua as competências técnicas, comportamentais e de liderança necessárias.",
     "opcoes": [
@@ -8617,7 +8561,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 51,
+    "ordem_core": 49,
     "response_type": "escala4_frequencia",
     "pergunta": "As pessoas entregam os resultados esperados com qualidade, responsabilidade e consistência.",
     "opcoes": [
@@ -8663,7 +8607,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 52,
+    "ordem_core": 50,
     "response_type": "escala4_frequencia",
     "pergunta": "Existe colaboração efetiva entre equipes e áreas para alcançar objetivos comuns.",
     "opcoes": [
@@ -8709,7 +8653,7 @@ export const CATALOGO_IDENTIDADE = [
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 53,
+    "ordem_core": 51,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa reconhece e reforça atitudes e resultados alinhados à estratégia.",
     "opcoes": [

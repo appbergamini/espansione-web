@@ -15,9 +15,9 @@ import {
   indicadoresComparaveis,
 } from '../catalog.js';
 
-test('catálogo tem 233 perguntas, IDs únicos', () => {
-  assert.equal(CATALOGO_IDENTIDADE.length, 233);
-  assert.equal(new Set(CATALOGO_IDENTIDADE.map((q) => q.id)).size, 233);
+test('catálogo tem 231 perguntas, IDs únicos', () => {
+  assert.equal(CATALOGO_IDENTIDADE.length, 231);
+  assert.equal(new Set(CATALOGO_IDENTIDADE.map((q) => q.id)).size, 231);
 });
 
 test('toda maturity tem indicador_canonico', () => {
