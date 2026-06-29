@@ -39,11 +39,12 @@ export async function resolveVizData(projetoId, conteudo) {
   if ([...MARKERS_CIS].some(t => tipos.has(t))) {
     cisAssessments = await fetchCisAssessmentsDoProjeto(projetoId);
   }
+  const cisIndex = cisAssessments ? buildCisAssessmentIndex(cisAssessments) : null;
 
   // Agregado do TIME = só colaboradores (helper centraliza filtro por
   // papel + agregação). Sem o filtro, os markers `*_time` misturariam
   // sócios + colaboradores e deturpariam a leitura coletiva.
-  const agregado = agregarCisDoTime(cisAssessments);
+  const agregado = cisAssessments ? agregarCisDoTime(cisAssessments) : null;
 
   // ─── Maturidade 360°: uma única consulta ────────────────────────────
   let maturidade360 = null;
@@ -52,12 +53,15 @@ export async function resolveVizData(projetoId, conteudo) {
   }
 
   // ─── Popular vizData por marker ─────────────────────────────────────
+  const chavesProcessadas = new Set();
   for (const marker of markers) {
     const chave = vizMarkerKey(marker);
+    if (chavesProcessadas.has(chave)) continue;
+    chavesProcessadas.add(chave);
 
     switch (marker.tipo) {
       case 'radar_disc_socio': {
-        const dados = resolverRadarDiscSocio(cisAssessments, marker.parametro);
+        const dados = resolverRadarDiscSocio(cisIndex, marker.parametro);
         if (dados) vizData[chave] = dados;
         break;
       }
@@ -151,16 +155,33 @@ async function fetchMaturidade360(projetoId) {
 
 // ─── Resolvers por tipo ───────────────────────────────────────────────
 
-function resolverRadarDiscSocio(assessments, slug) {
-  if (!assessments || !slug) return null;
-  let alvo = assessments.find(a => slugify(a.nome) === slug);
+export function buildCisAssessmentIndex(assessments = []) {
+  const items = [];
+  const bySlug = new Map();
+
+  for (const assessment of (assessments || [])) {
+    const normalizedSlug = slugify(assessment?.nome);
+    const item = { ...assessment, _normalizedSlug: normalizedSlug };
+    items.push(item);
+    if (normalizedSlug && !bySlug.has(normalizedSlug)) {
+      bySlug.set(normalizedSlug, item);
+    }
+  }
+
+  return { items, bySlug };
+}
+
+export function resolverRadarDiscSocio(cisIndex, slug) {
+  if (!cisIndex || !slug) return null;
+
+  let alvo = cisIndex.bySlug.get(slug);
   if (!alvo) {
     // Fallback: o agente pode emitir um slug com nome completo (ex.
     // "rafael-menezes-de-souza") enquanto o banco guarda uma versão curta
     // ("Rafael Menezes") — ou vice-versa. Aceita match se um slug for prefixo
     // do outro E a correspondência entre os sócios do projeto for única.
-    const candidatos = assessments.filter(a => {
-      const s = slugify(a.nome);
+    const candidatos = cisIndex.items.filter(a => {
+      const s = a._normalizedSlug;
       return s && (s.startsWith(slug) || slug.startsWith(s));
     });
     if (candidatos.length === 1) alvo = candidatos[0];

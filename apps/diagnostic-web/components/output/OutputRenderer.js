@@ -18,6 +18,7 @@
 //   - Estilização híbrida: Tailwind p/ layout, inline CSS vars p/ cores
 //   - VizCard é o wrapper editorial padrão (TASK 4.1)
 
+import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -49,6 +50,7 @@ const LANGS_VIZ = new Set([
   'simbolo-marca',
   'moodboard',
 ]);
+const REMARK_PLUGINS = [remarkGfm];
 
 function tryParseFencedJson(content) {
   try {
@@ -119,7 +121,7 @@ export default function OutputRenderer({
   vizData = {},
   compactMode = false,
 }) {
-  const blocos = dividirEmBlocos(conteudo);
+  const blocos = useMemo(() => dividirEmBlocos(conteudo), [conteudo]);
 
   return (
     <article className={`output-editorial ${compactMode ? 'output-compact' : ''}`}>
@@ -142,7 +144,7 @@ export default function OutputRenderer({
             className="output-prose"
             style={{ color: 'var(--viz-card-text)' }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
+            <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={MARKDOWN_COMPONENTS}>
               {resumoExecutivo}
             </ReactMarkdown>
           </div>
@@ -177,7 +179,7 @@ export default function OutputRenderer({
             className="output-prose"
             style={{ color: 'var(--viz-card-text)' }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
+            <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={MARKDOWN_COMPONENTS}>
               {conclusoes}
             </ReactMarkdown>
           </div>
@@ -204,7 +206,7 @@ export default function OutputRenderer({
             className="output-prose"
             style={{ color: 'var(--viz-card-text)', fontSize: '0.85rem' }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
+            <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={MARKDOWN_COMPONENTS}>
               {fontes}
             </ReactMarkdown>
           </div>
@@ -247,14 +249,14 @@ function dividirEmBlocos(conteudo) {
   return blocos;
 }
 
-function BlocoRenderer({ bloco, vizData }) {
+const BlocoRenderer = memo(function BlocoRenderer({ bloco, vizData }) {
   if (bloco.tipo === 'texto') {
     return (
       <div
         className="output-prose"
         style={{ color: 'var(--viz-card-text)' }}
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
+        <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={MARKDOWN_COMPONENTS}>
           {bloco.conteudo}
         </ReactMarkdown>
       </div>
@@ -266,9 +268,9 @@ function BlocoRenderer({ bloco, vizData }) {
   }
 
   return null;
-}
+});
 
-function VizBloco({ marker, vizData }) {
+const VizBloco = memo(function VizBloco({ marker, vizData }) {
   const chave = vizMarkerKey(marker);
   const dados = vizData?.[chave];
 
@@ -333,4 +335,4 @@ function VizBloco({ marker, vizData }) {
     default:
       return null;
   }
-}
+});
