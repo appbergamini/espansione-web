@@ -8,6 +8,11 @@ import {
 } from '../executionMetadata.js';
 import { runAgencyWorkflow } from '../workflow.js';
 import { FakeSupabase } from '../../../../../packages/brand-memory/src/__tests__/fake-supabase.ts';
+import {
+  BRAND_COMPLIANCE_PROMPT_VERSION,
+  CHANNEL_ADAPTER_PROMPT_VERSION,
+  COPYWRITER_PROMPT_VERSION,
+} from '../../../../../packages/agents/src/prompt-packs.ts';
 
 test('metadata padronizado de step normaliza tokens e erro', () => {
   const metadata = buildStepExecutionMetadata({
@@ -151,18 +156,18 @@ test('agency step salva metadata de execução e prompt_version', async () => {
   assert.equal(copyStep.model_used, 'test-model-copywriter');
   assert.equal(copyStep.model_id, 'claude-sonnet-4-6');
   assert.equal(copyStep.is_mock, false);
-  assert.equal(copyStep.prompt_version, 'copywriter_v1');
+  assert.equal(copyStep.prompt_version, COPYWRITER_PROMPT_VERSION);
   assert.equal(copyStep.tokens.total, 30);
   assert.equal(copyStep.cost_estimate, 0.003);
   assert.equal(copyStep.attempt_count, 1);
-  assert.equal(copyStep.execution_metadata.prompt_version, 'copywriter_v1');
+  assert.equal(copyStep.execution_metadata.prompt_version, COPYWRITER_PROMPT_VERSION);
   assert.equal(copyStep.execution_metadata_json.model_id, 'claude-sonnet-4-6');
   assert.equal(channelStep.status, 'completed');
-  assert.equal(channelStep.prompt_version, 'channel_adapter_v1');
+  assert.equal(channelStep.prompt_version, CHANNEL_ADAPTER_PROMPT_VERSION);
   assert.equal(channelStep.output.data.adapted_content.body, 'Copy adaptada para LinkedIn.');
   assert.equal(editorStep.input.channelAdapterOutput.adapted_content.body, 'Copy adaptada para LinkedIn.');
   assert.equal(brandComplianceStep.status, 'completed');
-  assert.equal(brandComplianceStep.prompt_version, 'brand_compliance_v1');
+  assert.equal(brandComplianceStep.prompt_version, BRAND_COMPLIANCE_PROMPT_VERSION);
   assert.equal(brandComplianceStep.input.editorOutput.versao_editada, 'Versão editada');
   assert.equal(brandComplianceStep.quality_assessment.quality_status, 'risky');
   assert.equal(run.execution_metadata.total_steps, 7);
@@ -258,7 +263,7 @@ test('modo economical resolve Gemini 3 Flash para os steps', async () => {
 
   assert.equal(run.execution_mode, 'economical');
   assert.equal(copyStep.provider, 'test-provider');
-  assert.equal(copyStep.input.promptPack.promptVersion, 'copywriter_v1');
+  assert.equal(copyStep.input.promptPack.promptVersion, COPYWRITER_PROMPT_VERSION);
   assert.equal(gateway.calls.find((call) => call.agentId === 'copywriter').modelId, 'gemini-3.5-flash');
 });
 
