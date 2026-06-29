@@ -87,6 +87,11 @@ export function priorizacao(publico) {
   return CATALOGO_IDENTIDADE.filter((q) => q.sistema === 'Priorização' && q.publico === publico);
 }
 
+/** Perguntas de NPS/eNPS no Core de um público (índice à parte; entra na v1). */
+export function npsCore(publico) {
+  return ordenar(CATALOGO_IDENTIDADE.filter((q) => q.score_family === 'nps' && q.tier_mvp === 'Core' && q.publico === publico));
+}
+
 /** Campos de perfil de um público. */
 export function perfil(publico) {
   return CATALOGO_IDENTIDADE.filter((q) => q.sistema === 'Perfil' && q.publico === publico);

@@ -8,8 +8,10 @@ import {
   calcularSatisfacao,
   calcularGaps,
   agregarPriorizacao,
+  montarResultado,
 } from '../scoring.js';
 import { maturidadeCore } from '../catalog.js';
+import { montarFormulario } from '../forms.js';
 
 test('mediaValidas ignora N/A (-1) e ausentes', () => {
   assert.equal(mediaValidas([3, 1, -1, undefined, null, 2]), 2); // (3+1+2)/3
@@ -85,6 +87,16 @@ test('calcularGaps: ignora indicador com < 2 públicos', () => {
   const mat = { socios: { indicadores: { 'marca.diferenciacao_clareza': { nota: 80 } } }, colaboradores: { indicadores: {} }, clientes: { indicadores: {} } };
   const gaps = calcularGaps(mat);
   assert.equal(gaps.find((g) => g.indicador_canonico === 'marca.diferenciacao_clareza'), undefined);
+});
+
+test('montarResultado: sócios free "tudo 3" → geral 100, sem gaps (1 público)', () => {
+  const perguntas = montarFormulario('socios', { produto: 'maturidade_free' });
+  const resp = {};
+  for (const q of perguntas) resp[q.id] = q.response_type.startsWith('escala4') ? 3 : (q.response_type === 'numero' ? 1 : 'x');
+  const r = montarResultado({ respostasPorPublico: { socios: [resp] }, produto: 'maturidade_free', geradoEm: 'T' });
+  assert.equal(r.porPublico.socios.geral, 100);
+  assert.equal(r.gaps.length, 0); // só 1 público → nada a comparar
+  assert.equal(r.geradoEm, 'T');
 });
 
 test('agregarPriorizacao: ranking por frequência', () => {

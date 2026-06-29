@@ -10,7 +10,14 @@
 //   satisfaction  → média 0–10, índice à parte
 //   none/priorização → ranking por frequência (não pontua)
 // =====================================================================
-import { SISTEMAS, getPergunta, indicadoresComparaveis } from './catalog.js';
+import {
+  SISTEMAS,
+  indicadoresComparaveis,
+  maturidadeCore,
+  formularioMaturidadeFree,
+  npsCore,
+  priorizacao,
+} from './catalog.js';
 
 const NA = -1;
 const MAX_MATURITY = 3;
@@ -146,6 +153,50 @@ export function agregarPriorizacao(escolhas) {
   return Object.entries(cont)
     .map(([tema, count]) => ({ tema, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+/** Perguntas de maturidade que entram na nota de um público/produto. */
+function maturidadeDoPublico(publico, produto) {
+  if (publico === 'socios' && produto === 'maturidade_free') return formularioMaturidadeFree();
+  return maturidadeCore(publico);
+}
+
+/**
+ * Monta o result_json completo a partir das respostas por público.
+ * @param {object} args
+ * @param {Object<string, Array<Object>>} args.respostasPorPublico  { socios:[map], colaboradores:[map], clientes:[map] }
+ * @param {string} args.produto
+ * @param {string} [args.geradoEm]  ISO timestamp (injetado pelo caller)
+ */
+export function montarResultado({ respostasPorPublico, produto, geradoEm = null }) {
+  const porPublico = {};
+  const indices = {};
+  const priorizacaoOut = {};
+
+  for (const [publico, respondentes] of Object.entries(respostasPorPublico)) {
+    if (!respondentes || !respondentes.length) continue;
+
+    // maturidade
+    porPublico[publico] = agregarMaturidade(respondentes, maturidadeDoPublico(publico, produto));
+
+    // NPS / eNPS (1ª pergunta nps do público, se houver)
+    const npsQ = npsCore(publico)[0];
+    if (npsQ) {
+      const valores = respondentes.map((r) => r[npsQ.id]).filter((x) => typeof x === 'number');
+      const chave = publico === 'colaboradores' ? 'enps' : 'nps';
+      indices[chave] = { publico, ...calcularNps(valores) };
+    }
+
+    // priorização (1ª pergunta de priorização do público)
+    const priQ = priorizacao(publico)[0];
+    if (priQ) {
+      priorizacaoOut[publico] = agregarPriorizacao(respondentes.map((r) => r[priQ.id]));
+    }
+  }
+
+  const gaps = calcularGaps(porPublico);
+
+  return { produto, geradoEm, porPublico, gaps, indices, priorizacao: priorizacaoOut };
 }
 
 // helpers numéricos
