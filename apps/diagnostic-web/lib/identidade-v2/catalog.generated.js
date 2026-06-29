@@ -2,7 +2,7 @@
 // GERADO AUTOMATICAMENTE — NÃO EDITAR À MÃO.
 // Fonte: data/identidade/banco_mvp_v1.xlsx (aba Banco_Completo_Anotado).
 // Regenerar: node scripts/build-identidade-catalog.cjs
-// Total de perguntas: 222
+// Total de perguntas: 233
 // =====================================================================
 
 /** @typedef {Object} PerguntaIdentidade */
@@ -18,7 +18,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -50,6 +50,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -63,7 +64,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -95,6 +96,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -140,6 +142,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -153,7 +156,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -185,6 +188,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -198,7 +202,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -230,6 +234,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -243,7 +248,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -275,6 +280,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "correção: colunas deslocadas no banco original"
   },
   {
@@ -288,7 +294,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -320,6 +326,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -333,7 +340,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -365,6 +372,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -378,7 +386,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -410,6 +418,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -437,6 +446,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -473,6 +483,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -497,6 +508,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual informação importante você sente falta de receber?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -523,6 +535,7 @@ export const CATALOGO_IDENTIDADE = [
       "3 palavras"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -536,7 +549,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -568,6 +581,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -613,6 +627,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -658,6 +673,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -671,7 +687,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -703,6 +719,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -729,6 +746,7 @@ export const CATALOGO_IDENTIDADE = [
       "Lista de valores cadastrados pelos sócios + Outro + Não sei"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -755,6 +773,7 @@ export const CATALOGO_IDENTIDADE = [
       "Lista de valores cadastrados pelos sócios + Outro + Não sei"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -768,7 +787,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -800,6 +819,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -826,6 +846,7 @@ export const CATALOGO_IDENTIDADE = [
       "Até 3 nomes"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -839,7 +860,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -871,6 +892,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -884,7 +906,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -916,6 +938,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -929,7 +952,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -961,6 +984,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -974,7 +998,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1006,6 +1030,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1019,7 +1044,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "nps",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1033,6 +1058,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Com certeza"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1057,6 +1083,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é a principal incoerência entre o que a empresa diz ser e o que você vivencia no dia a dia?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1070,7 +1097,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1102,6 +1129,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1115,7 +1143,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1147,6 +1175,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1160,7 +1189,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1192,6 +1221,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1205,7 +1235,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1237,6 +1267,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1250,7 +1281,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1282,6 +1313,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1321,6 +1353,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1360,6 +1393,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1373,7 +1407,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1405,6 +1439,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1450,6 +1485,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -1495,6 +1531,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -1508,7 +1545,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1540,6 +1577,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1567,6 +1605,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1594,6 +1633,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1631,6 +1671,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1655,6 +1696,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Existe alguma barreira importante aos resultados que não apareceu nas opções anteriores? Qual?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1668,7 +1710,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1691,6 +1733,7 @@ export const CATALOGO_IDENTIDADE = [
       "Prefiro não informar"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1704,7 +1747,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1719,6 +1762,7 @@ export const CATALOGO_IDENTIDADE = [
       "Prefiro não informar"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1732,7 +1776,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1750,6 +1794,7 @@ export const CATALOGO_IDENTIDADE = [
       "Prefiro não informar"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1763,7 +1808,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1780,6 +1825,7 @@ export const CATALOGO_IDENTIDADE = [
       "Mais de 5 anos"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1807,6 +1853,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1834,6 +1881,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Muito motivado(a)"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1861,6 +1909,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1906,6 +1955,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -1919,7 +1969,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1951,6 +2001,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -1964,7 +2015,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -1996,6 +2047,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2009,7 +2061,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2041,6 +2093,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2054,7 +2107,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2086,6 +2139,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2113,6 +2167,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2126,7 +2181,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2158,6 +2213,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2171,7 +2227,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2203,6 +2259,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2216,7 +2273,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2248,6 +2305,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2275,6 +2333,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2288,7 +2347,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2320,6 +2379,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2333,7 +2393,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2365,6 +2425,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2378,7 +2439,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2410,6 +2471,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2437,6 +2499,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2482,6 +2545,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -2520,6 +2584,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2557,6 +2622,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2593,6 +2659,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2617,6 +2684,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual mudança teria maior impacto positivo sobre sua experiência e seus resultados?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2630,7 +2698,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2662,6 +2730,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2675,7 +2744,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2707,6 +2776,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2720,7 +2790,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2752,6 +2822,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2765,7 +2836,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2797,6 +2868,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2810,7 +2882,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2842,6 +2914,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2869,6 +2942,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2882,7 +2956,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -2914,6 +2988,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -2959,6 +3034,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -2972,7 +3048,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3004,6 +3080,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3017,7 +3094,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3049,6 +3126,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3062,7 +3140,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3094,6 +3172,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3107,7 +3186,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3139,6 +3218,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3184,6 +3264,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -3197,7 +3278,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3229,6 +3310,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "correção: colunas deslocadas no banco original"
   },
   {
@@ -3256,6 +3338,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3292,6 +3375,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3316,6 +3400,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Existe alguma sugestão, dúvida ou reclamação que não foi adequadamente tratada? Conte brevemente.",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3342,6 +3427,7 @@ export const CATALOGO_IDENTIDADE = [
       "3 palavras"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3380,6 +3466,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3393,7 +3480,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3425,6 +3512,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3463,6 +3551,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3476,7 +3565,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3508,6 +3597,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3521,7 +3611,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3553,6 +3643,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3566,7 +3657,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3598,6 +3689,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3634,6 +3726,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3647,7 +3740,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3679,6 +3772,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3706,6 +3800,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3719,7 +3814,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "nps",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3733,6 +3828,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Com certeza"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3757,6 +3853,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Como você apresentaria esta empresa em poucas palavras para alguém da sua rede?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3770,7 +3867,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3802,6 +3899,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — promove proposito_clareza para [3P]"
   },
   {
@@ -3826,6 +3924,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Que problema, necessidade ou objetivo levou você a procurar esse tipo de solução?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3864,6 +3963,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3890,6 +3990,7 @@ export const CATALOGO_IDENTIDADE = [
       "Concorrentes cadastrados pelos sócios + Outro + Nenhuma"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3919,6 +4020,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3932,7 +4034,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -3964,6 +4066,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -3991,6 +4094,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4021,6 +4125,7 @@ export const CATALOGO_IDENTIDADE = [
       "Não sei avaliar"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4034,7 +4139,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4066,6 +4171,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4079,7 +4185,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4111,6 +4217,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4124,7 +4231,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4156,6 +4263,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4169,7 +4277,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "nps",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4183,6 +4291,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Com certeza"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4196,7 +4305,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4228,6 +4337,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4241,7 +4351,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4273,6 +4383,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4310,6 +4421,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4323,7 +4435,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4341,6 +4453,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4354,7 +4467,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4371,6 +4484,7 @@ export const CATALOGO_IDENTIDADE = [
       "Ainda não houve contratação"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4384,7 +4498,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4395,6 +4509,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Nome ou identificação do respondente.",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4408,7 +4523,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4419,6 +4534,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é seu cargo, profissão ou área de atuação?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4432,7 +4548,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4456,6 +4572,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4469,7 +4586,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4501,6 +4618,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4514,7 +4632,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4546,6 +4664,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4591,6 +4710,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -4604,7 +4724,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4636,6 +4756,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4649,7 +4770,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4681,6 +4802,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4694,7 +4816,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4726,6 +4848,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4771,6 +4894,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -4784,7 +4908,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4816,6 +4940,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4843,6 +4968,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4867,6 +4993,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Há algum comportamento da equipe que mereça ser destacado, de forma positiva ou negativa?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -4880,7 +5007,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4900,6 +5027,7 @@ export const CATALOGO_IDENTIDADE = [
       "Preço/valor"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — substitui índice de importância"
   },
   {
@@ -4913,7 +5041,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -4935,6 +5063,7 @@ export const CATALOGO_IDENTIDADE = [
       "Cultura e valores"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — substitui índice de importância"
   },
   {
@@ -4948,13 +5077,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": false,
     "obrigatoria": true,
-    "ordem_core": 43,
+    "ordem_core": 54,
     "response_type": "multipla_ate3",
     "pergunta": "Quais temas devem receber mais atenção nos próximos 12 meses? (escolha até 3)",
     "opcoes": [
@@ -4970,6 +5099,7 @@ export const CATALOGO_IDENTIDADE = [
       "Experiência do cliente"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — substitui índice de importância"
   },
   {
@@ -4983,13 +5113,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 25,
+    "ordem_core": 36,
     "response_type": "escala4_frequencia",
     "pergunta": "As informações necessárias chegam às pessoas com clareza e no momento adequado.",
     "opcoes": [
@@ -5015,6 +5145,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5028,13 +5159,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 26,
+    "ordem_core": 37,
     "response_type": "escala4_frequencia",
     "pergunta": "Decisões, mudanças e prioridades são comunicadas com transparência.",
     "opcoes": [
@@ -5060,6 +5191,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5095,6 +5227,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5131,6 +5264,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5167,6 +5301,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5191,6 +5326,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Em uma frase, qual mensagem principal a empresa precisa transmitir ao mercado?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5204,13 +5340,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 27,
+    "ordem_core": 38,
     "response_type": "escala4_concordancia",
     "pergunta": "A comunicação externa explica com clareza o que a empresa faz, para quem e por que é diferente.",
     "opcoes": [
@@ -5236,6 +5372,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5249,13 +5386,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 28,
+    "ordem_core": 39,
     "response_type": "escala4_frequencia",
     "pergunta": "A mensagem e a identidade da empresa são consistentes nos diferentes canais e pontos de contato.",
     "opcoes": [
@@ -5281,6 +5418,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5326,6 +5464,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -5339,13 +5478,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 29,
+    "ordem_core": 40,
     "response_type": "escala4_frequencia",
     "pergunta": "A equipe comercial comunica valor com clareza, sem depender principalmente do preço como argumento.",
     "opcoes": [
@@ -5371,6 +5510,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5384,13 +5524,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 30,
+    "ordem_core": 41,
     "response_type": "escala4_frequencia",
     "pergunta": "Propostas, apresentações e conversas comerciais deixam claro o problema resolvido, a entrega e o valor esperado.",
     "opcoes": [
@@ -5416,6 +5556,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5429,13 +5570,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 31,
+    "ordem_core": 42,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa coleta feedbacks de clientes de forma sistemática e intencional.",
     "opcoes": [
@@ -5461,6 +5602,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5474,13 +5616,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 32,
+    "ordem_core": 43,
     "response_type": "escala4_frequencia",
     "pergunta": "Os feedbacks de clientes são transformados em melhorias de processos, comunicação e experiência.",
     "opcoes": [
@@ -5506,6 +5648,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5543,6 +5686,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5570,6 +5714,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5594,6 +5739,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Como a empresa surgiu e qual contexto motivou sua criação?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5618,6 +5764,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Que problema, necessidade ou indignação os fundadores queriam resolver?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5642,6 +5789,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Em uma frase, qual é o propósito da empresa além do resultado financeiro?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5655,13 +5803,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 7,
+    "ordem_core": 18,
     "response_type": "escala4_concordancia",
     "pergunta": "O propósito da empresa está claramente definido e orienta decisões importantes.",
     "opcoes": [
@@ -5687,6 +5835,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5711,6 +5860,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Se a empresa deixasse de existir, o que seria perdido além de seus produtos, serviços e empregos?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5737,6 +5887,7 @@ export const CATALOGO_IDENTIDADE = [
       "Até 5 respostas"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5750,13 +5901,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 8,
+    "ordem_core": 19,
     "response_type": "escala4_frequencia",
     "pergunta": "Os valores da empresa orientam de forma consistente as decisões e os comportamentos do dia a dia.",
     "opcoes": [
@@ -5782,6 +5933,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5820,6 +5972,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5844,6 +5997,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é a principal promessa que a empresa faz ao mercado, mesmo que ainda não esteja formalizada?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5868,6 +6022,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "O que diferencia a empresa de forma relevante e difícil de copiar em relação às demais alternativas do mercado?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5881,13 +6036,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 9,
+    "ordem_core": 20,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa possui um diferencial claro, consistente e fácil de explicar.",
     "opcoes": [
@@ -5913,6 +6068,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5926,13 +6082,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 10,
+    "ordem_core": 21,
     "response_type": "escala4_frequencia",
     "pergunta": "O posicionamento da marca é utilizado como referência para decisões de oferta, atendimento, comunicação e crescimento.",
     "opcoes": [
@@ -5958,6 +6114,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -5984,6 +6141,7 @@ export const CATALOGO_IDENTIDADE = [
       "3 palavras"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6010,6 +6168,7 @@ export const CATALOGO_IDENTIDADE = [
       "3 palavras"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6040,6 +6199,7 @@ export const CATALOGO_IDENTIDADE = [
       "Não está claro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6064,6 +6224,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Como você descreveria a cultura atual da empresa, de forma honesta e sem linguagem institucional?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6077,13 +6238,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 11,
+    "ordem_core": 22,
     "response_type": "escala4_concordancia",
     "pergunta": "Existe coerência entre o que a empresa diz, o que entrega ao mercado e o que vive internamente.",
     "opcoes": [
@@ -6109,6 +6270,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6133,6 +6295,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é a proposta de valor oferecida aos colaboradores e por que ela é relevante?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6157,6 +6320,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Por que um profissional talentoso deveria escolher trabalhar nesta empresa em vez de escolher outra organização?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6170,13 +6334,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 12,
+    "ordem_core": 23,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa possui uma reputação forte e coerente com o posicionamento que deseja ocupar.",
     "opcoes": [
@@ -6202,6 +6366,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6229,6 +6394,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6253,6 +6419,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Como você deseja que a empresa seja reconhecida daqui a três anos?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6266,13 +6433,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 13,
+    "ordem_core": 24,
     "response_type": "escala4_frequencia",
     "pergunta": "A personalidade da marca (tom, jeito de se comunicar e de se relacionar) é clara e aplicada de forma consistente.",
     "opcoes": [
@@ -6298,6 +6465,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1)"
   },
   {
@@ -6311,13 +6479,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 14,
+    "ordem_core": 25,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa cumpre, de forma consistente, a promessa que faz ao mercado.",
     "opcoes": [
@@ -6343,6 +6511,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — cria anchor [2P] com EX-MAR-006"
   },
   {
@@ -6367,6 +6536,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "O que a empresa vende? Descreva as principais soluções, produtos ou serviços.",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6391,6 +6561,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Para quem a empresa vende? Descreva o perfil de cliente prioritário.",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6415,6 +6586,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é a principal transformação ou benefício entregue ao cliente?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6428,13 +6600,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 15,
+    "ordem_core": 26,
     "response_type": "escala4_concordancia",
     "pergunta": "A proposta de valor da empresa é clara, relevante para o cliente e sustentável para o negócio.",
     "opcoes": [
@@ -6460,6 +6632,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6473,13 +6646,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 16,
+    "ordem_core": 27,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa possui objetivos estratégicos claros para os próximos três anos.",
     "opcoes": [
@@ -6505,6 +6678,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6518,13 +6692,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 17,
+    "ordem_core": 28,
     "response_type": "escala4_frequencia",
     "pergunta": "As prioridades estratégicas são definidas e protegidas mesmo diante das urgências da rotina.",
     "opcoes": [
@@ -6550,6 +6724,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6588,6 +6763,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6612,6 +6788,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é hoje o principal desafio para alcançar os objetivos da empresa?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6638,6 +6815,7 @@ export const CATALOGO_IDENTIDADE = [
       "Até 5 nomes"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6662,6 +6840,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Quais empresas você considera referência e por quais motivos?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6700,6 +6879,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6738,6 +6918,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6776,6 +6957,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6814,6 +6996,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6827,13 +7010,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 18,
+    "ordem_core": 29,
     "response_type": "escala4_concordancia",
     "pergunta": "A entrega possui padrões suficientes para garantir consistência, qualidade e capacidade de crescimento.",
     "opcoes": [
@@ -6859,6 +7042,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6872,13 +7056,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 19,
+    "ordem_core": 30,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa consegue crescer sem aumentar na mesma proporção a dependência dos sócios, os custos e a complexidade operacional.",
     "opcoes": [
@@ -6904,6 +7088,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6917,13 +7102,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 20,
+    "ordem_core": 31,
     "response_type": "escala4_frequencia",
     "pergunta": "As prioridades são transformadas em planos com responsáveis, prazos e critérios de acompanhamento.",
     "opcoes": [
@@ -6949,6 +7134,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -6962,13 +7148,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 21,
+    "ordem_core": 32,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa acompanha indicadores confiáveis para orientar decisões e corrigir desvios.",
     "opcoes": [
@@ -6994,6 +7180,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7031,6 +7218,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7058,6 +7246,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7085,6 +7274,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7112,6 +7302,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7139,6 +7330,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7167,6 +7359,7 @@ export const CATALOGO_IDENTIDADE = [
       "Aceleradores"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7180,13 +7373,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 22,
+    "ordem_core": 33,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa conhece bem seus concorrentes e o que a diferencia diante das alternativas do mercado.",
     "opcoes": [
@@ -7212,6 +7405,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — cria anchor [2P] com CL-NEG-005"
   },
   {
@@ -7225,13 +7419,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 23,
+    "ordem_core": 34,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa tem clareza sobre quais perfis de clientes são prioritários e direciona esforços a eles.",
     "opcoes": [
@@ -7257,6 +7451,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1) — cria anchor [2P] com CL-NEG-004"
   },
   {
@@ -7270,13 +7465,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "1P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 24,
+    "ordem_core": 35,
     "response_type": "escala4_concordancia",
     "pergunta": "A empresa entrega resultados financeiros consistentes e sustentáveis para sustentar o crescimento.",
     "opcoes": [
@@ -7302,6 +7497,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "nova (MVP v1)"
   },
   {
@@ -7315,7 +7511,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -7326,6 +7522,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Nome completo do respondente.",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7339,7 +7536,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -7356,6 +7553,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7369,7 +7567,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -7386,6 +7584,7 @@ export const CATALOGO_IDENTIDADE = [
       "Mais de 10 anos"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7399,7 +7598,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -7416,6 +7615,7 @@ export const CATALOGO_IDENTIDADE = [
       "Mais de 100"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7429,7 +7629,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -7440,6 +7640,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Quantos sócios participam atualmente da empresa?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7453,7 +7654,7 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": null,
     "score_family": "none",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
+    "produto": "Identidade (pago)",
     "is_free": false,
     "is_paid_core": true,
     "is_paid_extra": false,
@@ -7464,7 +7665,388 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é o principal segmento de atuação da empresa?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
+  },
+  {
+    "id": "SD-PER-N01",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Há quanto tempo sua empresa existe?",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 7,
+    "response_type": "selecao_unica",
+    "pergunta": "Há quanto tempo sua empresa existe?",
+    "opcoes": [
+      "Menos de 1 ano",
+      "1 a 3 anos",
+      "3 a 5 anos",
+      "5 a 10 anos",
+      "Mais de 10 anos"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N02",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Qual é a sua idade?",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 8,
+    "response_type": "numero",
+    "pergunta": "Qual é a sua idade?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N03",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Cidade",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 9,
+    "response_type": "texto_curto",
+    "pergunta": "Cidade",
+    "opcoes": [],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N04",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Estado (UF)",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 10,
+    "response_type": "selecao_unica",
+    "pergunta": "Estado (UF)",
+    "opcoes": [
+      "AC",
+      "AL",
+      "AP",
+      "AM",
+      "BA",
+      "CE",
+      "DF",
+      "ES",
+      "GO",
+      "MA",
+      "MT",
+      "MS",
+      "MG",
+      "PA",
+      "PB",
+      "PR",
+      "PE",
+      "PI",
+      "RJ",
+      "RN",
+      "RS",
+      "RO",
+      "RR",
+      "SC",
+      "SP",
+      "SE",
+      "TO"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N05",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Sexo",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 11,
+    "response_type": "selecao_unica",
+    "pergunta": "Sexo",
+    "opcoes": [
+      "Masculino",
+      "Feminino",
+      "Outro"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N06",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Grau de escolaridade",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 12,
+    "response_type": "selecao_unica",
+    "pergunta": "Grau de escolaridade",
+    "opcoes": [
+      "Até o ensino médio",
+      "Superior incompleto",
+      "Superior completo",
+      "Pós-graduação (MBA, mestrado, doutorado, etc.)"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N07",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Número de colaboradores",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 13,
+    "response_type": "selecao_unica",
+    "pergunta": "Número de colaboradores",
+    "opcoes": [
+      "1 a 10",
+      "11 a 50",
+      "51 a 100",
+      "Acima de 100"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N08",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Qual o segmento de atuação do seu negóci",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": true,
+    "ordem_core": 14,
+    "response_type": "selecao_unica",
+    "pergunta": "Qual o segmento de atuação do seu negócio?",
+    "opcoes": [
+      "Serviço",
+      "Comércio varejista",
+      "Comércio atacadista",
+      "Indústria"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": null,
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N09",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Se for serviço, qual o tipo?",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": false,
+    "ordem_core": 15,
+    "response_type": "selecao_unica",
+    "pergunta": "Se for serviço, qual o tipo?",
+    "opcoes": [
+      "Administração e negócios",
+      "Advocacia, contabilidade",
+      "Consultorias",
+      "Alimentos, bebidas e conveniências",
+      "Beleza",
+      "Comunicação e marketing",
+      "Educação",
+      "Entretenimento",
+      "Informática, telecomunicações e tecnologia",
+      "Pessoal, limpeza e segurança",
+      "Saúde e bem-estar (podologia, spa, terapias integrativas)",
+      "Clínicas médicas, odontológicas, psicológicas",
+      "Turismo",
+      "Transporte",
+      "Outros"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": {
+      "depende": "SD-PER-N08",
+      "valores": [
+        "Serviço"
+      ]
+    },
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N10",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Se for comércio, qual o tipo?",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": false,
+    "ordem_core": 16,
+    "response_type": "selecao_unica",
+    "pergunta": "Se for comércio, qual o tipo?",
+    "opcoes": [
+      "Automotivo – veículos e máquinas",
+      "Automotivo – autopeças, combustíveis, lubrificantes e GLP",
+      "Moda – calçados, vestuário, acessórios",
+      "Tecnologia – informática, telefonia, som e imagem",
+      "Saúde e beleza – farmácias, perfumarias e higiene",
+      "Lojas de departamentos e variedades",
+      "Materiais de construção",
+      "Móveis e decoração",
+      "Óticas e relojoarias",
+      "Produtos alimentícios e bebidas",
+      "Outros"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": {
+      "depende": "SD-PER-N08",
+      "valores": [
+        "Comércio varejista",
+        "Comércio atacadista"
+      ]
+    },
+    "observacao": "nova (identificação)"
+  },
+  {
+    "id": "SD-PER-N11",
+    "publico": "socios",
+    "subperfil": "todos",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Se for indústria, qual o tipo?",
+    "indicador_canonico": null,
+    "anchor_cobertura": null,
+    "score_family": "none",
+    "tier_mvp": "Core",
+    "produto": "Identidade (pago)",
+    "is_free": false,
+    "is_paid_core": true,
+    "is_paid_extra": false,
+    "usar_no_calculo_v1": false,
+    "obrigatoria": false,
+    "ordem_core": 17,
+    "response_type": "selecao_unica",
+    "pergunta": "Se for indústria, qual o tipo?",
+    "opcoes": [
+      "Agropecuária",
+      "Alimentos e bebidas",
+      "Construção civil",
+      "Eletrodomésticos",
+      "Eletrônica e informática",
+      "Higiene e beleza",
+      "Outros"
+    ],
+    "max_escolhas": null,
+    "regra_condicional": {
+      "depende": "SD-PER-N08",
+      "valores": [
+        "Indústria"
+      ]
+    },
+    "observacao": "nova (identificação)"
   },
   {
     "id": "SD-PES-001",
@@ -7477,13 +8059,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 33,
+    "ordem_core": 44,
     "response_type": "escala4_concordancia",
     "pergunta": "Papéis, responsabilidades e níveis de decisão estão claramente definidos.",
     "opcoes": [
@@ -7509,6 +8091,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7522,13 +8105,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 34,
+    "ordem_core": 45,
     "response_type": "escala4_frequencia",
     "pergunta": "As decisões são tomadas no nível adequado, sem dependência excessiva dos sócios ou da direção.",
     "opcoes": [
@@ -7554,6 +8137,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7599,6 +8183,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -7644,6 +8229,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -7657,13 +8243,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 35,
+    "ordem_core": 46,
     "response_type": "escala4_frequencia",
     "pergunta": "Os líderes orientam prioridades, acompanham entregas e corrigem desvios com consistência.",
     "opcoes": [
@@ -7689,6 +8275,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7702,13 +8289,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 36,
+    "ordem_core": 47,
     "response_type": "escala4_frequencia",
     "pergunta": "A direção oferece feedback periódico e estruturado aos líderes sobre sua atuação.",
     "opcoes": [
@@ -7734,6 +8321,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7747,13 +8335,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 37,
+    "ordem_core": 48,
     "response_type": "escala4_frequencia",
     "pergunta": "Os líderes desenvolvem as pessoas por meio de orientação, feedback, delegação e acompanhamento.",
     "opcoes": [
@@ -7779,6 +8367,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7806,6 +8395,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7830,6 +8420,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Como é realizado o processo de contratação e quem participa das decisões?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7875,6 +8466,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -7913,6 +8505,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7926,13 +8519,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 38,
+    "ordem_core": 49,
     "response_type": "escala4_concordancia",
     "pergunta": "As competências atuais da equipe são suficientes para sustentar o crescimento planejado.",
     "opcoes": [
@@ -7958,6 +8551,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -7971,13 +8565,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Identidade Pago",
-    "is_free": false,
+    "produto": "Maturidade (grátis) + Identidade",
+    "is_free": true,
     "is_paid_core": true,
-    "is_paid_extra": true,
+    "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 39,
+    "ordem_core": 50,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa desenvolve de forma contínua as competências técnicas, comportamentais e de liderança necessárias.",
     "opcoes": [
@@ -8003,6 +8597,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -8016,13 +8611,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 40,
+    "ordem_core": 51,
     "response_type": "escala4_frequencia",
     "pergunta": "As pessoas entregam os resultados esperados com qualidade, responsabilidade e consistência.",
     "opcoes": [
@@ -8048,6 +8643,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -8061,13 +8657,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "3P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 41,
+    "ordem_core": 52,
     "response_type": "escala4_frequencia",
     "pergunta": "Existe colaboração efetiva entre equipes e áreas para alcançar objetivos comuns.",
     "opcoes": [
@@ -8093,6 +8689,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -8106,13 +8703,13 @@ export const CATALOGO_IDENTIDADE = [
     "anchor_cobertura": "2P",
     "score_family": "maturity",
     "tier_mvp": "Core",
-    "produto": "Maturidade Free + Identidade Pago",
+    "produto": "Maturidade (grátis) + Identidade",
     "is_free": true,
     "is_paid_core": true,
     "is_paid_extra": false,
     "usar_no_calculo_v1": true,
     "obrigatoria": true,
-    "ordem_core": 42,
+    "ordem_core": 53,
     "response_type": "escala4_frequencia",
     "pergunta": "A empresa reconhece e reforça atitudes e resultados alinhados à estratégia.",
     "opcoes": [
@@ -8138,6 +8735,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -8165,6 +8763,7 @@ export const CATALOGO_IDENTIDADE = [
       "10 = Totalmente satisfeito"
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -8202,6 +8801,7 @@ export const CATALOGO_IDENTIDADE = [
       "Outro"
     ],
     "max_escolhas": 3,
+    "regra_condicional": null,
     "observacao": ""
   },
   {
@@ -8247,6 +8847,7 @@ export const CATALOGO_IDENTIDADE = [
       }
     ],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": "rebaixada p/ Aprofundamento (fora do Core MVP)"
   },
   {
@@ -8271,6 +8872,7 @@ export const CATALOGO_IDENTIDADE = [
     "pergunta": "Qual é hoje o maior desafio relacionado à liderança e à gestão de pessoas?",
     "opcoes": [],
     "max_escolhas": null,
+    "regra_condicional": null,
     "observacao": ""
   }
 ];

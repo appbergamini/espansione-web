@@ -72,6 +72,7 @@ function slimPerguntas(perguntas) {
     id: p.id, sistema: p.sistema, objetivo: p.objetivo, indicador: p.indicador,
     pergunta: p.pergunta, response_type: p.response_type, opcoes: p.opcoes,
     max_escolhas: p.max_escolhas, obrigatoria: p.obrigatoria, score_family: p.score_family,
+    regra_condicional: p.regra_condicional || null,
   }));
 }
 

@@ -64,16 +64,24 @@ export default function FormIdentidadeV2() {
     salvar({ [id]: value });
   }
 
-  const obrigatorias = useMemo(() => perguntas.filter((q) => q.obrigatoria), [perguntas]);
+  // visibilidade condicional: mostra a pergunta só se a regra for satisfeita
+  const visivel = useCallback((q) => {
+    const r = q.regra_condicional;
+    if (!r) return true;
+    return r.valores.includes(answers[r.depende]);
+  }, [answers]);
+
+  const visiveis = useMemo(() => perguntas.filter(visivel), [perguntas, visivel]);
+  const obrigatorias = useMemo(() => visiveis.filter((q) => q.obrigatoria), [visiveis]);
   const faltando = useMemo(() => obrigatorias.filter((q) => !preenchida(q, answers[q.id])).map((q) => q.id), [obrigatorias, answers]);
-  const respondidas = useMemo(() => perguntas.filter((q) => preenchida(q, answers[q.id])).length, [perguntas, answers]);
+  const respondidas = useMemo(() => visiveis.filter((q) => preenchida(q, answers[q.id])).length, [visiveis, answers]);
   const completo = faltando.length === 0;
 
   const secoes = useMemo(() => {
     const g = {};
-    for (const q of perguntas) (g[SECAO(q)] = g[SECAO(q)] || []).push(q);
+    for (const q of visiveis) (g[SECAO(q)] = g[SECAO(q)] || []).push(q);
     return ORDEM_SECOES.filter((s) => g[s]?.length).map((s) => [s, g[s]]);
-  }, [perguntas]);
+  }, [visiveis]);
 
   async function finalizar() {
     if (!completo) { setTentou(true); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
@@ -121,7 +129,7 @@ export default function FormIdentidadeV2() {
 
         {fase === 'form' && (
           <Card wide>
-            <Progresso atual={respondidas} total={perguntas.length} />
+            <Progresso atual={respondidas} total={visiveis.length} />
             {tentou && !completo && (
               <p style={{ color: '#fca5a5', fontSize: '0.82rem', marginTop: '0.7rem' }}>
                 Faltam {faltando.length} resposta(s) obrigatória(s).

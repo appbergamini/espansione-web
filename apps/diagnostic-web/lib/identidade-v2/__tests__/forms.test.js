@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { montarFormulario, respostaPreenchida, obrigatoriasFaltando, progresso } from '../forms.js';
 import { getPergunta } from '../catalog.js';
 
-test('montarFormulario sócios free = perfil + 24 maturidade (sem priorização)', () => {
+test('montarFormulario sócios free = perfil + 36 maturidade (formulário único, sem priorização)', () => {
   const f = montarFormulario('socios', { produto: 'maturidade_free' });
   const mat = f.filter((q) => q.score_family === 'maturity');
   const pri = f.filter((q) => q.sistema === 'Priorização');
-  assert.equal(mat.length, 24);
+  assert.equal(mat.length, 36);
   assert.equal(pri.length, 0);
   assert.ok(f.some((q) => q.sistema === 'Perfil'), 'inclui perfil');
 });

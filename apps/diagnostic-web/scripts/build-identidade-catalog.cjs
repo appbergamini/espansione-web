@@ -62,6 +62,13 @@ function parseLista(opcoes) {
   return String(opcoes || '').split('|').map((s) => s.trim()).filter(Boolean);
 }
 
+// Regra condicional "mostra_se=<id>:val1;val2" → { depende, valores }
+function parseRegra(txt) {
+  const m = String(txt || '').match(/^mostra_se=([^:]+):(.+)$/);
+  if (!m) return null;
+  return { depende: m[1].trim(), valores: m[2].split(';').map((s) => s.trim()).filter(Boolean) };
+}
+
 function build() {
   const wb = XLSX.readFile(SRC);
   const rows = XLSX.utils.sheet_to_json(wb.Sheets['Banco_Completo_Anotado'], { defval: '' });
@@ -96,6 +103,7 @@ function build() {
           : isMultipla ? parseLista(r['Opções / Escala'])
           : parseLista(r['Opções / Escala']),
         max_escolhas: isMultipla ? 3 : null,
+        regra_condicional: parseRegra(r['Regra condicional']),
         observacao: r.observacao_v1 || '',
       };
     })
