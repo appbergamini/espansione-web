@@ -87,7 +87,7 @@ export default async function handler(req, res) {
   const { assessment, publico } = r;
 
   const { data: proj } = await db.from('projetos').select('cliente').eq('id', assessment.projeto_id).maybeSingle();
-  const perguntas = montarFormulario(publico, { produto: assessment.produto, lider: false });
+  const perguntas = montarFormulario(publico, { lider: false });
 
   if (req.method === 'GET') {
     const rid = (req.query.rid || '').toString().trim() || null;
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       : (rid ? { id: rid } : null);
     const answers = await answersOf(db, respondente?.id);
     return res.status(200).json({
-      success: true, publico, produto: assessment.produto, cliente: proj?.cliente || '',
+      success: true, publico, cliente: proj?.cliente || '',
       perguntas: slimPerguntas(perguntas), answers, rid: respondente?.id || null,
       status: respondente?.status || 'not_started',
     });

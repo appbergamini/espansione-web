@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const { data: ansAtual } = await db.from('id_v2_answers').select('question_id, value_num, value_text, value_json').eq('respondent_id', respondenteId);
     const mapAtual = {};
     for (const a of ansAtual || []) mapAtual[a.question_id] = fromRow(a);
-    const perguntas = montarFormulario(publico, { produto: assessment.produto, lider: false });
+    const perguntas = montarFormulario(publico, { lider: false });
     const faltando = obrigatoriasFaltando(perguntas, mapAtual);
     if (faltando.length) return res.status(422).json({ success: false, error: 'Respostas obrigatórias incompletas', faltando });
 
@@ -74,12 +74,11 @@ export default async function handler(req, res) {
       }
     }
 
-    const result = montarResultado({ respostasPorPublico, produto: assessment.produto, geradoEm: new Date().toISOString() });
+    const result = montarResultado({ respostasPorPublico, geradoEm: new Date().toISOString() });
 
-    // status do assessment: free → sócios; pago → os 3 públicos com ≥1 concluído
+    // status: concluído quando os 3 públicos do Identidade têm ≥1 respondente concluído
     const publicosFeitos = new Set(Object.keys(respostasPorPublico));
-    const esperados = assessment.produto === 'maturidade_free' ? ['socios'] : ['socios', 'colaboradores', 'clientes'];
-    const completed = esperados.every((p) => publicosFeitos.has(p));
+    const completed = ['socios', 'colaboradores', 'clientes'].every((p) => publicosFeitos.has(p));
     const patch = { result_json: result, status: completed ? 'completed' : 'in_progress' };
     if (completed) patch.completed_at = new Date().toISOString();
     await db.from('id_v2_assessments').update(patch).eq('id', assessment.id);

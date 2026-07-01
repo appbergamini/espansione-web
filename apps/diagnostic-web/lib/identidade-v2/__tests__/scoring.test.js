@@ -89,11 +89,11 @@ test('calcularGaps: ignora indicador com < 2 públicos', () => {
   assert.equal(gaps.find((g) => g.indicador_canonico === 'marca.diferenciacao_clareza'), undefined);
 });
 
-test('montarResultado: sócios free "tudo 3" → geral 100, sem gaps (1 público)', () => {
-  const perguntas = montarFormulario('socios', { produto: 'maturidade_free' });
+test('montarResultado: sócios "tudo 3" → geral 100, sem gaps (1 público)', () => {
+  const perguntas = montarFormulario('socios');
   const resp = {};
   for (const q of perguntas) resp[q.id] = q.response_type.startsWith('escala4') ? 3 : (q.response_type === 'numero' ? 1 : 'x');
-  const r = montarResultado({ respostasPorPublico: { socios: [resp] }, produto: 'maturidade_free', geradoEm: 'T' });
+  const r = montarResultado({ respostasPorPublico: { socios: [resp] }, geradoEm: 'T' });
   assert.equal(r.porPublico.socios.geral, 100);
   assert.equal(r.gaps.length, 0); // só 1 público → nada a comparar
   assert.equal(r.geradoEm, 'T');

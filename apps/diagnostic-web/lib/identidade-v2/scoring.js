@@ -14,7 +14,6 @@ import {
   SISTEMAS,
   indicadoresComparaveis,
   maturidadeCore,
-  formularioMaturidadeFree,
   npsCore,
   priorizacao,
 } from './catalog.js';
@@ -155,20 +154,13 @@ export function agregarPriorizacao(escolhas) {
     .sort((a, b) => b.count - a.count);
 }
 
-/** Perguntas de maturidade que entram na nota de um público/produto. */
-function maturidadeDoPublico(publico, produto) {
-  if (publico === 'socios' && produto === 'maturidade_free') return formularioMaturidadeFree();
-  return maturidadeCore(publico);
-}
-
 /**
  * Monta o result_json completo a partir das respostas por público.
  * @param {object} args
  * @param {Object<string, Array<Object>>} args.respostasPorPublico  { socios:[map], colaboradores:[map], clientes:[map] }
- * @param {string} args.produto
  * @param {string} [args.geradoEm]  ISO timestamp (injetado pelo caller)
  */
-export function montarResultado({ respostasPorPublico, produto, geradoEm = null }) {
+export function montarResultado({ respostasPorPublico, geradoEm = null }) {
   const porPublico = {};
   const indices = {};
   const priorizacaoOut = {};
@@ -177,7 +169,7 @@ export function montarResultado({ respostasPorPublico, produto, geradoEm = null 
     if (!respondentes || !respondentes.length) continue;
 
     // maturidade
-    porPublico[publico] = agregarMaturidade(respondentes, maturidadeDoPublico(publico, produto));
+    porPublico[publico] = agregarMaturidade(respondentes, maturidadeCore(publico));
 
     // NPS / eNPS (1ª pergunta nps do público, se houver)
     const npsQ = npsCore(publico)[0];
@@ -196,7 +188,7 @@ export function montarResultado({ respostasPorPublico, produto, geradoEm = null 
 
   const gaps = calcularGaps(porPublico);
 
-  return { produto, geradoEm, porPublico, gaps, indices, priorizacao: priorizacaoOut };
+  return { geradoEm, porPublico, gaps, indices, priorizacao: priorizacaoOut };
 }
 
 // helpers numéricos

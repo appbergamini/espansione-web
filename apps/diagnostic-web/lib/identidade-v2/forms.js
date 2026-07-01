@@ -1,34 +1,29 @@
 // =====================================================================
 // Mapa de Identidade Estratégica (MVP v1) — montagem de formulário.
 // Decide, a partir do catálogo, QUAIS perguntas um respondente vê (por
-// público, produto e perfil de líder) e valida o preenchimento.
+// público e perfil de líder) e valida o preenchimento.
 // =====================================================================
 import {
   perfil,
   priorizacao,
   npsCore,
-  formularioMaturidadeFree,
   maturidadeCore,
   formularioColaboradores,
   formularioClientes,
 } from './catalog.js';
 
-export const PRODUTOS = ['maturidade_free', 'identidade_pago'];
-
 /**
- * Monta o formulário de um respondente.
+ * Monta o formulário de um respondente do Mapa de Identidade (instrumento
+ * único e independente do Mapa de Maturidade). Ordem: perfil → maturidade →
+ * eNPS/NPS → priorização.
  * @param {string} publico  socios | colaboradores | clientes
  * @param {object} [opts]
- * @param {string} [opts.produto='identidade_pago']  maturidade_free só vale p/ sócios
  * @param {boolean} [opts.lider=false]  colaborador que é líder (abre bloco condicional)
- * @returns {Array} perguntas ordenadas (perfil → maturidade → priorização)
+ * @returns {Array} perguntas ordenadas
  */
-export function montarFormulario(publico, { produto = 'identidade_pago', lider = false } = {}) {
+export function montarFormulario(publico, { lider = false } = {}) {
   const perfilQs = perfil(publico);
   if (publico === 'socios') {
-    if (produto === 'maturidade_free') {
-      return [...perfilQs, ...formularioMaturidadeFree()];
-    }
     return [...perfilQs, ...maturidadeCore('socios'), ...priorizacao('socios')];
   }
   if (publico === 'colaboradores') {

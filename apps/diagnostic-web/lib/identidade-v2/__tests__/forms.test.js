@@ -3,19 +3,11 @@ import assert from 'node:assert/strict';
 import { montarFormulario, respostaPreenchida, obrigatoriasFaltando, progresso } from '../forms.js';
 import { getPergunta } from '../catalog.js';
 
-test('montarFormulario sócios free = perfil + 36 maturidade (formulário único, sem priorização)', () => {
-  const f = montarFormulario('socios', { produto: 'maturidade_free' });
-  const mat = f.filter((q) => q.score_family === 'maturity');
-  const pri = f.filter((q) => q.sistema === 'Priorização');
-  assert.equal(mat.length, 36);
-  assert.equal(pri.length, 0);
-  assert.ok(f.some((q) => q.sistema === 'Perfil'), 'inclui perfil');
-});
-
-test('montarFormulario sócios pago = perfil + 36 maturidade + priorização', () => {
-  const f = montarFormulario('socios', { produto: 'identidade_pago' });
+test('montarFormulario sócios = perfil + 36 maturidade + priorização', () => {
+  const f = montarFormulario('socios');
   assert.equal(f.filter((q) => q.score_family === 'maturity').length, 36);
   assert.equal(f.filter((q) => q.sistema === 'Priorização').length, 1);
+  assert.ok(f.some((q) => q.sistema === 'Perfil'), 'inclui perfil');
 });
 
 test('montarFormulario colaboradores: líder abre o bloco condicional (+5)', () => {
@@ -44,7 +36,7 @@ test('respostaPreenchida: escala aceita N/A (-1); múltipla exige >=1', () => {
 });
 
 test('obrigatoriasFaltando lista só as não preenchidas', () => {
-  const f = montarFormulario('socios', { produto: 'maturidade_free' });
+  const f = montarFormulario('socios');
   const valDe = (q) => {
     if (/escala4|escala_0_10|numero/.test(q.response_type)) return 3;
     if (q.response_type === 'multipla_ate3') return ['x'];
@@ -59,7 +51,7 @@ test('obrigatoriasFaltando lista só as não preenchidas', () => {
 });
 
 test('progresso conta respondidas/total', () => {
-  const f = montarFormulario('socios', { produto: 'maturidade_free' });
+  const f = montarFormulario('socios');
   const p0 = progresso(f, {});
   assert.equal(p0.respondidas, 0);
   assert.equal(p0.total, f.length);

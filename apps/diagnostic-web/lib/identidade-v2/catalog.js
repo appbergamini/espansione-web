@@ -43,26 +43,6 @@ export function maturidadeCore(publico, opts = {}) {
   return perguntasCore(publico, { ...opts, familia: 'maturity' });
 }
 
-/** Mapa de Maturidade gratuito: 24 perguntas de maturidade dos sócios. */
-export function formularioMaturidadeFree() {
-  return ordenar(CATALOGO_IDENTIDADE.filter((q) => q.is_free && q.score_family === 'maturity'));
-}
-
-/** Identidade pago — bloco de maturidade dos sócios (36 = 24 free + 12 extras). */
-export function formularioSociosPago() {
-  return maturidadeCore('socios');
-}
-
-/** IDs das perguntas free dos sócios (para o delta free⊂pago). */
-export function idsFree() {
-  return new Set(formularioMaturidadeFree().map((q) => q.id));
-}
-
-/** Perguntas adicionais que o sócio convertido responde além do free (as +12). */
-export function extrasPagoSocios() {
-  return maturidadeCore('socios').filter((q) => q.is_paid_extra);
-}
-
 /** Formulário de colaboradores; com líder=true inclui o bloco condicional. */
 export function formularioColaboradores({ lider = false } = {}) {
   return maturidadeCore('colaboradores', { incluirLider: lider });
