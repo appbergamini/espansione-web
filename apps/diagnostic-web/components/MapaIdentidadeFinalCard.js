@@ -15,6 +15,7 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
   const [status, setStatus] = useState(null);
   const [erro, setErro] = useState(null);
   const [copiado, setCopiado] = useState(null); // publico copiado
+  const [pdf, setPdf] = useState('idle'); // idle|gerando|erro
 
   useEffect(() => {
     if (!projetoId) return;
@@ -53,6 +54,29 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
     completed: { txt: 'Concluído', cor: '#86efac', bg: 'rgba(34,197,94,0.15)' },
   }[status] || { txt: '—', cor: '#9aa3ad', bg: 'rgba(255,255,255,0.06)' };
 
+  // token de qualquer público serve para o relatório (extrai do 1º link)
+  const tokenRelatorio = (() => {
+    const l = (links || [])[0]?.link || '';
+    const m = l.match(/token=([a-f0-9]+)/);
+    return m ? m[1] : null;
+  })();
+
+  async function baixarPdf() {
+    if (!tokenRelatorio) return;
+    setPdf('gerando');
+    try {
+      const r = await fetch(`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}`);
+      if (!r.ok) throw new Error('falha');
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'mapa-identidade.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      setPdf('idle');
+    } catch { setPdf('erro'); }
+  }
+
   return (
     <div className="glass-card" style={st.card}>
       <div style={st.accent} />
@@ -89,6 +113,13 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
           ))}
         </div>
       )}
+
+      {status === 'completed' && tokenRelatorio && (
+        <button onClick={baixarPdf} disabled={pdf === 'gerando'}
+          style={{ ...st.btnBlue, marginTop: '0.9rem', width: '100%', opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
+          {pdf === 'gerando' ? 'Gerando relatório…' : pdf === 'erro' ? 'Erro — tentar de novo' : '⬇ Baixar relatório de triangulação (PDF)'}
+        </button>
+      )}
     </div>
   );
 }
@@ -102,4 +133,5 @@ const st = {
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 0.8rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' },
   btnAccent: { background: 'rgba(218,49,68,0.15)', border: '1px solid rgba(218,49,68,0.32)', color: '#fca5b0', borderRadius: 8, padding: '0.42rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap' },
   btnGhost: { border: '1px solid rgba(255,255,255,0.18)', color: 'var(--text-secondary)', borderRadius: 8, padding: '0.42rem 0.7rem', fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap' },
+  btnBlue: { background: 'rgba(0,50,109,0.2)', border: '1px solid rgba(80,130,200,0.4)', color: '#9bb8e0', borderRadius: 8, padding: '0.55rem 0.9rem', fontSize: '0.84rem' },
 };
