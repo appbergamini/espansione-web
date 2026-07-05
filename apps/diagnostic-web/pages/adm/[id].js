@@ -7,6 +7,7 @@ import RespondentesManager from '../../components/RespondentesManager';
 import OptInEntrevistasManager from '../../components/OptInEntrevistasManager';
 import EntrevistaIASessoes from '../../components/EntrevistaIASessoes';
 import MapaMaturidadeCard from '../../components/MapaMaturidadeCard';
+import MapaIdentidadeFinalCard from '../../components/MapaIdentidadeFinalCard';
 import PosicionamentoResults from '../../components/PosicionamentoResults';
 import ClustersCard from '../../components/clusters/ClustersCard';
 import { CompanyHeader, JourneyStepper, AdminTabs, VisaoGeral, FormulariosTab, PessoasTab, EntregaveisTab, PlaceholderTab } from '../../components/admin-cockpit/Cockpit';
@@ -1802,6 +1803,8 @@ export default function ProjetoDetalhes() {
               <EntrevistaIASessoes projetoId={id} />
 
               <MapaMaturidadeCard projetoId={id} />
+
+              <MapaIdentidadeFinalCard projetoId={id} />
 
               <a href={`/mapa-identidade/${id}`} target="_blank" rel="noreferrer" className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.3rem 1.4rem', borderColor: 'rgba(218,49,68,0.28)', textDecoration: 'none', color: 'inherit', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' }} />
