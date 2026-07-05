@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test --experimental-strip-types lib/agency/__tests__/*.test.js lib/output/__tests__/*.test.js lib/agents/__tests__/*.test.js lib/identidade-v2/__tests__/*.test.js"
+    "test": "node --test --experimental-strip-types lib/agency/__tests__/*.test.js lib/output/__tests__/*.test.js lib/agents/__tests__/*.test.js lib/identidade-v2/__tests__/*.test.js lib/mapa-maturidade/__tests__/*.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
