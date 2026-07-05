@@ -35,11 +35,11 @@ const nextConfig = {
     // Relatórios editoriais (Maturidade + Identidade) geram PDF via chromium.
     // Incluir @sparticuz/chromium (bin do Chromium) E playwright-core (que
     // carrega browsers.json em runtime — não visto pelo tracing estático).
-    '/api/mapa/report': [
+    '/api/mapa/**': [
       './node_modules/@sparticuz/chromium/**/*',
       './node_modules/playwright-core/**/*',
     ],
-    '/api/identidade-final/report': [
+    '/api/identidade-final/**': [
       './node_modules/@sparticuz/chromium/**/*',
       './node_modules/playwright-core/**/*',
     ],
