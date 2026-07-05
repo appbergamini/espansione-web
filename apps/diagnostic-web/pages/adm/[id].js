@@ -1381,7 +1381,7 @@ export default function ProjetoDetalhes() {
   ];
   function onCockpitAction(action) {
     const m = action?.module;
-    if (m === 'identity') { window.open(`/mapa-identidade/${id}`, '_blank'); return; }
+    if (m === 'identity') { setTab('esteira'); return; }
     if (m === 'disc') { setTab('esteira'); return; }
     if (m === 'report') { setTab('entregaveis'); return; }
     setTab('visao');
@@ -1805,16 +1805,6 @@ export default function ProjetoDetalhes() {
               <MapaMaturidadeCard projetoId={id} />
 
               <MapaIdentidadeFinalCard projetoId={id} />
-
-              <a href={`/mapa-identidade/${id}`} target="_blank" rel="noreferrer" className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.3rem 1.4rem', borderColor: 'rgba(218,49,68,0.28)', textDecoration: 'none', color: 'inherit', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' }} />
-                <div>
-                  <div style={{ fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Diagnóstico · 2ª etapa</div>
-                  <h3 style={{ margin: '0.2rem 0 0', fontSize: '1.05rem' }}>🧬 Mapa de Identidade Estratégica</h3>
-                  <p style={{ margin: '0.35rem 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Essência · Território de valor · Espelho interno e externo</p>
-                </div>
-                <span style={{ color: '#fca5b0', fontSize: '1.1rem' }}>→</span>
-              </a>
 
               {/* Card: Mapeamento Comportamental CIS */}
               <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(167, 139, 250, 0.25)' }}>

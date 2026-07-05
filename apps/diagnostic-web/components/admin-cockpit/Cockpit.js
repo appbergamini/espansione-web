@@ -164,7 +164,7 @@ export function VisaoGeral({ cockpit, projetoId, onAction }) {
         <div style={c.eyebrow}>Módulos da jornada</div>
         <div style={{ ...c.grid2, marginTop: '0.7rem' }}>
           <div><MapaMaturidadeCard projetoId={projetoId} /></div>
-          <ModuleCard titulo="🧬 Mapa de Identidade" status={s.identity.status} href={`/mapa-identidade/${projetoId}`} cta="Gerenciar identidade"
+          <ModuleCard titulo="🧬 Mapa de Identidade" status={s.identity.status} href={`/adm/${projetoId}`} cta="Gerenciar identidade"
             linhas={[['Território dominante', s.identity.dominant_territory || '—'], ['Fontes obrigatórias', s.identity.forms.filter((f) => f.obrigatorio && f.status === 'completed').length + '/2']]} />
           <ModuleCard titulo="🧠 Mapeamento Comportamental" cta="Gerenciar DISC" onCta={() => onAction?.({ module: 'disc' })}
             linhas={[['Sócios', `${s.people.socios.concluidos}/${s.people.socios.total}`], ['Equipe', `${s.people.equipe.concluidos}/${s.people.equipe.total}`]]} hint="DISC padrão — a função (sócio/líder) contextualiza as trilhas depois." />
@@ -185,7 +185,7 @@ export function FormulariosTab({ cockpit, projetoId }) {
   const s = cockpit.summary;
   const linhas = [
     { label: 'Mapa de Maturidade — questionário', status: s.maturity.status, href: null },
-    ...s.identity.forms.map((f) => ({ label: 'Identidade — ' + f.label, status: mapFormStatus(f.status), href: `/mapa-identidade/${projetoId}` })),
+    ...s.identity.forms.map((f) => ({ label: 'Identidade — ' + f.label, status: mapFormStatus(f.status), href: `/adm/${projetoId}` })),
   ];
   return (
     <div className="glass-card" style={{ padding: '1.3rem' }}>
