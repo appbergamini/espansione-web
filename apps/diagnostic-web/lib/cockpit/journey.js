@@ -25,7 +25,13 @@ export const JOURNEY_DEFS = [
   { key: 'remeasure', label: 'Nova Medição', short: 'Nova Medição', icon: '🔁' },
 ];
 
-const FONTES_OBRIGATORIAS = ['identity_brand_essence_v1', 'identity_value_territory_v1'];
+// Mapa de Identidade FINAL: as "fontes" são os 3 públicos (triangulação).
+const FONTES_OBRIGATORIAS = ['socios', 'colaboradores', 'clientes'];
+const PUBLICO_LABEL = {
+  socios: 'Sócios e Diretores',
+  colaboradores: 'Colaboradores e Líderes',
+  clientes: 'Clientes e Fornecedores',
+};
 
 function statusFromMaturidade(m) {
   if (!m) return STATUS.NOT_STARTED;
@@ -34,11 +40,12 @@ function statusFromMaturidade(m) {
   return STATUS.NOT_STARTED;
 }
 
-// formStatuses: { form_type: 'not_started'|'in_progress'|'completed' }
+// idn.status vem do id_v2_assessments (not_started|in_progress|completed);
+// formStatuses = status por público (derivado dos respondentes).
 function statusFromIdentidade(idn, formStatuses) {
   if (!idn) return STATUS.NOT_STARTED;
-  const obrigDone = FONTES_OBRIGATORIAS.every((t) => formStatuses[t] === 'completed');
-  if (obrigDone) return STATUS.COMPLETED;
+  if (idn.status === 'completed') return STATUS.COMPLETED;
+  if (idn.status === 'in_progress') return STATUS.IN_PROGRESS;
   const algum = Object.values(formStatuses).some((s) => s === 'in_progress' || s === 'completed');
   return algum ? STATUS.IN_PROGRESS : STATUS.NOT_STARTED;
 }
@@ -98,15 +105,15 @@ export function computeCockpit(raw) {
     },
     identity: {
       status: idnStatus,
-      forms: [
-        { type: 'identity_brand_essence_v1', label: 'Essência e Direção da Marca', status: identidadeForms.identity_brand_essence_v1 || 'not_started', obrigatorio: true },
-        { type: 'identity_value_territory_v1', label: 'Território Estratégico de Valor', status: identidadeForms.identity_value_territory_v1 || 'not_started', obrigatorio: true },
-        { type: 'identity_internal_mirror_v1', label: 'Espelho Interno', status: identidadeForms.identity_internal_mirror_v1 || 'not_started', condicional: true },
-        { type: 'identity_external_mirror_v1', label: 'Espelho Externo', status: identidadeForms.identity_external_mirror_v1 || 'not_started', condicional: true },
-      ],
-      dominant_territory: idnResult.value_territory?.dominant || null,
-      internal_responses: idnResult.internal_mirror?.respondents_count || 0,
-      external_responses: idnResult.external_mirror?.respondents_count || 0,
+      forms: FONTES_OBRIGATORIAS.map((p) => ({
+        type: p,
+        label: PUBLICO_LABEL[p],
+        status: identidadeForms[p] || 'not_started',
+        obrigatorio: true,
+      })),
+      publicos_concluidos: FONTES_OBRIGATORIAS.filter((p) => identidadeForms[p] === 'completed').length,
+      publicos_total: FONTES_OBRIGATORIAS.length,
+      top_gap: (idnResult.triangulacao || []).find((t) => t.gap != null) || null,
     },
     people: { socios, equipe },
     deliverables: {
@@ -152,26 +159,30 @@ function buildActions(ctx) {
     a.push({ key: 'mat_cont', title: 'Concluir Mapa de Maturidade', reason: 'Diagnóstico de maturidade em andamento — aguardando conclusão.', cta: 'Ver', priority: 'alta', module: 'maturity' });
   }
 
-  if (identidadeForms.identity_brand_essence_v1 !== 'completed') {
-    a.push({ key: 'idn_ess', title: 'Concluir Essência e Direção da Marca', reason: 'Fonte obrigatória do Mapa de Identidade ainda não concluída.', cta: 'Abrir', priority: 'alta', module: 'identity' });
-  }
-  if (identidadeForms.identity_value_territory_v1 !== 'completed') {
-    a.push({ key: 'idn_ter', title: 'Concluir Território Estratégico de Valor', reason: 'Fonte obrigatória do Mapa de Identidade ainda não concluída.', cta: 'Abrir', priority: 'alta', module: 'identity' });
+  // coleta por público (triangulação exige os 3)
+  const PUB = { socios: 'Sócios/Diretores', colaboradores: 'Colaboradores/Líderes', clientes: 'Clientes/Fornecedores' };
+  const prioPub = { socios: 'alta', colaboradores: 'media', clientes: 'baixa' };
+  if (matStatus === P.COMPLETED || idnStatus !== P.NOT_STARTED) {
+    for (const p of ['socios', 'colaboradores', 'clientes']) {
+      if (identidadeForms[p] !== 'completed') {
+        a.push({
+          key: `idn_${p}`,
+          title: `Coletar respostas de ${PUB[p]} (Identidade)`,
+          reason: 'Fonte da triangulação do Mapa de Identidade ainda sem respostas concluídas.',
+          cta: 'Copiar link',
+          priority: prioPub[p],
+          module: 'identity',
+        });
+      }
+    }
   }
 
   if (socios.total > 0 && socios.concluidos < socios.total) {
     a.push({ key: 'disc_soc', title: 'Concluir Mapeamento Comportamental dos sócios', reason: `${socios.concluidos}/${socios.total} sócios concluíram o DISC.`, cta: 'Gerenciar', priority: 'media', module: 'disc' });
   }
 
-  if (obrigDone && (summary.identity.internal_responses === 0)) {
-    a.push({ key: 'esp_int', title: 'Enviar link do Espelho Interno', reason: 'Aprofunda a percepção interna — nenhuma resposta recebida ainda.', cta: 'Enviar link', priority: 'media', module: 'identity' });
-  }
-  if (obrigDone && (summary.identity.external_responses === 0)) {
-    a.push({ key: 'esp_ext', title: 'Enviar link do Espelho Externo', reason: 'Aprofunda a percepção externa — nenhuma resposta recebida ainda.', cta: 'Enviar link', priority: 'baixa', module: 'identity' });
-  }
-
   if (obrigDone) {
-    a.push({ key: 'pdf', title: 'Gerar Relatório PDF do Mapa de Identidade', reason: 'Fontes obrigatórias concluídas — o relatório pode ser gerado.', cta: 'Gerar PDF', priority: 'media', module: 'report' });
+    a.push({ key: 'pdf', title: 'Gerar Relatório de Triangulação (Identidade)', reason: 'Os 3 públicos têm respostas — o relatório pode ser gerado.', cta: 'Gerar PDF', priority: 'media', module: 'report' });
   }
 
   return a;

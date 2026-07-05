@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   try {
     const [matRes, idnRes, respRes, outRes] = await Promise.all([
       db.from('mapa_assessments').select('status, general_score, general_level, result_json, completed_at, created_at').eq('projeto_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      db.from('identity_assessments').select('id, status, result_json, completed_at, created_at').eq('projeto_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      db.from('id_v2_assessments').select('id, status, result_json, completed_at, created_at').eq('projeto_id', id).eq('produto', 'identidade_final').order('created_at', { ascending: false }).limit(1).maybeSingle(),
       db.from('respondentes').select('papel, respondido').eq('projeto_id', id),
       db.from('outputs').select('agent_num, status').eq('projeto_id', id),
     ]);
@@ -39,20 +39,23 @@ export default async function handler(req, res) {
     const maturidade = matRes.data || null;
     const identidade = idnRes.data || null;
 
-    // status por formulário de identidade
+    // status por público do Mapa de Identidade (FINAL): completo se ≥1
+    // respondente concluído; em andamento se há respondente; senão não iniciado.
     const identidadeForms = {};
     if (identidade) {
-      const { data: subs } = await db
-        .from('identity_submissions')
-        .select('form_type, status, is_anonymous')
-        .eq('identity_assessment_id', identidade.id);
-      for (const s of subs || []) {
-        if (s.is_anonymous) continue; // mirrors tratados via agregados abaixo
-        if (s.status === 'completed' || !identidadeForms[s.form_type]) identidadeForms[s.form_type] = s.status;
+      const { data: reps } = await db
+        .from('id_v2_respondents')
+        .select('publico, status')
+        .eq('assessment_id', identidade.id);
+      const byPub = {};
+      for (const r of reps || []) {
+        (byPub[r.publico] = byPub[r.publico] || { total: 0, done: 0 }).total++;
+        if (r.status === 'completed') byPub[r.publico].done++;
       }
-      const r = identidade.result_json || {};
-      identidadeForms.identity_internal_mirror_v1 = (r.internal_mirror?.respondents_count || 0) > 0 ? 'in_progress' : 'not_started';
-      identidadeForms.identity_external_mirror_v1 = (r.external_mirror?.respondents_count || 0) > 0 ? 'in_progress' : 'not_started';
+      for (const p of ['socios', 'colaboradores', 'clientes']) {
+        const b = byPub[p];
+        identidadeForms[p] = !b ? 'not_started' : b.done > 0 ? 'completed' : 'in_progress';
+      }
     }
 
     // pessoas (aproximação: respondentes por papel + flag respondido)

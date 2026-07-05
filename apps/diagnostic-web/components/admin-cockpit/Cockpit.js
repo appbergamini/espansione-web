@@ -117,7 +117,7 @@ export function VisaoGeral({ cockpit, projetoId, onAction }) {
         </ResumoCard>
 
         <ResumoCard titulo="Identidade" status={s.identity.status}>
-          {s.identity.dominant_territory && <div style={c.small}>Território: <b>{s.identity.dominant_territory}</b></div>}
+          {s.identity.top_gap && <div style={c.small}>Maior divergência: <b>{s.identity.top_gap.indicador}</b> (gap {Math.round(s.identity.top_gap.gap)})</div>}
           <div style={{ marginTop: '0.4rem', display: 'grid', gap: '0.2rem' }}>
             {s.identity.forms.map((f) => (
               <div key={f.type} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
@@ -165,7 +165,7 @@ export function VisaoGeral({ cockpit, projetoId, onAction }) {
         <div style={{ ...c.grid2, marginTop: '0.7rem' }}>
           <div><MapaMaturidadeCard projetoId={projetoId} /></div>
           <ModuleCard titulo="🧬 Mapa de Identidade" status={s.identity.status} href={`/adm/${projetoId}`} cta="Gerenciar identidade"
-            linhas={[['Território dominante', s.identity.dominant_territory || '—'], ['Fontes obrigatórias', s.identity.forms.filter((f) => f.obrigatorio && f.status === 'completed').length + '/2']]} />
+            linhas={[['Públicos concluídos', `${s.identity.publicos_concluidos}/${s.identity.publicos_total}`], ['Maior divergência', s.identity.top_gap ? `${s.identity.top_gap.indicador} (${Math.round(s.identity.top_gap.gap)})` : '—']]} />
           <ModuleCard titulo="🧠 Mapeamento Comportamental" cta="Gerenciar DISC" onCta={() => onAction?.({ module: 'disc' })}
             linhas={[['Sócios', `${s.people.socios.concluidos}/${s.people.socios.total}`], ['Equipe', `${s.people.equipe.concluidos}/${s.people.equipe.total}`]]} hint="DISC padrão — a função (sócio/líder) contextualiza as trilhas depois." />
           <ModuleCard titulo="📘 Relatório PDF" status={s.deliverables.pdf_identidade_blocked ? STATUS.BLOCKED : STATUS.NOT_STARTED}
