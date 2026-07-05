@@ -428,40 +428,14 @@ function Resultado({ result, cliente, token }) {
       </div>
 
       <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '1.4rem' }}>
-        <a className="btn-primary" href={`/api/mapa/report?token=${encodeURIComponent(token)}&format=html`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+        <a className="btn-primary" href={`/api/mapa/report?token=${encodeURIComponent(token)}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
           📄 Ver relatório completo
         </a>
-        <BaixarPdf token={token} />
+        <a href={`/api/mapa/report?token=${encodeURIComponent(token)}&print=1`} target="_blank" rel="noreferrer" style={{ ...sx.btnGhostResult, textDecoration: 'none' }}>
+          ⬇ Baixar PDF
+        </a>
       </div>
     </Card>
-  );
-}
-
-function BaixarPdf({ token }) {
-  const [estado, setEstado] = useState('idle');
-  async function baixar() {
-    setEstado('gerando');
-    try {
-      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(token)}&format=pdf`);
-      if (!r.ok) throw new Error('falha');
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'mapa-da-maturidade.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setEstado('idle');
-    } catch {
-      setEstado('erro');
-    }
-  }
-  return (
-    <button onClick={baixar} disabled={estado === 'gerando'} style={{ ...sx.btnGhostResult, opacity: estado === 'gerando' ? 0.6 : 1 }}>
-      {estado === 'gerando' ? 'Gerando PDF…' : estado === 'erro' ? 'Erro — tentar de novo' : '⬇ Baixar PDF'}
-    </button>
   );
 }
 

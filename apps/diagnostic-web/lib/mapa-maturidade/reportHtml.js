@@ -121,8 +121,12 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   footer{padding:40px 0 60px;text-align:center;} .brand{font-family:"Fraunces",serif;font-size:20px;letter-spacing:.04em;color:var(--ink);}
   .tagline{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:8px;}
   @media (max-width:560px){.pattern,.next{padding:30px 24px;}.exp{padding:20px;}.score-big{font-size:44px;}}
-  @media print{body{background:#fff;} .exp,.sys,.pattern,.next,.attr-q,.gap-q{break-inside:avoid;} section{padding:34px 0;}}
+  .pdf-btn{position:fixed;bottom:20px;right:20px;z-index:99;background:var(--brass);color:#1a1204;border:0;border-radius:10px;padding:12px 18px;font:600 14px "IBM Plex Sans",sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28);}
+  .pdf-btn:hover{background:#C99B57;}
+  @media print{body{background:#fff;} .pdf-btn{display:none;} .exp,.sys,.pattern,.next,.attr-q,.gap-q{break-inside:avoid;} section{padding:34px 0;}}
 </style></head><body>
+<button class="pdf-btn" onclick="window.print()">⬇ Baixar PDF</button>
+<script>if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListener('load',function(){setTimeout(function(){window.print();},700);});}</script>
 
 <header class="hero"><div class="wrap">
   <div class="top"><span class="eyebrow">Mapa da Maturidade</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>

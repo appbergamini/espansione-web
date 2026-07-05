@@ -1,14 +1,11 @@
-// GET /api/identidade-final/report?token=...&format=html|pdf
-//   format=html (default) → página web do relatório de triangulação (text/html)
-//   format=pdf            → PDF pixel-perfect (chromium renderiza o mesmo HTML)
+// GET /api/identidade-final/report?token=...  → página web do relatório (text/html)
+// Com ?print=1 a página dispara window.print() ao carregar (PDF pelo navegador).
 // Aceita qualquer um dos 3 tokens. Narrativa cacheada em result_json.report.
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { gerarRelatorioTriangulacao } from '../../../lib/identidade-final/report';
 import { buildRelatorioIdentidadeHtml } from '../../../lib/identidade-final/reportHtml';
 import { abertasDoPublico } from '../../../lib/identidade-final/catalog';
-// generatePdfFromPage importado dinamicamente só no branch PDF (evita carregar
-// playwright-core/@sparticuz/chromium no caminho HTML).
 
 export const maxDuration = 120;
 export const config = { maxDuration: 120 };
@@ -46,7 +43,6 @@ export default async function handler(req, res) {
   if (!supabaseAdmin) return res.status(500).json({ success: false, error: 'Supabase indisponível' });
   const db = supabaseAdmin;
   const token = (req.query.token || '').toString().trim();
-  const format = (req.query.format || 'html').toString();
   if (!TOKEN_RE.test(token)) return res.status(400).json({ success: false, error: 'token inválido' });
 
   const { data: assessment } = await db
@@ -71,16 +67,7 @@ export default async function handler(req, res) {
     }
 
     const html = buildRelatorioIdentidadeHtml({ cliente, dataLabel: mesAno(assessment.completed_at), result, narrativa, proposito });
-
-    if (format === 'pdf') {
-      const { generatePdfFromPage } = await import('../../../lib/pdf/generatePdfFromPage');
-      const pdf = await generatePdfFromPage({ html, waitForSelector: 'footer .brand', margens: { top: '0', right: '0', bottom: '0', left: '0' } });
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="mapa-identidade${cliente ? '-' + slug(cliente) : ''}.pdf"`);
-      res.setHeader('Content-Length', pdf.length);
-      return res.status(200).send(Buffer.from(pdf));
-    }
-
+    // PDF gerado no cliente (window.print() na própria página — ver ?print=1).
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(html);
@@ -88,8 +75,4 @@ export default async function handler(req, res) {
     console.error('[identidade-final/report]', e);
     return res.status(500).json({ success: false, error: e.message || 'Erro ao gerar relatório' });
   }
-}
-
-function slug(str) {
-  return String(str).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 }

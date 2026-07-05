@@ -15,7 +15,6 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
   const [status, setStatus] = useState(null);
   const [erro, setErro] = useState(null);
   const [copiado, setCopiado] = useState(null); // publico copiado
-  const [pdf, setPdf] = useState('idle'); // idle|gerando|erro
 
   useEffect(() => {
     if (!projetoId) return;
@@ -61,21 +60,6 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
     return m ? m[1] : null;
   })();
 
-  async function baixarPdf() {
-    if (!tokenRelatorio) return;
-    setPdf('gerando');
-    try {
-      const r = await fetch(`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}&format=pdf`);
-      if (!r.ok) throw new Error('falha');
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'mapa-identidade.pdf';
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-      setPdf('idle');
-    } catch { setPdf('erro'); }
-  }
 
   return (
     <div className="glass-card" style={st.card}>
@@ -116,12 +100,9 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
 
       {status === 'completed' && tokenRelatorio && (
         <div style={{ display: 'flex', gap: '0.45rem', marginTop: '0.9rem' }}>
-          <a href={`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}&format=html`} target="_blank" rel="noreferrer"
+          <a href={`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}`} target="_blank" rel="noreferrer"
             style={{ ...st.btnGhost, flex: 1, textAlign: 'center' }}>📄 Ver relatório de triangulação</a>
-          <button onClick={baixarPdf} disabled={pdf === 'gerando'}
-            style={{ ...st.btnBlue, opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
-            {pdf === 'gerando' ? 'Gerando…' : pdf === 'erro' ? 'Erro' : '⬇ PDF'}
-          </button>
+          <a href={`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}&print=1`} target="_blank" rel="noreferrer" style={st.btnBlue}>⬇ PDF</a>
         </div>
       )}
     </div>

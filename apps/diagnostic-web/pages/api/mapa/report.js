@@ -1,13 +1,10 @@
-// GET /api/mapa/report?token=...&format=html|pdf
-//   format=html (default) → página web do relatório editorial (text/html)
-//   format=pdf            → PDF pixel-perfect (chromium renderiza o mesmo HTML)
+// GET /api/mapa/report?token=...  → página web do relatório editorial (text/html)
+// Com ?print=1 a página dispara window.print() ao carregar (PDF pelo navegador).
 // A narrativa da IA (Sonnet) é cacheada em result_json.report.
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { gerarRelatorioVendedor } from '../../../lib/mapa-maturidade/reportVendedor';
 import { buildRelatorioMaturidadeHtml } from '../../../lib/mapa-maturidade/reportHtml';
-// generatePdfFromPage (playwright-core + @sparticuz/chromium) é importado
-// dinamicamente só no branch PDF — evita carregar o chromium no caminho HTML.
 
 export const maxDuration = 120;
 export const config = { maxDuration: 120 };
@@ -24,7 +21,6 @@ export default async function handler(req, res) {
   if (!supabaseAdmin) return res.status(500).json({ success: false, error: 'Supabase indisponível' });
   const db = supabaseAdmin;
   const token = (req.query.token || '').toString().trim();
-  const format = (req.query.format || 'html').toString();
   if (!token) return res.status(400).json({ success: false, error: 'token obrigatório' });
 
   const { data: assessment } = await db
@@ -53,16 +49,8 @@ export default async function handler(req, res) {
     }
 
     const html = buildRelatorioMaturidadeHtml({ cliente, dataLabel: mesAno(assessment.completed_at), result, narrativa });
-
-    if (format === 'pdf') {
-      const { generatePdfFromPage } = await import('../../../lib/pdf/generatePdfFromPage');
-      const pdf = await generatePdfFromPage({ html, waitForSelector: 'footer .brand', margens: { top: '0', right: '0', bottom: '0', left: '0' } });
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="mapa-da-maturidade${cliente ? '-' + slug(cliente) : ''}.pdf"`);
-      res.setHeader('Content-Length', pdf.length);
-      return res.status(200).send(Buffer.from(pdf));
-    }
-
+    // O PDF é gerado no cliente (window.print() na própria página — ver ?print=1),
+    // evitando dependência de chromium serverless.
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(html);
@@ -70,8 +58,4 @@ export default async function handler(req, res) {
     console.error('[mapa/report]', e);
     return res.status(500).json({ success: false, error: e.message || 'Erro ao gerar relatório' });
   }
-}
-
-function slug(str) {
-  return String(str).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 }

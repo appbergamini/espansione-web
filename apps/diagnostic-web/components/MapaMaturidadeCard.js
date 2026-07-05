@@ -9,7 +9,6 @@ export default function MapaMaturidadeCard({ projetoId }) {
   const [resumo, setResumo] = useState(null); // { general_score, general_level }
   const [erro, setErro] = useState(null);
   const [copiado, setCopiado] = useState(false);
-  const [pdf, setPdf] = useState('idle'); // idle|gerando|erro
 
   useEffect(() => {
     if (!projetoId) return;
@@ -54,27 +53,6 @@ export default function MapaMaturidadeCard({ projetoId }) {
     setTimeout(() => setCopiado(false), 1800);
   }
 
-  async function baixarPdf() {
-    if (!assessment) return;
-    setPdf('gerando');
-    try {
-      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(assessment.token)}&format=pdf`);
-      if (!r.ok) throw new Error('falha');
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'mapa-de-maturidade.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setPdf('idle');
-    } catch {
-      setPdf('erro');
-    }
-  }
-
   const pill = {
     pendente: { txt: 'Não iniciado', cor: '#9aa3ad', bg: 'rgba(255,255,255,0.06)' },
     em_andamento: { txt: 'Em andamento', cor: '#fde68a', bg: 'rgba(234,179,8,0.14)' },
@@ -114,10 +92,8 @@ export default function MapaMaturidadeCard({ projetoId }) {
           </a>
           {assessment.status === 'concluido' && (
             <>
-              <a href={`/api/mapa/report?token=${encodeURIComponent(assessment.token)}&format=html`} target="_blank" rel="noreferrer" style={st.btnGhost}>📄 Relatório</a>
-              <button onClick={baixarPdf} disabled={pdf === 'gerando'} style={{ ...st.btnBlue, opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
-                {pdf === 'gerando' ? 'Gerando…' : pdf === 'erro' ? 'Erro — repetir' : '⬇ PDF'}
-              </button>
+              <a href={`/api/mapa/report?token=${encodeURIComponent(assessment.token)}`} target="_blank" rel="noreferrer" style={st.btnGhost}>📄 Relatório</a>
+              <a href={`/api/mapa/report?token=${encodeURIComponent(assessment.token)}&print=1`} target="_blank" rel="noreferrer" style={st.btnBlue}>⬇ PDF</a>
             </>
           )}
         </div>
