@@ -1,9 +1,9 @@
-// Renderiza o relatório do Mapa de Maturidade em PDF (react-pdf, server-side).
+// Renderiza o relatório vendedor do Mapa da Maturidade em PDF (react-pdf, server-side).
 import React from 'react';
 import { renderToBuffer } from '@react-pdf/renderer';
 import fs from 'fs';
 import path from 'path';
-import RelatorioMaturidade from '../../components/pdf/RelatorioMaturidade';
+import RelatorioMaturidadeVendedor from '../../components/pdf/RelatorioMaturidadeVendedor';
 
 let logoCache; // memoiza o logo entre chamadas no mesmo lambda
 function carregarLogo() {
@@ -20,7 +20,7 @@ function carregarLogo() {
 
 export async function gerarPdfMaturidade({ cliente, result, narrativa, dataLabel }) {
   const buffer = await renderToBuffer(
-    React.createElement(RelatorioMaturidade, {
+    React.createElement(RelatorioMaturidadeVendedor, {
       cliente,
       result,
       narrativa,

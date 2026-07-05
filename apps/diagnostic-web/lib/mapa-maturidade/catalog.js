@@ -14,6 +14,18 @@ export { CATALOGO_MATURIDADE, SISTEMAS_MATURIDADE, REGUA_MATURIDADE, CADASTRO_MA
 export const VALOR_NA = -1; // "Não sei/Não se aplica" — excluído do cálculo
 export const MAX_POR_PERGUNTA = 3;
 
+// rótulos da escala de frequência (para persistir junto da resposta)
+export const LABEL_FREQUENCIA = {
+  '-1': 'Não sei/Não se aplica',
+  0: 'Nunca',
+  1: 'Poucas vezes',
+  2: 'Muitas vezes',
+  3: 'Sempre',
+};
+export function labelFrequencia(value) {
+  return LABEL_FREQUENCIA[value] ?? null;
+}
+
 const BY_ID = new Map(CATALOGO_MATURIDADE.map((q) => [q.id, q]));
 
 export function perguntaById(id) {

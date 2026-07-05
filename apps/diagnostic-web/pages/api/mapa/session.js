@@ -1,25 +1,19 @@
 // /api/mapa/session — PÚBLICO, por token
-// GET  ?token=         → estado da avaliação (status, respostas, resultado, projeto)
-// POST { token, answers:{code:value}, status? }
-//                      → salva (upsert) um lote de respostas progressivamente.
-//
-// As respostas de aprofundamento (códigos *_AP_*) são salvas com
-// is_deepening=true e NÃO entram no score (seção 5 do spec) — só enriquecem
-// a interpretação futura. O score é sempre recomputado em /api/mapa/finalize
-// a partir das obrigatórias persistidas (nunca confiamos no cliente).
+// GET  ?token=  → estado (status, cadastro, respostas, extras, resultado)
+// POST { token, answers:{code:value}, cadastro?, extras?, status? }
+//       → salva (upsert) respostas + cadastro/lead + extras progressivamente.
+// O score é sempre recomputado em /api/mapa/finalize a partir das respostas
+// persistidas (nunca confiamos no cliente).
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
-import { PERGUNTA_PILAR, labelDaResposta } from '../../../lib/mapa-maturidade/pilares';
-import { validarContexto, buildContextSnapshot } from '../../../lib/mapa-maturidade/contexto';
+import { perguntaById, labelFrequencia } from '../../../lib/mapa-maturidade/catalog';
 
-function isDeepeningCode(code) {
-  return /_AP_/.test(code);
-}
+const VALORES_VALIDOS = [-1, 0, 1, 2, 3];
 
 async function resolveAssessment(db, token) {
   const { data } = await db
     .from('mapa_assessments')
-    .select('id, projeto_id, status, result_json, context_json, started_at')
+    .select('id, projeto_id, status, result_json, cadastro_json, extras_json, started_at')
     .eq('token', token)
     .maybeSingle();
   return data || null;
@@ -38,81 +32,74 @@ export default async function handler(req, res) {
 
   // ── GET: estado atual ─────────────────────────────────────────────
   if (req.method === 'GET') {
-    const { data: proj } = await db
-      .from('projetos')
-      .select('cliente')
-      .eq('id', assessment.projeto_id)
-      .maybeSingle();
+    let cliente = assessment.cadastro_json?.empresa || '';
+    if (assessment.projeto_id) {
+      const { data: proj } = await db
+        .from('projetos')
+        .select('cliente')
+        .eq('id', assessment.projeto_id)
+        .maybeSingle();
+      cliente = proj?.cliente || cliente;
+    }
 
     const { data: rows } = await db
       .from('mapa_answers')
-      .select('question_code, value, is_deepening')
+      .select('question_code, value')
       .eq('assessment_id', assessment.id);
-
     const answers = {};
-    const deepeningAnswers = {};
-    for (const r of rows || []) {
-      (r.is_deepening ? deepeningAnswers : answers)[r.question_code] = r.value;
-    }
+    for (const r of rows || []) answers[r.question_code] = r.value;
 
     return res.status(200).json({
       success: true,
       status: assessment.status,
-      cliente: proj?.cliente || '',
+      cliente,
+      cadastro: assessment.cadastro_json || null,
       answers,
-      deepening_answers: deepeningAnswers,
+      extras: assessment.extras_json || null,
       result: assessment.result_json || null,
-      context: assessment.context_json || null,
     });
   }
 
-  // ── POST: salvar respostas ────────────────────────────────────────
+  // ── POST: salvar respostas / cadastro / extras ────────────────────
   if (req.method === 'POST') {
     if (assessment.status === 'concluido') {
       return res.status(409).json({ success: false, error: 'Avaliação já concluída' });
     }
-    const { answers, status, context } = req.body || {};
+    const { answers, cadastro, extras } = req.body || {};
 
-    // Contexto da Empresa (perfil, fora do score) — snapshot por medição
-    if (context && typeof context === 'object') {
-      const faltando = validarContexto(context);
-      if (faltando.length) {
-        return res.status(422).json({ success: false, error: 'Contexto da Empresa incompleto', faltando });
-      }
-      const { error } = await db
-        .from('mapa_assessments')
-        .update({ context_json: buildContextSnapshot(context) })
-        .eq('id', assessment.id);
-      if (error) {
-        console.error('[mapa/session] context', error);
-        return res.status(500).json({ success: false, error: 'Erro ao salvar contexto' });
-      }
+    // cadastro/lead (jsonb) e extras não-pontuados (atributos de marca)
+    const patch = {};
+    if (cadastro && typeof cadastro === 'object') {
+      patch.cadastro_json = { ...(assessment.cadastro_json || {}), ...cadastro };
+    }
+    if (extras && typeof extras === 'object') {
+      patch.extras_json = { ...(assessment.extras_json || {}), ...extras };
     }
 
     if (answers && typeof answers === 'object') {
-      const rows = [];
+      const linhas = [];
       for (const [code, raw] of Object.entries(answers)) {
-        const value = Number(raw);
-        const pillar = PERGUNTA_PILAR[code];
-        if (!pillar) {
+        const pergunta = perguntaById(code);
+        if (!pergunta || !pergunta.pontua) {
           return res.status(400).json({ success: false, error: `Pergunta desconhecida: ${code}` });
         }
-        if (![-1, 0, 1, 2, 3].includes(value)) {
+        const value = Number(raw);
+        if (!VALORES_VALIDOS.includes(value)) {
           return res.status(400).json({ success: false, error: `Valor inválido para ${code}` });
         }
-        rows.push({
+        linhas.push({
           assessment_id: assessment.id,
           question_code: code,
-          pillar_code: pillar,
+          pillar_code: pergunta.sistema,
           value,
-          label: labelDaResposta(value),
-          is_deepening: isDeepeningCode(code),
+          label: labelFrequencia(value),
+          is_deepening: false,
         });
       }
-      if (rows.length) {
+      if (linhas.length) {
         const { error } = await db
           .from('mapa_answers')
-          .upsert(rows, { onConflict: 'assessment_id,question_code' });
+          .upsert(linhas, { onConflict: 'assessment_id,question_code' });
         if (error) {
           console.error('[mapa/session] upsert', error);
           return res.status(500).json({ success: false, error: 'Erro ao salvar respostas' });
@@ -120,13 +107,15 @@ export default async function handler(req, res) {
       }
     }
 
-    // primeira escrita marca início; status avança para em_andamento
-    const patch = {};
+    // primeira escrita marca início; avança status para em_andamento
     if (!assessment.started_at) patch.started_at = new Date().toISOString();
-    const novoStatus = status === 'em_andamento' ? 'em_andamento' : null;
-    if (assessment.status === 'pendente') patch.status = novoStatus || 'em_andamento';
+    if (assessment.status === 'pendente') patch.status = 'em_andamento';
     if (Object.keys(patch).length) {
-      await db.from('mapa_assessments').update(patch).eq('id', assessment.id);
+      const { error } = await db.from('mapa_assessments').update(patch).eq('id', assessment.id);
+      if (error) {
+        console.error('[mapa/session] patch', error);
+        return res.status(500).json({ success: false, error: 'Erro ao salvar' });
+      }
     }
 
     return res.status(200).json({ success: true });

@@ -1,12 +1,11 @@
 // POST /api/mapa/finalize — PÚBLICO, por token
 // Body: { token }
-// Recomputa o resultado AUTORITATIVO a partir das respostas obrigatórias
-// persistidas (nunca confia no cliente), valida completude, salva o
-// resultado consolidado e marca a avaliação como concluída.
+// Recomputa o resultado AUTORITATIVO a partir das respostas persistidas
+// (nunca confia no cliente), valida completude e marca como concluído.
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
-import { PERGUNTAS_TODAS } from '../../../lib/mapa-maturidade/pilares';
-import { buildResult } from '../../../lib/mapa-maturidade/scoring';
+import { obrigatoriasFaltando } from '../../../lib/mapa-maturidade/catalog';
+import { buildResultado } from '../../../lib/mapa-maturidade/score';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,12 +20,11 @@ export default async function handler(req, res) {
 
   const { data: assessment } = await db
     .from('mapa_assessments')
-    .select('id, projeto_id, status, context_json')
+    .select('id, projeto_id, status, cadastro_json, extras_json')
     .eq('token', token)
     .maybeSingle();
   if (!assessment) return res.status(404).json({ success: false, error: 'Link inválido' });
 
-  // carrega TODAS as respostas (obrigatórias + aprofundamento)
   const { data: rows, error } = await db
     .from('mapa_answers')
     .select('question_code, value')
@@ -38,39 +36,27 @@ export default async function handler(req, res) {
 
   const answers = {};
   for (const r of rows || []) answers[r.question_code] = r.value;
+  // atributos de marca (MM2-MAR-10b, não pontua) vêm de extras_json
+  const atributos = assessment.extras_json?.atributos_marca;
+  if (Array.isArray(atributos)) answers['MM2-MAR-10b'] = atributos;
 
-  // valida completude (todas obrigatórias; "Não se aplica" = -1 também conta)
-  const faltando = PERGUNTAS_TODAS.filter((q) => typeof answers[q.code] !== 'number').map(
-    (q) => q.code
-  );
+  const faltando = obrigatoriasFaltando(answers);
   if (faltando.length) {
-    return res
-      .status(422)
-      .json({ success: false, error: 'Respostas obrigatórias incompletas', faltando });
+    return res.status(422).json({ success: false, error: 'Respostas obrigatórias incompletas', faltando });
   }
 
-  const result = buildResult(answers, {
+  const result = buildResultado(answers, {
     assessment_id: assessment.id,
     projeto_id: assessment.projeto_id,
   });
-  // referência ao snapshot de Contexto da Empresa daquela medição (fora do score)
-  result.context = assessment.context_json || null;
-
-  // bloqueia conclusão se algum pilar tiver dados insuficientes (2+ "Não se aplica")
-  if (result.has_insufficient_data) {
-    return res.status(422).json({
-      success: false,
-      error: 'Pilares com dados insuficientes — revise as respostas "Não se aplica".',
-      pillars_to_review: result.pillars_to_review,
-    });
-  }
+  result.cadastro = assessment.cadastro_json || null;
 
   const { error: upErr } = await db
     .from('mapa_assessments')
     .update({
       status: 'concluido',
       completed_at: new Date().toISOString(),
-      general_score: result.general_score,
+      general_score: result.general_score == null ? null : Math.round(result.general_score),
       general_level: result.general_level,
       result_json: result,
     })
