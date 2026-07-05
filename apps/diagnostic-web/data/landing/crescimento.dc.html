@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:'Manrope',system-ui,sans-serif;color:#0C1D33;background:#FFFFFF;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  ::selection{background:#C72638;color:#fff;}
+  @keyframes floatSwirl{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-22px) rotate(6deg);}}
+  @keyframes pulseDot{0%,100%{opacity:.55;transform:scale(1);}50%{opacity:1;transform:scale(1.35);}}
+  @keyframes shine{0%{transform:translateX(-120%);}60%,100%{transform:translateX(220%);}}
+  @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @keyframes previaPop{0%{transform:scale(.55);opacity:0;}100%{transform:scale(1);opacity:1;}}
+</style>
+</helmet>
+
+<div id="top" style="position:relative;overflow-x:clip;">
+
+<div id="lp-progress" aria-hidden="true" style="position:fixed;top:0;left:0;height:3px;width:0;z-index:101;background:linear-gradient(90deg,#C72638,#ff8a95);box-shadow:0 0 14px rgba(199,38,56,.65);transition:width .12s linear;pointer-events:none;"></div>
+<div id="lp-grain" aria-hidden="true" style="position:fixed;inset:0;z-index:99;pointer-events:none;opacity:.045;mix-blend-mode:overlay;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22140%22 height=%22140%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E');"></div>
+
+<!-- ================= NAV ================= -->
+<nav id="lp-nav" style="position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(20px,5vw,64px);border-bottom:1px solid transparent;transition:background .35s ease,box-shadow .35s ease,border-color .35s ease;">
+  <a href="#top" style="display:flex;align-items:center;gap:11px;text-decoration:none;">
+    <img src="brand/espansione-mark.png" alt="" style="height:34px;width:auto;display:block;">
+    <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:23px;letter-spacing:-.5px;color:#fff;line-height:1;">espansione</span>
+  </a>
+  <div style="display:flex;align-items:center;gap:30px;">
+    <div id="lp-links" style="display:flex;align-items:center;gap:28px;">
+      <a href="#dor" style="text-decoration:none;color:rgba(255,255,255,.82);font-weight:600;font-size:15px;">O problema</a>
+      <a href="#mapa-sistemas" style="text-decoration:none;color:rgba(255,255,255,.82);font-weight:600;font-size:15px;">O Mapa</a>
+      <a href="#como-funciona" style="text-decoration:none;color:rgba(255,255,255,.82);font-weight:600;font-size:15px;">Como funciona</a>
+      <a href="#metodo" style="text-decoration:none;color:rgba(255,255,255,.82);font-weight:600;font-size:15px;">Método</a>
+    </div>
+    <a href="#mapa" data-cta-primary style="display:inline-flex;align-items:center;gap:8px;background:#C72638;color:#fff;font-family:'Manrope';font-weight:700;font-size:14.5px;padding:11px 20px;border-radius:11px;text-decoration:none;box-shadow:0 8px 22px -8px rgba(199,38,56,.6);transition:transform .2s,background .2s;" style-hover="transform:translateY(-2px);background:#e13345;">Fazer meu Mapa</a>
+    <button id="lp-burger" aria-label="Menu" style="display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);width:42px;height:42px;border-radius:11px;cursor:pointer;color:#fff;font-size:18px;align-items:center;justify-content:center;">☰</button>
+  </div>
+</nav>
+<div id="lp-mobile" style="display:none;position:fixed;top:74px;left:12px;right:12px;z-index:59;flex-direction:column;gap:4px;background:rgba(0,29,58,.97);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px;box-shadow:0 24px 50px -18px rgba(0,0,0,.6);">
+  <a href="#dor" style="text-decoration:none;color:#fff;font-weight:600;font-size:16px;padding:12px 14px;border-radius:10px;">O problema</a>
+  <a href="#mapa-sistemas" style="text-decoration:none;color:#fff;font-weight:600;font-size:16px;padding:12px 14px;border-radius:10px;">O Mapa</a>
+  <a href="#como-funciona" style="text-decoration:none;color:#fff;font-weight:600;font-size:16px;padding:12px 14px;border-radius:10px;">Como funciona</a>
+  <a href="#metodo" style="text-decoration:none;color:#fff;font-weight:600;font-size:16px;padding:12px 14px;border-radius:10px;">Método</a>
+</div>
+
+<!-- ================= HERO ================= -->
+<header style="position:relative;background:radial-gradient(120% 120% at 80% 0%,#0A4E9E 0%,#00408A 38%,#002A5C 100%);color:#fff;padding:150px clamp(20px,5vw,64px) 96px;overflow:hidden;">
+  <div aria-hidden="true" style="position:absolute;top:-120px;right:-140px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(10,78,158,.85),rgba(0,42,92,0) 70%);animation:floatSwirl 14s ease-in-out infinite;pointer-events:none;"></div>
+  <div aria-hidden="true" style="position:absolute;top:120px;right:60px;font-family:'Baloo 2';font-weight:800;font-size:640px;line-height:.7;color:rgba(255,255,255,.035);pointer-events:none;user-select:none;">e</div>
+  <div aria-hidden="true" style="position:absolute;bottom:-160px;left:-120px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(199,38,56,.22),rgba(199,38,56,0) 70%);pointer-events:none;"></div>
+  <div style="position:relative;max-width:1180px;margin:0 auto;">
+    <div data-reveal style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);padding:8px 16px;border-radius:100px;font-weight:600;font-size:13.5px;letter-spacing:.3px;color:rgba(255,255,255,.9);margin-bottom:30px;">
+      <span style="width:8px;height:8px;border-radius:50%;background:#C72638;animation:pulseDot 2.2s infinite;"></span>
+      DIAGNÓSTICO GRATUITO · 10 MIN · RESULTADO NA HORA
+    </div>
+    <h1 data-reveal data-delay="60" style="font-family:'Poppins';font-weight:700;font-size:clamp(38px,6vw,74px);line-height:1.04;letter-spacing:-1.5px;margin:0 0 26px;max-width:16ch;">Sua empresa está pronta para <span style="position:relative;white-space:nowrap;">sustentar<span style="position:absolute;left:0;right:0;bottom:6px;height:12px;background:rgba(199,38,56,.55);border-radius:4px;z-index:-1;"></span></span> o crescimento?</h1>
+    <p data-reveal data-delay="120" style="font-size:clamp(18px,2.2vw,22px);line-height:1.5;color:rgba(255,255,255,.82);max-width:60ch;margin:0 0 40px;font-weight:500;">Descubra em <strong style="color:#fff;">10 minutos</strong> quais sinais mostram se sua empresa está preparada para continuar crescendo — ou se <strong style="color:#fff;">Marca, Negócios, Comunicação e Pessoas</strong> estão evoluindo de forma desalinhada.</p>
+    <div data-reveal data-delay="180" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:22px;">
+      <a href="#mapa" data-cta-primary style="position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:11px;background:#C72638;color:#fff;font-family:'Poppins';font-weight:600;font-size:18px;padding:19px 34px;border-radius:15px;text-decoration:none;box-shadow:0 16px 38px -10px rgba(199,38,56,.6);transition:transform .2s,box-shadow .2s,background .2s;" style-hover="transform:translateY(-3px);background:#e13345;box-shadow:0 24px 50px -12px rgba(199,38,56,.7);">
+        Fazer meu Mapa do Crescimento
+        <span style="font-size:20px;line-height:1;">→</span>
+        <span aria-hidden="true" style="position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0));animation:shine 5s ease-in-out infinite;"></span>
+      </a>
+      <a href="#como-funciona" style="display:inline-flex;align-items:center;gap:9px;color:#fff;font-family:'Poppins';font-weight:600;font-size:18px;padding:18px 30px;border-radius:15px;text-decoration:none;border:1.5px solid rgba(255,255,255,.3);transition:background .2s,border-color .2s;" style-hover="background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.55);">Entender como funciona</a>
+    </div>
+    <div data-reveal data-delay="205" style="display:flex;flex-wrap:wrap;gap:10px 22px;margin-bottom:16px;">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:rgba(255,255,255,.82);font-weight:600;"><span style="color:#7fffbf;">✓</span> Sem custo</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:rgba(255,255,255,.82);font-weight:600;"><span style="color:#7fffbf;">✓</span> Sem compromisso</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:rgba(255,255,255,.82);font-weight:600;"><span style="color:#7fffbf;">✓</span> Resultado imediato</span>
+    </div>
+    <p data-reveal data-delay="220" style="font-size:14.5px;color:rgba(255,255,255,.62);margin:0;display:flex;align-items:center;gap:8px;font-weight:500;">
+      <span style="color:#C72638;font-size:16px;">◆</span> Para empresas com no mínimo 10 colaboradores que já vivem os desafios de sustentar o crescimento.
+    </p>
+
+    <!-- support text card -->
+    <div data-reveal data-delay="120" style="margin-top:58px;display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:stretch;" class="hero-grid">
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:34px 36px;backdrop-filter:blur(6px);">
+        <p style="font-size:17px;line-height:1.6;color:rgba(255,255,255,.86);margin:0 0 16px;font-weight:500;">Empresas em crescimento não sofrem apenas porque trabalham muito. Sofrem porque chegaram a um ponto em que <strong style="color:#fff;">as decisões ficaram mais complexas</strong> — e os sócios já não conseguem sustentar tudo sozinhos.</p>
+        <p style="font-size:15.5px;line-height:1.55;color:rgba(255,255,255,.6);margin:0;">O empresário sente as dores do crescimento, mas nem sempre enxerga com clareza por onde começar, o que priorizar e quais áreas estão mais frágeis.</p>
+      </div>
+      <div style="background:linear-gradient(150deg,rgba(199,38,56,.18),rgba(199,38,56,.04));border:1px solid rgba(199,38,56,.35);border-radius:22px;padding:32px 34px;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-family:'Poppins';font-weight:700;font-size:15px;letter-spacing:.5px;color:#ff8a95;margin-bottom:14px;">O QUE O MAPA REVELA</div>
+        <p style="font-size:17px;line-height:1.5;color:#fff;margin:0;font-weight:600;">Onde estão os sintomas da falta de integração entre Marca, Negócios, Comunicação e Pessoas.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= MARQUEE — VALORES DA MARCA ================= -->
+<div aria-hidden="true" style="background:#001A3B;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);overflow:hidden;padding:15px 0;white-space:nowrap;position:relative;">
+  <div style="display:inline-flex;align-items:center;animation:marquee 34s linear infinite;">
+    <span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">CRESCIMENTO DE DENTRO PARA FORA</span><span style="color:#C72638;">◆</span><span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">ANÁLISE COMPORTAMENTAL</span><span style="color:#C72638;">◆</span><span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">PROPÓSITO CLARO E VISÃO DE FUTURO</span><span style="color:#C72638;">◆</span><span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">CONGRUÊNCIA NA COMUNICAÇÃO</span><span style="color:#C72638;">◆</span>
+    <span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">CRESCIMENTO DE DENTRO PARA FORA</span><span style="color:#C72638;">◆</span><span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">ANÁLISE COMPORTAMENTAL</span><span style="color:#C72638;">◆</span><span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">PROPÓSITO CLARO E VISÃO DE FUTURO</span><span style="color:#C72638;">◆</span><span style="font-family:'Poppins';font-weight:600;font-size:14px;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:0 30px;">CONGRUÊNCIA NA COMUNICAÇÃO</span><span style="color:#C72638;">◆</span>
+  </div>
+</div>
+
+<!-- ================= SEC 2 — DOR ================= -->
+<section id="dor" style="background:#FFFFFF;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">01 — O PROBLEMA</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+    </div>
+    <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 0 22px;max-width:20ch;color:#0C1D33;">Quando a empresa cresce, os problemas deixam de ser simples.</h2>
+    <p data-reveal style="font-size:19px;line-height:1.6;color:#4A5A70;max-width:64ch;margin:0 0 48px;">No início, o esforço dos sócios resolve quase tudo. Mas com o crescimento surgem novos desafios: mais clientes, mais equipe, mais decisões, mais processos, mais expectativas e mais riscos. O crescimento começa a revelar sintomas que antes ficavam escondidos.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;" class="symptom-grid">
+      <div data-reveal style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">A empresa vende, mas a margem nem sempre acompanha.</span></div>
+      <div data-reveal data-delay="40" style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">Os sócios viram gargalo das decisões.</span></div>
+      <div data-reveal data-delay="80" style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">A equipe cresce, mas nem todos acompanham o ritmo.</span></div>
+      <div data-reveal style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">Os líderes ainda não têm maturidade para conduzir pessoas.</span></div>
+      <div data-reveal data-delay="40" style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">Clientes percebem diferenças na qualidade da entrega.</span></div>
+      <div data-reveal data-delay="80" style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">A comunicação interna gera ruídos e retrabalho.</span></div>
+      <div data-reveal style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">O comercial não explica valor sem cair em preço.</span></div>
+      <div data-reveal data-delay="40" style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">A operação depende demais de pessoas específicas.</span></div>
+      <div data-reveal data-delay="80" style="display:flex;gap:14px;align-items:flex-start;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:16px;padding:20px 22px;transition:transform .2s,box-shadow .2s,border-color .2s;" style-hover="transform:translateY(-3px);box-shadow:0 16px 34px -18px rgba(0,42,92,.4);border-color:#C7D4E6;"><span style="flex:none;color:#C72638;font-size:18px;margin-top:1px;">✕</span><span style="font-size:16px;line-height:1.45;color:#25344A;font-weight:500;">Todos trabalham muito, mas as prioridades não ficam claras.</span></div>
+    </div>
+
+    <div data-reveal style="margin-top:44px;background:linear-gradient(135deg,#002A5C,#00408A);border-radius:24px;padding:clamp(30px,4vw,46px);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:26px;justify-content:space-between;">
+      <p style="font-size:clamp(19px,2.4vw,25px);line-height:1.4;margin:0;max-width:34ch;font-weight:600;font-family:'Poppins';">O empresário sabe que existe um problema — mas nem sempre identifica <span style="color:#ff8a95;">qual sistema gera o maior impacto</span> e o que atacar primeiro.</p>
+      <div style="flex:none;font-size:16px;color:rgba(255,255,255,.8);max-width:22ch;line-height:1.5;border-left:2px solid #C72638;padding-left:20px;">É aí que o <strong style="color:#fff;">Mapa do Crescimento Integrado</strong> entra.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 3 — TESE ================= -->
+<section style="background:#F2F5FA;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);position:relative;overflow:hidden;">
+  <div style="max-width:1120px;margin:0 auto;position:relative;">
+    <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">02 — A TESE</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+    </div>
+    <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 0 22px;max-width:22ch;color:#0C1D33;">O crescimento trava quando a empresa tenta resolver sintomas isolados.</h2>
+    <p data-reveal style="font-size:19px;line-height:1.6;color:#4A5A70;max-width:64ch;margin:0 0 46px;">Contratam um treinamento. Mudam a comunicação. Cobram mais dos líderes. Reorganizam processos. Investem em vendas. Mas quando Marca, Negócios, Comunicação e Pessoas não estão conectados, cada ação continua incompleta — a empresa melhora um ponto e outro continua travando.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;" class="tese-grid">
+      <div data-reveal style="background:#fff;border:1px solid #E4EAF2;border-radius:22px;padding:34px;">
+        <div style="display:inline-flex;align-items:center;gap:8px;font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:1px;color:#8894a8;margin-bottom:22px;">✕ AÇÕES SOLTAS</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;color:#6a7688;font-weight:500;"><span style="width:9px;height:9px;border-radius:2px;background:#c9d2df;flex:none;"></span>Treinamento avulso</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;color:#6a7688;font-weight:500;"><span style="width:9px;height:9px;border-radius:2px;background:#c9d2df;flex:none;"></span>Nova comunicação</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;color:#6a7688;font-weight:500;"><span style="width:9px;height:9px;border-radius:2px;background:#c9d2df;flex:none;"></span>Mais cobrança dos líderes</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;color:#6a7688;font-weight:500;"><span style="width:9px;height:9px;border-radius:2px;background:#c9d2df;flex:none;"></span>Processos reorganizados</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;color:#6a7688;font-weight:500;"><span style="width:9px;height:9px;border-radius:2px;background:#c9d2df;flex:none;"></span>Investimento em vendas</div>
+        </div>
+        <p style="margin:24px 0 0;font-size:14.5px;color:#8894a8;line-height:1.5;font-style:italic;">Resultado: um ponto melhora, outro continua travando.</p>
+      </div>
+      <div data-reveal data-delay="80" style="background:linear-gradient(155deg,#00408A,#002A5C);border-radius:22px;padding:34px;color:#fff;position:relative;overflow:hidden;">
+        <div aria-hidden="true" style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(199,38,56,.25),transparent 70%);"></div>
+        <div style="display:inline-flex;align-items:center;gap:8px;font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:1px;color:#ff8a95;margin-bottom:22px;position:relative;">◆ CRESCIMENTO INTEGRADO</div>
+        <div style="display:flex;flex-direction:column;gap:11px;position:relative;">
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;font-weight:600;"><span style="color:#7fffbf;flex:none;">✓</span> O que a empresa promete</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;font-weight:600;"><span style="color:#7fffbf;flex:none;">✓</span> O que ela entrega</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;font-weight:600;"><span style="color:#7fffbf;flex:none;">✓</span> Como comunica valor</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;font-weight:600;"><span style="color:#7fffbf;flex:none;">✓</span> Como organiza o negócio</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;font-weight:600;"><span style="color:#7fffbf;flex:none;">✓</span> Como líderes conduzem pessoas</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:15.5px;font-weight:600;"><span style="color:#7fffbf;flex:none;">✓</span> Como a equipe sustenta o cliente</div>
+        </div>
+        <p style="margin:24px 0 0;font-size:14.5px;color:rgba(255,255,255,.78);line-height:1.5;position:relative;">Tudo conectado — o crescimento passa a se sustentar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 4 — ISCA / 4 SISTEMAS ================= -->
+<section id="mapa-sistemas" style="background:radial-gradient(120% 100% at 20% 0%,#0A4E9E,#00408A 45%,#002A5C 100%);color:#fff;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);position:relative;overflow:hidden;">
+  <div aria-hidden="true" style="position:absolute;bottom:-140px;right:-100px;font-family:'Baloo 2';font-weight:800;font-size:520px;line-height:.7;color:rgba(255,255,255,.03);pointer-events:none;">e</div>
+  <div style="max-width:1120px;margin:0 auto;position:relative;">
+    <div style="max-width:720px;">
+      <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#ff8a95;">03 — O MAPA</span>
+        <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+      </div>
+      <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(30px,4.4vw,52px);line-height:1.08;letter-spacing:-1.2px;margin:0 0 22px;">Faça o Mapa do Crescimento Integrado</h2>
+      <p data-reveal style="font-size:19px;line-height:1.6;color:rgba(255,255,255,.82);margin:0 0 12px;">Uma análise rápida para identificar quais sistemas da sua empresa estão favorecendo — ou limitando — o próximo estágio de crescimento.</p>
+      <p data-reveal style="font-size:17px;line-height:1.55;color:rgba(255,255,255,.62);margin:0 0 50px;">Em cerca de 10 minutos você responde perguntas objetivas sobre os quatro sistemas que sustentam uma empresa preparada para crescer com estrutura.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;" class="pillar-grid">
+      <div data-reveal style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:30px 28px;transition:transform .25s,background .25s,border-color .25s;" style-hover="transform:translateY(-6px);background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);">
+        <div style="width:52px;height:52px;border-radius:15px;background:rgba(199,38,56,.16);border:1px solid rgba(199,38,56,.4);display:grid;place-items:center;margin-bottom:22px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff8a95" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.4 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z"/></svg>
+        </div>
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:22px;margin:0 0 12px;color:#fff;">Marca</h3>
+        <p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.72);margin:0;">Sua empresa gera confiança, diferenciação e percepção de valor — ou ainda depende da explicação dos sócios e da comparação por preço?</p>
+      </div>
+      <div data-reveal data-delay="60" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:30px 28px;transition:transform .25s,background .25s,border-color .25s;" style-hover="transform:translateY(-6px);background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);">
+        <div style="width:52px;height:52px;border-radius:15px;background:rgba(199,38,56,.16);border:1px solid rgba(199,38,56,.4);display:grid;place-items:center;margin-bottom:22px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff8a95" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="4" y="13" width="4" height="6"/><rect x="10" y="9" width="4" height="10"/><rect x="16" y="4" width="4" height="15"/></svg>
+        </div>
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:22px;margin:0 0 12px;color:#fff;">Negócios</h3>
+        <p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.72);margin:0;">Sua empresa tem direção, processos, margem, entrega consistente e capacidade de crescer sem perder o controle?</p>
+      </div>
+      <div data-reveal data-delay="120" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:30px 28px;transition:transform .25s,background .25s,border-color .25s;" style-hover="transform:translateY(-6px);background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);">
+        <div style="width:52px;height:52px;border-radius:15px;background:rgba(199,38,56,.16);border:1px solid rgba(199,38,56,.4);display:grid;place-items:center;margin-bottom:22px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff8a95" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"/><path d="M9 9h7M9 12h4"/></svg>
+        </div>
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:22px;margin:0 0 12px;color:#fff;">Comunicação</h3>
+        <p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.72);margin:0;">Sua empresa comunica valor com clareza — ou sofre com ruídos internos, propostas pouco claras e desalinhamento entre áreas?</p>
+      </div>
+      <div data-reveal data-delay="180" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:30px 28px;transition:transform .25s,background .25s,border-color .25s;" style-hover="transform:translateY(-6px);background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);">
+        <div style="width:52px;height:52px;border-radius:15px;background:rgba(199,38,56,.16);border:1px solid rgba(199,38,56,.4);display:grid;place-items:center;margin-bottom:22px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff8a95" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 0 1 0 5.8"/><path d="M17.5 14c2.5.6 4.5 2.9 4.5 5.9"/></svg>
+        </div>
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:22px;margin:0 0 12px;color:#fff;">Pessoas</h3>
+        <p style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.72);margin:0;">Sua liderança e sua equipe sustentam a operação — ou a empresa ainda depende demais de poucas pessoas para funcionar bem?</p>
+      </div>
+    </div>
+
+    <div data-reveal style="margin-top:48px;display:flex;justify-content:center;">
+      <a href="#mapa" data-cta-primary style="position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:11px;background:#C72638;color:#fff;font-family:'Poppins';font-weight:600;font-size:18px;padding:19px 38px;border-radius:15px;text-decoration:none;box-shadow:0 16px 40px -10px rgba(199,38,56,.6);transition:transform .2s,background .2s;" style-hover="transform:translateY(-3px);background:#e13345;">Começar meu mapa agora <span style="font-size:20px;">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRÉVIA INTERATIVA ================= -->
+<section id="previa" style="background:#F2F5FA;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="text-align:center;max-width:660px;margin:0 auto 44px;">
+      <div data-reveal style="display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid #E4EAF2;padding:8px 16px;border-radius:100px;font-family:'Poppins';font-weight:700;font-size:12.5px;letter-spacing:1.5px;color:#C72638;margin-bottom:20px;"><span style="width:7px;height:7px;border-radius:50%;background:#C72638;animation:pulseDot 2.2s infinite;"></span>PRÉVIA INTERATIVA · 60 SEGUNDOS</div>
+      <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,46px);line-height:1.1;letter-spacing:-1px;margin:0 0 16px;color:#0C1D33;">Sinta um sinal antes mesmo do mapa completo.</h2>
+      <p data-reveal style="font-size:18px;line-height:1.55;color:#4A5A70;margin:0;">Responda 4 afirmações rápidas e veja, na hora, onde sua empresa tende a estar mais forte — e onde o crescimento pode travar.</p>
+    </div>
+
+    <div data-reveal style="background:radial-gradient(120% 130% at 85% 0%,#0A4E9E,#00408A 45%,#002A5C 100%);border-radius:28px;padding:clamp(22px,3.2vw,42px);box-shadow:0 44px 84px -36px rgba(0,42,92,.55);position:relative;overflow:hidden;">
+      <div aria-hidden="true" style="position:absolute;bottom:-170px;right:-90px;font-family:'Baloo 2';font-weight:800;font-size:440px;line-height:.7;color:rgba(255,255,255,.03);pointer-events:none;user-select:none;">e</div>
+      <div class="previa-grid" style="position:relative;display:grid;grid-template-columns:1.12fr .88fr;gap:26px;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px 20px;">
+            <div style="font-family:'Poppins';font-weight:700;font-size:11.5px;letter-spacing:1.5px;color:#ff8a95;margin-bottom:8px;">MARCA</div>
+            <p style="font-size:15px;line-height:1.4;color:#fff;margin:0 0 14px;font-weight:500;">Nossos clientes entendem nosso valor sem depender da explicação dos sócios.</p>
+            <div style="display:flex;gap:8px;">
+              <button type="button" data-pillar="marca" data-val="2" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Sim</button>
+              <button type="button" data-pillar="marca" data-val="1" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Em parte</button>
+              <button type="button" data-pillar="marca" data-val="0" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Não</button>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px 20px;">
+            <div style="font-family:'Poppins';font-weight:700;font-size:11.5px;letter-spacing:1.5px;color:#ff8a95;margin-bottom:8px;">NEGÓCIOS</div>
+            <p style="font-size:15px;line-height:1.4;color:#fff;margin:0 0 14px;font-weight:500;">Temos processos e margem que sustentam o crescimento sem perder o controle.</p>
+            <div style="display:flex;gap:8px;">
+              <button type="button" data-pillar="negocios" data-val="2" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Sim</button>
+              <button type="button" data-pillar="negocios" data-val="1" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Em parte</button>
+              <button type="button" data-pillar="negocios" data-val="0" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Não</button>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px 20px;">
+            <div style="font-family:'Poppins';font-weight:700;font-size:11.5px;letter-spacing:1.5px;color:#ff8a95;margin-bottom:8px;">COMUNICAÇÃO</div>
+            <p style="font-size:15px;line-height:1.4;color:#fff;margin:0 0 14px;font-weight:500;">As áreas se comunicam com clareza, sem ruído e sem retrabalho.</p>
+            <div style="display:flex;gap:8px;">
+              <button type="button" data-pillar="comunicacao" data-val="2" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Sim</button>
+              <button type="button" data-pillar="comunicacao" data-val="1" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Em parte</button>
+              <button type="button" data-pillar="comunicacao" data-val="0" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Não</button>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px 20px;">
+            <div style="font-family:'Poppins';font-weight:700;font-size:11.5px;letter-spacing:1.5px;color:#ff8a95;margin-bottom:8px;">PESSOAS</div>
+            <p style="font-size:15px;line-height:1.4;color:#fff;margin:0 0 14px;font-weight:500;">A operação funciona sem depender de poucas pessoas específicas.</p>
+            <div style="display:flex;gap:8px;">
+              <button type="button" data-pillar="pessoas" data-val="2" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Sim</button>
+              <button type="button" data-pillar="pessoas" data-val="1" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Em parte</button>
+              <button type="button" data-pillar="pessoas" data-val="0" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.82);font-family:'Manrope';font-weight:600;font-size:13px;padding:10px 4px;border-radius:10px;cursor:pointer;transition:all .18s;" style-hover="background:rgba(255,255,255,.12);">Não</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:26px;display:flex;flex-direction:column;">
+          <div style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:1px;color:#ff8a95;margin-bottom:22px;">SUA LEITURA PARCIAL</div>
+          <div style="margin-bottom:15px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);margin-bottom:7px;"><span>Marca</span><span id="pct-marca" style="color:rgba(255,255,255,.45);">—</span></div>
+            <div style="height:8px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;"><div id="fill-marca" style="height:100%;width:0;border-radius:6px;background:#C72638;transition:width .5s cubic-bezier(.16,1,.3,1),background .3s;"></div></div>
+          </div>
+          <div style="margin-bottom:15px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);margin-bottom:7px;"><span>Negócios</span><span id="pct-negocios" style="color:rgba(255,255,255,.45);">—</span></div>
+            <div style="height:8px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;"><div id="fill-negocios" style="height:100%;width:0;border-radius:6px;background:#C72638;transition:width .5s cubic-bezier(.16,1,.3,1),background .3s;"></div></div>
+          </div>
+          <div style="margin-bottom:15px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);margin-bottom:7px;"><span>Comunicação</span><span id="pct-comunicacao" style="color:rgba(255,255,255,.45);">—</span></div>
+            <div style="height:8px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;"><div id="fill-comunicacao" style="height:100%;width:0;border-radius:6px;background:#C72638;transition:width .5s cubic-bezier(.16,1,.3,1),background .3s;"></div></div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);margin-bottom:7px;"><span>Pessoas</span><span id="pct-pessoas" style="color:rgba(255,255,255,.45);">—</span></div>
+            <div style="height:8px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;"><div id="fill-pessoas" style="height:100%;width:0;border-radius:6px;background:#C72638;transition:width .5s cubic-bezier(.16,1,.3,1),background .3s;"></div></div>
+          </div>
+          <div style="margin-top:auto;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);margin-top:22px;">
+            <div style="display:flex;align-items:baseline;gap:12px;">
+              <span id="previa-score" style="font-family:'Poppins';font-weight:800;font-size:46px;line-height:1;color:#fff;">—</span>
+              <span id="previa-label" style="font-family:'Poppins';font-weight:700;font-size:15px;color:rgba(255,255,255,.55);">Responda os 4</span>
+            </div>
+            <p id="previa-teaser" style="font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.7);margin:12px 0 20px;">Selecione uma opção em cada afirmação para revelar seu sinal.</p>
+            <a id="previa-cta" href="#mapa" data-cta-primary style="display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#C72638;color:#fff;font-family:'Poppins';font-weight:600;font-size:16px;padding:15px 24px;border-radius:13px;text-decoration:none;box-shadow:0 14px 32px -10px rgba(199,38,56,.6);transition:transform .2s,background .2s,opacity .3s;opacity:.5;" style-hover="transform:translateY(-2px);background:#e13345;">Ver meu Mapa completo <span style="font-size:18px;">→</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p data-reveal style="text-align:center;font-size:13.5px;color:#8894a8;margin:20px 0 0;">Esta é apenas uma amostra. O Mapa completo analisa os 4 sistemas em profundidade.</p>
+  </div>
+</section>
+
+<!-- ================= SEC 5 — NÃO ENXERGA ================= -->
+<section style="background:#FFFFFF;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">04 — O PONTO CEGO</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+    </div>
+    <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 0 22px;max-width:20ch;color:#0C1D33;">O problema nem sempre está onde parece estar.</h2>
+    <p data-reveal style="font-size:19px;line-height:1.6;color:#4A5A70;max-width:60ch;margin:0 0 50px;">Muitos empresários acreditam que já sabem onde está o problema. Mas o sintoma raramente aponta para a causa.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div data-reveal style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:26px;">
+        <div style="font-size:14px;font-weight:700;color:#98a3b5;letter-spacing:.3px;margin-bottom:8px;">ACHA QUE É…</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:18px;color:#0C1D33;margin-bottom:14px;">A equipe.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:15.5px;line-height:1.5;color:#4A5A70;"><span style="color:#C72638;font-weight:800;">→</span> Mas a equipe não recebeu direção clara.</div>
+      </div>
+      <div data-reveal data-delay="40" style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:26px;">
+        <div style="font-size:14px;font-weight:700;color:#98a3b5;letter-spacing:.3px;margin-bottom:8px;">ACHA QUE É…</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:18px;color:#0C1D33;margin-bottom:14px;">As vendas.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:15.5px;line-height:1.5;color:#4A5A70;"><span style="color:#C72638;font-weight:800;">→</span> Mas o cliente não percebe valor suficiente.</div>
+      </div>
+      <div data-reveal data-delay="80" style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:26px;">
+        <div style="font-size:14px;font-weight:700;color:#98a3b5;letter-spacing:.3px;margin-bottom:8px;">ACHA QUE É…</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:18px;color:#0C1D33;margin-bottom:14px;">A comunicação.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:15.5px;line-height:1.5;color:#4A5A70;"><span style="color:#C72638;font-weight:800;">→</span> Mas a marca não tem posicionamento claro.</div>
+      </div>
+      <div data-reveal style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:26px;">
+        <div style="font-size:14px;font-weight:700;color:#98a3b5;letter-spacing:.3px;margin-bottom:8px;">ACHA QUE É…</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:18px;color:#0C1D33;margin-bottom:14px;">A operação.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:15.5px;line-height:1.5;color:#4A5A70;"><span style="color:#C72638;font-weight:800;">→</span> Mas os processos dependem demais dos sócios.</div>
+      </div>
+      <div data-reveal data-delay="40" style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:26px;">
+        <div style="font-size:14px;font-weight:700;color:#98a3b5;letter-spacing:.3px;margin-bottom:8px;">ACHA QUE PRECISA DE…</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:18px;color:#0C1D33;margin-bottom:14px;">Treinamento.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:15.5px;line-height:1.5;color:#4A5A70;"><span style="color:#C72638;font-weight:800;">→</span> Mas ainda não identificou quais competências desenvolver.</div>
+      </div>
+      <div data-reveal data-delay="80" style="background:linear-gradient(150deg,#00408A,#002A5C);border-radius:18px;padding:26px;color:#fff;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:14px;font-weight:700;color:#ff8a95;letter-spacing:.3px;margin-bottom:10px;">O MAPA FAZ ISSO ↴</div>
+        <p style="font-size:16px;line-height:1.5;margin:0;font-weight:600;">Organiza a percepção, mostra os sinais de alerta e aponta onde a falta de integração está impactando o crescimento.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 6 — MÉDICO ================= -->
+<section style="background:#F2F5FA;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center;" class="doc-grid">
+      <div>
+        <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">05 — A ANALOGIA</span>
+        </div>
+        <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-1px;margin:0 0 22px;color:#0C1D33;">Antes do tratamento, é preciso investigar os sinais.</h2>
+        <p data-reveal style="font-size:18px;line-height:1.6;color:#4A5A70;margin:0 0 18px;">Um bom médico não define o tratamento apenas pela sensação do paciente. Primeiro pede exames, investiga as causas e só então define o caminho adequado.</p>
+        <p data-reveal style="font-size:18px;line-height:1.6;color:#4A5A70;margin:0;">Com empresas é igual. Sobrecarga dos sócios, queda de margem, ruído entre áreas, clientes comparando por preço, liderança imatura e retrabalho são <strong style="color:#0C1D33;">sintomas</strong> — não a causa.</p>
+      </div>
+      <div data-reveal data-delay="80" style="background:#fff;border:1px solid #E4EAF2;border-radius:24px;padding:clamp(26px,3vw,40px);box-shadow:0 30px 60px -30px rgba(0,42,92,.28);">
+        <div style="font-family:'Poppins';font-weight:700;font-size:14px;letter-spacing:.5px;color:#C72638;margin-bottom:26px;">O MAPA É O SEU PRIMEIRO CHECK-UP</div>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          <div style="display:flex;gap:18px;align-items:flex-start;padding-bottom:22px;">
+            <div style="flex:none;width:40px;height:40px;border-radius:12px;background:#EAF0F9;color:#00408A;display:grid;place-items:center;font-family:'Poppins';font-weight:700;">1</div>
+            <div><div style="font-family:'Poppins';font-weight:600;font-size:17px;color:#0C1D33;margin-bottom:3px;">Pede os exames</div><div style="font-size:15px;color:#6a7688;line-height:1.45;">O mapa coleta os sinais reais da empresa.</div></div>
+          </div>
+          <div style="width:1px;height:14px;background:#E0E7F1;margin-left:20px;margin-top:-22px;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:18px;align-items:flex-start;padding-bottom:22px;">
+            <div style="flex:none;width:40px;height:40px;border-radius:12px;background:#EAF0F9;color:#00408A;display:grid;place-items:center;font-family:'Poppins';font-weight:700;">2</div>
+            <div><div style="font-family:'Poppins';font-weight:600;font-size:17px;color:#0C1D33;margin-bottom:3px;">Mostra as alterações</div><div style="font-size:15px;color:#6a7688;line-height:1.45;">Revela onde estão os pontos críticos.</div></div>
+          </div>
+          <div style="width:1px;height:14px;background:#E0E7F1;margin-left:20px;margin-top:-22px;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:18px;align-items:flex-start;">
+            <div style="flex:none;width:40px;height:40px;border-radius:12px;background:#C72638;color:#fff;display:grid;place-items:center;font-family:'Poppins';font-weight:700;">3</div>
+            <div><div style="font-family:'Poppins';font-weight:600;font-size:17px;color:#0C1D33;margin-bottom:3px;">Indica onde investigar</div><div style="font-size:15px;color:#6a7688;line-height:1.45;">Aponta quais dimensões precisam de atenção para crescer com estrutura.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 7 — O QUE VOCÊ RECEBE ================= -->
+<section style="background:#FFFFFF;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">06 — O ENTREGÁVEL</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+    </div>
+    <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 0 16px;color:#0C1D33;">O que o Mapa entrega</h2>
+    <p data-reveal style="font-size:19px;line-height:1.6;color:#4A5A70;max-width:62ch;margin:0 0 46px;">Uma análise objetiva, com apontamentos estratégicos sobre os sistemas que sustentam o crescimento da sua empresa. Você identifica:</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;margin-bottom:44px;">
+      <div data-reveal style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">O nível atual de maturidade da empresa</span></div>
+      <div data-reveal data-delay="30" style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Quais sistemas estão mais estruturados</span></div>
+      <div data-reveal data-delay="60" style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Quais áreas apresentam sinais de fragilidade</span></div>
+      <div data-reveal style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Onde podem estar os gargalos do crescimento</span></div>
+      <div data-reveal data-delay="30" style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Quais sintomas indicam falta de integração</span></div>
+      <div data-reveal data-delay="60" style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Quais pontos merecem investigação mais profunda</span></div>
+      <div data-reveal style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Quais prioridades observar para o próximo estágio</span></div>
+      <div data-reveal data-delay="30" style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:14px;border:1px solid #E7ECF4;transition:border-color .2s,background .2s;" style-hover="background:#F5F7FB;border-color:#C7D4E6;"><span style="flex:none;color:#00408A;">▹</span><span style="font-size:16px;color:#25344A;font-weight:500;line-height:1.4;">Quais temas orientam treinamentos e liderança</span></div>
+    </div>
+
+    <div data-reveal style="position:relative;background:linear-gradient(135deg,#C72638,#8f1a28);border-radius:24px;padding:clamp(32px,4vw,52px);color:#fff;overflow:hidden;">
+      <div aria-hidden="true" style="position:absolute;top:-60px;right:-30px;font-family:'Poppins';font-weight:800;font-size:220px;color:rgba(255,255,255,.08);line-height:1;">”</div>
+      <p style="font-family:'Poppins';font-weight:600;font-size:clamp(21px,2.8vw,30px);line-height:1.35;margin:0;max-width:26ch;position:relative;">O mapa mostra onde sua empresa está perdendo força antes que o crescimento vire desorganização.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 8 — O QUE A ESPANSIONE FAZ ================= -->
+<section style="background:radial-gradient(120% 100% at 80% 0%,#0A4E9E,#00408A 45%,#002A5C 100%);color:#fff;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);position:relative;overflow:hidden;">
+  <div style="max-width:1120px;margin:0 auto;position:relative;">
+    <div style="display:grid;grid-template-columns:1fr .85fr;gap:50px;align-items:start;margin-bottom:56px;" class="esp-grid">
+      <div>
+        <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#ff8a95;">07 — A ESPANSIONE</span>
+        </div>
+        <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4vw,46px);line-height:1.1;letter-spacing:-1px;margin:0 0 20px;">A Espansione desenvolve empresas para o Crescimento Integrado.</h2>
+        <p data-reveal style="font-size:18px;line-height:1.6;color:rgba(255,255,255,.82);margin:0 0 16px;">Ajudamos empresas que já cresceram e precisam sustentar o próximo estágio com mais clareza, direção e estrutura.</p>
+        <p data-reveal style="font-size:17px;line-height:1.6;color:rgba(255,255,255,.66);margin:0;">Conectamos Marca, Negócios, Comunicação e Pessoas para que o crescimento deixe de depender apenas do esforço dos sócios — e passe a ser sustentado por estratégia integrada, liderança preparada, comunicação clara e equipes desenvolvidas.</p>
+      </div>
+      <div data-reveal data-delay="80" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:12px;overflow:hidden;">
+        <img src="brand/img-0.png" alt="Espansione" style="width:100%;height:auto;display:block;border-radius:16px;background:rgba(255,255,255,.9);">
+        <div style="padding:16px 12px 8px;">
+          <div style="font-family:'Baloo 2';font-weight:700;font-size:20px;color:#fff;">espansione</div>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.6);margin-top:2px;">Consultoria de Crescimento Integrado</div>
+        </div>
+      </div>
+    </div>
+
+    <p data-reveal style="font-family:'Poppins';font-weight:600;font-size:16px;color:rgba(255,255,255,.9);margin:0 0 26px;">A partir do primeiro mapa, conduzimos uma jornada completa de desenvolvimento:</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+      <div data-reveal style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;"><div style="font-family:'Poppins';font-weight:800;font-size:15px;color:#ff8a95;margin-bottom:14px;">01</div><div style="font-family:'Poppins';font-weight:600;font-size:17px;margin-bottom:8px;">Diagnóstico</div><div style="font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.68);">Identificamos os sinais que limitam o crescimento.</div></div>
+      <div data-reveal data-delay="40" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;"><div style="font-family:'Poppins';font-weight:800;font-size:15px;color:#ff8a95;margin-bottom:14px;">02</div><div style="font-family:'Poppins';font-weight:600;font-size:17px;margin-bottom:8px;">Investigação</div><div style="font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.68);">Aprofundamos causas, desalinhamentos e prioridades.</div></div>
+      <div data-reveal data-delay="80" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;"><div style="font-family:'Poppins';font-weight:800;font-size:15px;color:#ff8a95;margin-bottom:14px;">03</div><div style="font-family:'Poppins';font-weight:600;font-size:17px;margin-bottom:8px;">Direcionamento</div><div style="font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.68);">Definimos caminhos estratégicos para o próximo estágio.</div></div>
+      <div data-reveal data-delay="120" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;"><div style="font-family:'Poppins';font-weight:800;font-size:15px;color:#ff8a95;margin-bottom:14px;">04</div><div style="font-family:'Poppins';font-weight:600;font-size:17px;margin-bottom:8px;">Treinamentos</div><div style="font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.68);">Desenvolvemos líderes e equipes sob medida.</div></div>
+      <div data-reveal data-delay="160" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;"><div style="font-family:'Poppins';font-weight:800;font-size:15px;color:#ff8a95;margin-bottom:14px;">05</div><div style="font-family:'Poppins';font-weight:600;font-size:17px;margin-bottom:8px;">Mentorias</div><div style="font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.68);">Acompanhamos a evolução e medimos resultados.</div></div>
+    </div>
+
+    <div data-reveal style="margin-top:44px;border-left:3px solid #C72638;padding:6px 0 6px 24px;max-width:60ch;">
+      <p style="font-family:'Poppins';font-weight:600;font-size:clamp(18px,2.2vw,22px);line-height:1.45;margin:0;">A Espansione não entrega apenas um questionário. Entrega uma forma mais clara de enxergar o crescimento e desenvolver a empresa a partir do que ela realmente precisa evoluir.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 9 — DESEJO ================= -->
+<section style="background:#FFFFFF;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">08 — A TRANSFORMAÇÃO</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+    </div>
+    <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 0 40px;max-width:20ch;color:#0C1D33;">Imagine sua empresa crescendo com mais direção.</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+      <div data-reveal style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:24px 26px;"><div style="color:#1B9E6B;font-size:20px;margin-bottom:12px;">✓</div><p style="margin:0;font-size:16px;line-height:1.5;color:#25344A;font-weight:500;">As decisões ficam mais claras e os sócios deixam de ser o centro de tudo.</p></div>
+      <div data-reveal data-delay="40" style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:24px 26px;"><div style="color:#1B9E6B;font-size:20px;margin-bottom:12px;">✓</div><p style="margin:0;font-size:16px;line-height:1.5;color:#25344A;font-weight:500;">A comunicação passa a expressar melhor o valor da empresa.</p></div>
+      <div data-reveal data-delay="80" style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:24px 26px;"><div style="color:#1B9E6B;font-size:20px;margin-bottom:12px;">✓</div><p style="margin:0;font-size:16px;line-height:1.5;color:#25344A;font-weight:500;">Os líderes entendem onde precisam evoluir; a equipe ganha direção e autonomia.</p></div>
+      <div data-reveal style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:24px 26px;"><div style="color:#1B9E6B;font-size:20px;margin-bottom:12px;">✓</div><p style="margin:0;font-size:16px;line-height:1.5;color:#25344A;font-weight:500;">Os clientes percebem mais consistência na entrega.</p></div>
+      <div data-reveal data-delay="40" style="background:#F5F7FB;border:1px solid #E7ECF4;border-radius:18px;padding:24px 26px;"><div style="color:#1B9E6B;font-size:20px;margin-bottom:12px;">✓</div><p style="margin:0;font-size:16px;line-height:1.5;color:#25344A;font-weight:500;">Os treinamentos deixam de ser genéricos e passam a impactar o negócio.</p></div>
+      <div data-reveal data-delay="80" style="background:linear-gradient(150deg,#00408A,#002A5C);border-radius:18px;padding:24px 26px;color:#fff;display:flex;align-items:center;"><p style="margin:0;font-size:17px;line-height:1.45;font-weight:600;font-family:'Poppins';">O crescimento deixa de ser uma sequência de incêndios — e vira um processo consciente e acompanhado.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 10 — PARA QUEM ================= -->
+<section style="background:#F2F5FA;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="display:grid;grid-template-columns:.85fr 1.15fr;gap:50px;align-items:start;" class="quem-grid">
+      <div>
+        <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">09 — PARA QUEM É</span>
+        </div>
+        <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-1px;margin:0 0 20px;color:#0C1D33;">Para empresas que já chegaram a um novo nível.</h2>
+        <p data-reveal style="font-size:18px;line-height:1.6;color:#4A5A70;margin:0 0 26px;">Indicado para empresas com <strong style="color:#0C1D33;">no mínimo 10 colaboradores</strong>, operação em andamento, equipe formada e desafios reais de crescimento.</p>
+        <div data-reveal style="background:#fff;border:1px solid #E4EAF2;border-left:3px solid #C72638;border-radius:14px;padding:22px 24px;">
+          <p style="margin:0 0 8px;font-size:16px;line-height:1.5;color:#25344A;font-weight:600;">Não é para quem ainda está começando do zero.</p>
+          <p style="margin:0;font-size:15px;line-height:1.5;color:#6a7688;">É para empresas em um estágio em que o crescimento exige mais clareza, método e desenvolvimento.</p>
+        </div>
+      </div>
+      <div data-reveal data-delay="80" style="background:#fff;border:1px solid #E4EAF2;border-radius:22px;padding:clamp(26px,3vw,38px);box-shadow:0 30px 60px -34px rgba(0,42,92,.25);">
+        <div style="font-family:'Poppins';font-weight:700;font-size:14px;color:#00408A;letter-spacing:.5px;margin-bottom:20px;">ESTE MAPA É PARA VOCÊ SE A SUA EMPRESA…</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;" class="quem-checks">
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Já tem clientes, equipe e operação ativa</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Cresceu, mas a estrutura precisa acompanhar</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Possui pelo menos 10 colaboradores</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Sente sobrecarga nos sócios ou líderes</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Precisa organizar prioridades do próximo estágio</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Quer vender melhor sem depender só de preço</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Precisa melhorar a comunicação interna e externa</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Quer desenvolver líderes e equipes</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Percebe falhas de padrão, entrega ou atendimento</div>
+          <div style="display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.4;color:#25344A;font-weight:500;"><span style="color:#1B9E6B;flex:none;">✓</span>Deseja crescer de forma integrada e estruturada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 11 — COMO FUNCIONA ================= -->
+<section id="como-funciona" style="background:#FFFFFF;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div data-reveal style="text-align:center;margin-bottom:52px;">
+      <div style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;margin-bottom:16px;">10 — COMO FUNCIONA</div>
+      <h2 style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 auto;max-width:20ch;color:#0C1D33;">Como funciona o Mapa do Crescimento Integrado</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;">
+      <div data-reveal style="position:relative;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:20px;padding:30px 26px;">
+        <div style="font-family:'Baloo 2';font-weight:800;font-size:44px;color:#DCE4F0;line-height:1;margin-bottom:14px;">1</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:19px;color:#0C1D33;margin-bottom:10px;">Responda o mapa</div>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#6a7688;">Perguntas objetivas sobre Marca, Negócios, Comunicação e Pessoas.</p>
+      </div>
+      <div data-reveal data-delay="60" style="position:relative;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:20px;padding:30px 26px;">
+        <div style="font-family:'Baloo 2';font-weight:800;font-size:44px;color:#DCE4F0;line-height:1;margin-bottom:14px;">2</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:19px;color:#0C1D33;margin-bottom:10px;">Receba a análise</div>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#6a7688;">Veja quais sistemas estão mais fortes e quais podem estar limitando o crescimento.</p>
+      </div>
+      <div data-reveal data-delay="120" style="position:relative;background:#F5F7FB;border:1px solid #E7ECF4;border-radius:20px;padding:30px 26px;">
+        <div style="font-family:'Baloo 2';font-weight:800;font-size:44px;color:#DCE4F0;line-height:1;margin-bottom:14px;">3</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:19px;color:#0C1D33;margin-bottom:10px;">Entenda prioridades</div>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#6a7688;">Visualize os sintomas da falta de integração e os pontos que precisam de atenção.</p>
+      </div>
+      <div data-reveal data-delay="180" style="position:relative;background:linear-gradient(150deg,#00408A,#002A5C);border-radius:20px;padding:30px 26px;color:#fff;">
+        <div style="font-family:'Baloo 2';font-weight:800;font-size:44px;color:rgba(255,138,149,.4);line-height:1;margin-bottom:14px;">4</div>
+        <div style="font-family:'Poppins';font-weight:600;font-size:19px;margin-bottom:10px;">Avance com direção</div>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:rgba(255,255,255,.75);">A Espansione aprofunda os pontos críticos e constrói seu plano de desenvolvimento.</p>
+      </div>
+    </div>
+    <div data-reveal style="margin-top:44px;display:flex;justify-content:center;">
+      <a href="#mapa" data-cta-primary style="display:inline-flex;align-items:center;gap:11px;background:#C72638;color:#fff;font-family:'Poppins';font-weight:600;font-size:18px;padding:19px 38px;border-radius:15px;text-decoration:none;box-shadow:0 16px 40px -10px rgba(199,38,56,.5);transition:transform .2s,background .2s;" style-hover="transform:translateY(-3px);background:#e13345;">Fazer meu Mapa do Crescimento <span style="font-size:20px;">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 12 — DIFERENCIAL / MÉTODO ================= -->
+<section id="metodo" style="background:#F2F5FA;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">11 — O MÉTODO</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#C72638,transparent);"></span>
+    </div>
+    <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;margin:0 0 20px;max-width:22ch;color:#0C1D33;">Crescimento Integrado é olhar a empresa como um sistema.</h2>
+    <p data-reveal style="font-size:19px;line-height:1.6;color:#4A5A70;max-width:64ch;margin:0 0 46px;">O mercado trata os problemas em partes separadas: marca de um lado, vendas de outro, comunicação de outro, liderança de outro. A Espansione trabalha de forma integrada — porque a empresa cresce melhor quando o que ela promete, vende, comunica, entrega e desenvolve nas pessoas está conectado.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:44px;">
+      <div data-reveal style="background:#fff;border:1px solid #E4EAF2;border-radius:20px;padding:28px;border-top:3px solid #C72638;">
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:20px;margin:0 0 10px;color:#0C1D33;">Marca</h3>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#4A5A70;">Clareza, confiança, diferenciação e percepção de valor.</p>
+      </div>
+      <div data-reveal data-delay="50" style="background:#fff;border:1px solid #E4EAF2;border-radius:20px;padding:28px;border-top:3px solid #00408A;">
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:20px;margin:0 0 10px;color:#0C1D33;">Negócios</h3>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#4A5A70;">Direção, processos, entrega, margem e crescimento.</p>
+      </div>
+      <div data-reveal data-delay="100" style="background:#fff;border:1px solid #E4EAF2;border-radius:20px;padding:28px;border-top:3px solid #C72638;">
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:20px;margin:0 0 10px;color:#0C1D33;">Comunicação</h3>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#4A5A70;">Menos ruído, mensagens alinhadas, valor expresso com clareza.</p>
+      </div>
+      <div data-reveal data-delay="150" style="background:#fff;border:1px solid #E4EAF2;border-radius:20px;padding:28px;border-top:3px solid #00408A;">
+        <h3 style="font-family:'Poppins';font-weight:700;font-size:20px;margin:0 0 10px;color:#0C1D33;">Pessoas</h3>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#4A5A70;">Líderes, equipes, autonomia e cultura de execução.</p>
+      </div>
+    </div>
+
+    <div data-reveal style="background:linear-gradient(135deg,#002A5C,#00408A);border-radius:24px;padding:clamp(30px,4vw,48px);color:#fff;text-align:center;">
+      <p style="font-family:'Poppins';font-weight:600;font-size:clamp(20px,2.6vw,28px);line-height:1.4;margin:0 auto;max-width:40ch;">Quando Marca, Negócios, Comunicação e Pessoas evoluem juntos, o crescimento deixa de depender apenas do esforço e passa a ser sustentado por <span style="color:#ff8a95;">estratégia integrada</span>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 13 — CONTINUIDADE ================= -->
+<section style="background:#FFFFFF;padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;" class="cont-grid">
+      <div>
+        <div data-reveal style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <span style="font-family:'Poppins';font-weight:700;font-size:13px;letter-spacing:2px;color:#C72638;">12 — O PRÓXIMO PASSO</span>
+        </div>
+        <h2 data-reveal style="font-family:'Poppins';font-weight:700;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-1px;margin:0 0 20px;color:#0C1D33;">O mapa é o primeiro passo. A evolução começa depois dele.</h2>
+        <p data-reveal style="font-size:18px;line-height:1.6;color:#4A5A70;margin:0 0 18px;">O Mapa mostra os sinais. Mas transformar sinais em evolução real exige investigar causas, definir prioridades e desenvolver as competências certas.</p>
+        <div data-reveal style="background:#F2F5FA;border-radius:16px;padding:22px 24px;border-left:3px solid #C72638;">
+          <p style="margin:0;font-size:16px;line-height:1.55;color:#25344A;font-weight:500;">Você não recebe apenas uma leitura automática. Recebe uma análise inicial para entender onde estão os sinais de alerta e quais caminhos podem orientar a evolução da sua empresa.</p>
+        </div>
+      </div>
+      <div data-reveal data-delay="80" style="background:radial-gradient(120% 100% at 100% 0%,#0A4E9E,#002A5C);border-radius:24px;padding:clamp(28px,3vw,40px);color:#fff;">
+        <div style="font-family:'Poppins';font-weight:700;font-size:14px;color:#ff8a95;letter-spacing:.5px;margin-bottom:20px;">DEPOIS DO MAPA, VOCÊ PODE AVANÇAR PARA:</div>
+        <div style="display:flex;flex-direction:column;gap:13px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Análise aprofundada dos sistemas críticos</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Identificação dos principais desalinhamentos</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Definição de prioridades estratégicas</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Plano de desenvolvimento personalizado</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Treinamentos para líderes e equipes</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Mentorias coletivas mensais</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.9);font-weight:500;"><span style="color:#7fffbf;flex:none;">✓</span>Acompanhamento e mensuração de resultados</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEC 14 — CTA FINAL ================= -->
+<section id="mapa" style="background:radial-gradient(130% 120% at 50% 0%,#0A4E9E,#00408A 40%,#001F45 100%);color:#fff;padding:clamp(80px,10vw,130px) clamp(20px,5vw,64px);position:relative;overflow:hidden;text-align:center;">
+  <div aria-hidden="true" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Baloo 2';font-weight:800;font-size:720px;line-height:.7;color:rgba(255,255,255,.028);pointer-events:none;">e</div>
+  <div aria-hidden="true" style="position:absolute;top:-100px;left:-80px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(199,38,56,.22),transparent 70%);"></div>
+  <div style="position:relative;max-width:800px;margin:0 auto;">
+    <div data-reveal style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);padding:8px 16px;border-radius:100px;font-weight:600;font-size:13.5px;color:rgba(255,255,255,.9);margin-bottom:26px;"><span style="width:8px;height:8px;border-radius:50%;background:#C72638;animation:pulseDot 2.2s infinite;"></span>10 MINUTOS • RESULTADO IMEDIATO</div>
+    <h2 data-reveal data-delay="60" style="font-family:'Poppins';font-weight:700;font-size:clamp(32px,5vw,58px);line-height:1.06;letter-spacing:-1.4px;margin:0 0 22px;">Descubra o que pode estar limitando o próximo estágio da sua empresa.</h2>
+    <p data-reveal data-delay="120" style="font-size:clamp(18px,2.2vw,21px);line-height:1.55;color:rgba(255,255,255,.82);max-width:60ch;margin:0 auto 40px;">Faça o Mapa do Crescimento Integrado e identifique, em cerca de 10 minutos, os sinais que mostram se sua empresa está preparada para crescer com clareza, direção e estrutura.</p>
+    <div data-reveal data-delay="160" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-bottom:22px;">
+      <a href="#top" data-cta-primary style="position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:11px;background:#C72638;color:#fff;font-family:'Poppins';font-weight:600;font-size:19px;padding:20px 40px;border-radius:15px;text-decoration:none;box-shadow:0 18px 44px -10px rgba(199,38,56,.65);transition:transform .2s,background .2s;" style-hover="transform:translateY(-3px);background:#e13345;">Fazer meu mapa agora <span style="font-size:21px;">→</span><span aria-hidden="true" style="position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0));animation:shine 5s ease-in-out infinite;"></span></a>
+      <a href="#top" style="display:inline-flex;align-items:center;gap:9px;color:#fff;font-family:'Poppins';font-weight:600;font-size:19px;padding:19px 34px;border-radius:15px;text-decoration:none;border:1.5px solid rgba(255,255,255,.3);transition:background .2s;" style-hover="background:rgba(255,255,255,.09);">Falar com a Espansione</a>
+    </div>
+    <p data-reveal data-delay="200" style="font-size:14.5px;color:rgba(255,255,255,.6);margin:0;">Para empresas com equipe formada, operação ativa e desafios reais de crescimento.</p>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer style="background:#001A3B;color:rgba(255,255,255,.6);padding:52px clamp(20px,5vw,64px);">
+  <div style="max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="brand/espansione-mark.png" alt="" style="height:36px;width:auto;display:block;">
+      <div>
+        <div style="font-family:'Baloo 2';font-weight:700;font-size:21px;color:#fff;line-height:1;">espansione</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-top:3px;letter-spacing:.3px;">Construindo marcas, conectando propósitos</div>
+      </div>
+    </div>
+    <div style="font-size:13.5px;color:rgba(255,255,255,.45);">© 2026 Espansione • Consultoria de Crescimento Integrado</div>
+  </div>
+</footer>
+
+<!-- ================= FLOATING CTA ================= -->
+<a id="floating-cta" href="#mapa" data-cta-primary style="position:fixed;bottom:22px;right:22px;z-index:70;display:flex;align-items:center;gap:9px;background:#C72638;color:#fff;font-family:'Poppins';font-weight:600;font-size:15.5px;padding:14px 22px;border-radius:14px;text-decoration:none;box-shadow:0 16px 38px -10px rgba(199,38,56,.7);opacity:0;transform:translateY(30px);pointer-events:none;transition:opacity .35s,transform .35s,background .2s;" style-hover="background:#e13345;">Fazer meu Mapa <span style="font-size:17px;">→</span></a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:760},&quot;ctaLink&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;#mapa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;CTA&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C72638&quot;,&quot;options&quot;:[&quot;#C72638&quot;,&quot;#0A4E9E&quot;,&quot;#1B7A57&quot;,&quot;#B4472B&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Aparência&quot;},&quot;showFloatingCta&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;CTA&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    // reveal on scroll
+    const reveals = Array.from(document.querySelectorAll('[data-reveal]'));
+    reveals.forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(26px)';
+      el.style.transition = 'opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)';
+      el.style.willChange = 'opacity, transform';
+    });
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const d = e.target.getAttribute('data-delay') || 0;
+          e.target.style.transitionDelay = d + 'ms';
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'none';
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    reveals.forEach(el => io.observe(el));
+    this._io = io;
+
+    // nav background + floating cta on scroll
+    const nav = document.getElementById('lp-nav');
+    const fc = document.getElementById('floating-cta');
+    const onScroll = () => {
+      const y = window.scrollY;
+      const prog = document.getElementById('lp-progress');
+      if (prog) {
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        prog.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
+      }
+      if (nav) {
+        if (y > 40) {
+          nav.style.background = 'rgba(0,26,59,0.92)';
+          nav.style.backdropFilter = 'blur(12px)';
+          nav.style.webkitBackdropFilter = 'blur(12px)';
+          nav.style.boxShadow = '0 10px 32px -14px rgba(0,0,0,0.55)';
+          nav.style.borderBottomColor = 'rgba(255,255,255,0.08)';
+        } else {
+          nav.style.background = 'transparent';
+          nav.style.backdropFilter = 'none';
+          nav.style.webkitBackdropFilter = 'none';
+          nav.style.boxShadow = 'none';
+          nav.style.borderBottomColor = 'transparent';
+        }
+      }
+      if (fc && this._fcEnabled !== false) {
+        if (y > 700) {
+          fc.style.opacity = '1';
+          fc.style.transform = 'none';
+          fc.style.pointerEvents = 'auto';
+        } else {
+          fc.style.opacity = '0';
+          fc.style.transform = 'translateY(30px)';
+          fc.style.pointerEvents = 'none';
+        }
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    this._onScroll = onScroll;
+    onScroll();
+
+    // smooth anchor scroll with nav offset
+    this._anchorHandlers = [];
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      const h = (ev) => {
+        const id = a.getAttribute('href');
+        if (id && id.length > 1) {
+          const t = document.querySelector(id);
+          if (t) {
+            ev.preventDefault();
+            const yy = t.getBoundingClientRect().top + window.scrollY - 66;
+            window.scrollTo({ top: Math.max(0, yy), behavior: 'smooth' });
+          }
+        }
+      };
+      a.addEventListener('click', h);
+      this._anchorHandlers.push([a, h]);
+    });
+
+    // mobile menu
+    const burger = document.getElementById('lp-burger');
+    const menu = document.getElementById('lp-mobile');
+    if (burger && menu) {
+      burger.addEventListener('click', () => {
+        const open = menu.style.display === 'flex';
+        menu.style.display = open ? 'none' : 'flex';
+      });
+      menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { menu.style.display = 'none'; }));
+    }
+
+    // responsive: show burger / hide inline links on small screens
+    const applyResponsive = () => {
+      const small = window.innerWidth < 900;
+      const links = document.getElementById('lp-links');
+      if (links) links.style.display = small ? 'none' : 'flex';
+      if (burger) burger.style.display = small ? 'flex' : 'none';
+      if (!small && menu) menu.style.display = 'none';
+      document.querySelectorAll('.hero-grid,.tese-grid,.doc-grid,.esp-grid,.quem-grid,.cont-grid,.previa-grid').forEach(g => {
+        g.style.gridTemplateColumns = small ? '1fr' : '';
+      });
+      document.querySelectorAll('.quem-checks').forEach(g => {
+        g.style.gridTemplateColumns = small ? '1fr' : '1fr 1fr';
+      });
+    };
+    applyResponsive();
+    window.addEventListener('resize', applyResponsive);
+    this._applyResponsive = applyResponsive;
+
+    // magnetic pull on large CTAs
+    document.querySelectorAll('[data-cta-primary]').forEach(btn => {
+      if (btn.offsetHeight < 50) return;
+      btn.addEventListener('mousemove', (e) => {
+        const r = btn.getBoundingClientRect();
+        const mx = e.clientX - r.left - r.width / 2;
+        const my = e.clientY - r.top - r.height / 2;
+        btn.style.transform = 'translate(' + (mx * 0.12).toFixed(1) + 'px,' + (my * 0.22).toFixed(1) + 'px)';
+      });
+      btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+    });
+
+    // interactive "Prévia" mini-diagnostic
+    this.previa = { marca: null, negocios: null, comunicacao: null, pessoas: null };
+    document.querySelectorAll('[data-pillar]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pillar = btn.getAttribute('data-pillar');
+        const val = parseInt(btn.getAttribute('data-val'), 10);
+        this.previa[pillar] = val;
+        const col = val === 2 ? '#1B9E6B' : val === 1 ? '#E8A100' : '#C72638';
+        document.querySelectorAll('[data-pillar="' + pillar + '"]').forEach(b => {
+          const bv = parseInt(b.getAttribute('data-val'), 10);
+          const bcol = bv === 2 ? '#1B9E6B' : bv === 1 ? '#E8A100' : '#C72638';
+          const sel = bv === val;
+          b.style.background = sel ? bcol : 'rgba(255,255,255,.06)';
+          b.style.borderColor = sel ? bcol : 'rgba(255,255,255,.16)';
+          b.style.color = sel ? '#fff' : 'rgba(255,255,255,.82)';
+          b.style.boxShadow = sel ? '0 8px 20px -8px ' + bcol : 'none';
+        });
+        const fill = document.getElementById('fill-' + pillar);
+        const pctEl = document.getElementById('pct-' + pillar);
+        if (fill) { fill.style.width = ((val / 2) * 100) + '%'; fill.style.background = col; }
+        if (pctEl) { pctEl.textContent = val === 2 ? 'Forte' : val === 1 ? 'Parcial' : 'Frágil'; pctEl.style.color = col; }
+        this.updatePrevia();
+      });
+    });
+
+    this.applyProps();
+  }
+
+  updatePrevia() {
+    const p = this.previa || {};
+    const keys = ['marca', 'negocios', 'comunicacao', 'pessoas'];
+    const answered = keys.filter(k => p[k] !== null && p[k] !== undefined);
+    const scoreEl = document.getElementById('previa-score');
+    const labelEl = document.getElementById('previa-label');
+    const teaserEl = document.getElementById('previa-teaser');
+    const ctaEl = document.getElementById('previa-cta');
+    if (answered.length < 4) {
+      if (labelEl) { labelEl.textContent = answered.length + ' de 4 respondidas'; labelEl.style.color = 'rgba(255,255,255,.55)'; }
+      return;
+    }
+    const sum = keys.reduce((a, k) => a + p[k], 0);
+    const pct = Math.round((sum / 8) * 100);
+    let tier, col, teaser;
+    if (pct >= 75) { tier = 'Estruturado'; col = '#7fffbf'; teaser = 'Boa base. Ainda assim, o Mapa completo revela onde o próximo estágio pode travar — e o que proteger.'; }
+    else if (pct >= 40) { tier = 'Em evolução'; col = '#ffcf5c'; teaser = 'Há sinais de desalinhamento. O Mapa completo mostra qual sistema priorizar primeiro para não desperdiçar energia.'; }
+    else { tier = 'Atenção'; col = '#ff8a95'; teaser = 'Vários sistemas pedindo atenção. O Mapa completo aponta por onde começar com clareza.'; }
+    if (scoreEl) { scoreEl.textContent = pct + '%'; scoreEl.style.color = col; scoreEl.style.animation = 'none'; void scoreEl.offsetWidth; scoreEl.style.animation = 'previaPop .5s cubic-bezier(.16,1,.3,1)'; }
+    if (labelEl) { labelEl.textContent = tier; labelEl.style.color = col; }
+    if (teaserEl) teaserEl.textContent = teaser;
+    if (ctaEl) ctaEl.style.opacity = '1';
+  }
+
+  componentDidUpdate() { this.applyProps(); }
+
+  applyProps() {
+    const p = this.props || {};
+    const link = p.ctaLink;
+    const acc = p.accentColor;
+    document.querySelectorAll('[data-cta-primary]').forEach(a => {
+      if (link) a.setAttribute('href', link);
+      if (acc) a.style.background = acc;
+    });
+    const fc = document.getElementById('floating-cta');
+    this._fcEnabled = p.showFloatingCta !== false;
+    if (fc && p.showFloatingCta === false) {
+      fc.style.display = 'none';
+    } else if (fc) {
+      fc.style.display = 'flex';
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._onScroll) window.removeEventListener('scroll', this._onScroll);
+    if (this._applyResponsive) window.removeEventListener('resize', this._applyResponsive);
+    if (this._io) this._io.disconnect();
+  }
+
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

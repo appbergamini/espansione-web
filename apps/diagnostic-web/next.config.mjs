@@ -33,6 +33,13 @@ const nextConfig = {
       './node_modules/@sparticuz/chromium/**/*',
     ],
   },
+
+  // Landing page estática do Mapa do Crescimento Integrado.
+  // O HTML self-contained vive em public/crescimento/index.html; o rewrite
+  // dá a URL limpa /crescimento.
+  async rewrites() {
+    return [{ source: '/crescimento', destination: '/crescimento/index.html' }];
+  },
 };
 
 export default nextConfig;
