@@ -6,7 +6,8 @@
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { gerarRelatorioVendedor } from '../../../lib/mapa-maturidade/reportVendedor';
 import { buildRelatorioMaturidadeHtml } from '../../../lib/mapa-maturidade/reportHtml';
-import { generatePdfFromPage } from '../../../lib/pdf/generatePdfFromPage';
+// generatePdfFromPage (playwright-core + @sparticuz/chromium) é importado
+// dinamicamente só no branch PDF — evita carregar o chromium no caminho HTML.
 
 export const maxDuration = 120;
 export const config = { maxDuration: 120 };
@@ -54,6 +55,7 @@ export default async function handler(req, res) {
     const html = buildRelatorioMaturidadeHtml({ cliente, dataLabel: mesAno(assessment.completed_at), result, narrativa });
 
     if (format === 'pdf') {
+      const { generatePdfFromPage } = await import('../../../lib/pdf/generatePdfFromPage');
       const pdf = await generatePdfFromPage({ html, waitForSelector: 'footer .brand', margens: { top: '0', right: '0', bottom: '0', left: '0' } });
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="mapa-da-maturidade${cliente ? '-' + slug(cliente) : ''}.pdf"`);

@@ -7,7 +7,8 @@ import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { gerarRelatorioTriangulacao } from '../../../lib/identidade-final/report';
 import { buildRelatorioIdentidadeHtml } from '../../../lib/identidade-final/reportHtml';
 import { abertasDoPublico } from '../../../lib/identidade-final/catalog';
-import { generatePdfFromPage } from '../../../lib/pdf/generatePdfFromPage';
+// generatePdfFromPage importado dinamicamente só no branch PDF (evita carregar
+// playwright-core/@sparticuz/chromium no caminho HTML).
 
 export const maxDuration = 120;
 export const config = { maxDuration: 120 };
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
     const html = buildRelatorioIdentidadeHtml({ cliente, dataLabel: mesAno(assessment.completed_at), result, narrativa, proposito });
 
     if (format === 'pdf') {
+      const { generatePdfFromPage } = await import('../../../lib/pdf/generatePdfFromPage');
       const pdf = await generatePdfFromPage({ html, waitForSelector: 'footer .brand', margens: { top: '0', right: '0', bottom: '0', left: '0' } });
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="mapa-identidade${cliente ? '-' + slug(cliente) : ''}.pdf"`);
