@@ -427,7 +427,10 @@ function Resultado({ result, cliente, token }) {
         </p>
       </div>
 
-      <div style={{ ...sx.navRow, marginTop: '1.4rem' }}>
+      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '1.4rem' }}>
+        <a className="btn-primary" href={`/api/mapa/report?token=${encodeURIComponent(token)}&format=html`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+          📄 Ver relatório completo
+        </a>
         <BaixarPdf token={token} />
       </div>
     </Card>
@@ -439,7 +442,7 @@ function BaixarPdf({ token }) {
   async function baixar() {
     setEstado('gerando');
     try {
-      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(token)}`);
+      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(token)}&format=pdf`);
       if (!r.ok) throw new Error('falha');
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
@@ -456,8 +459,8 @@ function BaixarPdf({ token }) {
     }
   }
   return (
-    <button className="btn-primary" onClick={baixar} disabled={estado === 'gerando'} style={{ opacity: estado === 'gerando' ? 0.6 : 1 }}>
-      {estado === 'gerando' ? 'Gerando relatório…' : estado === 'erro' ? 'Erro — tentar de novo' : '⬇ Baixar relatório (PDF)'}
+    <button onClick={baixar} disabled={estado === 'gerando'} style={{ ...sx.btnGhostResult, opacity: estado === 'gerando' ? 0.6 : 1 }}>
+      {estado === 'gerando' ? 'Gerando PDF…' : estado === 'erro' ? 'Erro — tentar de novo' : '⬇ Baixar PDF'}
     </button>
   );
 }
@@ -522,4 +525,5 @@ const sx = {
   miniBarIn: { height: '100%', background: '#Da3144', borderRadius: 99 },
   chip: { fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', borderRadius: 99, padding: '0.28rem 0.7rem' },
   ctaAprofundar: { marginTop: '1.8rem', padding: '1.1rem 1.2rem', borderRadius: 12, background: 'rgba(218,49,68,0.10)', border: '1px solid rgba(218,49,68,0.25)' },
+  btnGhostResult: { background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: 'var(--text-secondary, #9aa)', padding: '0.7rem 1.1rem', cursor: 'pointer', fontSize: '0.9rem' },
 };

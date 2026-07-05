@@ -58,7 +58,7 @@ export default function MapaMaturidadeCard({ projetoId }) {
     if (!assessment) return;
     setPdf('gerando');
     try {
-      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(assessment.token)}`);
+      const r = await fetch(`/api/mapa/report?token=${encodeURIComponent(assessment.token)}&format=pdf`);
       if (!r.ok) throw new Error('falha');
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
@@ -113,9 +113,12 @@ export default function MapaMaturidadeCard({ projetoId }) {
             {assessment.status === 'concluido' ? 'Ver resultado →' : 'Abrir →'}
           </a>
           {assessment.status === 'concluido' && (
-            <button onClick={baixarPdf} disabled={pdf === 'gerando'} style={{ ...st.btnBlue, opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
-              {pdf === 'gerando' ? 'Gerando…' : pdf === 'erro' ? 'Erro — repetir' : '⬇ PDF'}
-            </button>
+            <>
+              <a href={`/api/mapa/report?token=${encodeURIComponent(assessment.token)}&format=html`} target="_blank" rel="noreferrer" style={st.btnGhost}>📄 Relatório</a>
+              <button onClick={baixarPdf} disabled={pdf === 'gerando'} style={{ ...st.btnBlue, opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
+                {pdf === 'gerando' ? 'Gerando…' : pdf === 'erro' ? 'Erro — repetir' : '⬇ PDF'}
+              </button>
+            </>
           )}
         </div>
       )}

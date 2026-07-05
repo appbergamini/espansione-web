@@ -32,13 +32,14 @@ function log(...args) {
 
 export async function generatePdfFromPage({
   url,
+  html,
   formato = 'A4',
   margens = DEFAULT_MARGINS,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   waitForSelector = '.output-editorial',
 }) {
-  log('enter', { url: url?.slice(0, 120), hasUrl: !!url });
-  if (!url) throw new Error('[generatePdfFromPage] url obrigatória');
+  log('enter', { url: url?.slice(0, 120), hasUrl: !!url, hasHtml: !!html });
+  if (!url && !html) throw new Error('[generatePdfFromPage] url ou html obrigatório');
 
   const isServerless =
     process.env.VERCEL === '1' ||
@@ -100,12 +101,13 @@ export async function generatePdfFromPage({
     const page = await context.newPage();
     log('page:created');
 
-    log('goto:start', { timeout: Math.max(5000, timeoutMs - 5000) });
+    log('goto:start', { timeout: Math.max(5000, timeoutMs - 5000), mode: html ? 'setContent' : 'goto' });
     try {
-      await page.goto(url, {
-        waitUntil: 'networkidle',
-        timeout: Math.max(5000, timeoutMs - 5000),
-      });
+      if (html) {
+        await page.setContent(html, { waitUntil: 'networkidle', timeout: Math.max(5000, timeoutMs - 5000) });
+      } else {
+        await page.goto(url, { waitUntil: 'networkidle', timeout: Math.max(5000, timeoutMs - 5000) });
+      }
       log('goto:ok');
     } catch (e) {
       log('goto:FAIL', { message: e?.message });
