@@ -65,7 +65,7 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
     if (!tokenRelatorio) return;
     setPdf('gerando');
     try {
-      const r = await fetch(`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}`);
+      const r = await fetch(`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}&format=pdf`);
       if (!r.ok) throw new Error('falha');
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
@@ -115,10 +115,14 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
       )}
 
       {status === 'completed' && tokenRelatorio && (
-        <button onClick={baixarPdf} disabled={pdf === 'gerando'}
-          style={{ ...st.btnBlue, marginTop: '0.9rem', width: '100%', opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
-          {pdf === 'gerando' ? 'Gerando relatório…' : pdf === 'erro' ? 'Erro — tentar de novo' : '⬇ Baixar relatório de triangulação (PDF)'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.45rem', marginTop: '0.9rem' }}>
+          <a href={`/api/identidade-final/report?token=${encodeURIComponent(tokenRelatorio)}&format=html`} target="_blank" rel="noreferrer"
+            style={{ ...st.btnGhost, flex: 1, textAlign: 'center' }}>📄 Ver relatório de triangulação</a>
+          <button onClick={baixarPdf} disabled={pdf === 'gerando'}
+            style={{ ...st.btnBlue, opacity: pdf === 'gerando' ? 0.6 : 1, cursor: pdf === 'gerando' ? 'default' : 'pointer' }}>
+            {pdf === 'gerando' ? 'Gerando…' : pdf === 'erro' ? 'Erro' : '⬇ PDF'}
+          </button>
+        </div>
       )}
     </div>
   );
