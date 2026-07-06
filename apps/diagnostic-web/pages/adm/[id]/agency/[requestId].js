@@ -6,100 +6,11 @@ import Logo from '../../../../components/Logo';
 import OutputQualityPanel from '../../../../components/output/OutputQualityPanel';
 import { supabase } from '../../../../lib/supabaseClient';
 
-const REQUEST_TYPE_LABELS = {
-  social_post: 'Post social',
-  carousel: 'Carrossel',
-  short_video_script: 'Roteiro vídeo curto',
-  email: 'E-mail',
-  landing_page_copy: 'Copy de landing page',
-};
-
-const CHANNEL_LABELS = {
-  linkedin: 'LinkedIn',
-  instagram: 'Instagram',
-  whatsapp: 'WhatsApp',
-  email: 'E-mail',
-  website: 'Website',
-  paid_media: 'Mídia paga',
-  other: 'Outro',
-};
-
-const OBJECTIVE_LABELS = {
-  awareness: 'Awareness',
-  authority: 'Autoridade',
-  lead_generation: 'Geração de leads',
-  conversion: 'Conversão',
-  launch: 'Lançamento',
-  relationship: 'Relacionamento',
-  retention: 'Retenção',
-};
-
-const AGENCY_AGENT_ORDER = ['account_director', 'copywriter', 'channel_adapter', 'visual_director', 'editor', 'brand_compliance', 'approver'];
-
-const AI_MODELS = [
-  { provider: 'mock', model_id: 'mock-model', display_name: 'Mock / Simulado', cost_tier: 'zero', is_mock: true },
-  { provider: 'google', model_id: 'gemini-3.5-flash', display_name: 'Gemini 3.5 Flash', cost_tier: 'low', is_preview: true },
-  { provider: 'openai', model_id: 'gpt-5.4', display_name: 'GPT-5.4', cost_tier: 'medium_high' },
-  { provider: 'anthropic', model_id: 'claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6', cost_tier: 'medium_high' },
-];
-
-const REAL_AI_MODELS = AI_MODELS.filter((model) => !model.is_mock);
-const DEFAULT_AGENT_MODEL = {
-  account_director: 'gpt-5.4',
-  copywriter: 'claude-sonnet-4-6',
-  channel_adapter: 'gemini-3.5-flash',
-  visual_director: 'gpt-5.4',
-  editor: 'claude-sonnet-4-6',
-  brand_compliance: 'gpt-5.4',
-  approver: 'gpt-5.4',
-};
-
-const EXECUTION_MODE_OPTIONS = [
-  {
-    value: 'mock',
-    label: 'Simular sem gastar tokens',
-    description: 'Testa fluxo, banco, timeline e UI sem chamar IA real.',
-  },
-  {
-    value: 'economical',
-    label: 'Econômico',
-    description: 'Usa modelo rápido/barato para testes com output real.',
-  },
-  {
-    value: 'use_agent_defaults',
-    label: 'Padrão por agente',
-    description: 'Usa o modelo recomendado para cada agente.',
-  },
-  {
-    value: 'use_single_model_for_run',
-    label: 'Modelo único para toda a execução',
-    description: 'Aplica o mesmo modelo em todos os steps desta execução.',
-  },
-  {
-    value: 'override_single_agent',
-    label: 'Personalizado por agente',
-    description: 'Permite escolher modelo para agentes específicos da run.',
-  },
-];
-
-const CREATIVE_ASSET_TYPE_LABELS = {
-  conceptual_image: 'Imagem conceitual',
-  moodboard_reference: 'Referência de moodboard',
-  background_image: 'Imagem de fundo',
-  visual_prompt: 'Prompt visual',
-  editable_art_reference: 'Referência para arte editável',
-  final_art: 'Arte final',
-};
-
-const CREATIVE_ASSET_STATUS_LABELS = {
-  draft: 'Rascunho',
-  generated: 'Gerado',
-  approved: 'Aprovado',
-  rejected: 'Rejeitado',
-  archived: 'Arquivado',
-};
-
-const EMBEDDED_TEXT_REVIEW_WARNING = 'Imagens com texto embutido exigem revisão humana de ortografia, legibilidade, marca e claims.';
+import {
+  REQUEST_TYPE_LABELS, CHANNEL_LABELS, OBJECTIVE_LABELS, AGENCY_AGENT_ORDER,
+  AI_MODELS, REAL_AI_MODELS, DEFAULT_AGENT_MODEL, EXECUTION_MODE_OPTIONS,
+  CREATIVE_ASSET_TYPE_LABELS, CREATIVE_ASSET_STATUS_LABELS, EMBEDDED_TEXT_REVIEW_WARNING,
+} from '../../../../components/agency-request/constants';
 
 export default function AgencyRequestDetailPage() {
   const router = useRouter();
