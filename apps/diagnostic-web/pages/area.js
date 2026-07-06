@@ -10,6 +10,7 @@ export default function AreaCliente() {
   const [email, setEmail] = useState('');
   const [enviado, setEnviado] = useState(false);
   const [codigo, setCodigo] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const [verificando, setVerificando] = useState(false);
   const [dados, setDados] = useState(null);
   const [aba, setAba] = useState('diagnostico');
@@ -40,12 +41,17 @@ export default function AreaCliente() {
 
   async function entrar() {
     if (!email.trim()) return;
-    setErro(null);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: true },
-    });
-    if (error) setErro(error.message); else setEnviado(true);
+    setErro(null); setEnviando(true);
+    try {
+      const r = await fetch('/api/area/enviar-codigo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const j = await r.json();
+      if (j.success) setEnviado(true);
+      else setErro(j.error || 'Não foi possível enviar o código.');
+    } catch { setErro('Erro de conexão.'); }
+    setEnviando(false);
   }
 
   async function verificar() {
@@ -73,11 +79,11 @@ export default function AreaCliente() {
             <h1 style={sx.h1}>Acesse com o seu e-mail</h1>
             {enviado ? (
               <>
-                <p style={sx.txt}>Enviamos um <b>código de 6 dígitos</b> para <b>{email}</b>. Digite ele abaixo:</p>
-                <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="000000" inputMode="numeric" maxLength={6}
-                  style={{ ...sx.input, letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.4rem' }}
+                <p style={sx.txt}>Enviamos um <b>código de acesso</b> para <b>{email}</b>. Digite ele abaixo:</p>
+                <input value={codigo} onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} placeholder="Código do e-mail" inputMode="numeric" maxLength={8}
+                  style={{ ...sx.input, letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.4rem' }}
                   onKeyDown={(e) => e.key === 'Enter' && verificar()} autoFocus />
-                <button className="btn-primary" onClick={verificar} style={{ marginTop: '1rem', opacity: codigo.replace(/\D/g, '').length === 6 && !verificando ? 1 : 0.6 }}>
+                <button className="btn-primary" onClick={verificar} style={{ marginTop: '1rem', opacity: codigo.replace(/\D/g, '').length >= 6 && !verificando ? 1 : 0.6 }}>
                   {verificando ? 'Entrando…' : 'Entrar →'}
                 </button>
                 <button onClick={() => { setEnviado(false); setCodigo(''); setErro(null); }}
@@ -88,8 +94,8 @@ export default function AreaCliente() {
                 <p style={sx.txt}>Use o mesmo e-mail da sua compra. Enviaremos um <b>código de acesso</b> — sem senha.</p>
                 <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" type="email"
                   style={sx.input} onKeyDown={(e) => e.key === 'Enter' && entrar()} />
-                <button className="btn-primary" onClick={entrar} style={{ marginTop: '1rem', opacity: email.trim() ? 1 : 0.6 }}>
-                  Enviar código →
+                <button className="btn-primary" onClick={entrar} style={{ marginTop: '1rem', opacity: email.trim() && !enviando ? 1 : 0.6 }}>
+                  {enviando ? 'Enviando…' : 'Enviar código →'}
                 </button>
               </>
             )}
