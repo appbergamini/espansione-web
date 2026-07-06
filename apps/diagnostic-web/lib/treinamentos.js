@@ -10,24 +10,15 @@ export const BUNNY_LIBRARY_ID = process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '';
 
 // Editar à vontade — títulos, descrições, ordem e os videoId (GUID do Bunny).
 // videoId vazio = aula "em breve" (aparece bloqueada até você preencher).
+// ⚠️ Títulos/ordem editáveis — ajuste à vontade (ou renomeie no Bunny).
+// Conteúdo detectado: perfil comportamental (Mapeamento Comportamental).
 export const TREINAMENTOS = [
   {
-    modulo: 'Boas-vindas',
+    modulo: 'Mapeamento Comportamental',
     aulas: [
-      { id: 'intro', titulo: 'Bem-vindo ao Mapa de Identidade Estratégica', duracao: '', videoId: '', descricao: 'Como funciona o programa e o que você vai construir.' },
-    ],
-  },
-  {
-    modulo: 'Preparando o diagnóstico',
-    aulas: [
-      { id: 'como-responder', titulo: 'Como conduzir os 3 públicos', duracao: '', videoId: '', descricao: 'Sócios, equipe e clientes — como coletar respostas de qualidade.' },
-      { id: 'lendo-o-mapa', titulo: 'Lendo o relatório de triangulação', duracao: '', videoId: '', descricao: 'O que os gaps entre os olhares revelam sobre a sua marca.' },
-    ],
-  },
-  {
-    modulo: 'Da estratégia à execução',
-    aulas: [
-      { id: 'plano', titulo: 'Transformando o mapa em plano', duracao: '', videoId: '', descricao: 'Priorizando o caminho que destrava o crescimento.' },
+      { id: 'aula-1', titulo: 'Conhecendo como cada perfil funciona', duracao: '4:34', videoId: '44ebed51-51f9-469d-b9f5-9f69f2f60461', descricao: 'Como o seu perfil e o das pessoas com quem você se relaciona impactam os resultados.' },
+      { id: 'aula-2', titulo: 'Aula 2', duracao: '10:00', videoId: 'b1aeba20-d6d3-4f8f-97da-d3bb381d65ce', descricao: '' },
+      { id: 'aula-3', titulo: 'Aula 3', duracao: '12:29', videoId: 'e8b20fad-842c-4b7d-bff9-f03654dcf267', descricao: '' },
     ],
   },
 ];
