@@ -125,8 +125,28 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .pdf-btn:hover{background:#E13345;}
   @media print{body{background:#fff;} .pdf-btn{display:none;} .exp,.sys,.pattern,.next,.attr-q,.gap-q{break-inside:avoid;} section{padding:34px 0;}}
 </style></head><body>
-<button class="pdf-btn" onclick="window.print()">⬇ Salvar como PDF</button>
-<script>if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListener('load',function(){setTimeout(function(){window.print();},700);});}</script>
+<button class="pdf-btn" onclick="baixarPdf()">⬇ Baixar PDF</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function baixarPdf(){
+  var btn=document.querySelector('.pdf-btn');
+  if(!window.html2pdf){ window.print(); return; }
+  var orig=btn?btn.innerHTML:''; if(btn){ btn.innerHTML='Gerando PDF…'; btn.disabled=true; }
+  var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  ready.then(function(){
+    return html2pdf().set({
+      margin:[8,6,10,6], filename:'mapa-da-maturidade.pdf',
+      image:{type:'jpeg',quality:0.95},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',
+        ignoreElements:function(el){return el.classList&&el.classList.contains('pdf-btn');}},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy']}
+    }).from(document.body).save();
+  }).then(function(){ if(btn){ btn.innerHTML=orig; btn.disabled=false; } })
+   .catch(function(){ if(btn){ btn.innerHTML=orig; btn.disabled=false; } window.print(); });
+}
+if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListener('load',function(){setTimeout(baixarPdf,900);});}
+</script>
 
 <header class="hero"><div class="wrap">
   <div class="top"><span class="eyebrow">Mapa da Maturidade</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
