@@ -19,7 +19,7 @@ LEIA O PADRÃO REAL DOS DADOS. O campo padrao_geral traz a leitura pré-calculad
 - alinhamento_baixo: os três concordam em nível baixo → fragilidade compartilhada e honesta, não um problema de tradução.
 - polarizacao: os olhares divergem sem um padrão limpo → a identidade significa coisas diferentes para cada público; falta um centro.
 
-Cada divergência é uma ESCOLHA (ex.: ou o diferencial não é tão único quanto se acredita, ou ele não está chegando ao cliente — decidir qual é a primeira escolha). Reconheça a força antes de expor a distância.
+Trate cada padrão de forma coerente: quando houver DIVERGÊNCIA, trate-a como uma ESCOLHA estratégica (ex.: ou o diferencial não é tão único quanto se acredita, ou ele não está chegando ao cliente — decidir qual vem primeiro); quando o padrão for alinhamento_baixo, trate como fragilidade estrutural compartilhada, não uma escolha; quando for alinhamento_alto, reconheça como força a proteger. Reconheça a força antes de expor a distância.
 
 USE OS DADOS COM DISCIPLINA (não gere texto genérico):
 - eNPS (equipe) e NPS (clientes): cite apenas se presentes em indices. Leia eNPS como termômetro de vínculo/orgulho interno e NPS como disposição do cliente a recomendar; conecte-os às divergências quando fizer sentido.
@@ -43,7 +43,7 @@ Responda APENAS um objeto JSON válido, sem texto fora dele:
     { "headline": "o ponto de escolha em 1 frase", "texto": "1 parágrafo: as duas hipóteses / o que a distância significa e qual é a escolha a fazer primeiro" }
   ],
   "causa_raiz": "1 parágrafo: a HIPÓTESE central mais provável que conecta as divergências, coerente com o padrão. Não trate hipótese como certeza. Termine com uma síntese curta.",
-  "voz_de_dentro": "1 a 2 frases cruzando o propósito declarado pelos sócios (se houver) com os outros olhares — a ideia mais valiosa é a que menos circula. Se não houver propósito, foque no maior gap.",
+  "voz_de_dentro": "1 a 2 frases cruzando o propósito declarado pelos sócios com os outros olhares — a ideia mais valiosa é a que menos circula. Se proposito_declarado_pelos_socios estiver ausente, escreva 1 frase dizendo que a leitura do propósito não pôde ser aprofundada a partir das respostas disponíveis, SEM inventar um propósito.",
   "prontidao": "1 parágrafo: quão pronta a empresa está para percorrer o caminho, à luz do padrão (ex.: na descida, a matéria-prima existe e falta tradução; no alinhamento_baixo, é preciso construir antes de traduzir)",
   "caminho": [
     { "headline": "o passo em 1 frase", "texto": "por que este passo, nesta ordem, destrava o resto — ligado a um tema de maior gap" }

@@ -37,7 +37,10 @@ export function buildRelatorioIdentidadeHtml({ cliente, dataLabel, result, narra
       ${bar3(t.porPublico)}
     </div>`).join('\n');
 
-  const divergHtml = topDiverg.map((t, i) => {
+  // renderiza tantos cards quantas divergências a IA escreveu (até 3); se a IA
+  // não retornou narrativa, cai nos dados. Robusto a arrays de tamanho variável.
+  const nDiv = divNarr.length ? Math.min(topDiverg.length, divNarr.length) : topDiverg.length;
+  const divergHtml = topDiverg.slice(0, nDiv).map((t, i) => {
     const n = divNarr[i] || {};
     const soc = t.porPublico.socios, cli = t.porPublico.clientes, eq = t.porPublico.colaboradores;
     const par = cli != null ? `Você ${Math.round(soc)}% × Cliente ${Math.round(cli)}%` : `Você ${Math.round(soc)}% × Equipe ${Math.round(eq)}%`;
