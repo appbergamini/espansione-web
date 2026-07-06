@@ -1,5 +1,7 @@
 import { supabaseAdmin } from './supabaseAdmin';
 import { BLOCKING_CHECKPOINT_STATUSES } from './checkpoints/structuredNotes';
+import { projectsRepo } from './repos/projectsRepo';
+import { outputsRepo } from './repos/outputsRepo';
 
 // Este módulo é usado só pelo pipeline (server-side, via /api/engine/*).
 // Usa service role para bypassar RLS — as escritas em outputs,
@@ -12,141 +14,9 @@ const supabase = supabaseAdmin;
 // =====================================================================
 
 export const db = {
-  // ── Projetos ─────────────────────────────────────────────────────
-
-  async createProject(dados) {
-    const { data, error } = await supabase
-      .from('projetos')
-      .insert([
-        {
-          empresa_id: dados.empresa_id,
-          cliente: dados.cliente || '',
-          porte: dados.tempo_mercado || dados.porte || '',
-          momento: dados.colaboradores || dados.momento || '',
-          objetivo: dados.motivacao || dados.objetivo || '',
-          contato: dados.contato || '',
-          status: 'planejamento',
-          etapa_atual: 0,
-        }
-      ])
-      .select('id')
-      .single();
-
-    if (error) throw new Error(`Erro createProject: ${error.message}`);
-    return data.id;
-  },
-
-  async getProject(projetoId) {
-    const { data, error } = await supabase
-      .from('projetos')
-      .select('*')
-      .eq('id', projetoId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw new Error(`Erro getProject: ${error.message}`);
-    return data || null;
-  },
-
-  async updateProjectStatus(projetoId, status, agentNum) {
-    const updatePayload = {
-      status
-    };
-    if (agentNum !== undefined) {
-      updatePayload.etapa_atual = agentNum;
-    }
-
-    const { error } = await supabase
-      .from('projetos')
-      .update(updatePayload)
-      .eq('id', projetoId);
-
-    if (error) throw new Error(`Erro updateProjectStatus: ${error.message}`);
-  },
-
-  async getAllProjects() {
-    const { data, error } = await supabase
-      .from('projetos')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw new Error(`Erro getAllProjects: ${error.message}`);
-    return data || [];
-  },
-
-  // ── Outputs ──────────────────────────────────────────────────────
-
-  async saveOutput(projetoId, agentNum, output) {
-    // FIX.24 — retorna o registro inserido pra que o pipeline possa
-    // materializar analysis_blocks a partir do output.id. findings_json
-    // é opcional (parser heurístico do conteudo serve de fallback).
-    const { data, error } = await supabase
-      .from('outputs')
-      .insert([
-        {
-          projeto_id: projetoId,
-          agent_num: agentNum,
-          conteudo: output.conteudo || '',
-          resumo_executivo: output.resumo_executivo || '',
-          conclusoes: output.conclusoes || '',
-          confianca: output.confianca || 'Media',
-          fontes: output.fontes || '',
-          gaps: output.gaps || '',
-          quality_metadata: output.quality_metadata || null,
-          execution_metadata: output.execution_metadata || null,
-          findings_json: Array.isArray(output.findings_json) ? output.findings_json : null,
-          brand_memory_export_status: output.brand_memory_export_status || 'not_applicable',
-          brand_memory_export_validation_result: output.brand_memory_export_validation_result || null,
-          brand_memory_export_json: output.brand_memory_export_json || null,
-          brand_memory_export_validated_at: output.brand_memory_export_validated_at || null,
-        }
-      ])
-      .select('*')
-      .single();
-
-    if (error) throw new Error(`Erro saveOutput: ${error.message}`);
-    return data;
-  },
-
-  async getOutput(projetoId, agentNum) {
-    const { data, error } = await supabase
-      .from('outputs')
-      .select('*')
-      .eq('projeto_id', projetoId)
-      .eq('agent_num', agentNum)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (error) throw new Error(`Erro getOutput: ${error.message}`);
-    return data && data.length > 0 ? data[0] : null;
-  },
-
-  async getOutputs(projetoId, agentNums) {
-    let query = supabase
-      .from('outputs')
-      .select('*')
-      .eq('projeto_id', projetoId)
-      .order('created_at', { ascending: false });
-
-    // Filtro opcional: quando null/undefined, retorna TODOS os outputs
-    // do projeto (usado por Pipeline.runAgent em FIX.4 pra validar deps).
-    if (Array.isArray(agentNums) && agentNums.length > 0) {
-      query = query.in('agent_num', agentNums);
-    }
-
-    const { data, error } = await query;
-    if (error) throw new Error(`Erro getOutputs: ${error.message}`);
-
-    // Agrupa para retornar o mais recente por agente
-    const result = {};
-    if (data) {
-      data.forEach((out) => {
-        if (!result[out.agent_num]) {
-          result[out.agent_num] = out;
-        }
-      });
-    }
-    return result;
-  },
+  // Projetos e Outputs vivem em lib/repos/* (item 4) — spread mantém a API do db.
+  ...projectsRepo,
+  ...outputsRepo,
 
   // ── Intake ───────────────────────────────────────────────────────
 
