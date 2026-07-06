@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   const registro = {
     order_nsu: pick(body, 'order_nsu', 'orderNsu', 'data.order_nsu'),
     transaction_nsu: pick(body, 'transaction_nsu', 'transactionNsu', 'data.transaction_nsu'),
-    slug: pick(body, 'slug', 'data.slug'),
+    slug: pick(body, 'invoice_slug', 'slug', 'data.invoice_slug', 'data.slug'),
     receipt_url: pick(body, 'receipt_url', 'receiptUrl', 'data.receipt_url'),
     status: pick(body, 'status', 'payment_status', 'data.status') || 'received',
     valor_centavos: Number(pick(body, 'amount', 'price', 'paid_amount', 'data.amount')) || null,

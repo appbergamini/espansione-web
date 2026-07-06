@@ -18,9 +18,11 @@ export default function IdentidadeSetup() {
   const router = useRouter();
   const order = (router.query.order || '').toString();
 
-  const [fase, setFase] = useState('loading'); // loading|aguardando|empresa|pronto|erro
+  const [fase, setFase] = useState('loading'); // loading|aguardando|dados|pronto|erro
   const [dados, setDados] = useState(null); // { cliente, status, links }
   const [empresa, setEmpresa] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
   const [copiado, setCopiado] = useState(null);
 
@@ -40,7 +42,7 @@ export default function IdentidadeSetup() {
         if (!j.success) { setErro(j.error || 'Erro'); setFase('erro'); return; }
         if (j.paid) {
           setDados(j);
-          setFase(j.precisa_empresa ? 'empresa' : 'pronto');
+          setFase(j.precisa_empresa || j.precisa_email ? 'dados' : 'pronto');
           return;
         }
         if (j.recusado) { setErro('O pagamento não foi aprovado.'); setFase('erro'); return; }
@@ -56,13 +58,16 @@ export default function IdentidadeSetup() {
     return () => { ativo = false; };
   }, [order, consultar]);
 
-  async function salvarEmpresa() {
-    if (!empresa.trim()) return;
+  async function salvarDados() {
+    const emailOk = /.+@.+\..+/.test(emailInput.trim());
+    if (!empresa.trim() || !emailOk) return;
+    setSalvando(true);
     const r = await fetch('/api/identidade-final/acesso', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order, empresa }),
+      body: JSON.stringify({ order, empresa: empresa.trim(), email: emailInput.trim() }),
     });
     const j = await r.json();
+    setSalvando(false);
     if (j.success) { setDados(j); setFase('pronto'); }
   }
 
@@ -92,16 +97,19 @@ export default function IdentidadeSetup() {
           </Card>
         )}
 
-        {fase === 'empresa' && (
+        {fase === 'dados' && (
           <Card>
             <div style={sx.accent} />
             <div style={sx.eyebrow}>Último passo</div>
-            <h1 style={sx.h1}>Qual é o nome da sua empresa?</h1>
-            <p style={sx.txt}>Vamos usar para identificar o seu diagnóstico e o relatório.</p>
-            <input value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Nome da empresa"
-              style={sx.input} onKeyDown={(e) => e.key === 'Enter' && salvarEmpresa()} />
-            <button className="btn-primary" onClick={salvarEmpresa} style={{ marginTop: '1rem', opacity: empresa.trim() ? 1 : 0.6 }}>
-              Continuar →
+            <h1 style={sx.h1}>Só confirmar seus dados</h1>
+            <p style={sx.txt}>Usamos para identificar o seu diagnóstico e enviar o acesso — inclusive aos treinamentos.</p>
+            <input value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Nome da sua empresa"
+              style={{ ...sx.input, marginTop: '1.1rem' }} />
+            <input value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="Seu melhor e-mail" type="email"
+              style={{ ...sx.input, marginTop: '0.7rem' }} onKeyDown={(e) => e.key === 'Enter' && salvarDados()} />
+            <button className="btn-primary" onClick={salvarDados}
+              style={{ marginTop: '1rem', opacity: empresa.trim() && /.+@.+\..+/.test(emailInput.trim()) && !salvando ? 1 : 0.6 }}>
+              {salvando ? 'Salvando…' : 'Continuar →'}
             </button>
           </Card>
         )}
