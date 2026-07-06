@@ -1,8 +1,8 @@
 // =====================================================================
 // Mapa de Identidade — narrativa EDITORIAL do relatório de triangulação (Sonnet).
-// Produz a cópia do relatório visual (reportHtml): veredito, a leitura da
-// "descida" entre os 3 olhares, os pontos de escolha (divergências), a
-// causa-raiz, a voz de dentro (propósito), a prontidão e o caminho.
+// A IA interpreta; o sistema calcula. montarDados envia uma camada de
+// INTERPRETAÇÃO pré-calculada (padrão dos olhares, maior gap, sistemas
+// frágeis/fortes) para a IA escrever em cima — sem forçar tese nem inventar.
 import { AIRouter } from '../ai/router';
 
 const MODEL_KEY = 'claude-sonnet'; // claude-sonnet-4-6
@@ -10,33 +10,48 @@ const PUBLICO_NOME = { socios: 'Você (sócios)', colaboradores: 'Equipe', clien
 
 const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa de Identidade Estratégica para a liderança de uma empresa.
 
-O diferencial deste mapa é a TRIANGULAÇÃO: os mesmos indicadores foram avaliados por três públicos — Você (sócios), a Equipe e os Clientes. O padrão quase sempre é uma DESCIDA: você acredita mais do que a equipe, que acredita mais do que o cliente. O ouro está na DISTÂNCIA entre os olhares — é ali que a causa aparece. Alinhamento = identidade forte; divergência = valor que mora na cabeça dos sócios e não foi traduzido.
+O diferencial deste mapa é a TRIANGULAÇÃO: os mesmos INDICADORES ESTRATÉGICOS foram avaliados por três públicos — Você (sócios), a Equipe e os Clientes — cada um a partir da sua experiência com a empresa. Não são perguntas literais idênticas: são os mesmos construtos vistos de lugares diferentes. O ouro está na DISTÂNCIA entre os olhares — é ali que a causa aparece.
 
-Voz: madura, específica, para o dono. Lê o gap como percepção (a empresa acredita entregar algo que o mercado não percebe) e diz o que isso implica. Cada divergência é uma ESCOLHA (ex.: ou o diferencial não é tão único, ou não chega ao cliente — decidir qual é a primeira escolha). Reconhece a força antes de expor a distância.
+LEIA O PADRÃO REAL DOS DADOS. O campo padrao_geral traz a leitura pré-calculada — use-a como âncora e NÃO force a tese da descida quando os dados mostrarem outro padrão:
+- descida: os sócios acreditam mais que a equipe, que acredita mais que o cliente → há valor real que não foi TRADUZIDO para fora (a empresa entrega algo que o mercado não percebe).
+- inversao: o cliente e/ou a equipe percebem mais força do que os próprios sócios enxergam → há valor sendo entregue que a liderança subestima e não capitaliza.
+- alinhamento_alto: os três olhares concordam em nível alto → identidade forte e coerente; reconheça a força e aponte onde proteger e escalar.
+- alinhamento_baixo: os três concordam em nível baixo → fragilidade compartilhada e honesta, não um problema de tradução.
+- polarizacao: os olhares divergem sem um padrão limpo → a identidade significa coisas diferentes para cada público; falta um centro.
+
+Cada divergência é uma ESCOLHA (ex.: ou o diferencial não é tão único quanto se acredita, ou ele não está chegando ao cliente — decidir qual é a primeira escolha). Reconheça a força antes de expor a distância.
+
+USE OS DADOS COM DISCIPLINA (não gere texto genérico):
+- eNPS (equipe) e NPS (clientes): cite apenas se presentes em indices. Leia eNPS como termômetro de vínculo/orgulho interno e NPS como disposição do cliente a recomendar; conecte-os às divergências quando fizer sentido.
+- drivers_do_cliente: se presentes, use para explicar O QUE sustenta (ou não) a percepção externa — o que o cliente de fato valoriza.
+- proposito_declarado_pelos_socios: se presente, cruze com os outros olhares (a ideia mais valiosa costuma ser a que menos circula). Se ausente, NÃO invente propósito.
+- outras_respostas_abertas: se ausentes, NÃO cite voz literal dos respondentes.
+- No caminho, conecte cada passo aos indicadores/temas de maior gap; o primeiro passo deve ser o que destrava os demais.
 
 Regras inegociáveis:
-- Baseie-se ESTRITAMENTE nos dados (notas 0–100 por público e indicador, gaps, índices, e o propósito declarado pelos sócios, se houver). Não invente números.
+- Baseie-se ESTRITAMENTE nos dados (notas 0–100 por público e indicador, gaps, índices, propósito). NÃO invente números.
 - Client-facing em pt-BR. NUNCA cite metodologia, IA, modelo, DISC, consultorias, nem como foi calculado. Método proprietário da Espansione.
+- Escreva com segurança, mas trate causa como HIPÓTESE — não afirme causalidade não comprovada.
 - Pode marcar UM trecho curto por campo com *asteriscos* para ênfase. Parcimônia.
 
 Responda APENAS um objeto JSON válido, sem texto fora dele:
 {
-  "verdict": "manchete de 1 frase que captura a distância central entre os olhares (ex.: a marca vale mais na sua cabeça do que na percepção de quem compra)",
-  "subverdict": "1 a 2 frases situando: você, equipe e clientes responderam às mesmas perguntas; este é o retrato dos três olhares juntos",
-  "olhares_leitura": "1 a 2 frases lendo o padrão de descida das barras — onde a queda para o cliente é maior, mora a causa",
+  "verdict": "manchete de 1 frase que captura a tensão central entre os olhares, coerente com padrao_geral (ex., na descida: a marca vale mais na sua cabeça do que na percepção de quem compra)",
+  "subverdict": "1 a 2 frases situando: você, equipe e clientes avaliaram os mesmos indicadores estratégicos, cada um a partir da sua experiência; este é o retrato dos três olhares juntos",
+  "olhares_leitura": "1 a 2 frases lendo o padrão real (padrao_geral) — onde a distância é maior e o que isso indica",
   "divergencias": [
-    { "headline": "o ponto de escolha em 1 frase (ex.: o diferencial que você vê, o cliente não vê)", "texto": "1 parágrafo: as duas hipóteses/o que a distância significa e qual é a escolha" }
+    { "headline": "o ponto de escolha em 1 frase", "texto": "1 parágrafo: as duas hipóteses / o que a distância significa e qual é a escolha a fazer primeiro" }
   ],
-  "causa_raiz": "1 parágrafo: o nó único que explica as divergências (o que torna a empresa valiosa vive na cabeça dos sócios e não foi traduzido). Termine com uma síntese curta.",
-  "voz_de_dentro": "1 a 2 frases cruzando o propósito declarado pelos sócios com os outros olhares — a ideia mais valiosa é a que menos circula",
-  "prontidao": "1 parágrafo: quão pronta a empresa está para percorrer o caminho (a matéria-prima existe nos sócios; falta tradução)",
+  "causa_raiz": "1 parágrafo: a HIPÓTESE central mais provável que conecta as divergências, coerente com o padrão. Não trate hipótese como certeza. Termine com uma síntese curta.",
+  "voz_de_dentro": "1 a 2 frases cruzando o propósito declarado pelos sócios (se houver) com os outros olhares — a ideia mais valiosa é a que menos circula. Se não houver propósito, foque no maior gap.",
+  "prontidao": "1 parágrafo: quão pronta a empresa está para percorrer o caminho, à luz do padrão (ex.: na descida, a matéria-prima existe e falta tradução; no alinhamento_baixo, é preciso construir antes de traduzir)",
   "caminho": [
-    { "headline": "o passo em 1 frase", "texto": "por que este passo, nesta ordem, destrava o resto" }
+    { "headline": "o passo em 1 frase", "texto": "por que este passo, nesta ordem, destrava o resto — ligado a um tema de maior gap" }
   ],
-  "cta_hook": "1 a 2 frases conduzindo à devolutiva com a Espansione"
+  "cta_hook": "1 a 2 frases conduzindo à devolutiva com a Espansione, como continuidade natural. Sem venda agressiva."
 }
 
-Em "divergencias": exatamente 3, na ordem dos maiores gaps recebidos. Em "caminho": 3 passos, na ordem que destrava (o que tira o gargalo primeiro).`;
+Em "divergencias": até 3, na ordem dos maiores gaps recebidos (use apenas os relevantes). Em "caminho": 3 passos, na ordem que destrava (o que tira o gargalo primeiro).`;
 
 function tryParseJson(text) {
   if (!text) return null;
@@ -46,6 +61,35 @@ function tryParseJson(text) {
   const first = text.indexOf('{'), last = text.lastIndexOf('}');
   if (first !== -1 && last > first) { try { return JSON.parse(text.slice(first, last + 1)); } catch {} }
   return null;
+}
+
+// classifica o padrão dos 3 olhares gerais — pré-cálculo p/ a IA não forçar tese
+function classificarPadrao(gerais) {
+  const s = gerais['Você (sócios)'], e = gerais['Equipe'], c = gerais['Clientes'];
+  const vals = [s, e, c].filter((v) => typeof v === 'number');
+  if (vals.length < 2) return null;
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const spread = max - min;
+  if (spread <= 8) return avg >= 62 ? 'alinhamento_alto' : 'alinhamento_baixo';
+  if (typeof s === 'number' && typeof e === 'number' && typeof c === 'number') {
+    if (s >= e - 4 && e >= c - 4 && (s - c) > 8) return 'descida';
+    if (c > s + 6 || e > s + 6) return 'inversao';
+  }
+  return 'polarizacao';
+}
+
+// qual par de públicos tem a maior distância no índice geral
+function maiorGapPublico(gerais) {
+  const pares = [['Você (sócios)', 'Clientes'], ['Você (sócios)', 'Equipe'], ['Equipe', 'Clientes']];
+  let melhor = null;
+  for (const [a, b] of pares) {
+    if (typeof gerais[a] === 'number' && typeof gerais[b] === 'number') {
+      const d = Math.abs(gerais[a] - gerais[b]);
+      if (!melhor || d > melhor.gap) melhor = { par: `${a} × ${b}`, gap: Math.round(d) };
+    }
+  }
+  return melhor;
 }
 
 function montarDados(result, proposito, aberturas) {
@@ -60,6 +104,16 @@ function montarDados(result, proposito, aberturas) {
   }));
   const olhares = tri.slice(0, 6).map((t) => ({ indicador: t.indicador, gap: t.gap }));
 
+  // sistemas mais frágeis/fortes por gap médio (quando há sistema nos indicadores)
+  const porSistema = {};
+  for (const t of tri) {
+    if (!t.sistema) continue;
+    (porSistema[t.sistema] = porSistema[t.sistema] || []).push(t.gap);
+  }
+  const sisGap = Object.entries(porSistema)
+    .map(([sistema, gaps]) => ({ sistema, gap_medio: Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length) }))
+    .sort((a, b) => b.gap_medio - a.gap_medio);
+
   const indices = {};
   if (result.indices?.enps) indices.eNPS_equipe = result.indices.enps.score;
   if (result.indices?.nps) indices.NPS_clientes = result.indices.nps.score;
@@ -70,6 +124,12 @@ function montarDados(result, proposito, aberturas) {
   }
 
   return {
+    // interpretação pré-calculada (a IA escreve em cima, não decide sozinha)
+    padrao_geral: classificarPadrao(gerais),
+    maior_gap_publico: maiorGapPublico(gerais),
+    sistemas_maior_divergencia: sisGap.slice(0, 2).map((s) => s.sistema),
+    sistemas_mais_alinhados: sisGap.slice(-2).reverse().map((s) => s.sistema),
+    // dados brutos
     indice_geral_por_publico: gerais,
     maiores_divergencias: divergencias,
     outros_olhares: olhares,

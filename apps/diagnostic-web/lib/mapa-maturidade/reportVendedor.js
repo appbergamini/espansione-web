@@ -1,39 +1,46 @@
 // =====================================================================
 // Mapa da Maturidade — narrativa EDITORIAL do relatório de conversão (Sonnet).
-// Produz a cópia do relatório visual (reportHtml): veredito, alertas por
-// sistema, os sinais mais críticos com "o que custa", o padrão por trás e a
-// provocação dos atributos de marca. Fiel aos dados; tom consultivo que vende.
+// A IA escreve APENAS o texto; os números e a seleção do que é relevante vêm
+// do sistema (montarDados). Total de perguntas é dinâmico (catálogo), não
+// hardcoded. Camada de interpretação pré-calculada reduz erro narrativo.
 // =====================================================================
 import { AIRouter } from '../ai/router';
+import { CATALOGO_MATURIDADE } from './catalog.generated.js';
 
 const MODEL_KEY = 'claude-sonnet'; // claude-sonnet-4-6
 
-const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa da Maturidade (um check-up gratuito) para o dono de uma empresa. O relatório é uma peça editorial de conversão: precisa fazer o leitor SENTIR onde a empresa está exposta e o que isso custa, e conduzi-lo ao próximo passo (o Mapa da Identidade Estratégica, pago).
+// total de perguntas pontuadas (exclui cadastro e o condicional de atributos)
+const TOTAL_PERGUNTAS = CATALOGO_MATURIDADE.filter(
+  (q) => q.score_family && q.score_family !== 'brand_attributes'
+).length;
+
+const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa da Maturidade (um check-up inicial gratuito) para o dono de uma empresa. O relatório é uma peça editorial de conversão: precisa fazer o leitor SENTIR onde a empresa está exposta e o que isso custa, e conduzi-lo ao próximo passo (o Mapa da Identidade Estratégica) como continuidade natural do diagnóstico.
 
 Voz: madura, específica, direta ao dono. Fala de negócio e consequência (margem, dependência dos sócios, cliente que cobra, retrabalho, venda que vira desconto), nunca de jargão de gestão. Reconhece a força antes de expor a fragilidade. Nunca alarmista falso; honesto.
 
 Regras inegociáveis:
-- Baseie-se ESTRITAMENTE nos dados (score, nível, nota por sistema, sinais de alerta reais). Não invente números.
-- Client-facing em pt-BR. NUNCA cite metodologia, IA, modelo, DISC, consultorias, nem como foi calculado. Método proprietário da Espansione.
-- Em campos de cópia, você PODE marcar UM trecho curto para ênfase com *asteriscos* (ex.: "...que ainda *depende de você*."). Use no máximo um por campo, com parcimônia.
+- Baseie-se ESTRITAMENTE nos dados recebidos (índice, nível, nota por sistema, sinais de alerta reais, e os sistemas já marcados como mais frágeis/mais fortes). NÃO invente números nem a quantidade de perguntas.
+- Ao situar o leitor, use o campo total_perguntas do JSON. Se ele não existir, diga apenas que ele respondeu o check-up inicial.
+- Client-facing em pt-BR. NUNCA cite metodologia, IA, modelo, DISC, consultorias, nem como foi calculado. Método proprietário da Espansione. NÃO use a palavra "pago" nem linguagem de venda agressiva.
+- Em campos de cópia, você PODE marcar UM trecho curto para ênfase com *asteriscos* (ex.: "...que ainda *depende de você*."). No máximo um por campo, com parcimônia.
 - O "custo" de cada sinal crítico deve ser concreto e visceral — o que aquilo cobra do negócio na prática.
 
 Responda APENAS um objeto JSON válido, sem texto fora dele:
 {
   "verdict": "manchete de 1 frase (máx ~16 palavras) que captura o retrato da empresa — a tensão entre o que está firme e o que está exposto",
-  "subverdict": "1 a 2 frases situando o leitor (ele respondeu 40 perguntas; abaixo, o retrato)",
+  "subverdict": "1 a 2 frases situando o leitor com base no total_perguntas recebido (ele respondeu o check-up; abaixo, o retrato)",
   "sistemas": [
     { "sistema": "Marca", "alert": "1 frase sobre o que esse nível significa na prática neste sistema", "is_alerta": false }
   ],
   "criticos": [
     { "tag": "Sistema · Tema curto", "headline": "o sinal em 1 frase forte", "cost": "o que costuma custar, concreto" }
   ],
-  "pattern": "1 parágrafo curto: a raiz provável que conecta os sinais críticos (o padrão por trás). Termine reconhecendo que ONDE exatamente o nó se forma, este diagnóstico não responde.",
+  "pattern": "1 parágrafo curto: a hipótese mais provável que conecta os sinais críticos (o padrão por trás). Termine reconhecendo que ONDE exatamente o nó se forma, este diagnóstico inicial não responde.",
   "atributos_pergunta": "1 a 2 frases provocando sobre os atributos que o mercado associa (e os que ficaram de fora) — puxando para a disputa de valor vs. preço",
-  "cta_hook": "1 a 2 frases: por que o Mapa da Identidade é o próximo passo (os 3 olhares — você, equipe, clientes — e a distância entre eles revela a causa)"
+  "cta_hook": "1 a 2 frases: por que o Mapa da Identidade é o próximo passo natural (os 3 olhares — você, equipe, clientes — e a distância entre eles revela a causa). Sem venda agressiva."
 }
 
-Em "sistemas": um objeto por sistema, na ordem recebida. Marque is_alerta=true nos sistemas de nível baixo (1 ou 2) e escreva o alert começando pelo sintoma. Em "criticos": exatamente 3, dos sistemas mais frágeis.`;
+Em "sistemas": um objeto por sistema, na ordem recebida. Marque is_alerta=true nos sistemas de nível baixo (1 ou 2) e escreva o alert começando pelo sintoma. Em "criticos": use exatamente 3 quando houver ao menos 3 sinais relevantes (priorize os sistemas mais frágeis); se houver menos sinais fortes, traga os principais pontos de atenção sem exagerar a gravidade.`;
 
 function tryParseJson(text) {
   if (!text) return null;
@@ -46,19 +53,32 @@ function tryParseJson(text) {
 }
 
 function montarDados(result) {
+  const sistemas = (result.sistemas || []).map((s) => ({
+    sistema: s.sistema,
+    nota: s.nota,
+    nivel: s.nivel,
+    nivel_nome: s.nivel_nome,
+    sinais_de_alerta: (s.alertas || []).map((a) => ({ indicador: a.indicador, sinal: a.sinal })),
+  }));
+
+  // interpretação pré-calculada — a IA escreve em cima disto, não decide sozinha
+  const comNota = sistemas.filter((s) => typeof s.nota === 'number');
+  const ordenados = [...comNota].sort((a, b) => a.nota - b.nota);
+  const sistemas_mais_frageis = ordenados.slice(0, 2).map((s) => s.sistema);
+  const sistemas_mais_fortes = ordenados.slice(-2).reverse().map((s) => s.sistema);
+
   return {
+    produto: 'Mapa da Maturidade',
+    tipo: 'check-up inicial gratuito',
+    total_perguntas: TOTAL_PERGUNTAS,
     indice_geral: result.general_score,
     nivel: result.general_nivel,
     nivel_nome: result.general_level,
     leitura_geral: result.general_leitura,
     atributos_de_marca_percebidos: result.atributos_marca || [],
-    sistemas: (result.sistemas || []).map((s) => ({
-      sistema: s.sistema,
-      nota: s.nota,
-      nivel: s.nivel,
-      nivel_nome: s.nivel_nome,
-      sinais_de_alerta: (s.alertas || []).map((a) => ({ indicador: a.indicador, sinal: a.sinal })),
-    })),
+    sistemas_mais_frageis,
+    sistemas_mais_fortes,
+    sistemas,
   };
 }
 
