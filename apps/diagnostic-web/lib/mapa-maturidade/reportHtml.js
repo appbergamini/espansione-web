@@ -17,7 +17,7 @@ function emphasize(s) {
   return esc(s).replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
 
-const COR_NIVEL = { 1: 'var(--clay)', 2: 'var(--brass)', 3: 'var(--sage)', 4: 'var(--sage)' };
+const COR_NIVEL = { 1: '#C72638', 2: '#C72638', 3: '#A16207', 4: '#15803D' };
 
 // todos os atributos de marca possíveis (opções do MM2-MAR-10b)
 function atributosPossiveis() {
