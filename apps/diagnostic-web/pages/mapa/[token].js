@@ -357,11 +357,11 @@ function Resultado({ result, cliente, token }) {
       {result.general_leitura && <p style={{ ...sx.txtSec, fontSize: '0.9rem', marginTop: '0.7rem' }}>{result.general_leitura}</p>}
 
       <div style={sx.sectionLabel}>Panorama dos 4 sistemas</div>
-      <div style={{ width: '100%', height: 320 }}>
+      <div style={{ width: '100%', height: 340 }}>
         <ResponsiveContainer>
-          <RadarChart data={radarData} outerRadius="72%">
+          <RadarChart data={radarData} outerRadius="66%" margin={{ top: 16, right: 60, bottom: 16, left: 60 }}>
             <PolarGrid stroke="#E2E8F0" />
-            <PolarAngleAxis dataKey="eixo" tick={{ fill: '#334155', fontSize: 11 }} />
+            <PolarAngleAxis dataKey="eixo" tick={{ fill: '#334155', fontSize: 10 }} />
             <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 9 }} angle={90} />
             <Radar dataKey="valor" stroke="#C72638" fill="#C72638" fillOpacity={0.35} />
           </RadarChart>
