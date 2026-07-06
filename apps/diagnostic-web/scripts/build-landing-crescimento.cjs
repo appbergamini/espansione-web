@@ -12,6 +12,9 @@ const helmet = (raw.match(/<helmet>([\s\S]*?)<\/helmet>/) || [])[1] || '';
 let body = (raw.split('</helmet>')[1] || '').split(/<script[^>]*data-dc-script/)[0].split('</x-dc>')[0];
 body = body.replace(/<script[^>]*support\.js[^>]*><\/script>/g, '')
   .replace(/href="#mapa"/g, 'href="/mapa"')
+  // CTA primário que veio do design apontando pro topo (#top) → funil /mapa.
+  // (Sem isto, o botão "Fazer meu mapa agora" só rola a página pro topo.)
+  .replace(/href="#top"(\s+data-cta-primary)/g, 'href="/mapa"$1')
   .replace(/src="brand\//g, 'src="/crescimento/brand/')
   .replace(/src='brand\//g, "src='/crescimento/brand/");
 
@@ -30,7 +33,10 @@ const script = `
 if('IntersectionObserver' in window){var io=new IntersectionObserver(function(ents,o){ents.forEach(function(en){if(en.isIntersecting){en.target.style.transition='opacity .7s ease, transform .7s ease';en.target.style.opacity='1';en.target.style.transform='none';o.unobserve(en.target);}});},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});els.forEach(function(e){io.observe(e);});}else{els.forEach(function(e){e.style.opacity='1';e.style.transform='none';});}
 var p=document.getElementById('lp-progress'),nav=document.getElementById('lp-nav');
 function onScroll(){var h=document.documentElement,sc=h.scrollTop||document.body.scrollTop,mx=h.scrollHeight-h.clientHeight;if(p)p.style.width=(mx>0?(sc/mx*100):0)+'%';if(nav){var on=sc>20;nav.style.background=on?'rgba(0,26,59,.92)':'transparent';nav.style.borderBottomColor=on?'rgba(255,255,255,.08)':'transparent';nav.style.boxShadow=on?'0 6px 24px rgba(0,0,0,.18)':'none';nav.style.backdropFilter=on?'blur(8px)':'none';}}
-window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+var burger=document.getElementById('lp-burger'),mobile=document.getElementById('lp-mobile');
+if(burger&&mobile){burger.addEventListener('click',function(){mobile.style.display=(mobile.style.display==='flex')?'none':'flex';});Array.prototype.forEach.call(mobile.querySelectorAll('a'),function(a){a.addEventListener('click',function(){mobile.style.display='none';});});}
+})();
 </script>`;
 const html = `<!DOCTYPE html>
 <html lang="pt-BR"><head>
