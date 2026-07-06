@@ -74,7 +74,8 @@ function classificarPadrao(gerais) {
   if (spread <= 8) return avg >= 62 ? 'alinhamento_alto' : 'alinhamento_baixo';
   if (typeof s === 'number' && typeof e === 'number' && typeof c === 'number') {
     if (s >= e - 4 && e >= c - 4 && (s - c) > 8) return 'descida';
-    if (c > s + 6 || e > s + 6) return 'inversao';
+    // inversão só com diferença RELEVANTE (>8), pra não exagerar em gaps pequenos
+    if (c > s + 8 || e > s + 8) return 'inversao';
   }
   return 'polarizacao';
 }
