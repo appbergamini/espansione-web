@@ -43,7 +43,8 @@ export default async function handler(req, res) {
     handle,
     items: [{ quantity: 1, price, description: produto.descricao }],
     order_nsu: orderNsu,
-    redirect_url: `${base}/pagamento-concluido`,
+    // após pagar, o comprador cai direto no setup do Mapa de Identidade
+    redirect_url: `${base}/identidade/setup?order=${encodeURIComponent(orderNsu)}`,
     webhook_url: `${base}/api/checkout/infinitepay-webhook`,
   };
 

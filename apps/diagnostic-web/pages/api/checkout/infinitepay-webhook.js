@@ -6,6 +6,8 @@
 // pelo admin (o pagamento anônimo da LP não conhece o projeto).
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import { provisionarIdentidade } from '../../../lib/checkout/provisionar';
+import { verificarPagamento } from '../../../lib/checkout/infinitepay';
 
 function pick(obj, ...keys) {
   for (const k of keys) {
@@ -30,16 +32,42 @@ export default async function handler(req, res) {
     raw: body,
   };
 
+  // Anti-spoof: confirma o pagamento no InfinitePay antes de liberar acesso.
+  //   paid    → provisiona
+  //   unpaid  → NÃO provisiona (registra como não-pago)
+  //   unknown → provisiona, mas marca 'paid_unverified' (não deu p/ verificar)
+  const negadoStatus = /fail|refus|cancel|denied|declin/i.test(String(registro.status || ''));
+  let verif = 'unknown';
+  if (registro.order_nsu && !negadoStatus) {
+    verif = await verificarPagamento({ order_nsu: registro.order_nsu, transaction_nsu: registro.transaction_nsu, slug: registro.slug });
+  }
+  const liberar = registro.order_nsu && !negadoStatus && verif !== 'unpaid';
+
   try {
-    if (supabaseAdmin) {
-      const { error } = await supabaseAdmin.from('pagamentos').insert([registro]);
-      if (error) console.error('[checkout/webhook] insert', error.message);
+    if (supabaseAdmin && liberar) {
+      if (verif === 'unknown') console.warn('[checkout/webhook] pagamento NÃO verificado (payment_check inconclusivo) — provisionando como paid_unverified', registro.order_nsu);
+      await provisionarIdentidade(supabaseAdmin, {
+        orderNsu: registro.order_nsu,
+        comprador: registro.cliente,
+        extraPagamento: {
+          transaction_nsu: registro.transaction_nsu,
+          slug: registro.slug,
+          receipt_url: registro.receipt_url,
+          status: verif === 'unknown' ? 'paid_unverified' : (registro.status || 'paid'),
+          valor_centavos: registro.valor_centavos,
+          raw: registro.raw,
+        },
+      });
+    } else if (supabaseAdmin) {
+      // sem order_nsu, negado, ou unpaid: só registra o evento
+      await supabaseAdmin.from('pagamentos').insert([{ ...registro, status: verif === 'unpaid' ? 'unpaid' : registro.status }])
+        .then(({ error }) => error && console.error('[checkout/webhook] insert', error.message));
     }
   } catch (e) {
-    console.error('[checkout/webhook] exceção', e?.message);
-    // ainda respondemos 200 p/ não gerar reentrega infinita; o raw fica no log
+    console.error('[checkout/webhook] provisionar', e?.message);
+    // responde 200 mesmo assim (evita reentrega infinita); o raw fica no log
   }
 
-  console.log('[checkout/webhook] pagamento', registro.order_nsu, registro.status);
+  console.log('[checkout/webhook] pagamento', registro.order_nsu, 'verif=' + verif, registro.status);
   return res.status(200).json({ ok: true });
 }
