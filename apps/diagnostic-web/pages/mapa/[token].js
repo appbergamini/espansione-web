@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -9,7 +8,6 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts';
-import Logo from '../../components/Logo';
 import {
   SISTEMAS_MATURIDADE,
   CADASTRO_MATURIDADE,
@@ -18,6 +16,7 @@ import {
   condicionalVisivel,
   obrigatoriasFaltando,
 } from '../../lib/mapa-maturidade/catalog';
+import { MapaShell, MapaCard as Card, sx, CORES, NIVEL_TAG_COR } from '../../components/mapa/mapaTheme';
 
 // =====================================================================
 // Mapa da Maturidade (FINAL) — página pública (acesso por token).
@@ -168,16 +167,7 @@ export default function MapaMaturidadePage() {
 
   // ── render ───────────────────────────────────────────────────────
   return (
-    <>
-      <Head>
-        <title>Mapa da Maturidade · Espansione</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      <div style={sx.page}>
-        <div style={{ marginBottom: '1.6rem' }}>
-          <Logo size="md" center />
-        </div>
-
+    <MapaShell>
         {fase === 'loading' && <Card><p style={sx.txtSec}>Carregando…</p></Card>}
         {fase === 'erro' && (
           <Card><h2 style={{ marginTop: 0 }}>Não foi possível abrir</h2><p style={sx.txtSec}>{erro}</p></Card>
@@ -197,13 +187,13 @@ export default function MapaMaturidadePage() {
               ))}
             </div>
             <div style={{ marginTop: '1.4rem', textAlign: 'right' }}>
-              <button className="btn-primary" onClick={avancarCadastro} disabled={salvando}
+              <button className="mapa-btn" onClick={avancarCadastro} disabled={salvando}
                 style={{ opacity: cadastroCompleto && !salvando ? 1 : 0.6 }}>
                 Iniciar check-up →
               </button>
             </div>
             {cadastroTentou && !cadastroCompleto && (
-              <p style={{ color: '#fca5a5', fontSize: '0.82rem', marginTop: '0.6rem' }}>
+              <p style={{ color: '#C72638', fontSize: '0.82rem', marginTop: '0.6rem' }}>
                 Preencha ao menos nome, empresa e contato para continuar.
               </p>
             )}
@@ -224,7 +214,7 @@ export default function MapaMaturidadePage() {
               para a empresa. Se a prática existe pouco ou ainda não foi estruturada, escolha
               <b> "Nunca"</b> ou <b>"Poucas vezes"</b>.
             </div>
-            <button className="btn-primary" onClick={() => setFase('quiz')} style={{ marginTop: '0.6rem' }}>
+            <button className="mapa-btn" onClick={() => setFase('quiz')} style={{ marginTop: '0.6rem' }}>
               Iniciar check-up
             </button>
           </Card>
@@ -259,7 +249,7 @@ export default function MapaMaturidadePage() {
             <div style={sx.navRow}>
               <button onClick={voltarSistema} disabled={sistemaIdx === 0 || salvando}
                 style={sx.btnGhost(sistemaIdx === 0 || salvando)}>← Voltar</button>
-              <button className="btn-primary" onClick={proximoSistema} disabled={!sistemaCompleto || salvando}
+              <button className="mapa-btn" onClick={proximoSistema} disabled={!sistemaCompleto || salvando}
                 style={{ opacity: sistemaCompleto && !salvando ? 1 : 0.5 }}>
                 {sistemaIdx < SISTEMAS_MATURIDADE.length - 1 ? 'Próximo sistema →' : 'Ver resultado →'}
               </button>
@@ -270,8 +260,7 @@ export default function MapaMaturidadePage() {
         {fase === 'enviando' && <Card><p style={sx.txtSec}>Calculando seu Mapa da Maturidade…</p></Card>}
 
         {fase === 'resultado' && result && <Resultado result={result} cliente={cliente} token={token} />}
-      </div>
-    </>
+    </MapaShell>
   );
 }
 
@@ -309,11 +298,11 @@ function Afirmacao({ numero, pergunta, valor, onSelect }) {
 function CadastroCampo({ c, val, onChange, erro }) {
   const essencial = ['CAD-MM-001', 'CAD-MM-002', 'CAD-MM-006'].includes(c.id);
   const vazio = !String(val || '').trim();
-  const borda = erro && essencial && vazio ? '1px solid #Da3144' : '1px solid rgba(255,255,255,0.16)';
+  const borda = erro && essencial && vazio ? '1px solid #C72638' : '1px solid rgba(255,255,255,0.16)';
   return (
     <div style={sx.ctxCampo}>
       <label style={sx.ctxLabel}>
-        {c.pergunta} {essencial && <span style={{ color: '#Da3144' }}>*</span>}
+        {c.pergunta} {essencial && <span style={{ color: '#C72638' }}>*</span>}
       </label>
       {c.response_type === 'selecao_unica' ? (
         <div style={sx.opcoes}>
@@ -344,12 +333,6 @@ function Progresso({ atual, total, rotulo }) {
   );
 }
 
-const NIVEL_TAG_COR = {
-  1: { bg: 'rgba(239,68,68,0.18)', fg: '#fca5a5' },
-  2: { bg: 'rgba(239,68,68,0.18)', fg: '#fca5a5' },
-  3: { bg: 'rgba(234,179,8,0.16)', fg: '#fde68a' },
-  4: { bg: 'rgba(34,197,94,0.16)', fg: '#86efac' },
-};
 
 function Resultado({ result, cliente, token }) {
   const radarData = (result.sistemas || []).map((s) => ({ eixo: s.sistema, valor: s.nota ?? 0 }));
@@ -360,10 +343,10 @@ function Resultado({ result, cliente, token }) {
       <p style={{ ...sx.txtSec, marginTop: '-0.1rem', fontSize: '0.9rem' }}>Check-up de maturidade do negócio</p>
 
       <div style={sx.indiceBox}>
-        <div style={sx.indiceAccent} />
+        <div style={sx.accent} />
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
           <span style={sx.indiceNum}>{result.general_score != null ? Math.round(result.general_score) : '—'}</span>
-          <span style={{ fontSize: '1rem', color: 'var(--text-secondary,#9aa)' }}>/100</span>
+          <span style={{ fontSize: '1rem', color: '#5B6B7F' }}>/100</span>
           <span style={{ marginLeft: 'auto', fontSize: '1.05rem', fontWeight: 700 }}>
             {result.general_nivel ? `Nível ${result.general_nivel} — ` : ''}{result.general_level}
           </span>
@@ -377,10 +360,10 @@ function Resultado({ result, cliente, token }) {
       <div style={{ width: '100%', height: 320 }}>
         <ResponsiveContainer>
           <RadarChart data={radarData} outerRadius="72%">
-            <PolarGrid stroke="rgba(255,255,255,0.12)" />
-            <PolarAngleAxis dataKey="eixo" tick={{ fill: '#cbd5e1', fontSize: 11 }} />
+            <PolarGrid stroke="#E2E8F0" />
+            <PolarAngleAxis dataKey="eixo" tick={{ fill: '#334155', fontSize: 11 }} />
             <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 9 }} angle={90} />
-            <Radar dataKey="valor" stroke="#Da3144" fill="#Da3144" fillOpacity={0.35} />
+            <Radar dataKey="valor" stroke="#C72638" fill="#C72638" fillOpacity={0.35} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
@@ -400,7 +383,7 @@ function Resultado({ result, cliente, token }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.5rem 0' }}>
                 <div style={sx.miniBarOut}><div style={{ ...sx.miniBarIn, width: `${nota ?? 0}%` }} /></div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary,#9aa)', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.85rem', color: '#5B6B7F', whiteSpace: 'nowrap' }}>
                   {nota != null ? `${nota}%` : '—'}
                 </span>
               </div>
@@ -420,7 +403,7 @@ function Resultado({ result, cliente, token }) {
       )}
 
       <div style={sx.ctaAprofundar}>
-        <strong style={{ color: '#fca5b0' }}>Próximo passo: Mapa da Identidade Estratégica</strong>
+        <strong style={{ color: '#C72638' }}>Próximo passo: Mapa da Identidade Estratégica</strong>
         <p style={{ ...sx.txtSec, fontSize: '0.88rem', margin: '0.4rem 0 0' }}>
           O check-up mostra onde estão os sinais. O Mapa da Identidade investiga as causas e o caminho
           para evoluir. Baixe o relatório completo para ver o diagnóstico por sistema.
@@ -428,7 +411,7 @@ function Resultado({ result, cliente, token }) {
       </div>
 
       <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '1.4rem' }}>
-        <a className="btn-primary" href={`/api/mapa/report?token=${encodeURIComponent(token)}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+        <a className="mapa-btn" href={`/api/mapa/report?token=${encodeURIComponent(token)}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
           📄 Ver relatório completo
         </a>
         <a href={`/api/mapa/report?token=${encodeURIComponent(token)}&print=1`} target="_blank" rel="noreferrer" style={{ ...sx.btnGhostResult, textDecoration: 'none' }}>
@@ -438,66 +421,3 @@ function Resultado({ result, cliente, token }) {
     </Card>
   );
 }
-
-function Card({ children, wide }) {
-  return (
-    <div className="glass-card" style={{ maxWidth: wide ? 720 : 540, width: '100%', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
-      <div style={sx.indiceAccent} />
-      {children}
-    </div>
-  );
-}
-
-// ── estilos ──────────────────────────────────────────────────────────
-const sx = {
-  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 1rem' },
-  h1: { marginTop: 0, fontSize: '1.6rem' },
-  h2: { fontSize: '1.25rem', margin: '0.4rem 0 0.2rem' },
-  txtSec: { color: 'var(--text-secondary, #9aa)', lineHeight: 1.6 },
-  progLabel: { fontSize: '0.78rem', color: 'var(--text-secondary, #9aa)' },
-  barraOut: { height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
-  barraIn: { height: '100%', background: 'linear-gradient(90deg, #Da3144, #f0667a)', transition: 'width 0.3s ease' },
-  navRow: { display: 'flex', justifyContent: 'space-between', gap: '0.6rem', marginTop: '1.6rem' },
-  btnGhost: (disabled) => ({
-    background: 'none', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8,
-    color: 'var(--text-secondary, #9aa)', padding: '0.6rem 1rem',
-    cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.45 : 1,
-  }),
-  afirmacao: { padding: '1rem 0', borderTop: '1px solid rgba(255,255,255,0.07)' },
-  afirmacaoTxt: { margin: '0 0 0.7rem', lineHeight: 1.5, fontSize: '0.98rem' },
-  afirmacaoNum: { color: '#Da3144', fontWeight: 700, marginRight: '0.2rem' },
-  condicional: { padding: '1rem 0', borderTop: '1px solid rgba(218,49,68,0.25)', marginTop: '0.4rem' },
-  opcoes: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem' },
-  opcao: (ativo) => ({
-    flex: '1 1 auto', minWidth: 110, padding: '0.55rem 0.7rem', borderRadius: 8,
-    border: ativo ? '1px solid #Da3144' : '1px solid rgba(255,255,255,0.16)',
-    background: ativo ? 'rgba(218,49,68,0.18)' : 'rgba(255,255,255,0.03)',
-    color: ativo ? '#fca5b0' : 'var(--text-secondary, #9aa)',
-    fontSize: '0.88rem', cursor: 'pointer', transition: 'all 0.15s ease',
-  }),
-  opcaoNaoSei: (ativo) => ({
-    flex: '0 0 auto', padding: '0.55rem 0.9rem', borderRadius: 8,
-    border: ativo ? '1px dashed #9aa3ad' : '1px dashed rgba(255,255,255,0.16)',
-    background: ativo ? 'rgba(255,255,255,0.08)' : 'transparent',
-    color: ativo ? '#cbd5e1' : 'var(--text-secondary, #9aa)',
-    fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.15s ease',
-  }),
-  eyebrow: { fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600 },
-  aviso: { marginTop: '0.9rem', padding: '0.75rem 0.9rem', borderRadius: 8, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', color: 'var(--text-secondary, #9aa)', fontSize: '0.84rem', lineHeight: 1.55 },
-  ctxCampo: { padding: '0.9rem 0', borderTop: '1px solid rgba(255,255,255,0.07)' },
-  ctxLabel: { display: 'block', marginBottom: '0.55rem', lineHeight: 1.45, fontSize: '0.96rem' },
-  ctxInput: { width: '100%', boxSizing: 'border-box', padding: '0.7rem 0.85rem', fontSize: '0.95rem', borderRadius: 8, background: 'rgba(255,255,255,0.03)', color: 'inherit', fontFamily: 'inherit' },
-  sectionLabel: { fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary, #9aa)', fontWeight: 600, margin: '1.7rem 0 0.7rem' },
-  indiceBox: { position: 'relative', overflow: 'hidden', padding: '1.2rem 1.3rem', borderRadius: 14, background: 'rgba(218,49,68,0.10)', border: '1px solid rgba(218,49,68,0.25)', marginTop: '1.1rem' },
-  indiceAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #Da3144, rgba(218,49,68,0.08))' },
-  indiceNum: { fontSize: '3rem', fontWeight: 800, color: '#Da3144', lineHeight: 1 },
-  gaugeOut: { height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden', margin: '0.6rem 0 0.45rem' },
-  gaugeIn: { height: '100%', background: 'linear-gradient(90deg, #Da3144, #f0667a)', borderRadius: 99 },
-  pilarCard: { padding: '1rem 1.1rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' },
-  nivelTagBase: { fontSize: '0.74rem', padding: '0.2rem 0.55rem', borderRadius: 99, whiteSpace: 'nowrap' },
-  miniBarOut: { flex: 1, height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' },
-  miniBarIn: { height: '100%', background: '#Da3144', borderRadius: 99 },
-  chip: { fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', borderRadius: 99, padding: '0.28rem 0.7rem' },
-  ctaAprofundar: { marginTop: '1.8rem', padding: '1.1rem 1.2rem', borderRadius: 12, background: 'rgba(218,49,68,0.10)', border: '1px solid rgba(218,49,68,0.25)' },
-  btnGhostResult: { background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: 'var(--text-secondary, #9aa)', padding: '0.7rem 1.1rem', cursor: 'pointer', fontSize: '0.9rem' },
-};
