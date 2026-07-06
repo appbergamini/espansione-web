@@ -1,14 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  ResponsiveContainer,
-} from 'recharts';
-import {
   SISTEMAS_MATURIDADE,
   CADASTRO_MATURIDADE,
   perguntasPorSistema,
@@ -16,7 +8,7 @@ import {
   condicionalVisivel,
   obrigatoriasFaltando,
 } from '../../lib/mapa-maturidade/catalog';
-import { MapaShell, MapaCard as Card, sx, CORES, NIVEL_TAG_COR } from '../../components/mapa/mapaTheme';
+import { MapaShell, MapaCard as Card, sx, CORES } from '../../components/mapa/mapaTheme';
 
 // =====================================================================
 // Mapa da Maturidade (FINAL) — página pública (acesso por token).
@@ -39,7 +31,6 @@ export default function MapaMaturidadePage() {
   const [answers, setAnswers] = useState({});
   const [atributos, setAtributos] = useState([]); // seleção do MM2-MAR-10b
   const [sistemaIdx, setSistemaIdx] = useState(0);
-  const [result, setResult] = useState(null);
   const [salvando, setSalvando] = useState(false);
 
   // ── carga inicial ────────────────────────────────────────────────
@@ -337,94 +328,5 @@ function Progresso({ atual, total, rotulo }) {
       </div>
       <div style={sx.barraOut}><div style={{ ...sx.barraIn, width: `${pct}%` }} /></div>
     </div>
-  );
-}
-
-
-function Resultado({ result, cliente, token }) {
-  const radarData = (result.sistemas || []).map((s) => ({ eixo: s.sistema, valor: s.nota ?? 0 }));
-  return (
-    <Card wide>
-      <div style={sx.eyebrow}>Resultado · Mapa da Maturidade</div>
-      <h1 style={sx.h1}>{cliente || 'Mapa da Maturidade'}</h1>
-      <p style={{ ...sx.txtSec, marginTop: '-0.1rem', fontSize: '0.9rem' }}>Check-up de maturidade do negócio</p>
-
-      <div style={sx.indiceBox}>
-        <div style={sx.accent} />
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-          <span style={sx.indiceNum}>{result.general_score != null ? Math.round(result.general_score) : '—'}</span>
-          <span style={{ fontSize: '1rem', color: '#5B6B7F' }}>/100</span>
-          <span style={{ marginLeft: 'auto', fontSize: '1.05rem', fontWeight: 700 }}>
-            {result.general_nivel ? `Nível ${result.general_nivel} — ` : ''}{result.general_level}
-          </span>
-        </div>
-        <div style={sx.gaugeOut}><div style={{ ...sx.gaugeIn, width: `${Math.round(result.general_score || 0)}%` }} /></div>
-        <div style={sx.eyebrow}>Índice Geral</div>
-      </div>
-      {result.general_leitura && <p style={{ ...sx.txtSec, fontSize: '0.9rem', marginTop: '0.7rem' }}>{result.general_leitura}</p>}
-
-      <div style={sx.sectionLabel}>Panorama dos 4 sistemas</div>
-      <div style={{ width: '100%', height: 340 }}>
-        <ResponsiveContainer>
-          <RadarChart data={radarData} outerRadius="66%" margin={{ top: 16, right: 60, bottom: 16, left: 60 }}>
-            <PolarGrid stroke="#E2E8F0" />
-            <PolarAngleAxis dataKey="eixo" tick={{ fill: '#334155', fontSize: 10 }} />
-            <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 9 }} angle={90} />
-            <Radar dataKey="valor" stroke="#C72638" fill="#C72638" fillOpacity={0.35} />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div style={sx.sectionLabel}>Leitura por sistema</div>
-      <div style={{ display: 'grid', gap: '0.9rem' }}>
-        {(result.sistemas || []).map((s) => {
-          const cor = NIVEL_TAG_COR[s.nivel] || NIVEL_TAG_COR[2];
-          const nota = s.nota == null ? null : Math.round(s.nota);
-          return (
-            <div key={s.sistema} style={sx.pilarCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
-                <strong style={{ fontSize: '1.02rem' }}>{s.sistema}</strong>
-                <span style={{ ...sx.nivelTagBase, background: cor.bg, color: cor.fg }}>
-                  {s.nivel ? `Nível ${s.nivel} — ${s.nivel_nome}` : 'Sem dados'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.5rem 0' }}>
-                <div style={sx.miniBarOut}><div style={{ ...sx.miniBarIn, width: `${nota ?? 0}%` }} /></div>
-                <span style={{ fontSize: '0.85rem', color: '#5B6B7F', whiteSpace: 'nowrap' }}>
-                  {nota != null ? `${nota}%` : '—'}
-                </span>
-              </div>
-              {s.leitura && <p style={{ ...sx.txtSec, fontSize: '0.9rem', margin: 0 }}>{s.leitura}</p>}
-            </div>
-          );
-        })}
-      </div>
-
-      {result.atributos_marca?.length > 0 && (
-        <>
-          <div style={sx.sectionLabel}>Atributos de marca percebidos</div>
-          <div style={sx.opcoes}>
-            {result.atributos_marca.map((a) => <span key={a} style={sx.chip}>{a}</span>)}
-          </div>
-        </>
-      )}
-
-      <div style={sx.ctaAprofundar}>
-        <strong style={{ color: '#C72638' }}>Próximo passo: Mapa da Identidade Estratégica</strong>
-        <p style={{ ...sx.txtSec, fontSize: '0.88rem', margin: '0.4rem 0 0' }}>
-          O check-up mostra onde estão os sinais. O Mapa da Identidade investiga as causas e o caminho
-          para evoluir. Baixe o relatório completo para ver o diagnóstico por sistema.
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '1.4rem' }}>
-        <a className="mapa-btn" href={`/api/mapa/report?token=${encodeURIComponent(token)}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-          📄 Ver relatório completo
-        </a>
-        <a href={`/api/mapa/report?token=${encodeURIComponent(token)}&print=1`} target="_blank" rel="noreferrer" style={{ ...sx.btnGhostResult, textDecoration: 'none' }}>
-          ⬇ Baixar PDF
-        </a>
-      </div>
-    </Card>
   );
 }
