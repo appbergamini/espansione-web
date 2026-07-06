@@ -140,6 +140,10 @@ export default function IdentidadeSetup() {
               style={{ marginTop: '1.2rem', textDecoration: 'none', display: 'inline-block' }}>
               Começar agora (responder como Sócio) →
             </a>
+            <p style={{ ...sx.txt, fontSize: '0.85rem', marginTop: '1.1rem' }}>
+              Para voltar depois e acompanhar tudo (diagnóstico + treinamentos), acesse a sua{' '}
+              <a href="/area" style={{ color: '#fca5b0' }}>área do cliente</a> com este mesmo e-mail.
+            </p>
           </Card>
         )}
       </div>
