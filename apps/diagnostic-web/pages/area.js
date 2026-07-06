@@ -221,7 +221,7 @@ const sx = {
   input: { width: '100%', boxSizing: 'border-box', padding: '0.8rem 0.9rem', fontSize: '1rem', borderRadius: 10, border: `1px solid ${C.border}`, background: '#F8FAFC', color: C.text, marginTop: '1rem' },
   ghost: { border: `1px solid ${C.border}`, borderRadius: 10, color: C.textSec, padding: '0.6rem 1rem', textDecoration: 'none', fontSize: '0.88rem', background: 'none', cursor: 'pointer' },
   tabs: { display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'nowrap' },
-  tab: (on) => ({ padding: '0.6rem 1.1rem', borderRadius: 10, border: on ? `1.5px solid ${C.red}` : '1px solid rgba(255,255,255,.25)', background: on ? '#fff' : 'rgba(255,255,255,.08)', color: on ? C.red : '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }),
+  tab: (on) => ({ padding: '0.6rem 1.1rem', borderRadius: 10, border: on ? `1.5px solid ${C.red}` : '1px solid rgba(255,255,255,.25)', background: on ? '#fff' : 'rgba(255,255,255,.08)', color: on ? C.red : '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, lineHeight: 1.2 }),
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.7rem', padding: '0.8rem 0.9rem', borderRadius: 10, background: '#F8FAFC', border: `1px solid ${C.border}` },
   btnAccent: { background: C.redSoft, border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 8, padding: '0.45rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 600 },
   btnGhost: { border: `1px solid ${C.border}`, color: C.textSec, borderRadius: 8, padding: '0.45rem 0.7rem', fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap' },
