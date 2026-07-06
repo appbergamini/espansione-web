@@ -12,10 +12,16 @@ import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 const API = 'https://api.checkout.infinitepay.io/links';
 
 function baseUrl(req) {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
-  const proto = (req.headers['x-forwarded-proto'] || 'https').toString().split(',')[0];
+  // Preferir o HOST real da requisição (o domínio onde a compra está acontecendo)
+  // — sempre um domínio servido, evitando redirect/webhook pra domínio errado.
   const host = (req.headers['x-forwarded-host'] || req.headers.host || '').toString();
-  return `${proto}://${host}`;
+  if (host) {
+    const proto = (req.headers['x-forwarded-proto'] || 'https').toString().split(',')[0];
+    return `${proto}://${host}`;
+  }
+  // fallback: env de RUNTIME (SITE_URL, não NEXT_PUBLIC que é inlinado no build).
+  const env = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  return env ? env.replace(/\/$/, '') : '';
 }
 
 export default async function handler(req, res) {
