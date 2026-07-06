@@ -14,6 +14,16 @@ body = body.replace(/<script[^>]*support\.js[^>]*><\/script>/g, '')
   .replace(/href="#mapa"/g, 'href="/mapa"')
   .replace(/src="brand\//g, 'src="/crescimento/brand/')
   .replace(/src='brand\//g, "src='/crescimento/brand/");
+
+// CTA de compra (Mapa de Identidade, pago) — injetado no container de botões da
+// seção final (âncora única). Estilo outline p/ distinguir do CTA vermelho (grátis).
+const btnCompra = `<a href="/api/checkout/infinitepay?produto=identidade" style="display:inline-flex;align-items:center;gap:10px;background:transparent;color:#fff;font-family:'Poppins';font-weight:600;font-size:18px;padding:18px 34px;border-radius:15px;border:1.5px solid rgba(255,255,255,.55);text-decoration:none;transition:background .2s,border-color .2s;">Comprar o Mapa de Identidade <span style="font-size:20px;">&#8594;</span></a>`;
+const anchorBtns = '<div data-reveal data-delay="160" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-bottom:22px;">';
+if (body.includes(anchorBtns)) {
+  body = body.replace(anchorBtns, anchorBtns + btnCompra);
+} else {
+  console.warn('[landing] âncora do CTA de compra não encontrada — botão não injetado');
+}
 const script = `
 <script>
 (function(){var els=document.querySelectorAll('[data-reveal]');
