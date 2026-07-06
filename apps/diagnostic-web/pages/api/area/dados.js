@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return e && e === email;
   });
   const pagas = minhas.filter((p) => PAGO.test(p.status || ''));
-  const temAcesso = pagas.length > 0;
+  const temTreinamentos = pagas.length > 0;
   const projetoIds = [...new Set(pagas.map((p) => p.projeto_id).filter(Boolean))];
 
   // diagnósticos (assessments identidade_final desses projetos)
@@ -66,5 +66,25 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(200).json({ success: true, email, temAcesso, diagnosticos });
+  // Mapa de Maturidade do cliente (e-mail no cadastro → campo CAD-MM-006)
+  const { data: mats } = await db
+    .from('mapa_assessments')
+    .select('token, cadastro_json, general_score, general_level, completed_at')
+    .eq('status', 'concluido')
+    .order('completed_at', { ascending: false })
+    .limit(500);
+  const maturidades = (mats || [])
+    .filter((m) => (m.cadastro_json?.['CAD-MM-006'] || '').toString().toLowerCase() === email)
+    .map((m) => ({
+      token: m.token,
+      empresa: m.cadastro_json?.empresa || '',
+      score: m.general_score,
+      nivel: m.general_level,
+      completed_at: m.completed_at,
+      report_link: `/api/mapa/report?token=${m.token}`,
+    }));
+
+  const temAcesso = temTreinamentos || maturidades.length > 0;
+
+  return res.status(200).json({ success: true, email, temAcesso, temTreinamentos, diagnosticos, maturidades });
 }

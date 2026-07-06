@@ -124,7 +124,14 @@ export default function AreaCliente() {
               </div>
 
               {aba === 'diagnostico' && <Diagnostico dados={dados} />}
-              {aba === 'treinamentos' && <Treinamentos />}
+              {aba === 'treinamentos' && (dados.temTreinamentos ? <Treinamentos /> : (
+                <Card wide>
+                  <div style={sx.accent} />
+                  <h2 style={{ marginTop: 0 }}>Treinamentos</h2>
+                  <p style={sx.txt}>Os treinamentos fazem parte do <b>Mapa de Identidade Estratégica</b>.{' '}
+                    <a href="/crescimento" style={{ color: '#fca5b0' }}>Conhecer →</a></p>
+                </Card>
+              ))}
             </div>
           )
         )}
@@ -139,9 +146,23 @@ function Diagnostico({ dados }) {
     navigator.clipboard.writeText(`${window.location.origin}${link}`);
     setCopiado(id); setTimeout(() => setCopiado(null), 1600);
   }
-  if (!dados.diagnosticos.length) return <Card wide><p style={sx.txt}>Seu diagnóstico está sendo preparado. Atualize em instantes.</p></Card>;
+  const maturidades = dados.maturidades || [];
+  if (!dados.diagnosticos.length && !maturidades.length) return <Card wide><p style={sx.txt}>Seu diagnóstico está sendo preparado. Atualize em instantes.</p></Card>;
   return (
     <>
+      {maturidades.map((m) => (
+        <div key={m.token} className="glass-card" style={sx.cardWide}>
+          <div style={sx.accent} />
+          <div style={sx.eyebrow}>Mapa de Maturidade</div>
+          <h2 style={{ margin: '0.3rem 0 0.2rem' }}>{m.empresa || 'Seu Mapa de Maturidade'}</h2>
+          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>
+            {m.nivel ? <>Nível <b>{m.nivel}</b>{m.score != null ? ` · ${m.score} pts` : ''}. </> : ''}
+            Seu relatório completo está pronto.
+          </p>
+          <a className="btn-primary" href={m.report_link} target="_blank" rel="noreferrer"
+            style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>📄 Ver relatório de Maturidade</a>
+        </div>
+      ))}
       {dados.diagnosticos.map((d) => (
         <div key={d.assessment_id} className="glass-card" style={sx.cardWide}>
           <div style={sx.accent} />
