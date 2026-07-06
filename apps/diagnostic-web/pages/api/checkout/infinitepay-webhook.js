@@ -6,8 +6,17 @@
 // pelo admin (o pagamento anônimo da LP não conhece o projeto).
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
-import { provisionarIdentidade } from '../../../lib/checkout/provisionar';
+import { provisionarIdentidade, registrarPagamento } from '../../../lib/checkout/provisionar';
 import { verificarPagamento } from '../../../lib/checkout/infinitepay';
+
+// slug do produto vem codificado no order_nsu (slug__uuid); resolve o
+// fulfillment pelo catálogo produtos_checkout (default 'identidade' p/ orders antigos)
+async function fulfillmentDoPedido(db, orderNsu) {
+  const slug = String(orderNsu || '').split('__')[0];
+  if (!slug) return { slug: 'identidade', fulfillment: 'identidade' };
+  const { data } = await db.from('produtos_checkout').select('slug, fulfillment').eq('slug', slug).maybeSingle();
+  return data ? { slug: data.slug, fulfillment: data.fulfillment } : { slug: 'identidade', fulfillment: 'identidade' };
+}
 
 function pick(obj, ...keys) {
   for (const k of keys) {
@@ -45,19 +54,22 @@ export default async function handler(req, res) {
 
   try {
     if (supabaseAdmin && liberar) {
-      if (verif === 'unknown') console.warn('[checkout/webhook] pagamento NÃO verificado (payment_check inconclusivo) — provisionando como paid_unverified', registro.order_nsu);
-      await provisionarIdentidade(supabaseAdmin, {
-        orderNsu: registro.order_nsu,
-        comprador: registro.cliente,
-        extraPagamento: {
-          transaction_nsu: registro.transaction_nsu,
-          slug: registro.slug,
-          receipt_url: registro.receipt_url,
-          status: verif === 'unknown' ? 'paid_unverified' : (registro.status || 'paid'),
-          valor_centavos: registro.valor_centavos,
-          raw: registro.raw,
-        },
-      });
+      if (verif === 'unknown') console.warn('[checkout/webhook] pagamento NÃO verificado (payment_check inconclusivo) — liberando como paid_unverified', registro.order_nsu);
+      const { slug, fulfillment } = await fulfillmentDoPedido(supabaseAdmin, registro.order_nsu);
+      const extraPagamento = {
+        transaction_nsu: registro.transaction_nsu,
+        slug: registro.slug,
+        receipt_url: registro.receipt_url,
+        status: verif === 'unknown' ? 'paid_unverified' : (registro.status || 'paid'),
+        valor_centavos: registro.valor_centavos,
+        raw: registro.raw,
+      };
+      if (fulfillment === 'identidade') {
+        await provisionarIdentidade(supabaseAdmin, { orderNsu: registro.order_nsu, comprador: registro.cliente, extraPagamento });
+      } else {
+        // treinamento/nenhum: só registra a compra (libera acesso à /area por compra paga)
+        await registrarPagamento(supabaseAdmin, { orderNsu: registro.order_nsu, comprador: registro.cliente, produto: slug, extra: extraPagamento });
+      }
     } else if (supabaseAdmin) {
       // sem order_nsu, negado, ou unpaid: só registra o evento
       await supabaseAdmin.from('pagamentos').insert([{ ...registro, status: verif === 'unpaid' ? 'unpaid' : registro.status }])

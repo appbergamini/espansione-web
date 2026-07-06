@@ -14,8 +14,10 @@ function nomeCliente(comprador) {
   return comprador.company || comprador.empresa || comprador.name || comprador.nome || comprador.email || null;
 }
 
-// registra/atualiza a linha de pagamento (se ainda não existe)
-async function garantirPagamento(db, orderNsu, comprador, extra = {}) {
+// Registra (idempotente por order_nsu) a linha de pagamento de QUALQUER produto.
+// Usado por fulfillments que não criam assessment (treinamento/nenhum) e pela
+// provisão de identidade.
+export async function registrarPagamento(db, { orderNsu, comprador = null, produto = 'identidade', extra = {} }) {
   const { data } = await db
     .from('pagamentos')
     .select('id, projeto_id')
@@ -26,7 +28,7 @@ async function garantirPagamento(db, orderNsu, comprador, extra = {}) {
   if (data) return data;
   const { data: nova, error } = await db
     .from('pagamentos')
-    .insert([{ order_nsu: orderNsu, status: 'paid', produto: 'identidade', cliente: comprador || null, ...extra }])
+    .insert([{ order_nsu: orderNsu, status: 'paid', produto, cliente: comprador || null, ...extra }])
     .select('id, projeto_id')
     .single();
   if (error) throw error;
@@ -34,13 +36,13 @@ async function garantirPagamento(db, orderNsu, comprador, extra = {}) {
 }
 
 /**
- * Provisiona (ou recupera) o assessment do comprador.
+ * Provisiona (ou recupera) o assessment do comprador (fulfillment=identidade).
  * @returns {{ projetoId, assessment, cliente }}
  */
 export async function provisionarIdentidade(db, { orderNsu, comprador = null, extraPagamento = {} }) {
   if (!orderNsu) throw new Error('orderNsu obrigatório');
 
-  const pg = await garantirPagamento(db, orderNsu, comprador, extraPagamento);
+  const pg = await registrarPagamento(db, { orderNsu, comprador, produto: 'identidade', extra: extraPagamento });
 
   // 1) projeto (cria leve se ainda não vinculado)
   let projetoId = pg.projeto_id;

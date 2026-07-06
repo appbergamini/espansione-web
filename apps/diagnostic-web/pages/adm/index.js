@@ -107,6 +107,11 @@ export default function AdminPanel() {
                 {isMaster ? 'Visao Master' : 'Meus Projetos'}
               </span>
               {(isMaster || userRole === 'admin') && (
+                <button onClick={() => router.push('/adm/produtos')} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600 }}>
+                  🛒 Produtos
+                </button>
+              )}
+              {(isMaster || userRole === 'admin') && (
                 <button onClick={() => router.push('/adm/pagamentos')} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600 }}>
                   💳 Pagamentos
                 </button>
