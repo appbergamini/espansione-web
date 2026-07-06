@@ -125,7 +125,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .pdf-btn:hover{background:#E13345;}
   @media print{body{background:#fff;} .pdf-btn{display:none;} .exp,.sys,.pattern,.next,.attr-q,.gap-q{break-inside:avoid;} section{padding:34px 0;}}
 </style></head><body>
-<button class="pdf-btn" onclick="window.print()">⬇ Baixar PDF</button>
+<button class="pdf-btn" onclick="window.print()">⬇ Salvar como PDF</button>
 <script>if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListener('load',function(){setTimeout(function(){window.print();},700);});}</script>
 
 <header class="hero"><div class="wrap">
