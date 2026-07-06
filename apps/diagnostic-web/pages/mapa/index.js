@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Logo from '../../components/Logo';
 import { CADASTRO_MATURIDADE } from '../../lib/mapa-maturidade/catalog';
 
@@ -24,6 +24,13 @@ export default function MapaEntradaPage() {
     [cadastro]
   );
   function setCad(id, v) { setCadastro((p) => ({ ...p, [id]: v })); }
+
+  // pré-preenche o contato quando vem da área logada (/mapa?email=...) — garante
+  // que a Maturidade fique vinculada ao mesmo e-mail do cliente.
+  useEffect(() => {
+    const e = router.query.email;
+    if (e) setCadastro((p) => (p['CAD-MM-006'] ? p : { ...p, 'CAD-MM-006': e.toString() }));
+  }, [router.query.email]);
 
   async function iniciar() {
     if (!completo) { setTentou(true); return; }

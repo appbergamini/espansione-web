@@ -163,6 +163,16 @@ function Diagnostico({ dados }) {
             style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>📄 Ver relatório de Maturidade</a>
         </div>
       ))}
+      {maturidades.length === 0 && (
+        <div className="glass-card" style={sx.cardWide}>
+          <div style={sx.accent} />
+          <div style={sx.eyebrow}>Mapa de Maturidade · grátis</div>
+          <h2 style={{ margin: '0.3rem 0 0.2rem' }}>Faça o seu Mapa de Maturidade</h2>
+          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Um diagnóstico rápido do seu negócio em 4 sistemas — Marca, Negócios, Comunicação e Pessoas. Leva poucos minutos e gera um relatório na hora.</p>
+          <a className="btn-primary" href={`/mapa?email=${encodeURIComponent(dados.email || '')}`} target="_blank" rel="noreferrer"
+            style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>Fazer o Mapa de Maturidade →</a>
+        </div>
+      )}
       {dados.diagnosticos.map((d) => (
         <div key={d.assessment_id} className="glass-card" style={sx.cardWide}>
           <div style={sx.accent} />
