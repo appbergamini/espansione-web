@@ -40,6 +40,7 @@ export function MapaShell({ children, title = 'Mapa da Maturidade · Espansione'
         .mapa-btn:disabled { cursor:default; }
         .mapa-input { width:100%; box-sizing:border-box; padding:0.75rem 0.9rem; font-size:0.98rem; border-radius:10px; border:1px solid ${CORES.border}; background:#F8FAFC; color:${CORES.text}; outline:none; transition:border-color .15s, box-shadow .15s; }
         .mapa-input:focus { border-color:${CORES.red}; box-shadow:0 0 0 3px ${CORES.redSoft}; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
       <div className="mapa-shell" style={shell}>
         <div style={{ marginBottom: '1.6rem' }}><Logo size="md" center /></div>
