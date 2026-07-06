@@ -268,11 +268,10 @@ test('modo economical resolve Gemini 3 Flash para os steps', async () => {
 });
 
 test('UI expõe opção Simular sem gastar tokens', async () => {
-  const fs = await import('node:fs/promises');
-  const path = new URL('../../../pages/adm/[id]/agency/[requestId].js', import.meta.url);
-  const source = await fs.readFile(path, 'utf8');
-
-  assert.match(source, /Simular sem gastar tokens/);
+  // O rótulo vive em components/agency-request/constants.js (EXECUTION_MODE_OPTIONS),
+  // consumido pela tela da Agência. Checamos a constante direto (robusto a refactor).
+  const { EXECUTION_MODE_OPTIONS } = await import('../../../components/agency-request/constants.js');
+  assert.ok(EXECUTION_MODE_OPTIONS.some((o) => o.label === 'Simular sem gastar tokens'));
 });
 
 class InstrumentedGateway {

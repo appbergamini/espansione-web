@@ -233,6 +233,112 @@ async function buildForAgent(projetoId, agentNum, { precomputedEnrichment } = {}
   };
 }
 
+// ── Passos de runAgent (extraídos p/ isolar responsabilidades) ──────────
+
+// Pré-flight: valida dependências, checkpoints pendentes e a regra especial do
+// Agente 16 (brand memory). Lança se algo impedir a execução.
+async function validarPreExecucao(projetoId, agentNum) {
+  // FIX.4 — validação dura de dependências ANTES de preparar o contexto.
+  const existentes = await db.getOutputs(projetoId, null);
+  const agentNumsPresentes = Object.keys(existentes || {}).map((n) => Number(n));
+  const deps = podeExecutar(agentNum, agentNumsPresentes);
+  if (!deps.ok) {
+    throw new Error(
+      `${deps.motivo} Execute o${deps.faltando.length > 1 ? 's' : ''} agente${deps.faltando.length > 1 ? 's' : ''} ${deps.faltando.join(', ')} antes.`,
+    );
+  }
+
+  const pending = await db.getPendingCheckpoints(projetoId);
+  if (pending && pending.length > 0) {
+    for (const cp of pending) {
+      for (const [num, cfg] of Object.entries(AGENT_CONFIGS)) {
+        if (cfg.checkpoint === cp.checkpoint_num && agentNum > Number(num)) {
+          throw new Error(`Checkpoint ${cp.checkpoint_num} pendente. Aprove antes de executar Agente ${agentNum}`);
+        }
+      }
+    }
+  }
+
+  if (agentNum === 16) {
+    const projeto = await db.getProject(projetoId);
+    assertBrandMemoryExportsReadyForAgent16(existentes, { includeEvp: !!projeto?.tem_evp });
+  }
+}
+
+// FIX.32 — Guard de completude: aborta ANTES de salvar se a saída veio truncada
+// (finish_reason de limite) ou com o envelope <conteudo> aberto (geração interrompida).
+async function guardSaidaCompleta(projetoId, agentNum, response) {
+  const rawOut = response.text || '';
+  const finish = String(response.finishReason || '').toUpperCase();
+  const truncadoPorLimite = ['MAX_TOKENS', 'LENGTH'].includes(finish);
+  const envelopeAberto = rawOut.includes('<conteudo>') && !rawOut.includes('</conteudo>');
+  if (!truncadoPorLimite && !envelopeAberto) return;
+  const motivo = truncadoPorLimite
+    ? `o modelo atingiu o limite de tokens de saída (finish_reason=${finish})`
+    : 'o texto terminou sem fechar a seção <conteudo> (geração interrompida)';
+  const msg = `Agente ${agentNum}: saída truncada/incompleta — ${motivo}. Rode novamente, de preferência com um modelo maior ou com mais tokens.`;
+  await db.logExecution(projetoId, agentNum, {
+    status: 'truncado', error: msg,
+    tokensIn: response.tokensIn, tokensOut: response.tokensOut, model: response.model,
+  });
+  throw new Error(msg);
+}
+
+// Monta o objeto `parsed`: parseOutput do agente + quality metadata + findings
+// estruturados + validação/extração do brand memory export.
+function montarParsed(agent, agentNum, response) {
+  const parsed = agent.parseOutput(response.text);
+  if (AGENTS_WITH_QUALITY_METADATA.has(agentNum)) {
+    parsed.quality_metadata = parseQualityMetadataFromRaw(response.text);
+  }
+  // FIX.24 — findings_json estruturado do raw; null cai no parser heurístico.
+  parsed.findings_json = parseFindingsFromRaw(response.text);
+
+  const expectedBrandMemorySlices = getExpectedBrandMemorySlices(agentNum);
+  const brandMemoryExportValidation = validateAgentBrandMemoryExport({
+    agentId: String(agentNum),
+    outputContent: response.text,
+    expectedSlices: expectedBrandMemorySlices,
+  });
+  parsed.brand_memory_export_status = brandMemoryExportValidation.status;
+  parsed.brand_memory_export_validation_result = brandMemoryExportValidation;
+  parsed.brand_memory_export_validated_at = new Date().toISOString();
+  if (['valid', 'warning'].includes(brandMemoryExportValidation.status)) {
+    try {
+      parsed.brand_memory_export_json = extractBrandMemoryExportJson(response.text);
+    } catch {
+      parsed.brand_memory_export_json = null;
+    }
+  } else {
+    parsed.brand_memory_export_json = null;
+  }
+  return parsed;
+}
+
+// Persiste: salva output, materializa findings (não-bloqueante), loga execução
+// e atualiza status/checkpoint do projeto.
+async function persistirResultado(projetoId, agentNum, config, parsed, response) {
+  const savedOutput = await db.saveOutput(projetoId, agentNum, parsed);
+
+  if (savedOutput && supabaseAdmin) {
+    try {
+      await materializarFindings(supabaseAdmin, savedOutput);
+    } catch (e) {
+      console.error('[pipeline] materializarFindings falhou:', e.message);
+    }
+  }
+
+  await db.logExecution(projetoId, agentNum, {
+    tokensIn: response.tokensIn, tokensOut: response.tokensOut, model: response.model, status: 'ok',
+  });
+  await db.updateProjectStatus(projetoId, `agente_${agentNum}_concluido`, agentNum);
+
+  if (config.checkpoint) {
+    await db.createCheckpoint(projetoId, config.checkpoint);
+    await db.updateProjectStatus(projetoId, `checkpoint_${config.checkpoint}_pendente`, agentNum);
+  }
+}
+
 export const Pipeline = {
   // Executa APENAS o enrichContext do agent (deep research + Tavily,
   // no caso do 5). Retorna o payload pro frontend injetar na chamada
@@ -258,45 +364,18 @@ export const Pipeline = {
     const config = AGENT_CONFIGS[agentNum];
     if (!config) throw new Error(`Agente ${agentNum} não existe na configuração`);
 
-    // FIX.4 — validação dura de dependências ANTES de preparar o
-    // contexto. Sem isto, o pipeline aceitava context parcial e gerava
-    // saídas silenciosamente ruins (ex.: Agente 6 rodando sem output
-    // 2/4/5 porque o admin apagou um deles).
-    const existentes = await db.getOutputs(projetoId, null);
-    const agentNumsPresentes = Object.keys(existentes || {}).map(n => Number(n));
-    const deps = podeExecutar(agentNum, agentNumsPresentes);
-    if (!deps.ok) {
-      throw new Error(
-        `${deps.motivo} Execute o${deps.faltando.length > 1 ? 's' : ''} agente${deps.faltando.length > 1 ? 's' : ''} ${deps.faltando.join(', ')} antes.`,
-      );
-    }
-
-    const pending = await db.getPendingCheckpoints(projetoId);
-    if (pending && pending.length > 0) {
-      for (const cp of pending) {
-        for (const [num, cfg] of Object.entries(AGENT_CONFIGS)) {
-          if (cfg.checkpoint === cp.checkpoint_num && agentNum > Number(num)) {
-            throw new Error(`Checkpoint ${cp.checkpoint_num} pendente. Aprove antes de executar Agente ${agentNum}`);
-          }
-        }
-      }
-    }
-
-    if (agentNum === 16) {
-      const projeto = await db.getProject(projetoId);
-      assertBrandMemoryExportsReadyForAgent16(existentes, { includeEvp: !!projeto?.tem_evp });
-    }
+    // 1) valida dependências, checkpoints e regra do Agente 16
+    await validarPreExecucao(projetoId, agentNum);
 
     console.log(`Pipeline: executando Agente ${agentNum} (${config.name}) para ${projetoId}`);
 
+    // 2) monta os prompts (contexto + system/user)
     const prompts = await buildForAgent(projetoId, agentNum, { precomputedEnrichment });
 
-    // Fallback para o preferredModel do agente quando o usuário não escolheu um
+    // 3) resolve modelo/tokens e chama a IA
+    // Fallback para o preferredModel do agente quando o usuário não escolheu um.
     const effectiveModelKey = modelKey || prompts.agent?.preferredModel || undefined;
-
-    // FIX.12 — agente pode declarar teto próprio de max_tokens via
-    // preferredMaxTokens (ex.: Agente 6 usa 12k em vez do default 16k).
-    // Opcional — sem isso, AIRouter aplica MAX_OUTPUT_TOKENS=16000.
+    // FIX.12 — teto próprio de max_tokens via preferredMaxTokens (ex.: Agente 6).
     const callOptions = { modelKey: effectiveModelKey };
     if (typeof prompts.agent?.preferredMaxTokens === 'number') {
       callOptions.maxTokens = prompts.agent.preferredMaxTokens;
@@ -307,93 +386,17 @@ export const Pipeline = {
       response = await AIRouter.callModel(
         prompts.systemPrompt,
         [{ role: 'user', content: prompts.userPrompt }],
-        callOptions
+        callOptions,
       );
     } catch (error) {
       await db.logExecution(projetoId, agentNum, { status: 'erro', error: error.message });
       throw error;
     }
 
-    // FIX.32 — Guard de completude. O Agente 6 (e outros densos) já saiu
-    // truncado salvando como "ok" silenciosamente (PARTE B cortada no meio).
-    // Detectamos saída incompleta por dois sinais e abortamos ANTES de salvar:
-    //   (a) finish_reason de limite de tokens (Gemini MAX_TOKENS / OpenAI
-    //       length / Claude max_tokens);
-    //   (b) envelope <conteudo> aberto e nunca fechado (geração interrompida).
-    {
-      const rawOut = response.text || '';
-      const finish = String(response.finishReason || '').toUpperCase();
-      const truncadoPorLimite = ['MAX_TOKENS', 'LENGTH'].includes(finish);
-      const envelopeAberto = rawOut.includes('<conteudo>') && !rawOut.includes('</conteudo>');
-      if (truncadoPorLimite || envelopeAberto) {
-        const motivo = truncadoPorLimite
-          ? `o modelo atingiu o limite de tokens de saída (finish_reason=${finish})`
-          : 'o texto terminou sem fechar a seção <conteudo> (geração interrompida)';
-        const msg = `Agente ${agentNum}: saída truncada/incompleta — ${motivo}. Rode novamente, de preferência com um modelo maior ou com mais tokens.`;
-        await db.logExecution(projetoId, agentNum, {
-          status: 'truncado',
-          error: msg,
-          tokensIn: response.tokensIn,
-          tokensOut: response.tokensOut,
-          model: response.model,
-        });
-        throw new Error(msg);
-      }
-    }
-
-    const parsed = prompts.agent.parseOutput(response.text);
-    if (AGENTS_WITH_QUALITY_METADATA.has(agentNum)) {
-      parsed.quality_metadata = parseQualityMetadataFromRaw(response.text);
-    }
-
-    // FIX.24 — extrai findings_json estruturado do raw text antes de salvar.
-    // Se o modelo não emitiu (ou JSON inválido), fica null e o
-    // materializador cai no parser heurístico do conteudo markdown.
-    parsed.findings_json = parseFindingsFromRaw(response.text);
-
-    const expectedBrandMemorySlices = getExpectedBrandMemorySlices(agentNum);
-    const brandMemoryExportValidation = validateAgentBrandMemoryExport({
-      agentId: String(agentNum),
-      outputContent: response.text,
-      expectedSlices: expectedBrandMemorySlices,
-    });
-    parsed.brand_memory_export_status = brandMemoryExportValidation.status;
-    parsed.brand_memory_export_validation_result = brandMemoryExportValidation;
-    parsed.brand_memory_export_validated_at = new Date().toISOString();
-    if (['valid', 'warning'].includes(brandMemoryExportValidation.status)) {
-      try {
-        parsed.brand_memory_export_json = extractBrandMemoryExportJson(response.text);
-      } catch {
-        parsed.brand_memory_export_json = null;
-      }
-    } else {
-      parsed.brand_memory_export_json = null;
-    }
-
-    const savedOutput = await db.saveOutput(projetoId, agentNum, parsed);
-
-    // FIX.24 — materializa analysis_blocks a partir do output salvo.
-    // Não bloqueia o fluxo se falhar — log + continuar.
-    if (savedOutput && supabaseAdmin) {
-      try {
-        await materializarFindings(supabaseAdmin, savedOutput);
-      } catch (e) {
-        console.error('[pipeline] materializarFindings falhou:', e.message);
-      }
-    }
-
-    await db.logExecution(projetoId, agentNum, {
-      tokensIn: response.tokensIn,
-      tokensOut: response.tokensOut,
-      model: response.model,
-      status: 'ok',
-    });
-    await db.updateProjectStatus(projetoId, `agente_${agentNum}_concluido`, agentNum);
-
-    if (config.checkpoint) {
-      await db.createCheckpoint(projetoId, config.checkpoint);
-      await db.updateProjectStatus(projetoId, `checkpoint_${config.checkpoint}_pendente`, agentNum);
-    }
+    // 4) guarda de completude → 5) monta parsed → 6) persiste
+    await guardSaidaCompleta(projetoId, agentNum, response);
+    const parsed = montarParsed(prompts.agent, agentNum, response);
+    await persistirResultado(projetoId, agentNum, config, parsed, response);
 
     return parsed;
   },
