@@ -57,9 +57,9 @@ export default function MapaMaturidadePage() {
         setCliente(data.cliente || '');
         setCadastro(data.cadastro || {});
         setAtributos(data.extras?.atributos_marca || []);
-        if (data.status === 'concluido' && data.result) {
-          setResult(data.result);
-          setFase('resultado');
+        if (data.status === 'concluido') {
+          // já concluído → vai direto para o relatório completo
+          window.location.href = `/api/mapa/report?token=${encodeURIComponent(token)}`;
           return;
         }
         setAnswers(data.answers || {});
@@ -148,7 +148,8 @@ export default function MapaMaturidadePage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    setFase('enviando');
+    setFase('gerando');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const r = await fetch('/api/mapa/finalize', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -156,9 +157,9 @@ export default function MapaMaturidadePage() {
       });
       const data = await r.json();
       if (!data.success) { setErro(data.error || 'Não foi possível concluir.'); setFase('erro'); return; }
-      setResult(data.result);
-      setFase('resultado');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // gera o relatório completo (aquece o cache da IA) e vai direto para ele
+      await fetch(`/api/mapa/report?token=${encodeURIComponent(token)}`).catch(() => {});
+      window.location.href = `/api/mapa/report?token=${encodeURIComponent(token)}`;
     } catch {
       setErro('Falha ao concluir. Tente novamente.');
       setFase('erro');
@@ -257,9 +258,15 @@ export default function MapaMaturidadePage() {
           </Card>
         )}
 
-        {fase === 'enviando' && <Card><p style={sx.txtSec}>Calculando seu Mapa da Maturidade…</p></Card>}
-
-        {fase === 'resultado' && result && <Resultado result={result} cliente={cliente} token={token} />}
+        {fase === 'gerando' && (
+          <Card>
+            <div style={sx.accent} />
+            <div style={sx.eyebrow}>Quase lá</div>
+            <h1 style={sx.h1}>Gerando o seu relatório…</h1>
+            <p style={sx.txtSec}>Estamos preparando a leitura completa do seu Mapa da Maturidade. Leva alguns segundos.</p>
+            <div style={{ width: 38, height: 38, margin: '1.4rem auto 0.3rem', borderRadius: '50%', border: `3px solid ${CORES.track}`, borderTopColor: CORES.red, animation: 'spin 0.9s linear infinite' }} />
+          </Card>
+        )}
     </MapaShell>
   );
 }

@@ -95,7 +95,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .score-lvl{padding-bottom:6px;} .score-lvl .n{font-family:'Poppins',sans-serif;font-size:21px;color:#fff;}
   .score-lvl .t{font-family:'Poppins',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#8E9AB6;}
   .track{margin-top:26px;} .track svg{width:100%;height:auto;display:block;}
-  section{padding:44px 0;} .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:26px;}
+  section{padding:44px 0;} .sec-head{display:flex;align-items:baseline;gap:14px;margin-top:26px;margin-bottom:26px;}
   .sec-head .num{font-family:'Poppins',sans-serif;font-size:12px;color:var(--brass);padding-top:4px;} .sec-head h2{font-size:clamp(21px,3vw,27px);}
   .lead{font-size:18px;color:var(--muted);max-width:60ch;} .divider{height:1px;background:var(--line);border:0;margin:0;}
   .sys{padding:18px 0;border-bottom:1px solid var(--line);} .sys:first-child{border-top:1px solid var(--line);}
@@ -190,8 +190,8 @@ ${chipsHtml ? `<section class="wrap">
   <span class="eyebrow">O próximo passo</span>
   <h2>Mapa da Identidade Estratégica</h2>
   <p class="hook">${esc(narrativa.cta_hook || 'Este retrato é só o seu olhar. O Mapa da Identidade coloca lado a lado como você, a sua equipe e os seus clientes respondem às mesmas perguntas — e é na distância entre esses três olhares que a causa aparece.')}</p>
-  <a class="cta" href="#">Agendar uma conversa sobre o seu diagnóstico</a>
-  <div class="fine">30 minutos · sobre o seu resultado, sem compromisso</div>
+  <a class="cta" href="/api/checkout/infinitepay?produto=identidade">Fazer o Mapa de Identidade Estratégica →</a>
+  <div class="fine">Os 3 olhares — você, equipe e clientes — e a distância entre eles</div>
 </div></section>
 
 <footer><div class="brand">Espansione</div><div class="tagline">Da estratégia que morre na gaveta para a marca que opera</div></footer>
