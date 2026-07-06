@@ -16,6 +16,15 @@
   @keyframes shine{0%{transform:translateX(-120%);}60%,100%{transform:translateX(220%);}}
   @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
   @keyframes previaPop{0%{transform:scale(.55);opacity:0;}100%{transform:scale(1);opacity:1;}}
+  @media (max-width:900px){
+    #lp-links{display:none !important;}
+    #lp-burger{display:flex !important;}
+    .hero-grid,.tese-grid,.doc-grid,.esp-grid,.quem-grid,.cont-grid,.previa-grid{grid-template-columns:1fr !important;}
+    #lp-nav [data-cta-primary]{display:none !important;}
+  }
+  @media (max-width:560px){
+    .quem-checks{grid-template-columns:1fr !important;}
+  }
 </style>
 </head><body>
 <div id="top" style="position:relative;overflow-x:clip;">
