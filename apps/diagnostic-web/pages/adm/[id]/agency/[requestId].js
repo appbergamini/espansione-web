@@ -78,6 +78,20 @@ import {
   downloadComposedArtwork,
   wrapCanvasText,
   drawCanvasLines,
+  getBriefingStatus,
+  isBriefingApprovedRequest,
+  labelAgent,
+  shortAgentLabel,
+  agentDescription,
+  miniActionStyle,
+  libraryActionStyle,
+  assetActionStyle,
+  creativeAssetStatusColor,
+  creativeAssetStatusBorder,
+  getCreativeAssetWarnings,
+  libraryItemTypeForAgent,
+  defaultLearningTypeForAgent,
+  defaultLearningContent,
 } from '../../../../components/agency-request/helpers';
 
 export default function AgencyRequestDetailPage() {
@@ -1551,62 +1565,6 @@ function BriefingSummary({ briefing }) {
   );
 }
 
-function getBriefingStatus(request, briefing) {
-  if (!briefing) {
-    return { label: 'aguardando geração', color: 'var(--text-secondary)', border: 'rgba(255,255,255,0.12)' };
-  }
-  if (request?.status === 'briefing_approved') {
-    return { label: 'aprovado', color: 'var(--success)', border: 'rgba(16,185,129,0.35)' };
-  }
-  if (request?.status === 'briefing_revision_requested') {
-    return { label: 'revisão solicitada', color: 'var(--warning)', border: 'rgba(245,158,11,0.35)' };
-  }
-  return { label: 'aguardando aprovação', color: 'var(--accent-blue)', border: 'rgba(56,189,248,0.35)' };
-}
-
-function isBriefingApprovedRequest(request) {
-  return !!request?.approved_briefing_json
-    && !['draft', 'briefing_pending', 'briefing_generated', 'briefing_revision_requested'].includes(request.status);
-}
-
-function labelAgent(agentId) {
-  const labels = {
-    account_director: 'Atendimento Estratégico',
-    copywriter: 'Copywriter',
-    channel_adapter: 'Channel Adapter',
-    visual_director: 'Direção Visual',
-    editor: 'Editor de Coerência',
-    brand_compliance: 'Brand Compliance',
-    approver: 'Aprovador de Marca',
-  };
-  return labels[agentId] || agentId;
-}
-
-function shortAgentLabel(agentId) {
-  const labels = {
-    account_director: 'Atendimento',
-    copywriter: 'Copywriter',
-    channel_adapter: 'Canal',
-    visual_director: 'Visual',
-    editor: 'Editor',
-    brand_compliance: 'Compliance',
-    approver: 'Aprovador',
-  };
-  return labels[agentId] || agentId;
-}
-
-function agentDescription(agentId) {
-  const descriptions = {
-    account_director: 'Briefing operacional',
-    copywriter: 'Texto e tom',
-    channel_adapter: 'Adaptação por canal',
-    visual_director: 'Direção de arte',
-    editor: 'Qualidade editorial',
-    brand_compliance: 'Aderência à marca',
-    approver: 'Gate final',
-  };
-  return descriptions[agentId] || 'Etapa da Agência';
-}
 
 
 function AgentOutput({ agentId, output }) {
@@ -2451,131 +2409,6 @@ function OutputCard({ children }) {
   );
 }
 
-function miniActionStyle(loading) {
-  return {
-    background: loading ? 'rgba(56,189,248,0.18)' : 'rgba(255,255,255,0.04)',
-    border: `1px solid ${loading ? 'rgba(56,189,248,0.45)' : 'rgba(255,255,255,0.1)'}`,
-    borderRadius: 8,
-    color: loading ? 'var(--accent-blue)' : 'var(--text-secondary)',
-    padding: '0.4rem 0.58rem',
-    cursor: loading ? 'wait' : 'pointer',
-    fontWeight: 800,
-    fontSize: '0.74rem',
-  };
-}
-
-function libraryActionStyle(loading, polarity) {
-  const positive = polarity === 'positive';
-  return {
-    background: loading
-      ? 'rgba(56,189,248,0.18)'
-      : positive
-        ? 'rgba(16,185,129,0.08)'
-        : 'rgba(245,158,11,0.08)',
-    border: `1px solid ${positive ? 'rgba(16,185,129,0.28)' : 'rgba(245,158,11,0.28)'}`,
-    borderRadius: 8,
-    color: loading ? 'var(--accent-blue)' : positive ? 'var(--success)' : 'var(--warning)',
-    padding: '0.4rem 0.58rem',
-    cursor: loading ? 'wait' : 'pointer',
-    fontWeight: 800,
-    fontSize: '0.74rem',
-  };
-}
-
-function assetActionStyle(action, loading) {
-  const variants = {
-    approve: ['rgba(16,185,129,0.08)', 'rgba(16,185,129,0.28)', 'var(--success)'],
-    reject: ['rgba(245,158,11,0.08)', 'rgba(245,158,11,0.28)', 'var(--warning)'],
-    archive: ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.12)', 'var(--text-secondary)'],
-  };
-  const [background, border, color] = variants[action] || variants.archive;
-  return {
-    background: loading ? 'rgba(56,189,248,0.18)' : background,
-    border: `1px solid ${loading ? 'rgba(56,189,248,0.45)' : border}`,
-    borderRadius: 8,
-    color: loading ? 'var(--accent-blue)' : color,
-    padding: '0.4rem 0.58rem',
-    cursor: loading ? 'wait' : 'pointer',
-    fontWeight: 800,
-    fontSize: '0.74rem',
-  };
-}
-
-function creativeAssetStatusColor(status) {
-  if (status === 'approved') return 'var(--success)';
-  if (status === 'rejected') return 'var(--brand-red)';
-  if (status === 'generated') return 'var(--accent-blue)';
-  if (status === 'archived') return 'var(--text-secondary)';
-  return 'var(--warning)';
-}
-
-function creativeAssetStatusBorder(status) {
-  if (status === 'approved') return 'rgba(16,185,129,0.35)';
-  if (status === 'rejected') return 'rgba(239,68,68,0.35)';
-  if (status === 'generated') return 'rgba(56,189,248,0.35)';
-  if (status === 'archived') return 'rgba(255,255,255,0.12)';
-  return 'rgba(245,158,11,0.35)';
-}
-
-function getCreativeAssetWarnings(asset = {}) {
-  const warnings = [];
-  if (asset.has_embedded_text) warnings.push(EMBEDDED_TEXT_REVIEW_WARNING);
-  if (asset.asset_type === 'final_art' && asset.text_review_required) {
-    warnings.push('Ativo final_art com texto embutido só deve avançar após revisão humana explícita.');
-  }
-  return warnings;
-}
-
-function libraryItemTypeForAgent(agentId, polarity) {
-  const positive = polarity === 'positive';
-  if (agentId === 'copywriter' || agentId === 'channel_adapter' || agentId === 'editor') {
-    return positive ? 'approved_copy' : 'rejected_copy';
-  }
-  if (agentId === 'visual_director') {
-    return positive ? 'approved_visual_direction' : 'rejected_visual_direction';
-  }
-  if (agentId === 'approver') {
-    return positive ? 'campaign_example' : 'negative_example';
-  }
-  if (agentId === 'brand_compliance') {
-    return positive ? 'campaign_example' : 'negative_example';
-  }
-  return positive ? 'creative_reference' : 'negative_example';
-}
-
-function defaultLearningTypeForAgent(agentId, step) {
-  const payload = getStepPayload(step);
-  const decision = normalizeDecision(payload.decisao || payload.decision);
-  if (agentId === 'copywriter') return 'voice_preference';
-  if (agentId === 'channel_adapter') return 'channel_rule';
-  if (agentId === 'visual_director') return 'visual_preference';
-  if (agentId === 'editor') return 'campaign_learning';
-  if (agentId === 'brand_compliance') return 'claim_rule';
-  if (agentId === 'approver' && decision === 'rejected') return 'claim_rule';
-  if (agentId === 'approver' && decision === 'revision_requested') return 'claim_rule';
-  return 'campaign_learning';
-}
-
-function defaultLearningContent(agentId, step) {
-  const payload = getStepPayload(step);
-  if (agentId === 'copywriter') return payload.racional_de_tom || payload.copy_principal || payload.cta || '';
-  if (agentId === 'channel_adapter') return extractChannelAdaptedText(payload) || payload.cta || '';
-  if (agentId === 'visual_director') return payload.direcao_de_arte || payload.composicao || payload.prompt_visual_opcional || '';
-  if (agentId === 'editor') return payload.versao_editada || toArray(payload.riscos_de_incoerencia).join('\n') || '';
-  if (agentId === 'brand_compliance') {
-    return toArray(payload.required_adjustments).join('\n')
-      || toArray(payload.violations).map((item) => item?.description || item?.suggested_fix).filter(Boolean).join('\n')
-      || toArray(payload.warnings).join('\n')
-      || '';
-  }
-  if (agentId === 'approver') {
-    return payload.risco_principal
-      || payload.justificativa
-      || toArray(payload.ajustes_obrigatorios).join('\n')
-      || '';
-  }
-  return JSON.stringify(payload);
-}
 
 function ComposedArtworkPreview({ image }) {
   const text = image.overlayText || {};
