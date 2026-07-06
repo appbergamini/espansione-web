@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useCallback } from 'react';
 import Logo from '../../components/Logo';
+import TreinamentosPlayer from '../../components/TreinamentosPlayer';
 
 // Setup self-serve do Mapa de Identidade após a compra (redirect do checkout).
 // Faz polling de /api/identidade-final/acesso?order=... até o pagamento ser
@@ -106,6 +107,7 @@ export default function IdentidadeSetup() {
         )}
 
         {fase === 'pronto' && dados && (
+          <div style={{ width: '100%', maxWidth: 680, display: 'grid', gap: '1rem' }}>
           <Card wide>
             <div style={sx.accent} />
             <div style={sx.eyebrow}>Mapa de Identidade Estratégica · configurado</div>
@@ -145,6 +147,12 @@ export default function IdentidadeSetup() {
               <a href="/area" style={{ color: '#fca5b0' }}>área do cliente</a> com este mesmo e-mail.
             </p>
           </Card>
+          <Card wide>
+            <div style={sx.accent} />
+            <div style={sx.eyebrow}>Treinamentos · incluídos na sua compra</div>
+            <div style={{ marginTop: '0.9rem' }}><TreinamentosPlayer /></div>
+          </Card>
+          </div>
         )}
       </div>
     </>

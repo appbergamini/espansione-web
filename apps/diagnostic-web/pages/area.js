@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';
 import Logo from '../components/Logo';
 import { supabase } from '../lib/supabaseClient';
-import { TREINAMENTOS, aulas as todasAulas, embedUrl, BUNNY_LIBRARY_ID } from '../lib/treinamentos';
+import TreinamentosPlayer from '../components/TreinamentosPlayer';
 
 // Área do cliente: login por e-mail (magic link) → abas Diagnóstico + Treinamentos.
 export default function AreaCliente() {
@@ -20,7 +20,10 @@ export default function AreaCliente() {
       if (!ativo) return;
       if (user) { setSessao('logado'); carregar(); } else { setSessao('deslogado'); }
     }
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { if (s?.user) { setSessao('logado'); carregar(); } });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (s?.user) { setSessao('logado'); carregar(); }
+      else { setSessao('deslogado'); setDados(null); setEnviado(false); setEmail(''); }
+    });
     check();
     return () => { ativo = false; sub?.subscription?.unsubscribe?.(); };
   }, []);
@@ -145,46 +148,10 @@ function Diagnostico({ dados }) {
 }
 
 function Treinamentos() {
-  const lista = useMemo(() => todasAulas(), []);
-  const [atual, setAtual] = useState(() => lista.find((a) => a.videoId) || lista[0] || null);
-  const url = atual ? embedUrl(atual.videoId) : null;
   return (
     <div className="glass-card" style={sx.cardWide}>
       <div style={sx.accent} />
-      <div style={sx.eyebrow}>Treinamentos</div>
-      <h2 style={{ margin: '0.3rem 0 1rem' }}>{atual?.titulo || 'Trilha de treinamento'}</h2>
-
-      <div style={sx.player}>
-        {url ? (
-          <iframe src={url} loading="lazy" style={sx.iframe} allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen" allowFullScreen title={atual?.titulo} />
-        ) : (
-          <div style={sx.playerVazio}>
-            {!BUNNY_LIBRARY_ID ? 'Vídeos em configuração — em breve.' : 'Esta aula estará disponível em breve.'}
-          </div>
-        )}
-      </div>
-      {atual?.descricao && <p style={{ ...sx.txt, fontSize: '0.9rem', marginTop: '0.9rem' }}>{atual.descricao}</p>}
-
-      <div style={{ marginTop: '1.4rem', display: 'grid', gap: '1.2rem' }}>
-        {TREINAMENTOS.map((m) => (
-          <div key={m.modulo}>
-            <div style={sx.modulo}>{m.modulo}</div>
-            <div style={{ display: 'grid', gap: '0.45rem', marginTop: '0.5rem' }}>
-              {m.aulas.map((a) => {
-                const ativo = atual?.id === a.id;
-                const disp = !!(BUNNY_LIBRARY_ID && a.videoId);
-                return (
-                  <button key={a.id} onClick={() => setAtual({ ...a, modulo: m.modulo })} style={sx.aula(ativo, disp)}>
-                    <span style={{ fontSize: '1rem' }}>{disp ? (ativo ? '▶' : '○') : '⏳'}</span>
-                    <span style={{ flex: 1 }}>{a.titulo}</span>
-                    {a.duracao && <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary,#9aa)' }}>{a.duracao}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      <TreinamentosPlayer />
     </div>
   );
 }
