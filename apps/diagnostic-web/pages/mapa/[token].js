@@ -222,8 +222,8 @@ export default function MapaMaturidadePage() {
 
         {fase === 'quiz' && sistema && (
           <Card wide>
-            <Progresso atual={sistemaIdx + 1} total={SISTEMAS_MATURIDADE.length} rotulo="Sistema" />
-            <h2 style={sx.h2}>Sistema {sistemaIdx + 1} de {SISTEMAS_MATURIDADE.length} — {sistema}</h2>
+            <Progresso atual={sistemaIdx + 1} total={SISTEMAS_MATURIDADE.length} rotulo="Bloco" />
+            <h2 style={sx.h2}>Bloco {sistemaIdx + 1} de {SISTEMAS_MATURIDADE.length} — {sistema}</h2>
 
             <div style={{ marginTop: '1.4rem' }}>
               {perguntas.map((q, i) => (
@@ -251,7 +251,7 @@ export default function MapaMaturidadePage() {
                 style={sx.btnGhost(sistemaIdx === 0 || salvando)}>← Voltar</button>
               <button className="mapa-btn" onClick={proximoSistema} disabled={!sistemaCompleto || salvando}
                 style={{ opacity: sistemaCompleto && !salvando ? 1 : 0.5 }}>
-                {sistemaIdx < SISTEMAS_MATURIDADE.length - 1 ? 'Próximo sistema →' : 'Ver resultado →'}
+                {sistemaIdx < SISTEMAS_MATURIDADE.length - 1 ? 'Próximo bloco →' : 'Ver resultado →'}
               </button>
             </div>
           </Card>
@@ -276,16 +276,16 @@ function Afirmacao({ numero, pergunta, valor, onSelect }) {
       <p style={sx.afirmacaoTxt}>
         <span style={sx.afirmacaoNum}>{numero}.</span> {pergunta.pergunta}
       </p>
-      <div style={sx.opcoes}>
+      <div className="escala-opcoes">
         {pergunta.opcoes.map((opt) =>
           opt.value === -1 ? (
-            <button key={opt.value} type="button" onClick={() => onSelect(opt.value)}
+            <button key={opt.value} type="button" className="naosei" onClick={() => onSelect(opt.value)}
               style={sx.opcaoNaoSei(valor === opt.value)}
               title="Não reduz nem aumenta a pontuação; apenas remove esta afirmação do cálculo.">
               {opt.label}
             </button>
           ) : (
-            <button key={opt.value} type="button" onClick={() => onSelect(opt.value)} style={sx.opcao(valor === opt.value)}>
+            <button key={opt.value} type="button" onClick={() => onSelect(opt.value)} style={{ ...sx.opcao(valor === opt.value), textAlign: 'center', justifyContent: 'center' }}>
               {opt.label}
             </button>
           )
