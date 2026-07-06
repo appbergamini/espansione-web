@@ -25,20 +25,33 @@ function atributosPossiveis() {
   return cond ? cond.opcoes : [];
 }
 
-function trackSvg(score) {
-  const x = Math.max(8, Math.min(792, Math.round((score / 100) * 800)));
-  return `<svg viewBox="0 0 800 74" role="img" aria-label="Nível de maturidade: ${score}%">
-      <g font-family="Poppins, sans-serif" font-size="12" fill="#7E89A4">
-        <rect x="0" y="30" width="196" height="10" rx="5" fill="#2C3A57"/>
-        <rect x="204" y="30" width="196" height="10" rx="5" fill="#33507A"/>
-        <rect x="408" y="30" width="196" height="10" rx="5" fill="#2C3A57"/>
-        <rect x="612" y="30" width="188" height="10" rx="5" fill="#2C3A57"/>
-        <text x="0" y="60">Nível 1</text><text x="204" y="60">Nível 2</text>
-        <text x="408" y="60">Nível 3</text><text x="612" y="60">Nível 4</text>
+// cores dos níveis sobre o navy do hero (versões claras, legíveis)
+const NIVEL_COR_HERO = { 1: '#EA6A76', 2: '#EA6A76', 3: '#E7B24D', 4: '#5FC08A' };
+
+function trackSvg(score, sistemas = []) {
+  const px = (v) => Math.max(12, Math.min(788, Math.round((v / 100) * 800)));
+  const x = px(score);
+  const dots = (sistemas || []).filter((s) => s.nota != null).map((s) => {
+    const sx = px(s.nota);
+    const cor = NIVEL_COR_HERO[s.nivel] || '#E7B24D';
+    const ini = esc((s.sistema || '?').trim().charAt(0).toUpperCase());
+    return `<line x1="${sx}" y1="40" x2="${sx}" y2="60" stroke="${cor}" stroke-width="2.5" opacity=".85"/>
+      <circle cx="${sx}" cy="40" r="5.5" fill="${cor}" stroke="#001A3B" stroke-width="1.5"/>
+      <text x="${sx}" y="30" text-anchor="middle" font-family="Poppins, sans-serif" font-size="13" font-weight="700" fill="${cor}">${ini}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 800 98" role="img" aria-label="Nível de maturidade: ${score}%">
+      <rect x="0" y="50" width="196" height="11" rx="5.5" fill="#2C3A57"/>
+      <rect x="204" y="50" width="196" height="11" rx="5.5" fill="#33507A"/>
+      <rect x="408" y="50" width="196" height="11" rx="5.5" fill="#3E5F91"/>
+      <rect x="612" y="50" width="188" height="11" rx="5.5" fill="#4A73AE"/>
+      <g font-family="Poppins, sans-serif" font-size="15" font-weight="600" fill="#C7D2E0">
+        <text x="0" y="88">Nível 1</text><text x="204" y="88">Nível 2</text>
+        <text x="408" y="88">Nível 3</text><text x="612" y="88">Nível 4</text>
       </g>
-      <g><line x1="${x}" y1="16" x2="${x}" y2="52" stroke="#F19AA5" stroke-width="2"/>
-        <circle cx="${x}" cy="35" r="8" fill="#F19AA5" stroke="#001A3B" stroke-width="2.5"/>
-        <text x="${x}" y="12" text-anchor="middle" font-family="Poppins, sans-serif" font-size="12" fill="#F19AA5">você</text></g>
+      ${dots}
+      <text x="${x}" y="14" text-anchor="middle" font-family="Poppins, sans-serif" font-size="14" font-weight="800" fill="#F19AA5">você</text>
+      <line x1="${x}" y1="18" x2="${x}" y2="66" stroke="#F19AA5" stroke-width="2.5"/>
+      <circle cx="${x}" cy="55" r="8.5" fill="#F19AA5" stroke="#001A3B" stroke-width="2.5"/>
     </svg>`;
 }
 
@@ -95,6 +108,9 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .score-lvl{padding-bottom:6px;} .score-lvl .n{font-family:'Poppins',sans-serif;font-size:21px;color:#fff;}
   .score-lvl .t{font-family:'Poppins',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#8E9AB6;}
   .track{margin-top:26px;} .track svg{width:100%;height:auto;display:block;}
+  .track-legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:16px;}
+  .track-legend .tl{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#C7D2E0;font-weight:500;}
+  .track-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 auto;}
   section{padding:44px 0;} .sec-head{display:flex;align-items:baseline;gap:14px;margin-top:26px;margin-bottom:26px;}
   .sec-head .num{font-family:'Poppins',sans-serif;font-size:12px;color:var(--brass);padding-top:4px;} .sec-head h2{font-size:clamp(21px,3vw,27px);}
   .lead{font-size:18px;color:var(--muted);max-width:60ch;} .divider{height:1px;background:var(--line);border:0;margin:0;}
@@ -154,7 +170,8 @@ if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListe
   <p class="subverdict">${esc(narrativa.subverdict || 'Você respondeu 40 perguntas sobre a sua empresa. Abaixo, o que elas revelam.')}</p>
   <div class="score-row"><div class="score-big">${score}<span>%</span></div>
     <div class="score-lvl"><div class="n">Nível ${result.general_nivel || '—'}</div><div class="t">${esc(result.general_level || '')}</div></div></div>
-  <div class="track">${trackSvg(score)}</div>
+  <div class="track">${trackSvg(score, result.sistemas)}</div>
+  <div class="track-legend">${(result.sistemas || []).map((s) => `<span class="tl"><i style="background:${NIVEL_COR_HERO[s.nivel] || '#E7B24D'}"></i>${esc((s.sistema || '').trim().charAt(0).toUpperCase())} · ${esc(s.sistema)}${s.nota != null ? ` — ${Math.round(s.nota)}%` : ''}</span>`).join('')}</div>
 </div></header>
 
 <section class="wrap">
