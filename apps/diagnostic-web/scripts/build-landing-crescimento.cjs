@@ -53,6 +53,9 @@ const html = `<!DOCTYPE html>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Mapa do Crescimento Integrado — diagnóstico gratuito da Espansione. Descubra em 10 minutos se a sua empresa está pronta para sustentar o crescimento nos 4 sistemas: Marca, Negócios, Comunicação e Pessoas.">
 <title>Mapa do Crescimento Integrado · Espansione</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/crescimento/brand/espansione-favicon-32.png">
+<link rel="icon" type="image/png" sizes="256x256" href="/crescimento/brand/espansione-favicon-256.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/crescimento/brand/espansione-favicon-180.png">
 ${helmet.trim()}
 </head><body>
 ${body.trim()}
