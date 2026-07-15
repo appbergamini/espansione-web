@@ -139,29 +139,28 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   @media (max-width:560px){.pattern,.next{padding:30px 24px;}.exp{padding:20px;}.score-big{font-size:44px;}}
   .pdf-btn{position:fixed;bottom:20px;right:20px;z-index:99;background:var(--brass);color:#fff;border:0;border-radius:10px;padding:12px 18px;font:600 14px 'Poppins',sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28);}
   .pdf-btn:hover{background:#E13345;}
-  @media print{body{background:#fff;} .pdf-btn{display:none;} .exp,.sys,.pattern,.next,.attr-q,.gap-q{break-inside:avoid;} section{padding:34px 0;}}
+  @page{size:A4;margin:14mm 12mm;}
+  @media print{
+    html,body{background:#fff!important;}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .pdf-btn{display:none!important;}
+    .hero{padding:34px 0 30px;} section{padding:24px 0;} .sec-head{margin-top:12px;margin-bottom:18px;}
+    .sys,.exp,.pattern,.next,.attr-q,.gap-q,.gap-sub,.chips,.track,.score-row{break-inside:avoid;}
+    h1,h2,h3{break-after:avoid;}
+  }
 </style></head><body>
-<button class="pdf-btn" onclick="baixarPdf()">⬇ Baixar PDF</button>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<button class="pdf-btn" onclick="salvarPdf()">⬇ Salvar como PDF</button>
 <script>
-function baixarPdf(){
-  var btn=document.querySelector('.pdf-btn');
-  if(!window.html2pdf){ window.print(); return; }
-  var orig=btn?btn.innerHTML:''; if(btn){ btn.innerHTML='Gerando PDF…'; btn.disabled=true; }
+// PDF pela impressão nativa do navegador: vetorial, texto selecionável e
+// paginação correta. O html2pdf (canvas fatiado) gerava páginas em branco no
+// início e cortava seções — trocado por window.print + @media print.
+function salvarPdf(){
   var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
-  ready.then(function(){
-    return html2pdf().set({
-      margin:[8,6,10,6], filename:'mapa-da-maturidade.pdf',
-      image:{type:'jpeg',quality:0.95},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',
-        ignoreElements:function(el){return el.classList&&el.classList.contains('pdf-btn');}},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['css','legacy']}
-    }).from(document.body).save();
-  }).then(function(){ if(btn){ btn.innerHTML=orig; btn.disabled=false; } })
-   .catch(function(){ if(btn){ btn.innerHTML=orig; btn.disabled=false; } window.print(); });
+  ready.then(function(){ setTimeout(function(){ window.print(); }, 150); });
 }
-if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListener('load',function(){setTimeout(baixarPdf,900);});}
+if(new URLSearchParams(location.search).get('print')==='1'){
+  window.addEventListener('load',function(){ salvarPdf(); });
+}
 </script>
 
 <header class="hero"><div class="wrap">
