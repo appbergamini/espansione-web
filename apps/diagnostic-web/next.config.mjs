@@ -35,10 +35,24 @@ const nextConfig = {
   },
 
   // Landing page estática do Mapa do Crescimento Integrado.
-  // O HTML self-contained vive em public/crescimento/index.html; o rewrite
-  // dá a URL limpa /crescimento.
+  // O HTML self-contained vive em public/crescimento/index.html.
   async rewrites() {
-    return [{ source: '/crescimento', destination: '/crescimento/index.html' }];
+    // Domínio próprio do funil: a home ("/") serve a LP em vez da index do
+    // app. Precisa de `beforeFiles` porque "/" casa com pages/index.js — em
+    // afterFiles o rewrite nunca dispararia. Nos demais domínios
+    // (*.vercel.app, painel), "/" continua abrindo o app normalmente.
+    const FUNIL_HOSTS = ['crescimentointegrado.com.br', 'www.crescimentointegrado.com.br'];
+    return {
+      beforeFiles: FUNIL_HOSTS.map((host) => ({
+        source: '/',
+        has: [{ type: 'host', value: host }],
+        destination: '/crescimento/index.html',
+      })),
+      // URL limpa /crescimento -> HTML self-contained em public/.
+      afterFiles: [
+        { source: '/crescimento', destination: '/crescimento/index.html' },
+      ],
+    };
   },
 };
 
