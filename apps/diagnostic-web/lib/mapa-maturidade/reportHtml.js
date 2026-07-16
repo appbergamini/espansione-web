@@ -6,6 +6,12 @@
 // =====================================================================
 import { CATALOGO_MATURIDADE } from './catalog.generated.js';
 
+// Contato do CTA final — mesmo WhatsApp da landing (/crescimento). O próximo passo
+// é uma conversa, não um checkout.
+const WHATSAPP_URL = `https://wa.me/5511985775893?text=${encodeURIComponent(
+  'Olá! Fiz o Mapa da Maturidade e quero saber mais sobre o Mapa de Identidade Estratégica.'
+)}`;
+
 // escapa texto da IA/dados para não quebrar o layout
 function esc(s) {
   return String(s == null ? '' : s)
@@ -206,7 +212,7 @@ ${chipsHtml ? `<section class="wrap">
   <span class="eyebrow">O próximo passo</span>
   <h2>Mapa da Identidade Estratégica</h2>
   <p class="hook">${esc(narrativa.cta_hook || 'Este retrato é só o seu olhar. O Mapa da Identidade coloca lado a lado como você, a sua equipe e os seus clientes respondem às mesmas perguntas — e é na distância entre esses três olhares que a causa aparece.')}</p>
-  <a class="cta" href="/api/checkout/infinitepay?produto=identidade">Fazer o Mapa de Identidade Estratégica →</a>
+  <a class="cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer">Falar sobre o Mapa de Identidade Estratégica →</a>
   <div class="fine">Os 3 olhares — você, equipe e clientes — e a distância entre eles</div>
 </div></section>
 
