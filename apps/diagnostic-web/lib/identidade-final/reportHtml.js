@@ -3,12 +3,28 @@
 // Alinhado à landing (Poppins + navy #001A3B + vermelho #C72638), fundo claro imprimível. Cruza os 3 olhares
 // (Você/Equipe/Clientes) pelos mesmos indicadores. Serve página web e PDF.
 // =====================================================================
+// remove travessões (— / –) de qualquer texto, convertendo em pontuação corrente.
+// Decisão de marca: os relatórios não usam travessão.
+function deDash(s) {
+  return String(s == null ? '' : s)
+    .replace(/\s*[—–]\s*/g, ', ')
+    .replace(/,\s*,/g, ',')
+    .replace(/\s+,/g, ',')
+    .replace(/,\s*\./g, '.')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 function esc(s) {
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return deDash(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function emphasize(s) {
   return esc(s).replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
+
+// Contato do CTA de devolutiva: mesmo WhatsApp da landing/Maturidade.
+const WHATSAPP_URL = `https://wa.me/5511985775893?text=${encodeURIComponent(
+  'Olá! Concluí o Mapa do Crescimento Integrado v2 e quero agendar a conversa de devolutiva sobre o meu diagnóstico.'
+)}`;
 
 const PUB = [
   { key: 'socios', nome: 'Você', cor: '#001A3B' },
@@ -122,7 +138,7 @@ export function buildRelatorioIdentidadeHtml({ cliente, dataLabel, result, narra
 <hr class="divider">
 
 <section class="wrap">
-  <div class="sec-head"><span class="num">02</span><h2>Onde os olhares divergem — os pontos de escolha</h2></div>
+  <div class="sec-head"><span class="num">02</span><h2>Onde os olhares divergem: os pontos de escolha</h2></div>
   ${divergHtml}
 </section>
 
@@ -149,11 +165,11 @@ ${narrativa.prontidao ? `<section class="wrap">
 <section class="wrap"><div class="next">
   <span class="eyebrow">O próximo passo</span>
   <h2>O mapa mostrou o quê, o porquê e por onde começar.</h2>
-  <p class="hook">${esc(narrativa.cta_hook || 'A partir daqui, a Espansione conduz a tradução — descer o rumo, alinhar a entrega e traduzir o diferencial numa marca que opera.')}</p>
-  <a class="cta" href="#">Agendar a conversa de devolutiva</a>
-  <div class="fine">sobre o seu diagnóstico · com a Espansione</div>
+  <p class="hook">${esc(narrativa.cta_hook || 'A partir daqui, a Espansione transforma leitura em direcionamento e direcionamento em desenvolvimento: alinhar os quatro pilares, traduzir o valor para fora e sustentar o crescimento de dentro para fora. Clareza para decidir, estrutura para crescer.')}</p>
+  <a class="cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer">Agendar a conversa de devolutiva →</a>
+  <div class="fine">sobre o seu diagnóstico, com a Espansione</div>
 </div></section>
 
-<footer><div class="brand">Espansione</div><div class="tagline">Da estratégia que morre na gaveta para a marca que opera</div></footer>
+<footer><div class="brand">Espansione</div><div class="tagline">Crescimento Integrado. Clareza para decidir, estrutura para crescer.</div></footer>
 </body></html>`;
 }
