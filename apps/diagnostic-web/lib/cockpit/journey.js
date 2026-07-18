@@ -16,8 +16,8 @@ export const STATUS = {
 
 // rótulos oficiais (item 15)
 export const JOURNEY_DEFS = [
-  { key: 'maturity', label: 'Mapa do Crescimento Integrado', short: 'Crescimento', icon: '🧭' },
-  { key: 'identity', label: 'Mapa do Crescimento Integrado v2', short: 'Crescimento v2', icon: '🧬' },
+  { key: 'maturity', label: 'Mapa do Crescimento Integrado Essencial', short: 'Crescimento', icon: '🧭' },
+  { key: 'identity', label: 'Mapa do Crescimento Integrado Estratégico', short: 'Crescimento Estratégico', icon: '🧬' },
   { key: 'report', label: 'Relatório PDF + Leitura Guiada', short: 'PDF + Leitura', icon: '📘' },
   { key: 'tracks', label: 'Trilhas de Aprofundamento', short: 'Aprofundamento', icon: '🧗' },
   { key: 'ai', label: 'IA Socrática', short: 'IA Socrática', icon: '🤖' },
@@ -25,7 +25,7 @@ export const JOURNEY_DEFS = [
   { key: 'remeasure', label: 'Nova Medição', short: 'Nova Medição', icon: '🔁' },
 ];
 
-// Mapa do Crescimento Integrado v2 FINAL: as "fontes" são os 3 públicos (triangulação).
+// Mapa do Crescimento Integrado Estratégico FINAL: as "fontes" são os 3 públicos (triangulação).
 const FONTES_OBRIGATORIAS = ['socios', 'colaboradores', 'clientes'];
 const PUBLICO_LABEL = {
   socios: 'Sócios e Diretores',
@@ -154,9 +154,9 @@ function buildActions(ctx) {
   const P = STATUS;
 
   if (matStatus === P.NOT_STARTED) {
-    a.push({ key: 'mat_start', title: 'Iniciar Mapa do Crescimento Integrado', reason: 'O cliente ainda não iniciou o diagnóstico de maturidade.', cta: 'Iniciar', priority: 'alta', module: 'maturity' });
+    a.push({ key: 'mat_start', title: 'Iniciar Mapa do Crescimento Integrado Essencial', reason: 'O cliente ainda não iniciou o diagnóstico de maturidade.', cta: 'Iniciar', priority: 'alta', module: 'maturity' });
   } else if (matStatus === P.IN_PROGRESS) {
-    a.push({ key: 'mat_cont', title: 'Concluir Mapa do Crescimento Integrado', reason: 'Diagnóstico de maturidade em andamento — aguardando conclusão.', cta: 'Ver', priority: 'alta', module: 'maturity' });
+    a.push({ key: 'mat_cont', title: 'Concluir Mapa do Crescimento Integrado Essencial', reason: 'Diagnóstico de maturidade em andamento — aguardando conclusão.', cta: 'Ver', priority: 'alta', module: 'maturity' });
   }
 
   // coleta por público (triangulação exige os 3)
@@ -168,7 +168,7 @@ function buildActions(ctx) {
         a.push({
           key: `idn_${p}`,
           title: `Coletar respostas de ${PUB[p]} (Identidade)`,
-          reason: 'Fonte da triangulação do Mapa do Crescimento Integrado v2 ainda sem respostas concluídas.',
+          reason: 'Fonte da triangulação do Mapa do Crescimento Integrado Estratégico ainda sem respostas concluídas.',
           cta: 'Copiar link',
           priority: prioPub[p],
           module: 'identity',

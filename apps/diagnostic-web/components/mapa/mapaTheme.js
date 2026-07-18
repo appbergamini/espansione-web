@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Logo from '../Logo';
 
 // =====================================================================
-// Tema do funil público do Mapa do Crescimento Integrado — alinhado à landing page
+// Tema do funil público do Mapa do Crescimento Integrado Essencial — alinhado à landing page
 // (/crescimento): fundo azul #001A3B, fonte Poppins, vermelho #C72638,
 // cards CLAROS sobre o azul. Compartilhado por /mapa e /mapa/[token].
 // =====================================================================
@@ -23,7 +23,7 @@ export const CORES = {
 
 // Wrapper da página: fundo azul + Poppins + logo centralizado + CSS dos
 // botões/inputs (hover não dá pra fazer inline).
-export function MapaShell({ children, title = 'Mapa do Crescimento Integrado · Espansione' }) {
+export function MapaShell({ children, title = 'Mapa do Crescimento Integrado Essencial · Espansione' }) {
   return (
     <>
       <Head>

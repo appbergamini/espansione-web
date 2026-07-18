@@ -9,7 +9,7 @@ import { CATALOGO_MATURIDADE } from './catalog.generated.js';
 // Contato do CTA final — mesmo WhatsApp da landing (/crescimento). O próximo passo
 // é uma conversa, não um checkout.
 const WHATSAPP_URL = `https://wa.me/5511985775893?text=${encodeURIComponent(
-  'Olá! Fiz o Mapa do Crescimento Integrado e quero descobrir a origem por trás dos sintomas com o Crescimento Integrado v2.'
+  'Olá! Fiz o Mapa do Crescimento Integrado Essencial e quero descobrir a origem por trás dos sintomas com o Crescimento Integrado Estratégico.'
 )}`;
 
 // remove travessões (— / –) de qualquer texto, convertendo em pontuação corrente.
@@ -125,7 +125,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   return `<!DOCTYPE html>
 <html lang="pt-BR"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa do Crescimento Integrado${cliente ? ' · ' + esc(cliente) : ''}</title>
+<title>Mapa do Crescimento Integrado Essencial${cliente ? ' · ' + esc(cliente) : ''}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -168,6 +168,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);} .chip.off{color:var(--faint);border-style:dashed;}
   .attr-q{font-family:'Poppins',sans-serif;font-size:20px;line-height:1.4;color:var(--text);max-width:54ch;}
   .start{border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:var(--r);background:var(--paper-2);padding:22px 24px;} .start .eyebrow{display:block;margin-bottom:8px;} .start p{font-family:'Poppins',sans-serif;font-size:18px;line-height:1.5;color:var(--text);margin:0;} .start p em{font-style:normal;font-weight:600;color:var(--brass-deep);}
+  .gaps{border:1px solid var(--line);border-radius:var(--r);background:var(--paper-2);padding:22px 24px;} .gaps .eyebrow{display:block;margin-bottom:12px;} .gaps ul{margin:0;padding:0;list-style:none;} .gaps li{position:relative;padding-left:18px;margin:0 0 9px;font-size:15px;color:var(--muted);line-height:1.5;} .gaps li:last-child{margin-bottom:0;} .gaps li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--brass);} .gaps li b{color:var(--text);font-weight:600;}
   .gap-q{font-family:'Poppins',sans-serif;font-size:clamp(22px,3.4vw,30px);line-height:1.32;max-width:24ch;margin:0 auto;text-align:center;} .gap-q em{font-style:italic;color:var(--brass-deep);}
   .gap-sub{text-align:center;color:var(--muted);max-width:48ch;margin:18px auto 0;}
   .next{background:linear-gradient(180deg,#1B2A47,#001A3B);color:#EEF1F7;border-radius:22px;padding:46px 44px;text-align:center;} .next .eyebrow{color:#F19AA5;}
@@ -204,7 +205,7 @@ if(new URLSearchParams(location.search).get('print')==='1'){
 </script>
 
 <header class="hero"><div class="wrap">
-  <div class="top"><span class="eyebrow">Mapa do Crescimento Integrado</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
+  <div class="top"><span class="eyebrow">Mapa do Crescimento Integrado Essencial</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
   <h1 class="verdict">${emphasize(narrativa.verdict || 'O retrato da sua empresa hoje.')}</h1>
   <p class="subverdict">${esc(narrativa.subverdict || 'Você respondeu 40 perguntas sobre a sua empresa. Abaixo, o que elas revelam.')}</p>
   <div class="score-row"><div class="score-big">${score}<span>%</span></div>
@@ -218,6 +219,8 @@ if(new URLSearchParams(location.search).get('print')==='1'){
   <p class="lead" style="margin-bottom:26px;">Marca, Negócios, Comunicação e Pessoas não funcionam separados: juntos, formam um sistema. Abaixo, o nível de cada pilar, a leitura do que isso significa na prática e, onde pesa, o que a fragilidade costuma custar ao negócio.</p>
   ${sistemasHtml}
 </section>
+
+${Array.isArray(narrativa.gaps) && narrativa.gaps.length ? `<section class="wrap"><div class="gaps"><span class="eyebrow">Principais gaps</span><ul>${narrativa.gaps.map((g) => `<li><b>${esc(g.pilar)}:</b> ${emphasize(g.gap)}</li>`).join('')}</ul></div></section>` : ''}
 
 ${narrativa.pattern ? `<section class="wrap"><div class="pattern"><span class="eyebrow">Resumo da Análise</span>${String(narrativa.pattern).split(/\n{2,}/).map((p) => `<p>${emphasize(p)}</p>`).join('')}</div></section>` : ''}
 
@@ -239,8 +242,8 @@ ${narrativa.ponto_de_partida ? `<section class="wrap"><div class="start"><span c
 
 <section class="wrap"><div class="next">
   <span class="eyebrow">O próximo passo</span>
-  <h2>Mapa do Crescimento Integrado v2</h2>
-  <p class="hook">${esc(narrativa.cta_hook || 'Este retrato mostra ONDE a empresa está. O Crescimento Integrado v2 revela POR QUÊ: ele conecta os quatro pilares, Marca, Negócios, Comunicação e Pessoas, e mostra onde a integração se rompe. Ouve não só você, mas a sua equipe e os seus clientes, cruza percepção, comportamento e resultado, e chega à origem por trás dos sintomas, com clareza para decidir e direção para crescer.')}</p>
+  <h2>Mapa do Crescimento Integrado Estratégico</h2>
+  <p class="hook">${esc(narrativa.cta_hook || 'Este retrato mostra ONDE a empresa está. O Crescimento Integrado Estratégico revela POR QUÊ: ele conecta os quatro pilares, Marca, Negócios, Comunicação e Pessoas, e mostra onde a integração se rompe. Ouve não só você, mas a sua equipe e os seus clientes, cruza percepção, comportamento e resultado, e chega à origem por trás dos sintomas, com clareza para decidir e direção para crescer.')}</p>
   <a class="cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer">Quero descobrir a origem por trás dos sintomas →</a>
   <div class="fine">Os quatro pilares como um sistema: da leitura ao direcionamento.</div>
 </div></section>

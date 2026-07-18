@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import Logo from '../../../components/Logo';
 
-// Formulário genérico do Mapa do Crescimento Integrado v2 (FINAL), dirigido pelo catálogo.
+// Formulário genérico do Mapa do Crescimento Integrado Estratégico (FINAL), dirigido pelo catálogo.
 // Serve os 3 públicos; conteúdo vem de /api/identidade-final. Autosave por campo.
 // Cobre escala4, 0–10, NPS, múltipla (limitada e livre), ranking, seleção única,
 // número, texto e abertas (curta/longa/estruturada).
@@ -115,7 +115,7 @@ export default function FormIdentidadeFinal() {
 
   return (
     <>
-      <Head><title>Mapa do Crescimento Integrado v2</title><meta name="viewport" content="width=device-width, initial-scale=1" /></Head>
+      <Head><title>Mapa do Crescimento Integrado Estratégico</title><meta name="viewport" content="width=device-width, initial-scale=1" /></Head>
       <div style={sx.page}>
         <div style={{ marginBottom: '1.4rem' }}><Logo size="md" center /></div>
 
@@ -139,7 +139,7 @@ export default function FormIdentidadeFinal() {
 
         {fase === 'form' && (
           <Card wide>
-            <div style={sx.eyebrow}>Mapa do Crescimento Integrado v2{publico ? ` · ${TITULO[publico] || publico}` : ''}</div>
+            <div style={sx.eyebrow}>Mapa do Crescimento Integrado Estratégico{publico ? ` · ${TITULO[publico] || publico}` : ''}</div>
             {cliente && <p style={{ ...sx.txtSec, margin: '0.2rem 0 0.8rem' }}>{cliente}</p>}
             <Progresso atual={respondidas} total={visiveis.length} />
             {tentou && !completo && (

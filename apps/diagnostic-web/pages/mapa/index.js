@@ -4,7 +4,7 @@ import { CADASTRO_MATURIDADE } from '../../lib/mapa-maturidade/catalog';
 import { MapaShell, MapaCard, sx, CORES } from '../../components/mapa/mapaTheme';
 
 // =====================================================================
-// Mapa do Crescimento Integrado — entrada pública (funil de captação).
+// Mapa do Crescimento Integrado Essencial — entrada pública (funil de captação).
 // Coleta o cadastro/lead, cria a avaliação (/api/mapa/start) e leva ao
 // questionário em /mapa/[token]. Visual alinhado à landing (/crescimento).
 // =====================================================================
@@ -52,7 +52,7 @@ export default function MapaEntradaPage() {
     <MapaShell>
       <MapaCard wide>
         <div style={sx.eyebrow}>Check-up gratuito</div>
-        <h1 style={sx.h1}>Mapa do Crescimento Integrado</h1>
+        <h1 style={sx.h1}>Mapa do Crescimento Integrado Essencial</h1>
         <p style={sx.txtSec}>
           Um diagnóstico rápido do seu negócio em 4 pilares: Marca, Negócios, Comunicação e
           Pessoas. Preencha seus dados para começar e receber o resultado.

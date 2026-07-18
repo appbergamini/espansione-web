@@ -6,7 +6,7 @@ import Logo from '../../components/Logo';
 // Catálogo de produtos do checkout (master/admin): criar/editar preço, nome,
 // fulfillment e ativar/desativar. O checkout e os botões leem daqui.
 const FULFILLMENTS = [
-  { v: 'identidade', label: 'Mapa do Crescimento Integrado v2 (cria assessment + 3 links)' },
+  { v: 'identidade', label: 'Mapa do Crescimento Integrado Estratégico (cria assessment + 3 links)' },
   { v: 'treinamento', label: 'Treinamento (só libera a área/vídeos)' },
   { v: 'nenhum', label: 'Nenhum (só registra a compra)' },
 ];
@@ -80,7 +80,7 @@ export default function AdminProdutos() {
           <h2 style={{ marginTop: 0 }}>{form.id ? 'Editar produto' : 'Novo produto'}</h2>
           <div style={sx.grid}>
             <label style={sx.lbl}>Slug (URL) <input value={form.slug} disabled={!!form.id} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="identidade" style={sx.inp} /></label>
-            <label style={sx.lbl}>Nome (aparece no checkout) <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Mapa do Crescimento Integrado v2" style={sx.inp} /></label>
+            <label style={sx.lbl}>Nome (aparece no checkout) <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Mapa do Crescimento Integrado Estratégico" style={sx.inp} /></label>
             <label style={sx.lbl}>Preço (R$) <input value={form.reais} onChange={(e) => setForm({ ...form, reais: e.target.value })} placeholder="1497.00" inputMode="decimal" style={sx.inp} /></label>
             <label style={sx.lbl}>Fulfillment
               <select value={form.fulfillment} onChange={(e) => setForm({ ...form, fulfillment: e.target.value })} style={sx.inp}>

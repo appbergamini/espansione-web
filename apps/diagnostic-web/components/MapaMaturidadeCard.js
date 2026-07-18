@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-// Mapa do Crescimento Integrado Espansione — card no painel do projeto.
+// Mapa do Crescimento Integrado Essencial Espansione — card no painel do projeto.
 // Gera (ou recupera) o link público de convite do Mapa e mostra o status.
 // Quando concluído, exibe o Índice Geral + nível e link para o resultado.
 
@@ -65,7 +65,7 @@ export default function MapaMaturidadeCard({ projetoId }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
         <div>
           <div style={st.eyebrow}>Diagnóstico · 1ª etapa</div>
-          <h3 style={st.title}>🧭 Mapa do Crescimento Integrado</h3>
+          <h3 style={st.title}>🧭 Mapa do Crescimento Integrado Essencial</h3>
         </div>
         <span style={{ ...st.pill, color: pill.cor, background: pill.bg }}>{pill.txt}</span>
       </div>

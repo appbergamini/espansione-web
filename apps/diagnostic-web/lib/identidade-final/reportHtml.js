@@ -1,5 +1,5 @@
 // =====================================================================
-// Mapa do Crescimento Integrado v2 — relatório editorial de TRIANGULAÇÃO (HTML data-driven).
+// Mapa do Crescimento Integrado Estratégico — relatório editorial de TRIANGULAÇÃO (HTML data-driven).
 // Alinhado à landing (Poppins + navy #001A3B + vermelho #C72638), fundo claro imprimível. Cruza os 3 olhares
 // (Você/Equipe/Clientes) pelos mesmos indicadores. Serve página web e PDF.
 // =====================================================================
@@ -23,7 +23,7 @@ function emphasize(s) {
 
 // Contato do CTA de devolutiva: mesmo WhatsApp da landing/Maturidade.
 const WHATSAPP_URL = `https://wa.me/5511985775893?text=${encodeURIComponent(
-  'Olá! Concluí o Mapa do Crescimento Integrado v2 e quero agendar a conversa de devolutiva sobre o meu diagnóstico.'
+  'Olá! Concluí o Mapa do Crescimento Integrado Estratégico e quero agendar a conversa de devolutiva sobre o meu diagnóstico.'
 )}`;
 
 const PUB = [
@@ -77,7 +77,7 @@ export function buildRelatorioIdentidadeHtml({ cliente, dataLabel, result, narra
   return `<!DOCTYPE html>
 <html lang="pt-BR"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa do Crescimento Integrado v2${cliente ? ' · ' + esc(cliente) : ''}</title>
+<title>Mapa do Crescimento Integrado Estratégico${cliente ? ' · ' + esc(cliente) : ''}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -122,7 +122,7 @@ export function buildRelatorioIdentidadeHtml({ cliente, dataLabel, result, narra
 <script>if(new URLSearchParams(location.search).get('print')==='1'){window.addEventListener('load',function(){setTimeout(function(){window.print();},700);});}</script>
 
 <header class="hero"><div class="wrap">
-  <div class="top"><span class="eyebrow">Mapa do Crescimento Integrado v2</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
+  <div class="top"><span class="eyebrow">Mapa do Crescimento Integrado Estratégico</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
   <h1 class="verdict">${emphasize(narrativa.verdict || 'Os três olhares sobre a sua marca, lado a lado.')}</h1>
   <p class="subverdict">${esc(narrativa.subverdict || 'Você, a sua equipe e os seus clientes responderam às mesmas perguntas. Este é o retrato que os três olhares formam juntos — e a causa que só aparece na distância entre eles.')}</p>
   <div class="grow">${geralBoxes}</div>

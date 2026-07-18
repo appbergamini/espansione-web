@@ -1,5 +1,5 @@
 // =====================================================================
-// Mapa do Crescimento Integrado v2 — narrativa EDITORIAL do relatório de triangulação (Sonnet).
+// Mapa do Crescimento Integrado Estratégico — narrativa EDITORIAL do relatório de triangulação (Sonnet).
 // A IA interpreta; o sistema calcula. montarDados envia uma camada de
 // INTERPRETAÇÃO pré-calculada (padrão dos olhares, maior gap, sistemas
 // frágeis/fortes) para a IA escrever em cima — sem forçar tese nem inventar.
@@ -8,7 +8,7 @@ import { AIRouter } from '../ai/router';
 const MODEL_KEY = 'claude-sonnet'; // claude-sonnet-4-6
 const PUBLICO_NOME = { socios: 'Você (sócios)', colaboradores: 'Equipe', clientes: 'Clientes' };
 
-const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa do Crescimento Integrado v2 para a liderança de uma empresa.
+const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa do Crescimento Integrado Estratégico para a liderança de uma empresa.
 
 POSICIONAMENTO DA ESPANSIONE (base de tudo o que você escreve):
 - Crescer não é só vender mais. Crescer é sustentar o que foi construído: transformar intenção em direção, estratégia em comportamento e promessa em experiência.

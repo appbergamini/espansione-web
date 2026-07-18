@@ -103,7 +103,7 @@ export default function AreaCliente() {
             <Card>
               <div style={sx.accent} />
               <h1 style={sx.h1}>Nenhuma compra encontrada</h1>
-              <p style={sx.txt}>Não encontramos uma compra do Mapa do Crescimento Integrado v2 no e-mail <b>{dados.email}</b>.
+              <p style={sx.txt}>Não encontramos uma compra do Mapa do Crescimento Integrado Estratégico no e-mail <b>{dados.email}</b>.
                 Se você comprou com outro e-mail, saia e entre com ele.</p>
               <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.2rem', flexWrap: 'wrap' }}>
                 <a className="mapa-btn" href="/crescimento" style={{ textDecoration: 'none' }}>Conhecer o Mapa</a>
@@ -123,7 +123,7 @@ export default function AreaCliente() {
                 <Card wide>
                   <div style={sx.accent} />
                   <h2 style={{ marginTop: 0 }}>Treinamentos</h2>
-                  <p style={sx.txt}>Os treinamentos fazem parte do <b>Mapa do Crescimento Integrado v2</b>.{' '}
+                  <p style={sx.txt}>Os treinamentos fazem parte do <b>Mapa do Crescimento Integrado Estratégico</b>.{' '}
                     <a href="/crescimento" style={{ color: CORES.red }}>Conhecer →</a></p>
                 </Card>
               ))}
@@ -147,8 +147,8 @@ function Diagnostico({ dados }) {
       {maturidades.map((m) => (
         <div key={m.token} style={sx.cardWide}>
           <div style={sx.accent} />
-          <div style={sx.eyebrow}>Mapa do Crescimento Integrado</div>
-          <h2 style={{ margin: '0.3rem 0 0.2rem' }}>{m.empresa || 'Seu Mapa do Crescimento Integrado'}</h2>
+          <div style={sx.eyebrow}>Mapa do Crescimento Integrado Essencial</div>
+          <h2 style={{ margin: '0.3rem 0 0.2rem' }}>{m.empresa || 'Seu Mapa do Crescimento Integrado Essencial'}</h2>
           <p style={{ ...sx.txt, fontSize: '0.9rem' }}>
             {m.nivel ? <>Nível <b>{m.nivel}</b>{m.score != null ? ` · ${m.score} pts` : ''}. </> : ''}
             Seu relatório completo está pronto.
@@ -160,17 +160,17 @@ function Diagnostico({ dados }) {
       {maturidades.length === 0 && (
         <div style={sx.cardWide}>
           <div style={sx.accent} />
-          <div style={sx.eyebrow}>Mapa do Crescimento Integrado · grátis</div>
-          <h2 style={{ margin: '0.3rem 0 0.2rem' }}>Faça o seu Mapa do Crescimento Integrado</h2>
+          <div style={sx.eyebrow}>Mapa do Crescimento Integrado Essencial · grátis</div>
+          <h2 style={{ margin: '0.3rem 0 0.2rem' }}>Faça o seu Mapa do Crescimento Integrado Essencial</h2>
           <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Um diagnóstico rápido do seu negócio em 4 sistemas: Marca, Negócios, Comunicação e Pessoas. Leva poucos minutos e gera um relatório na hora.</p>
           <a className="mapa-btn" href={`/mapa?email=${encodeURIComponent(dados.email || '')}`} target="_blank" rel="noreferrer"
-            style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>Fazer o Mapa do Crescimento Integrado →</a>
+            style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>Fazer o Mapa do Crescimento Integrado Essencial →</a>
         </div>
       )}
       {dados.diagnosticos.map((d) => (
         <div key={d.assessment_id} style={sx.cardWide}>
           <div style={sx.accent} />
-          <div style={sx.eyebrow}>Mapa do Crescimento Integrado v2</div>
+          <div style={sx.eyebrow}>Mapa do Crescimento Integrado Estratégico</div>
           <h2 style={{ margin: '0.3rem 0 0.2rem' }}>{d.cliente || 'Seu diagnóstico'}</h2>
           <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Compartilhe cada link com o público certo, quanto mais respostas, mais rica a triangulação.</p>
           <div style={{ display: 'grid', gap: '0.6rem', marginTop: '1rem' }}>
