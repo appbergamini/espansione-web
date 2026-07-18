@@ -34,31 +34,23 @@ const nextConfig = {
     ],
   },
 
-  // Temporário: no domínio do funil, "/" redireciona para a LP em /lp
-  // enquanto o novo site institucional não entra. Só nos hosts do funil —
-  // nos demais (*.vercel.app, painel), "/" segue abrindo o app (→ /adm).
-  // permanent: false (307) porque é provisório; não deve ficar cacheado.
-  async redirects() {
-    const FUNIL_HOSTS = ['crescimentointegrado.com.br', 'www.crescimentointegrado.com.br'];
-    return FUNIL_HOSTS.map((host) => ({
-      source: '/',
-      has: [{ type: 'host', value: host }],
-      destination: '/lp',
-      permanent: false,
-    }));
-  },
-
-  // Landing page estática do Mapa do Crescimento Integrado.
-  // O HTML self-contained vive em public/crescimento/index.html.
+  // No domínio do funil, "/" serve a home institucional (public/home/) e a
+  // LP do Mapa vive em /lp (+ alias /crescimento). Precisa de `beforeFiles`
+  // porque "/" casa com pages/index.js — em afterFiles nunca dispararia. Nos
+  // demais hosts (*.vercel.app, painel), "/" segue abrindo o app (→ /adm).
   async rewrites() {
-    // A LP agora vive em URLs próprias (/lp e /crescimento) — NÃO mais na
-    // home "/". A raiz voltou ao comportamento padrão do app (pages/index.js
-    // redireciona para /adm), liberando "/" para um novo site institucional.
+    const FUNIL_HOSTS = ['crescimentointegrado.com.br', 'www.crescimentointegrado.com.br'];
     return {
+      beforeFiles: FUNIL_HOSTS.map((host) => ({
+        source: '/',
+        has: [{ type: 'host', value: host }],
+        destination: '/home/index.html',
+      })),
       afterFiles: [
-        // URL principal da LP.
+        // URL limpa da home institucional.
+        { source: '/home', destination: '/home/index.html' },
+        // LP do Mapa (URL principal + alias histórico WhatsApp/links).
         { source: '/lp', destination: '/crescimento/index.html' },
-        // Alias histórico preservado (links internos/WhatsApp apontam p/ ele).
         { source: '/crescimento', destination: '/crescimento/index.html' },
       ],
     };
