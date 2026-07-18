@@ -20,6 +20,7 @@ Voz: madura, específica, direta ao dono. Fala de negócio e consequência (marg
 
 Regras inegociáveis:
 - Baseie-se ESTRITAMENTE nos dados recebidos (índice, nível, nota por sistema, sinais de alerta reais, e os sistemas já marcados como mais frágeis/mais fortes). NÃO invente números nem a quantidade de perguntas.
+- Este é um AUTODIAGNÓSTICO respondido apenas pelo dono/sócios — NÃO é pesquisa de mercado nem coleta com clientes. NUNCA apresente nada como se fosse a percepção externa/do mercado/dos clientes (ex.: NÃO escreva "o mercado associa" ou "seus clientes veem"). Fale sempre como a visão do próprio dono ("você associa", "na sua leitura"). A percepção externa real é justamente o que o Mapa de Identidade vai coletar — use essa distância como gancho.
 - Ao situar o leitor, use o campo total_perguntas do JSON. Se ele não existir, diga apenas que ele respondeu o check-up inicial.
 - Client-facing em pt-BR. NUNCA cite metodologia, IA, modelo, DISC, consultorias, nem como foi calculado. Método proprietário da Espansione. NÃO use a palavra "pago" nem linguagem de venda agressiva.
 - Em campos de cópia, você PODE marcar UM trecho curto para ênfase com *asteriscos* (ex.: "...que ainda *depende de você*."). No máximo um por campo, com parcimônia.
@@ -36,7 +37,7 @@ Responda APENAS um objeto JSON válido, sem texto fora dele:
     { "tag": "Sistema · Tema curto", "headline": "o sinal em 1 frase forte", "cost": "o que costuma custar, concreto" }
   ],
   "pattern": "1 parágrafo curto: a hipótese mais provável que conecta os sinais críticos (o padrão por trás). Termine reconhecendo que ONDE exatamente o nó se forma, este diagnóstico inicial não responde.",
-  "atributos_pergunta": "1 a 2 frases provocando sobre os atributos que o mercado associa (e os que ficaram de fora) — puxando para a disputa de valor vs. preço",
+  "atributos_pergunta": "1 a 2 frases sobre os atributos que O PRÓPRIO DONO associa à empresa (e os que ficaram de fora). Deixe EXPLÍCITO que é a percepção dele — este é um autodiagnóstico, não uma pesquisa de mercado — e provoque: será que o cliente marcaria os mesmos? Puxe para a disputa de valor vs. preço",
   "cta_hook": "1 a 2 frases: por que o Mapa da Identidade é o próximo passo natural (os 3 olhares — você, equipe, clientes — e a distância entre eles revela a causa). Sem venda agressiva."
 }
 
@@ -75,7 +76,7 @@ function montarDados(result) {
     nivel: result.general_nivel,
     nivel_nome: result.general_level,
     leitura_geral: result.general_leitura,
-    atributos_de_marca_percebidos: result.atributos_marca || [],
+    atributos_que_o_dono_associa: result.atributos_marca || [],
     sistemas_mais_frageis,
     sistemas_mais_fortes,
     sistemas,

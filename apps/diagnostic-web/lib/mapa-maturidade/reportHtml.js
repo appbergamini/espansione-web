@@ -195,8 +195,8 @@ if(new URLSearchParams(location.search).get('print')==='1'){
 ${narrativa.pattern ? `<section class="wrap"><div class="pattern"><span class="eyebrow">O padrão por trás</span><p>${emphasize(narrativa.pattern)}</p></div></section>` : ''}
 
 ${chipsHtml ? `<section class="wrap">
-  <div class="sec-head"><span class="num">03</span><h2>Como o mercado enxerga a empresa hoje</h2></div>
-  <p class="lead" style="margin-bottom:18px;">Os atributos que costumam ser associados à empresa — e os que ficaram de fora.</p>
+  <div class="sec-head"><span class="num">03</span><h2>Como você acha que o mercado enxerga a empresa</h2></div>
+  <p class="lead" style="margin-bottom:18px;">Estes são os atributos que <b>você</b> associa à empresa hoje — e os que ficaram de fora. Se os seus clientes respondessem, marcariam os mesmos? É essa distância que o Mapa de Identidade revela.</p>
   <div class="chips">${chipsHtml}</div>
   ${narrativa.atributos_pergunta ? `<p class="attr-q">${emphasize(narrativa.atributos_pergunta)}</p>` : ''}
 </section>` : ''}
