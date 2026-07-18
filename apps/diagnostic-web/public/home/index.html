@@ -175,6 +175,22 @@
   .founder p.bio{font-size:15.5px; color:var(--muted); margin-bottom:14px; max-width:60ch;}
   .founder blockquote{margin:20px 0 0; padding:16px 22px; border-left:3px solid var(--brass); background:var(--paper2); border-radius:0 12px 12px 0; font-size:16px; color:var(--ink); font-style:italic;}
   @media(max-width:760px){ .founder{grid-template-columns:1fr; gap:26px;} .founder-photo{max-width:280px;} }
+
+  /* diagrama dos 4 sistemas */
+  .sys-diagram-wrap{display:grid; grid-template-columns:1.02fr .98fr; gap:40px; align-items:center; margin-top:6px;}
+  .sys-diagram{position:relative; background:var(--paper2); border:1px solid var(--line); border-radius:18px; padding:22px 14px;}
+  .sys-diagram svg{width:100%; height:auto; display:block; overflow:visible;}
+  .sys-node{cursor:pointer; outline:none;}
+  .sys-node circle{transition:fill .25s, stroke .25s, r .2s;}
+  .sys-node text{transition:fill .25s;}
+  .sys-node:focus-visible circle{stroke:var(--brass);}
+  .sys-line{transition:stroke .3s, stroke-width .3s;}
+  .sys-panel .k{font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); font-weight:600; margin-bottom:8px;}
+  .sys-panel h3{font-size:24px; color:var(--ink); margin-bottom:10px;}
+  .sys-panel p{font-size:15.5px; color:var(--muted); max-width:46ch;}
+  .sys-hint{margin-top:16px; font-size:12.5px; color:var(--faint);}
+  .ph-paid{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink); border:1px solid var(--line); background:#fff; padding:3px 9px; border-radius:999px;}
+  @media(max-width:760px){ .sys-diagram-wrap{grid-template-columns:1fr; gap:20px;} .sys-panel{text-align:center;} .sys-panel p{margin:0 auto;} }
 </style>
 </head>
 <body>
@@ -201,7 +217,7 @@
     <p class="sub">A Espansione desenvolve pequenas e médias empresas, conectando Marca, Negócios, Comunicação e Pessoas. Antes de recomendar qualquer movimento, entendemos o que realmente limita o próximo estágio, porque o problema nem sempre está onde ele aparece.</p>
     <div class="hero-cta">
       <a href="#metodo" class="btn btn-ghost" style="color:#EEF1F7;">Conhecer o método</a>
-      <a href="/mapa" class="btn">Fazer o Mapa do Crescimento Integrado</a>
+      <a href="/mapa" class="btn">Fazer o Mapa do Crescimento Integrado · Essencial</a>
     </div>
   </div>
 </section>
@@ -242,11 +258,41 @@
     <div class="sec-eyebrow"><span class="eyebrow">Crescimento Integrado</span></div>
     <h2 class="sec-title">Quatro pilares, uma direção.</h2>
     <p class="sec-lead">Marca, Negócios, Comunicação e Pessoas não são áreas independentes. Uma decisão em um altera a entrega, a percepção e a execução dos outros.</p>
-    <div class="sys-grid">
-      <div class="sys-cell"><div class="k">Marca</div><h3>A promessa</h3><p>Organiza o significado e revela por que a empresa merece ser escolhida, por clientes e por colaboradores.</p></div>
-      <div class="sys-cell"><div class="k">Negócios</div><h3>O valor</h3><p>Transforma a promessa em valor: escolhas estratégicas, prioridades, margem e formas de competir.</p></div>
-      <div class="sys-cell"><div class="k">Comunicação</div><h3>A tradução</h3><p>Torna o valor visível e desejável, conectando o que a empresa acredita com o que o mercado percebe.</p></div>
-      <div class="sys-cell"><div class="k">Pessoas</div><h3>A realidade</h3><p>Representam a cultura, decidem, atendem, lideram e fazem a promessa da marca ser vivida.</p></div>
+    <div class="sys-diagram-wrap">
+      <div class="sys-diagram">
+        <svg viewBox="0 0 460 380" role="img" aria-label="Diagrama: quatro sistemas conectados a uma direção">
+          <polyline points="230,56 404,190 230,324 56,190 230,56" fill="none" stroke="#E2E8F0" stroke-width="1.5"></polyline>
+          <line class="sys-line" data-line="marca" x1="230" y1="190" x2="230" y2="56" stroke="#E2E8F0" stroke-width="2"></line>
+          <line class="sys-line" data-line="negocios" x1="230" y1="190" x2="404" y2="190" stroke="#E2E8F0" stroke-width="2"></line>
+          <line class="sys-line" data-line="comunicacao" x1="230" y1="190" x2="230" y2="324" stroke="#E2E8F0" stroke-width="2"></line>
+          <line class="sys-line" data-line="pessoas" x1="230" y1="190" x2="56" y2="190" stroke="#E2E8F0" stroke-width="2"></line>
+          <circle cx="230" cy="190" r="31" fill="#001A3B"></circle>
+          <text x="230" y="186" text-anchor="middle" fill="#E4485A" style="font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Uma</text>
+          <text x="230" y="202" text-anchor="middle" fill="#fff" style="font-size:13px;font-weight:600">direção</text>
+          <g class="sys-node" data-key="marca" tabindex="0" role="button" aria-label="Marca: a promessa">
+            <text x="230" y="26" text-anchor="middle" fill="#5B6B7F" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase">Marca</text>
+            <circle cx="230" cy="56" r="18" fill="#fff" stroke="#001A3B" stroke-width="2"></circle>
+          </g>
+          <g class="sys-node" data-key="negocios" tabindex="0" role="button" aria-label="Negócios: o valor">
+            <text x="404" y="160" text-anchor="middle" fill="#5B6B7F" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase">Negócios</text>
+            <circle cx="404" cy="190" r="18" fill="#fff" stroke="#001A3B" stroke-width="2"></circle>
+          </g>
+          <g class="sys-node" data-key="comunicacao" tabindex="0" role="button" aria-label="Comunicação: a tradução">
+            <circle cx="230" cy="324" r="18" fill="#fff" stroke="#001A3B" stroke-width="2"></circle>
+            <text x="230" y="360" text-anchor="middle" fill="#5B6B7F" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase">Comunicação</text>
+          </g>
+          <g class="sys-node" data-key="pessoas" tabindex="0" role="button" aria-label="Pessoas: a realidade">
+            <text x="56" y="160" text-anchor="middle" fill="#5B6B7F" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase">Pessoas</text>
+            <circle cx="56" cy="190" r="18" fill="#fff" stroke="#001A3B" stroke-width="2"></circle>
+          </g>
+        </svg>
+      </div>
+      <div class="sys-panel">
+        <div class="k" id="sysK">Marca</div>
+        <h3 id="sysRole">A promessa</h3>
+        <p id="sysDesc">Organiza o significado e revela por que a empresa merece ser escolhida, por clientes e por colaboradores.</p>
+        <div class="sys-hint">Toque em cada sistema no diagrama para ver o que ele representa.</div>
+      </div>
     </div>
     <p class="sys-note">Quando esses pilares caminham em direções diferentes, a empresa perde força.</p>
   </div>
@@ -293,28 +339,29 @@
     <p class="sec-lead">Três estágios encadeados. Cada um entrega valor sozinho e prepara o seguinte.</p>
 
     <div class="phase">
-      <div class="ph-top"><span class="ph-tag">Estágio 1 · Mapa do Crescimento Integrado</span><span class="ph-free">Gratuito</span></div>
+      <div class="ph-top"><span class="ph-tag">Estágio 1 · Mapa do Crescimento Integrado · Essencial</span><span class="ph-free">Gratuito</span></div>
       <h3>O espelho</h3>
-      <p>Uma autoavaliação estruturada, respondida pelo sócio ou decisor. Em cerca de 10 minutos, revela a maturidade dos quatro pilares e onde a empresa está exposta. É o olhar de dentro, mostra que há algo a investigar, sem ainda explicar a causa.</p>
+      <p>A leitura inicial da empresa. Respondida pelo sócio ou decisor em cerca de 10 minutos, mostra como a empresa está nas quatro dimensões, Marca, Negócio, Comunicação e Pessoas, e o que pode estar limitando o crescimento. É o olhar de dentro: aponta que há algo a investigar, sem ainda explicar a causa.</p>
       <ul>
-        <li>Nota geral e por pilar</li>
-        <li>Forças, fragilidades e sinais críticos</li>
-        <li>Leitura do que pode limitar o próximo estágio</li>
-        <li>Indicação de qual pilar aprofundar</li>
+        <li>Gaps e pontos de atenção</li>
+        <li>Prioridades por dimensão</li>
+        <li>O que pode limitar o crescimento</li>
+        <li>Forças e fragilidades</li>
       </ul>
     </div>
 
     <div class="phase">
-      <div class="ph-top"><span class="ph-tag">Estágio 2 · Mapa do Crescimento Integrado v2</span></div>
+      <div class="ph-top"><span class="ph-tag">Estágio 2 · Mapa do Crescimento Integrado · Estratégico</span><span class="ph-paid">Aprofundado</span></div>
       <h3>A causa</h3>
-      <p>Aqui a empresa é ouvida por inteiro. Estruturamos a escuta de três públicos sobre os mesmos temas e lemos a empresa na distância entre eles, porque a causa aparece justamente onde os olhares divergem. Cada divergência vira um ponto de escolha estratégica, não uma resposta fechada.</p>
+      <p>A etapa mais profunda da metodologia. Aqui você não apenas identifica os sinais, mas investiga com profundidade o que está por trás deles e constrói os direcionadores estratégicos para crescer com mais coerência, estrutura e alinhamento.</p>
       <ul>
-        <li>Escuta de sócios, líderes e clientes</li>
-        <li>Triangulação das percepções</li>
-        <li>Posicionamento e proposta de valor</li>
-        <li>Prioridades e critérios de decisão</li>
-        <li>Competências críticas a desenvolver</li>
-        <li>Roadmap de evolução</li>
+        <li>Análise aprofundada dos 4 pilares</li>
+        <li>Pesquisas com clientes e colaboradores</li>
+        <li>Leitura comportamental de sócios e equipe</li>
+        <li>Cultura, valores e propósito</li>
+        <li>Proposta de valor e posicionamento</li>
+        <li>Tom de voz, arquétipos e plataforma de marca</li>
+        <li>Jornada e experiência do cliente</li>
       </ul>
     </div>
 
@@ -424,7 +471,7 @@
     <div class="sec-eyebrow"><span class="eyebrow" style="color:var(--brass-light);">Crescimento Integrado</span></div>
     <h2>Crescer deveria trazer evolução, <em>não mais peso.</em></h2>
     <div class="sig">Clareza para decidir. Estrutura para crescer.</div>
-    <a href="/mapa" class="btn btn-light" style="font-size:16px; padding:15px 32px;">Comece pelo Mapa do Crescimento Integrado</a>
+    <a href="/mapa" class="btn btn-light" style="font-size:16px; padding:15px 32px;">Comece pelo Mapa do Crescimento Integrado · Essencial</a>
   </div>
 </section>
 
@@ -437,7 +484,7 @@
       </div>
       <div class="foot-links">
         <div class="foot-col"><b>O método</b><a href="#metodo">Como pensamos</a><a href="#diferencial">O diferencial</a><a href="#processo">O processo</a><a href="#fundadora">A fundadora</a></div>
-        <div class="foot-col"><b>Jornada</b><a href="/mapa">Mapa do Crescimento Integrado</a><a href="#processo">Mapa do Crescimento Integrado v2</a><a href="#processo">Programa de Crescimento</a></div>
+        <div class="foot-col"><b>Jornada</b><a href="/mapa">Mapa do Crescimento Integrado · Essencial</a><a href="#processo">Mapa do Crescimento Integrado · Estratégico</a><a href="#processo">Programa de Crescimento</a></div>
         <div class="foot-col"><b>Contato</b><a href="https://wa.me/5511985775893">WhatsApp</a><a href="/area">Área do cliente</a></div>
       </div>
     </div>
@@ -447,5 +494,37 @@
 
 <a class="wa" href="https://wa.me/5511985775893?text=Ol%C3%A1!%20Vim%20pela%20p%C3%A1gina%20da%20Espansione%20e%20quero%20saber%20mais." target="_blank" rel="noopener noreferrer" aria-label="Falar no WhatsApp" title="Falar no WhatsApp"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.892c0 2.096.549 4.14 1.595 5.945L0 24l6.335-1.652a11.882 11.882 0 005.71 1.454h.006c6.585 0 11.946-5.359 11.949-11.945a11.821 11.821 0 00-3.494-8.411"/></svg></a>
 
+<script>
+(function(){
+  var data={
+    marca:{k:'Marca',role:'A promessa',desc:'Organiza o significado e revela por que a empresa merece ser escolhida, por clientes e por colaboradores.'},
+    negocios:{k:'Negócios',role:'O valor',desc:'Transforma a promessa em valor: escolhas estratégicas, prioridades, margem e formas de competir.'},
+    comunicacao:{k:'Comunicação',role:'A tradução',desc:'Torna o valor visível e desejável, conectando o que a empresa acredita com o que o mercado percebe.'},
+    pessoas:{k:'Pessoas',role:'A realidade',desc:'Representam a cultura, decidem, atendem, lideram e fazem a promessa da marca ser vivida.'}
+  };
+  var nodes=document.querySelectorAll('.sys-node');
+  var lines=document.querySelectorAll('.sys-line');
+  var kEl=document.getElementById('sysK'), rEl=document.getElementById('sysRole'), dEl=document.getElementById('sysDesc');
+  if(!nodes.length||!kEl) return;
+  function activate(key){
+    nodes.forEach(function(n){
+      var on=n.getAttribute('data-key')===key, c=n.querySelector('circle');
+      c.style.fill=on?'#C72638':'#fff'; c.style.stroke=on?'#C72638':'#001A3B'; c.setAttribute('r', on?'21':'18');
+    });
+    lines.forEach(function(l){
+      var on=l.getAttribute('data-line')===key;
+      l.style.stroke=on?'#C72638':'#E2E8F0'; l.style.strokeWidth=on?'3':'2';
+    });
+    var d=data[key]; if(d){kEl.textContent=d.k; rEl.textContent=d.role; dEl.textContent=d.desc;}
+  }
+  nodes.forEach(function(n){
+    var key=n.getAttribute('data-key');
+    n.addEventListener('click', function(){activate(key);});
+    n.addEventListener('mouseenter', function(){activate(key);});
+    n.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault(); activate(key);} });
+  });
+  activate('marca');
+})();
+</script>
 </body>
 </html>
