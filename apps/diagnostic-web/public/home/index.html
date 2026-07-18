@@ -154,6 +154,27 @@
   .foot-col a:hover{color:#fff;}
   .foot-bottom{font-family:'Poppins',system-ui,sans-serif; font-size:11px; letter-spacing:.06em; color:#5E6A86;}
   .wa{position:fixed; bottom:22px; right:22px; z-index:60; background:#25D366; color:#fff; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,.2); font-weight:700; font-size:13px; font-family:'Poppins',system-ui,sans-serif;}
+
+  /* diferencial */
+  .diff{background:var(--paper2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .diff-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:8px;}
+  .diff-cell{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 22px;}
+  .diff-cell .dn{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); margin-bottom:8px; font-weight:600;}
+  .diff-cell p{font-size:14.5px; color:var(--text);}
+  @media(max-width:820px){ .diff-grid{grid-template-columns:1fr 1fr;} }
+  @media(max-width:560px){ .diff-grid{grid-template-columns:1fr;} }
+
+  /* fundadora */
+  .founder{display:grid; grid-template-columns:300px 1fr; gap:48px; align-items:center;}
+  .founder-photo{aspect-ratio:4/5; border-radius:18px; background:linear-gradient(160deg,var(--ink2),var(--ink3)); border:1px solid var(--line); position:relative; overflow:hidden; display:flex; align-items:flex-end; justify-content:center;}
+  .founder-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .founder-photo .mono{font-weight:700; font-size:76px; color:#fff; opacity:.92; letter-spacing:.02em; margin-bottom:12%;}
+  .founder .eyebrow{color:var(--brass);}
+  .founder h2{font-size:clamp(26px,3.4vw,34px); color:var(--ink); margin:8px 0 6px;}
+  .founder .role{font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--brass-deep); font-weight:600; margin-bottom:18px;}
+  .founder p.bio{font-size:15.5px; color:var(--muted); margin-bottom:14px; max-width:60ch;}
+  .founder blockquote{margin:20px 0 0; padding:16px 22px; border-left:3px solid var(--brass); background:var(--paper2); border-radius:0 12px 12px 0; font-size:16px; color:var(--ink); font-style:italic;}
+  @media(max-width:760px){ .founder{grid-template-columns:1fr; gap:26px;} .founder-photo{max-width:280px;} }
 </style>
 </head>
 <body>
@@ -177,7 +198,7 @@
   <div class="wrap">
     <span class="eyebrow">O método do Crescimento Integrado</span>
     <h1>Não começamos oferecendo soluções. <em>Começamos enxergando.</em></h1>
-    <p class="sub">A Espansione desenvolve empresas conectando Marca, Negócios, Comunicação e Pessoas. Antes de recomendar qualquer movimento, entendemos o que realmente limita o próximo estágio — porque o problema nem sempre está onde ele aparece.</p>
+    <p class="sub">A Espansione desenvolve pequenas e médias empresas, conectando Marca, Negócios, Comunicação e Pessoas. Antes de recomendar qualquer movimento, entendemos o que realmente limita o próximo estágio — porque o problema nem sempre está onde ele aparece.</p>
     <div class="hero-cta">
       <a href="#metodo" class="btn btn-ghost" style="color:#EEF1F7;">Conhecer o método</a>
       <a href="/mapa" class="btn">Fazer o Mapa da Maturidade</a>
@@ -232,6 +253,23 @@
   </div>
 </section>
 
+<!-- O DIFERENCIAL -->
+<section class="diff" id="diferencial">
+  <div class="wrap">
+    <div class="sec-eyebrow"><span class="eyebrow">O diferencial</span></div>
+    <h2 class="sec-title">Um olhar integrado — não problemas isolados.</h2>
+    <p class="sec-lead">Uma consultoria tradicional analisa cada problema em separado. Nós lemos a empresa como um sistema: uma dificuldade de vendas pode nascer de um posicionamento pouco claro, de uma comunicação que não mostra valor ou de uma equipe que não entrega a experiência prometida. Conectamos essas informações para o empresário sair do papel de executor e assumir o de gestor.</p>
+    <div class="diff-grid">
+      <div class="diff-cell"><div class="dn">Método</div><p>Metodologia própria de Crescimento Integrado.</p></div>
+      <div class="diff-cell"><div class="dn">Evidência</div><p>Pesquisas reais com clientes e colaboradores.</p></div>
+      <div class="diff-cell"><div class="dn">Comportamento</div><p>Análise comportamental de sócios e líderes.</p></div>
+      <div class="diff-cell"><div class="dn">Prática</div><p>Diagnóstico transformado em direcionadores para a realidade de cada empresa.</p></div>
+      <div class="diff-cell"><div class="dn">Pessoas</div><p>Desenvolvimento contínuo de líderes e equipes, com treinamentos personalizados por competência.</p></div>
+      <div class="diff-cell"><div class="dn">Integração</div><p>Tecnologia, dados e experiência humana caminhando na mesma direção.</p></div>
+    </div>
+  </div>
+</section>
+
 <!-- O MÉTODO -->
 <section class="method" id="metodo">
   <div class="wrap">
@@ -239,11 +277,11 @@
     <h2 class="sec-title">De leitura a capacidade real de evolução.</h2>
     <p class="sec-lead">Não entregamos um relatório e vamos embora. Transformamos leitura em direcionamento, direcionamento em alinhamento, alinhamento em desenvolvimento — e desenvolvimento em capacidade de sustentar o crescimento.</p>
     <div class="steps">
-      <div class="mstep"><div class="mn">01</div><h3>Enxergar</h3><p>Mapeamos o que está visível e investigamos o que ainda não está. Conectamos informações que normalmente são analisadas em separado.</p></div>
-      <div class="mstep"><div class="mn">02</div><h3>Investigar</h3><p>Ouvimos sócios, líderes, colaboradores e clientes. Unimos dados, percepção, comportamento e experiência para compreender o que realmente limita o próximo estágio.</p></div>
-      <div class="mstep"><div class="mn">03</div><h3>Direcionar</h3><p>Transformamos o diagnóstico em escolhas: posicionamento, proposta de valor, prioridades e critérios de decisão coerentes entre si.</p></div>
-      <div class="mstep"><div class="mn">04</div><h3>Desenvolver</h3><p>Preparamos líderes e equipes para transformar a direção em comportamento, decisão e entrega — sem depender de uma única pessoa.</p></div>
-      <div class="mstep"><div class="mn">05</div><h3>Sustentar</h3><p>Mantemos a estratégia viva e coerente enquanto a empresa cresce, para que a direção não volte a se fragmentar.</p></div>
+      <div class="mstep"><div class="mn">01</div><h3>Mapeamento</h3><p>Um breve diagnóstico mede o grau de maturidade da empresa em Marca, Negócio, Comunicação e Pessoas. É o ponto de partida que mostra onde há algo a investigar.</p></div>
+      <div class="mstep"><div class="mn">02</div><h3>Investigação</h3><p>Aprofundamos com entrevistas com os sócios, pesquisa com colaboradores e clientes, análise do posicionamento, da experiência entregue e do perfil comportamental da equipe e de cada sócio.</p></div>
+      <div class="mstep"><div class="mn">03</div><h3>Direcionamento</h3><p>Transformamos a leitura em direcionadores estratégicos: posicionamento, proposta de valor, prioridades e critérios de decisão coerentes entre si.</p></div>
+      <div class="mstep"><div class="mn">04</div><h3>Desenvolvimento</h3><p>Desenvolvemos líderes e equipes com treinamentos personalizados, transformando a estratégia em comportamento, decisão e entrega.</p></div>
+      <div class="mstep"><div class="mn">05</div><h3>Acompanhamento</h3><p>Acompanhamos a evolução por uma plataforma que integra as frentes e metrifica o progresso — mantendo a estratégia viva enquanto a empresa cresce.</p></div>
     </div>
   </div>
 </section>
@@ -325,8 +363,28 @@
     <div class="rigor-grid">
       <div class="rigor-cell"><div class="k">Cruzamento de evidências</div><h3>Nunca uma opinião isolada</h3><p>Cada leitura nasce do cruzamento de percepções, dados e comportamento — nunca da visão de uma sala só.</p></div>
       <div class="rigor-cell"><div class="k">Camadas separadas</div><h3>Fato, interpretação e recomendação</h3><p>Mantemos separado o que é evidência, o que é leitura e o que é sugestão — para que a decisão seja sempre consciente.</p></div>
-      <div class="rigor-cell"><div class="k">Decisão humana</div><h3>A tecnologia acelera; ela não decide</h3><p>Usamos tecnologia para coletar, organizar e comparar. As escolhas sensíveis de posicionamento e cultura passam por aprovação humana.</p></div>
+      <div class="rigor-cell"><div class="k">Decisão humana</div><h3>A tecnologia acelera; ela não decide</h3><p>A inteligência artificial consolida os dados e otimiza as etapas. A análise, a interpretação e a personalização para cada empresa continuam humanas — as escolhas sensíveis de posicionamento e cultura passam por aprovação.</p></div>
       <div class="rigor-cell"><div class="k">Prontidão de execução</div><h3>Só recomendamos o que se sustenta</h3><p>Antes de qualquer movimento, medimos se a cultura e a liderança conseguem carregá-lo. Estratégia que não se sustenta é fachada.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- A FUNDADORA -->
+<section id="fundadora">
+  <div class="wrap">
+    <div class="founder">
+      <div class="founder-photo">
+        <!-- Para o retrato real, troque o monograma por: <img src="/home/vanessa.jpg" alt="Vanessa Bergamini"> -->
+        <span class="mono">VB</span>
+      </div>
+      <div>
+        <span class="eyebrow">A fundadora</span>
+        <h2>Vanessa Bergamini</h2>
+        <div class="role">Fundadora da Espansione · Especialista em Crescimento Integrado</div>
+        <p class="bio">Com mais de 22 anos de experiência em estratégia de marca, comunicação, desenvolvimento de negócios e pessoas, Vanessa criou uma metodologia própria que identifica o que pode limitar o próximo estágio de uma empresa — e transforma essa leitura em direcionadores estratégicos, alinhamento interno e desenvolvimento de líderes e equipes.</p>
+        <p class="bio">Seu trabalho integra Marca, Negócio, Comunicação e Pessoas para que pequenas e médias empresas cresçam com mais clareza, estrutura, autonomia e valor percebido.</p>
+        <blockquote>"A inteligência artificial acelera e consolida os dados. Mas a análise, a interpretação e a personalização para cada empresa continuam sendo minhas."</blockquote>
+      </div>
     </div>
   </div>
 </section>
@@ -340,11 +398,12 @@
       <div>
         <h3>Faz sentido quando</h3>
         <ul>
-          <li>A empresa cresceu e a estrutura não acompanhou</li>
-          <li>As decisões continuam concentradas nos sócios</li>
-          <li>O cliente não percebe o valor e o preço domina a conversa</li>
-          <li>Sócios, líderes e equipe leem as prioridades de formas diferentes</li>
-          <li>A empresa quer escalar sem multiplicar ruído e retrabalho</li>
+          <li>A empresa cresceu de forma desestruturada e a operação não acompanhou</li>
+          <li>Há conflitos internos entre sócios e equipe</li>
+          <li>A empresa vende, mas a margem de lucro não acompanha o crescimento</li>
+          <li>O dono vive sobrecarregado no operacional, com retorno desproporcional ao esforço</li>
+          <li>A comunicação não gera valor percebido pelo cliente</li>
+          <li>A equipe não engaja e o rodízio é alto</li>
         </ul>
       </div>
       <div>
@@ -378,7 +437,7 @@
         <div class="t">Marca · Negócios · Comunicação · Pessoas na mesma direção</div>
       </div>
       <div class="foot-links">
-        <div class="foot-col"><b>O método</b><a href="#metodo">Como pensamos</a><a href="#processo">O processo</a><a href="#rigor">Rigor e governança</a></div>
+        <div class="foot-col"><b>O método</b><a href="#metodo">Como pensamos</a><a href="#diferencial">O diferencial</a><a href="#processo">O processo</a><a href="#fundadora">A fundadora</a></div>
         <div class="foot-col"><b>Jornada</b><a href="/mapa">Mapa da Maturidade</a><a href="#processo">Mapa da Identidade</a><a href="#processo">Programa de Crescimento</a></div>
         <div class="foot-col"><b>Contato</b><a href="https://wa.me/5511985775893">WhatsApp</a><a href="/area">Área do cliente</a></div>
       </div>
