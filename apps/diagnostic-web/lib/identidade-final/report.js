@@ -1,5 +1,5 @@
 // =====================================================================
-// Mapa de Identidade — narrativa EDITORIAL do relatório de triangulação (Sonnet).
+// Mapa do Crescimento Integrado v2 — narrativa EDITORIAL do relatório de triangulação (Sonnet).
 // A IA interpreta; o sistema calcula. montarDados envia uma camada de
 // INTERPRETAÇÃO pré-calculada (padrão dos olhares, maior gap, sistemas
 // frágeis/fortes) para a IA escrever em cima — sem forçar tese nem inventar.
@@ -8,7 +8,7 @@ import { AIRouter } from '../ai/router';
 const MODEL_KEY = 'claude-sonnet'; // claude-sonnet-4-6
 const PUBLICO_NOME = { socios: 'Você (sócios)', colaboradores: 'Equipe', clientes: 'Clientes' };
 
-const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa de Identidade Estratégica para a liderança de uma empresa.
+const SYSTEM = `Você é um estrategista sênior da Espansione escrevendo o relatório do Mapa do Crescimento Integrado v2 para a liderança de uma empresa.
 
 O diferencial deste mapa é a TRIANGULAÇÃO: os mesmos INDICADORES ESTRATÉGICOS foram avaliados por três públicos — Você (sócios), a Equipe e os Clientes — cada um a partir da sua experiência com a empresa. Não são perguntas literais idênticas: são os mesmos construtos vistos de lugares diferentes. O ouro está na DISTÂNCIA entre os olhares — é ali que a causa aparece.
 

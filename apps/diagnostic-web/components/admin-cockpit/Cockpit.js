@@ -164,13 +164,13 @@ export function VisaoGeral({ cockpit, projetoId, onAction }) {
         <div style={c.eyebrow}>Módulos da jornada</div>
         <div style={{ ...c.grid2, marginTop: '0.7rem' }}>
           <div><MapaMaturidadeCard projetoId={projetoId} /></div>
-          <ModuleCard titulo="🧬 Mapa de Identidade" status={s.identity.status} href={`/adm/${projetoId}`} cta="Gerenciar identidade"
+          <ModuleCard titulo="🧬 Mapa do Crescimento Integrado v2" status={s.identity.status} href={`/adm/${projetoId}`} cta="Gerenciar identidade"
             linhas={[['Públicos concluídos', `${s.identity.publicos_concluidos}/${s.identity.publicos_total}`], ['Maior divergência', s.identity.top_gap ? `${s.identity.top_gap.indicador} (${Math.round(s.identity.top_gap.gap)})` : '—']]} />
           <ModuleCard titulo="🧠 Mapeamento Comportamental" cta="Gerenciar DISC" onCta={() => onAction?.({ module: 'disc' })}
             linhas={[['Sócios', `${s.people.socios.concluidos}/${s.people.socios.total}`], ['Equipe', `${s.people.equipe.concluidos}/${s.people.equipe.total}`]]} hint="DISC padrão — a função (sócio/líder) contextualiza as trilhas depois." />
           <ModuleCard titulo="📘 Relatório PDF" status={s.deliverables.pdf_identidade_blocked ? STATUS.BLOCKED : STATUS.NOT_STARTED}
-            linhas={[['Identidade', s.deliverables.pdf_identidade_blocked ? 'Bloqueado' : 'Pode gerar']]} hint={s.deliverables.pdf_identidade_blocked ? 'Conclua as fontes obrigatórias do Mapa de Identidade para liberar.' : 'Ao gerar o PDF, a Leitura Guiada é liberada junto.'} />
-          <ModuleCard titulo="📖 Leitura Guiada" status={STATUS.BLOCKED} linhas={[['Público', 'Sócios']]} hint="Liberada automaticamente junto com o PDF do Mapa de Identidade." />
+            linhas={[['Identidade', s.deliverables.pdf_identidade_blocked ? 'Bloqueado' : 'Pode gerar']]} hint={s.deliverables.pdf_identidade_blocked ? 'Conclua as fontes obrigatórias do Mapa do Crescimento Integrado v2 para liberar.' : 'Ao gerar o PDF, a Leitura Guiada é liberada junto.'} />
+          <ModuleCard titulo="📖 Leitura Guiada" status={STATUS.BLOCKED} linhas={[['Público', 'Sócios']]} hint="Liberada automaticamente junto com o PDF do Mapa do Crescimento Integrado v2." />
           <ModuleCard titulo="🧗 Trilhas de Aprofundamento" status={s.deliverables.trilhas_blocked ? STATUS.BLOCKED : STATUS.NOT_STARTED} linhas={[['Público', 'Sócios e líderes']]} hint="Liberadas quando o relatório indicar recomendações." />
           <ModuleCard titulo="🤖 IA Socrática" status={STATUS.BLOCKED} hint="Disponível quando houver relatório e base mínima de conteúdo." />
           <ModuleCard titulo="🎓 Curadoria / Masterclass" status={STATUS.BLOCKED} hint="Em breve." />
@@ -184,7 +184,7 @@ export function VisaoGeral({ cockpit, projetoId, onAction }) {
 export function FormulariosTab({ cockpit, projetoId }) {
   const s = cockpit.summary;
   const linhas = [
-    { label: 'Mapa de Maturidade — questionário', status: s.maturity.status, href: null },
+    { label: 'Mapa do Crescimento Integrado — questionário', status: s.maturity.status, href: null },
     ...s.identity.forms.map((f) => ({ label: 'Identidade — ' + f.label, status: mapFormStatus(f.status), href: `/adm/${projetoId}` })),
   ];
   return (
@@ -219,8 +219,8 @@ export function PessoasTab({ cockpit }) {
 export function EntregaveisTab({ cockpit, projetoId }) {
   const d = cockpit.summary.deliverables;
   const items = [
-    { label: 'PDF do Mapa de Maturidade', ok: d.pdf_maturidade, href: null },
-    { label: 'PDF do Mapa de Identidade', ok: !d.pdf_identidade_blocked, blocked: d.pdf_identidade_blocked },
+    { label: 'PDF do Mapa do Crescimento Integrado', ok: d.pdf_maturidade, href: null },
+    { label: 'PDF do Mapa do Crescimento Integrado v2', ok: !d.pdf_identidade_blocked, blocked: d.pdf_identidade_blocked },
     { label: 'Leitura Guiada', blocked: d.leitura_blocked },
     { label: 'Guias de Aprofundamento', blocked: d.trilhas_blocked },
   ];

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-// Mapa de Identidade Estratégica (FINAL) — card no painel do projeto.
+// Mapa do Crescimento Integrado v2 (FINAL) — card no painel do projeto.
 // Gera (ou recupera) os 3 links por público (Sócios, Colaboradores/Líderes,
 // Clientes/Fornecedores) e mostra contagem de respondentes + status.
 
@@ -67,7 +67,7 @@ export default function MapaIdentidadeFinalCard({ projetoId }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
         <div>
           <div style={st.eyebrow}>Diagnóstico · 2ª etapa (pago)</div>
-          <h3 style={st.title}>🧬 Mapa de Identidade Estratégica</h3>
+          <h3 style={st.title}>🧬 Mapa do Crescimento Integrado v2</h3>
           <p style={{ margin: '0.3rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             3 públicos · triangulação Sócios × Equipe × Externo
           </p>

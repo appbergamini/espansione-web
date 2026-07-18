@@ -8,7 +8,7 @@ const NOME_PUBLICO = {
   clientes: 'Clientes e Fornecedores',
 };
 
-// E-mail de boas-vindas + instruções, disparado após a compra do Mapa de Identidade.
+// E-mail de boas-vindas + instruções, disparado após a compra do Mapa do Crescimento Integrado v2.
 export async function sendWelcomeIdentidade({ to, nome, baseUrl, links = [], setupUrl }) {
   if (!resend) throw new Error('RESEND_API_KEY não configurada');
   const from = process.env.RESEND_FROM_EMAIL || 'Espansione <onboarding@resend.dev>';
@@ -27,14 +27,14 @@ export async function sendWelcomeIdentidade({ to, nome, baseUrl, links = [], set
   const { data, error } = await resend.emails.send({
     from,
     to,
-    subject: 'Bem-vindo ao Mapa de Identidade Estratégica 🎉',
+    subject: 'Bem-vindo ao Mapa do Crescimento Integrado v2 🎉',
     html: `
       <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#334155">
         <div style="text-align:center;padding:28px 0"><h1 style="color:#004198;margin:0;font-size:24px">Espansione</h1></div>
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:32px">
           <p style="font-size:16px;margin:0 0 8px">Olá${firstName ? `, <strong>${firstName}</strong>` : ''}! 🎉</p>
           <p style="font-size:14px;line-height:1.6;color:#475569;margin:0 0 20px">
-            Sua compra do <strong>Mapa de Identidade Estratégica</strong> foi confirmada. Ele cruza
+            Sua compra do <strong>Mapa do Crescimento Integrado v2</strong> foi confirmada. Ele cruza
             <strong>três olhares</strong> sobre a sua empresa — Sócios, Equipe e Clientes — e gera um relatório de triangulação.
           </p>
 

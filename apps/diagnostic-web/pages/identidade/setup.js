@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import TreinamentosPlayer from '../../components/TreinamentosPlayer';
 import { MapaShell, MapaCard as Card, CORES } from '../../components/mapa/mapaTheme';
 
-// Setup self-serve do Mapa de Identidade após a compra (redirect do checkout).
+// Setup self-serve do Mapa do Crescimento Integrado v2 após a compra (redirect do checkout).
 // Faz polling de /api/identidade-final/acesso?order=... até o pagamento ser
 // confirmado (webhook), define o nome da empresa e entrega os 3 links.
 
@@ -78,7 +78,7 @@ export default function IdentidadeSetup() {
   }
 
   return (
-    <MapaShell title="Configurar o Mapa de Identidade · Espansione">
+    <MapaShell title="Configurar o Mapa do Crescimento Integrado v2 · Espansione">
         {fase === 'loading' && <Card><p style={sx.txt}>Carregando…</p></Card>}
         {fase === 'erro' && <Card><h2 style={{ marginTop: 0 }}>Ops</h2><p style={sx.txt}>{erro}</p></Card>}
 
@@ -86,7 +86,7 @@ export default function IdentidadeSetup() {
           <Card>
             <div style={sx.accent} />
             <div style={sx.eyebrow}>Compra confirmada</div>
-            <h1 style={sx.h1}>Preparando o seu Mapa de Identidade…</h1>
+            <h1 style={sx.h1}>Preparando o seu Mapa do Crescimento Integrado v2…</h1>
             <p style={sx.txt}>Estamos confirmando o seu pagamento. Isso costuma levar poucos segundos, esta página atualiza sozinha.</p>
             <div style={sx.spinner} />
           </Card>
@@ -113,10 +113,10 @@ export default function IdentidadeSetup() {
           <div style={{ width: '100%', maxWidth: 680, display: 'grid', gap: '1rem' }}>
           <Card wide>
             <div style={sx.accent} />
-            <div style={sx.eyebrow}>Mapa de Identidade Estratégica · configurado</div>
+            <div style={sx.eyebrow}>Mapa do Crescimento Integrado v2 · configurado</div>
             <h1 style={sx.h1}>Tudo pronto{dados.cliente ? `, ${dados.cliente}` : ''}!</h1>
             <p style={sx.txt}>
-              O Mapa de Identidade cruza <b>três olhares</b> sobre a sua empresa. Compartilhe cada link com
+              O Mapa do Crescimento Integrado v2 cruza <b>três olhares</b> sobre a sua empresa. Compartilhe cada link com
               o público certo, quanto mais respostas, mais rica a triangulação.
             </p>
 
