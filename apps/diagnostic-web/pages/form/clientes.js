@@ -151,8 +151,8 @@ export default function FormClientesPage() {
     <>
       <Head>
         <title>
-          {modoPreview ? 'Pré-visualização, ' : ''}
-          Pesquisa de Percepção, {projetoMeta?.nome_marca || 'Espansione'}
+          {modoPreview ? 'Pré-visualização · ' : ''}
+          Pesquisa de Percepção: {projetoMeta?.nome_marca || 'Espansione'}
         </title>
       </Head>
       {modoPreview && (

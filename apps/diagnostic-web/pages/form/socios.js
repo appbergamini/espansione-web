@@ -161,8 +161,8 @@ export default function FormSociosPage() {
     <>
       <Head>
         <title>
-          {modoPreview ? 'Pré-visualização, ' : ''}
-          Levantamento Inicial, {respondente?.projeto_nome || projetoMeta?.nome_marca || 'Espansione'}
+          {modoPreview ? 'Pré-visualização · ' : ''}
+          Levantamento Inicial: {respondente?.projeto_nome || projetoMeta?.nome_marca || 'Espansione'}
         </title>
       </Head>
       {modoPreview && (

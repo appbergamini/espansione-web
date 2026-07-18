@@ -149,8 +149,8 @@ export default function FormColaboradoresPage() {
     <>
       <Head>
         <title>
-          {modoPreview ? 'Pré-visualização, ' : ''}
-          {projetoNome ? `Pesquisa Interna, ${projetoNome}` : 'Pesquisa Interna'}
+          {modoPreview ? 'Pré-visualização · ' : ''}
+          {projetoNome ? `Pesquisa Interna: ${projetoNome}` : 'Pesquisa Interna'}
         </title>
       </Head>
       {modoPreview && (

@@ -162,7 +162,7 @@ function Diagnostico({ dados }) {
           <div style={sx.accent} />
           <div style={sx.eyebrow}>Mapa de Maturidade · grátis</div>
           <h2 style={{ margin: '0.3rem 0 0.2rem' }}>Faça o seu Mapa de Maturidade</h2>
-          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Um diagnóstico rápido do seu negócio em 4 sistemas, Marca, Negócios, Comunicação e Pessoas. Leva poucos minutos e gera um relatório na hora.</p>
+          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Um diagnóstico rápido do seu negócio em 4 sistemas: Marca, Negócios, Comunicação e Pessoas. Leva poucos minutos e gera um relatório na hora.</p>
           <a className="mapa-btn" href={`/mapa?email=${encodeURIComponent(dados.email || '')}`} target="_blank" rel="noreferrer"
             style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>Fazer o Mapa de Maturidade →</a>
         </div>
