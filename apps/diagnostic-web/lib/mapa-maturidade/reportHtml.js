@@ -218,7 +218,7 @@ if(new URLSearchParams(location.search).get('print')==='1'){
   ${sistemasHtml}
 </section>
 
-${narrativa.pattern ? `<section class="wrap"><div class="pattern"><span class="eyebrow">Resumo da Análise</span><p>${emphasize(narrativa.pattern)}</p></div></section>` : ''}
+${narrativa.pattern ? `<section class="wrap"><div class="pattern"><span class="eyebrow">Resumo da Análise</span>${String(narrativa.pattern).split(/\n{2,}/).map((p) => `<p>${emphasize(p)}</p>`).join('')}</div></section>` : ''}
 
 ${chipsHtml ? `<section class="wrap">
   <div class="sec-head"><span class="num">02</span><h2>Como você acha que o mercado enxerga a empresa</h2></div>

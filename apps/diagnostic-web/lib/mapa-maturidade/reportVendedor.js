@@ -34,19 +34,26 @@ Regras inegociáveis:
 - Em campos de cópia, você PODE marcar UM trecho curto para ênfase com *asteriscos* (ex.: "...que ainda *depende de você*."). No máximo um por campo, com parcimônia.
 - O "custo" de cada pilar frágil deve ser concreto e visceral: o que aquilo cobra do negócio na prática.
 
+COMO DAR PROFUNDIDADE (o mais importante: o relatório NÃO pode ser genérico):
+- ATERRISSE EM ESPECÍFICOS. Cada pilar traz três listas de dados reais: "pontos_fortes" (o que o dono marcou como forte, com o indicador e a dimensão), "sinais_de_alerta" (o que marcou como frágil, com o sinal) e "pontos_de_atencao" (o que é mediano/inconsistente). USE os nomes desses indicadores e dimensões concretos. NUNCA escreva "este pilar é forte/fraco" no genérico: diga O QUÊ está forte ou frágil (ex.: "as prioridades orientam a rotina, mas a delegação ainda trava nos sócios").
+- CONSTRÓI A LEITURA EM CADEIA: (1) o que os dados mostram (nomeie 1 a 2 indicadores reais), (2) o mecanismo, por que isso acontece / o que revela, (3) o efeito prático no negócio. Não pare no sintoma; explique a lógica por trás.
+- CONECTE OS PILARES ENTRE SI. A análise mais valiosa é a tensão entre eles: um pilar forte que cria uma promessa que outro pilar frágil não sustenta; ou dois frágeis que se realimentam. Nomeie essas relações (ex.: "a Marca vende um padrão que Pessoas ainda não consegue entregar com consistência").
+- HONRE A FORÇA COM ESPECIFICIDADE. Em pilar forte, não seja genérico nem breve: diga exatamente o que sustenta essa força (use pontos_fortes) e o único risco que ele ainda corre (acomodação, dependência de pessoa-chave, força não capitalizada).
+- Se um pilar tem NOTA média mas mistura pontos_fortes e sinais_de_alerta, mostre essa convivência (o que já funciona x o que ainda fura) em vez de uma leitura plana.
+
 Responda APENAS um objeto JSON válido, sem texto fora dele:
 {
   "verdict": "manchete de 1 frase (máx ~16 palavras) que captura o retrato da empresa: a tensão entre o que está firme e o que está exposto",
   "subverdict": "1 a 2 frases situando o leitor com base no total_perguntas recebido (ele respondeu o check-up; abaixo, o retrato)",
   "sistemas": [
-    { "sistema": "Marca", "alert": "1 frase sobre o que esse nível significa na prática neste pilar, começando pelo sintoma quando é um pilar frágil", "custo": "SOMENTE para os pilares mais frágeis (nível 1 ou 2, ou os de menor nota): 1 frase concreta do que essa fragilidade custa ao negócio. Para pilares fortes, deixe string vazia", "is_alerta": false }
+    { "sistema": "Marca", "alert": "2 a 3 frases, densas e específicas, seguindo a cadeia sintoma-mecanismo-efeito e nomeando indicadores/dimensões reais dos dados (pontos_fortes/sinais_de_alerta/pontos_de_atencao daquele pilar). Em pilar frágil, comece pelo sintoma concreto; em pilar forte, diga exatamente o que sustenta a força e o risco que resta. Nada genérico.", "custo": "SOMENTE para os pilares frágeis (nível 1 ou 2, ou os de menor nota): 1 a 2 frases concretas do que essa fragilidade cobra do negócio na prática (margem, retrabalho, dependência dos sócios, cliente que cobra, venda que vira desconto). Para pilares fortes, string vazia", "is_alerta": false }
   ],
-  "pattern": "1 parágrafo curto: a hipótese mais provável que conecta os pilares como um sistema (onde a coerência entre eles se perdeu, e por que o esforço atual já não sustenta o próximo estágio). NÃO comece repetindo um título como 'Resumo da Análise'; entre direto no conteúdo. NÃO diga o que o diagnóstico não responde nem liste hipóteses de onde o nó se forma; afirme a leitura com segurança.",
+  "pattern": "2 parágrafos curtos (separados por \\n\\n), a parte mais analítica do relatório. Parágrafo 1: a hipótese central que conecta os pilares COMO UM SISTEMA, nomeando a tensão real entre eles (qual pilar forte cria uma promessa/demanda que qual pilar frágil ainda não sustenta, ou como dois frágeis se realimentam) e onde a coerência se perde. Parágrafo 2: por que o esforço atual já não leva ao próximo estágio e o que está em jogo (crescer é sustentar o que foi construído). Entre direto no conteúdo (NÃO repita um título como 'Resumo da Análise'); afirme a leitura com segurança; NÃO diga o que o diagnóstico não responde.",
   "atributos_pergunta": "1 a 2 frases sobre os atributos que O PRÓPRIO DONO associa à empresa (e os que ficaram de fora). Deixe EXPLÍCITO que é a percepção dele, um autodiagnóstico, não uma pesquisa de mercado, e provoque a curiosidade: será que o cliente marcaria os mesmos? Puxe para a disputa de valor vs. preço",
   "cta_hook": "2 a 3 frases persuasivas sobre o Mapa do Crescimento Integrado v2 como o próximo passo: ele conecta os quatro pilares como um sistema, ouve você, a equipe e os clientes, e chega à ORIGEM por trás dos sintomas, entregando as respostas que este check-up desperta mas não responde. Sem venda agressiva; termine em direção (clareza para decidir, estrutura para crescer)."
 }
 
-Em "sistemas": um objeto por pilar, na ordem recebida. Marque is_alerta=true nos pilares de nível baixo (1 ou 2) e escreva o alert começando pelo sintoma; preencha "custo" só nesses (ou nos de menor nota). Nos pilares fortes, "custo" vem como string vazia.`;
+Em "sistemas": um objeto por pilar, na ordem recebida. Marque is_alerta=true nos pilares de nível baixo (1 ou 2) e comece o alert pelo sintoma concreto; preencha "custo" só nesses (ou nos de menor nota). Nos pilares fortes, "custo" vem como string vazia, mas o alert deve ser igualmente denso e específico sobre a força. Profundidade e especificidade importam mais que concisão: prefira nomear o indicador real a resumir.`;
 
 function tryParseJson(text) {
   if (!text) return null;
@@ -64,7 +71,10 @@ function montarDados(result) {
     nota: s.nota,
     nivel: s.nivel,
     nivel_nome: s.nivel_nome,
-    sinais_de_alerta: (s.alertas || []).map((a) => ({ indicador: a.indicador, sinal: a.sinal })),
+    // sinais reais para a IA aterrissar a leitura em ESPECÍFICOS (não genérico):
+    sinais_de_alerta: (s.alertas || []).map((a) => ({ indicador: a.indicador, dimensao: a.dimensao, sinal: a.sinal })),
+    pontos_fortes: (s.destaques || []).map((a) => ({ indicador: a.indicador, dimensao: a.dimensao, o_que_e: a.o_que_identifica })),
+    pontos_de_atencao: (s.atencao || []).map((a) => ({ indicador: a.indicador, dimensao: a.dimensao })),
   }));
 
   // interpretação pré-calculada: a IA escreve em cima disto, não decide sozinha

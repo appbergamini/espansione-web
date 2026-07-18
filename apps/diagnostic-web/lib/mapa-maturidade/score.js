@@ -36,7 +36,9 @@ export function faixaDaNota(nota) {
 export function computarSistema(answers, sistema) {
   const perguntas = perguntasPorSistema(sistema);
   const notas = [];
-  const alertas = []; // sinais de alerta das perguntas de nota baixa (0 ou 1)
+  const alertas = [];   // indicadores frágeis (nota 0 ou 1) — com o sinal de alerta
+  const destaques = []; // indicadores fortes (nota máxima) — o que sustenta o pilar
+  const atencao = [];   // indicadores medianos (nota 2) — presentes mas inconsistentes
   let naCount = 0;
   for (const q of perguntas) {
     const v = answers[q.id];
@@ -47,7 +49,11 @@ export function computarSistema(answers, sistema) {
     if (!valido(v)) continue;
     notas.push((v / MAX_POR_PERGUNTA) * 100);
     if (v <= 1 && q.sinal_alerta) {
-      alertas.push({ id: q.id, indicador: q.indicador, sinal: q.sinal_alerta, valor: v });
+      alertas.push({ id: q.id, indicador: q.indicador, dimensao: q.dimensao, sinal: q.sinal_alerta, valor: v });
+    } else if (v >= MAX_POR_PERGUNTA) {
+      destaques.push({ id: q.id, indicador: q.indicador, dimensao: q.dimensao, o_que_identifica: q.o_que_identifica, valor: v });
+    } else if (v === 2) {
+      atencao.push({ id: q.id, indicador: q.indicador, dimensao: q.dimensao, valor: v });
     }
   }
   const nota = notas.length ? Math.round((notas.reduce((s, n) => s + n, 0) / notas.length) * 10) / 10 : null;
@@ -62,6 +68,8 @@ export function computarSistema(answers, sistema) {
     leitura: faixa ? faixa.leitura : null,
     mensagem: faixa ? faixa.mensagem : null,
     alertas,
+    destaques,
+    atencao,
   };
 }
 
