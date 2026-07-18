@@ -9,12 +9,23 @@ import { CATALOGO_MATURIDADE } from './catalog.generated.js';
 // Contato do CTA final — mesmo WhatsApp da landing (/crescimento). O próximo passo
 // é uma conversa, não um checkout.
 const WHATSAPP_URL = `https://wa.me/5511985775893?text=${encodeURIComponent(
-  'Olá! Fiz o Mapa da Maturidade e quero saber mais sobre o Mapa de Identidade Estratégica.'
+  'Olá! Fiz o Mapa do Crescimento Integrado e quero descobrir a origem por trás dos sintomas com o Crescimento Integrado v2.'
 )}`;
 
-// escapa texto da IA/dados para não quebrar o layout
-function esc(s) {
+// remove travessões (— / –) de qualquer texto, convertendo em pontuação corrente.
+// Decisão de marca: os relatórios não usam travessão.
+function deDash(s) {
   return String(s == null ? '' : s)
+    .replace(/\s*[—–]\s*/g, ', ')
+    .replace(/,\s*,/g, ',')
+    .replace(/\s+,/g, ',')
+    .replace(/,\s*\./g, '.')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+// escapa texto da IA/dados para não quebrar o layout (e já tira travessões)
+function esc(s) {
+  return deDash(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
@@ -37,13 +48,34 @@ const NIVEL_COR_HERO = { 1: '#EA6A76', 2: '#EA6A76', 3: '#E7B24D', 4: '#5FC08A' 
 function trackSvg(score, sistemas = []) {
   const px = (v) => Math.max(12, Math.min(788, Math.round((v / 100) * 800)));
   const x = px(score);
-  const dots = (sistemas || []).filter((s) => s.nota != null).map((s) => {
-    const sx = px(s.nota);
-    const cor = NIVEL_COR_HERO[s.nivel] || '#E7B24D';
-    const ini = esc((s.sistema || '?').trim().charAt(0).toUpperCase());
-    return `<line x1="${sx}" y1="40" x2="${sx}" y2="60" stroke="${cor}" stroke-width="2.5" opacity=".85"/>
-      <circle cx="${sx}" cy="40" r="5.5" fill="${cor}" stroke="#001A3B" stroke-width="1.5"/>
-      <text x="${sx}" y="30" text-anchor="middle" font-family="Poppins, sans-serif" font-size="13" font-weight="700" fill="${cor}">${ini}</text>`;
+  // posição real de cada pilar na régua
+  const marks = (sistemas || []).filter((s) => s.nota != null).map((s) => ({
+    sx: px(s.nota),
+    cor: NIVEL_COR_HERO[s.nivel] || '#E7B24D',
+    ini: esc((s.sistema || '?').trim().charAt(0).toUpperCase()),
+  }));
+  // dodge: quando dois ou mais pilares têm nota igual/próxima, os marcadores
+  // se sobrepõem na régua. Espalha os coincidentes horizontalmente em torno do
+  // ponto médio, mantendo-os dentro dos limites.
+  marks.sort((a, b) => a.sx - b.sx);
+  const SPREAD = 16;
+  for (let i = 0; i < marks.length; ) {
+    let j = i;
+    while (j + 1 < marks.length && marks[j + 1].sx - marks[i].sx < SPREAD) j++;
+    const n = j - i + 1;
+    if (n > 1) {
+      const mid = (marks[i].sx + marks[j].sx) / 2;
+      for (let k = i; k <= j; k++) {
+        marks[k].lx = Math.max(12, Math.min(788, Math.round(mid + (k - i - (n - 1) / 2) * SPREAD)));
+      }
+    }
+    i = j + 1;
+  }
+  const dots = marks.map((m) => {
+    const lx = m.lx != null ? m.lx : m.sx;
+    return `<line x1="${lx}" y1="40" x2="${lx}" y2="60" stroke="${m.cor}" stroke-width="2.5" opacity=".85"/>
+      <circle cx="${lx}" cy="40" r="5.5" fill="${m.cor}" stroke="#001A3B" stroke-width="1.5"/>
+      <text x="${lx}" y="30" text-anchor="middle" font-family="Poppins, sans-serif" font-size="13" font-weight="700" fill="${m.cor}">${m.ini}</text>`;
   }).join('');
   return `<svg viewBox="0 0 800 98" role="img" aria-label="Nível de maturidade: ${score}%">
       <rect x="0" y="50" width="196" height="11" rx="5.5" fill="#2C3A57"/>
@@ -66,6 +98,8 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   const alertsByNome = {};
   for (const s of narrativa.sistemas || []) if (s && s.sistema) alertsByNome[s.sistema] = s;
 
+  // Um bloco por pilar amarrando TODOS os pontos: nível, leitura e, quando o
+  // pilar pesa, o que a fragilidade costuma custar (antes era uma seção à parte).
   const sistemasHtml = (result.sistemas || []).map((s) => {
     const nota = s.nota == null ? 0 : Math.round(s.nota);
     const cor = COR_NIVEL[s.nivel] || 'var(--brass)';
@@ -73,18 +107,16 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
     const alerta = n.alert
       ? (n.is_alerta ? `<b>Sinal de alerta:</b> ${emphasize(n.alert)}` : emphasize(n.alert))
       : esc(s.leitura || '');
+    const custo = n.custo && String(n.custo).trim()
+      ? `<p class="sys-cost"><b>O que costuma custar:</b> ${emphasize(n.custo)}</p>`
+      : '';
     return `<div class="sys">
-      <div class="sys-top"><span class="sys-name">${esc(s.sistema)}</span><span class="sys-meta"><b>${nota}%</b> · Nível ${s.nivel || '—'} · ${esc((s.nivel_nome || '').toLowerCase())}</span></div>
+      <div class="sys-top"><span class="sys-name">${esc(s.sistema)}</span><span class="sys-meta"><b>${nota}%</b> · Nível ${s.nivel || '?'} · ${esc((s.nivel_nome || '').toLowerCase())}</span></div>
       <div class="bar"><i style="width:${nota}%;background:${cor};"></i></div>
       <p class="sys-alert">${alerta}</p>
+      ${custo}
     </div>`;
   }).join('\n');
-
-  const criticosHtml = (narrativa.criticos || []).slice(0, 3).map((c) => `<div class="exp">
-      <span class="tag">${esc(c.tag)}</span>
-      <h3>${esc(c.headline)}</h3>
-      <p class="cost"><b>O que costuma custar:</b> ${emphasize(c.cost)}</p>
-    </div>`).join('\n');
 
   const selecionados = new Set(result.atributos_marca || []);
   const chipsHtml = atributosPossiveis().map((a) =>
@@ -93,7 +125,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   return `<!DOCTYPE html>
 <html lang="pt-BR"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa da Maturidade${cliente ? ' — ' + esc(cliente) : ''}</title>
+<title>Mapa do Crescimento Integrado${cliente ? ' · ' + esc(cliente) : ''}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -125,6 +157,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .sys-meta{font-family:'Poppins',sans-serif;font-size:12px;color:var(--muted);letter-spacing:.04em;} .sys-meta b{color:var(--text);}
   .bar{position:relative;height:9px;border-radius:6px;background:#E7E2D8;margin:12px 0 10px;overflow:hidden;} .bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;display:block;}
   .sys-alert{font-size:14.5px;color:var(--muted);} .sys-alert b{color:var(--clay);font-weight:600;}
+  .sys-cost{font-size:14px;color:var(--muted);margin:8px 0 0;padding-left:14px;border-left:2px solid var(--clay);} .sys-cost b{color:var(--text);font-weight:600;}
   .exp{border:1px solid var(--line);border-left:3px solid var(--clay);border-radius:var(--r);background:var(--paper-2);padding:22px 24px;margin-bottom:16px;}
   .exp .tag{font-family:'Poppins',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);font-weight:500;} .exp h3{font-size:20px;margin:8px 0 8px;}
   .exp .cost{font-size:15px;color:var(--muted);} .exp .cost b{color:var(--text);font-weight:600;}
@@ -159,7 +192,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
 <script>
 // PDF pela impressão nativa do navegador: vetorial, texto selecionável e
 // paginação correta. O html2pdf (canvas fatiado) gerava páginas em branco no
-// início e cortava seções — trocado por window.print + @media print.
+// início e cortava seções; trocado por window.print + @media print.
 function salvarPdf(){
   var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
   ready.then(function(){ setTimeout(function(){ window.print(); }, 150); });
@@ -170,33 +203,26 @@ if(new URLSearchParams(location.search).get('print')==='1'){
 </script>
 
 <header class="hero"><div class="wrap">
-  <div class="top"><span class="eyebrow">Mapa da Maturidade</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
+  <div class="top"><span class="eyebrow">Mapa do Crescimento Integrado</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
   <h1 class="verdict">${emphasize(narrativa.verdict || 'O retrato da sua empresa hoje.')}</h1>
   <p class="subverdict">${esc(narrativa.subverdict || 'Você respondeu 40 perguntas sobre a sua empresa. Abaixo, o que elas revelam.')}</p>
   <div class="score-row"><div class="score-big">${score}<span>%</span></div>
-    <div class="score-lvl"><div class="n">Nível ${result.general_nivel || '—'}</div><div class="t">${esc(result.general_level || '')}</div></div></div>
+    <div class="score-lvl"><div class="n">Nível ${result.general_nivel || '?'}</div><div class="t">${esc(result.general_level || '')}</div></div></div>
   <div class="track">${trackSvg(score, result.sistemas)}</div>
-  <div class="track-legend">${(result.sistemas || []).map((s) => `<span class="tl"><i style="background:${NIVEL_COR_HERO[s.nivel] || '#E7B24D'}"></i>${esc((s.sistema || '').trim().charAt(0).toUpperCase())} · ${esc(s.sistema)}${s.nota != null ? ` — ${Math.round(s.nota)}%` : ''}</span>`).join('')}</div>
+  <div class="track-legend">${(result.sistemas || []).map((s) => `<span class="tl"><i style="background:${NIVEL_COR_HERO[s.nivel] || '#E7B24D'}"></i>${esc((s.sistema || '').trim().charAt(0).toUpperCase())} · ${esc(s.sistema)}${s.nota != null ? ` (${Math.round(s.nota)}%)` : ''}</span>`).join('')}</div>
 </div></header>
 
 <section class="wrap">
-  <div class="sec-head"><span class="num">01</span><h2>Onde a empresa está, sistema a sistema</h2></div>
+  <div class="sec-head"><span class="num">01</span><h2>Onde a empresa está, pilar a pilar</h2></div>
+  <p class="lead" style="margin-bottom:26px;">Marca, Negócios, Comunicação e Pessoas não funcionam separados: juntos, formam um sistema. Abaixo, o nível de cada pilar, a leitura do que isso significa na prática e, onde pesa, o que a fragilidade costuma custar ao negócio.</p>
   ${sistemasHtml}
 </section>
 
-<hr class="divider">
-
-<section class="wrap">
-  <div class="sec-head"><span class="num">02</span><h2>Os sinais mais críticos</h2></div>
-  <p class="lead" style="margin-bottom:26px;">Não são os únicos — são os que mais pesam hoje. Ao lado de cada um, o que ele costuma custar.</p>
-  ${criticosHtml}
-</section>
-
-${narrativa.pattern ? `<section class="wrap"><div class="pattern"><span class="eyebrow">O padrão por trás</span><p>${emphasize(narrativa.pattern)}</p></div></section>` : ''}
+${narrativa.pattern ? `<section class="wrap"><div class="pattern"><span class="eyebrow">Resumo da Análise</span><p>${emphasize(narrativa.pattern)}</p></div></section>` : ''}
 
 ${chipsHtml ? `<section class="wrap">
-  <div class="sec-head"><span class="num">03</span><h2>Como você acha que o mercado enxerga a empresa</h2></div>
-  <p class="lead" style="margin-bottom:18px;">Estes são os atributos que <b>você</b> associa à empresa hoje — e os que ficaram de fora. Se os seus clientes respondessem, marcariam os mesmos? É essa distância que o Mapa de Identidade revela.</p>
+  <div class="sec-head"><span class="num">02</span><h2>Como você acha que o mercado enxerga a empresa</h2></div>
+  <p class="lead" style="margin-bottom:18px;">Estes são os atributos que <b>você</b> associa à empresa hoje, e os que ficaram de fora. Se os seus clientes respondessem, marcariam os mesmos? Essa é uma das perguntas que só ganham resposta quando se investiga a fundo.</p>
   <div class="chips">${chipsHtml}</div>
   ${narrativa.atributos_pergunta ? `<p class="attr-q">${emphasize(narrativa.atributos_pergunta)}</p>` : ''}
 </section>` : ''}
@@ -204,18 +230,18 @@ ${chipsHtml ? `<section class="wrap">
 <hr class="divider">
 
 <section class="wrap">
-  <p class="gap-q">Você já sabe onde dói. O que este diagnóstico não responde — <em>de propósito</em> — é por quê.</p>
-  <p class="gap-sub">Essa é a diferença entre apagar incêndio e resolver a origem.</p>
+  <p class="gap-q">O que você viu até aqui são <em>sintomas</em>. O que muda o jogo agora é descobrir a origem por trás deles.</p>
+  <p class="gap-sub">O problema aparece nas vendas, na margem, na equipe ou na sobrecarga do dono. Mas nem sempre a causa está onde o sintoma aparece.</p>
 </section>
 
 <section class="wrap"><div class="next">
   <span class="eyebrow">O próximo passo</span>
-  <h2>Mapa da Identidade Estratégica</h2>
-  <p class="hook">${esc(narrativa.cta_hook || 'Este retrato é só o seu olhar. O Mapa da Identidade coloca lado a lado como você, a sua equipe e os seus clientes respondem às mesmas perguntas — e é na distância entre esses três olhares que a causa aparece.')}</p>
-  <a class="cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer">Falar sobre o Mapa de Identidade Estratégica →</a>
-  <div class="fine">Os 3 olhares — você, equipe e clientes — e a distância entre eles</div>
+  <h2>Mapa do Crescimento Integrado v2</h2>
+  <p class="hook">${esc(narrativa.cta_hook || 'Este retrato mostra ONDE a empresa está. O Crescimento Integrado v2 revela POR QUÊ: ele conecta os quatro pilares, Marca, Negócios, Comunicação e Pessoas, e mostra onde a integração se rompe. Ouve não só você, mas a sua equipe e os seus clientes, cruza percepção, comportamento e resultado, e chega à origem por trás dos sintomas, com clareza para decidir e direção para crescer.')}</p>
+  <a class="cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer">Quero descobrir a origem por trás dos sintomas →</a>
+  <div class="fine">Os quatro pilares como um sistema: da leitura ao direcionamento.</div>
 </div></section>
 
-<footer><div class="brand">Espansione</div><div class="tagline">Da estratégia que morre na gaveta para a marca que opera</div></footer>
+<footer><div class="brand">Espansione</div><div class="tagline">Crescimento Integrado. Clareza para decidir, estrutura para crescer.</div></footer>
 </body></html>`;
 }
