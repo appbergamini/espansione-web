@@ -54,7 +54,7 @@ export default function MapaEntradaPage() {
         <div style={sx.eyebrow}>Check-up gratuito</div>
         <h1 style={sx.h1}>Mapa da Maturidade</h1>
         <p style={sx.txtSec}>
-          Um diagnóstico rápido do seu negócio em 4 sistemas — Marca, Negócios, Comunicação e
+          Um diagnóstico rápido do seu negócio em 4 sistemas, Marca, Negócios, Comunicação e
           Pessoas. Preencha seus dados para começar e receber o resultado.
         </p>
         <div style={{ marginTop: '1rem' }}>

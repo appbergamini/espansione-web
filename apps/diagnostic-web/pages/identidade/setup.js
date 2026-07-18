@@ -9,7 +9,7 @@ import { MapaShell, MapaCard as Card, CORES } from '../../components/mapa/mapaTh
 
 const PUBLICO = {
   socios: { nome: 'Sócios e Diretores', hint: 'Você e os demais sócios/diretores respondem.' },
-  colaboradores: { nome: 'Colaboradores e Líderes', hint: 'Envie para a equipe — várias pessoas podem responder.' },
+  colaboradores: { nome: 'Colaboradores e Líderes', hint: 'Envie para a equipe, várias pessoas podem responder.' },
   clientes: { nome: 'Clientes e Fornecedores', hint: 'Envie para clientes/fornecedores de confiança.' },
 };
 
@@ -87,7 +87,7 @@ export default function IdentidadeSetup() {
             <div style={sx.accent} />
             <div style={sx.eyebrow}>Compra confirmada</div>
             <h1 style={sx.h1}>Preparando o seu Mapa de Identidade…</h1>
-            <p style={sx.txt}>Estamos confirmando o seu pagamento. Isso costuma levar poucos segundos — esta página atualiza sozinha.</p>
+            <p style={sx.txt}>Estamos confirmando o seu pagamento. Isso costuma levar poucos segundos, esta página atualiza sozinha.</p>
             <div style={sx.spinner} />
           </Card>
         )}
@@ -97,7 +97,7 @@ export default function IdentidadeSetup() {
             <div style={sx.accent} />
             <div style={sx.eyebrow}>Último passo</div>
             <h1 style={sx.h1}>Só confirmar seus dados</h1>
-            <p style={sx.txt}>Usamos para identificar o seu diagnóstico e enviar o acesso — inclusive aos treinamentos.</p>
+            <p style={sx.txt}>Usamos para identificar o seu diagnóstico e enviar o acesso, inclusive aos treinamentos.</p>
             <input value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Nome da sua empresa"
               style={{ ...sx.input, marginTop: '1.1rem' }} />
             <input value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="Seu melhor e-mail" type="email"
@@ -117,7 +117,7 @@ export default function IdentidadeSetup() {
             <h1 style={sx.h1}>Tudo pronto{dados.cliente ? `, ${dados.cliente}` : ''}!</h1>
             <p style={sx.txt}>
               O Mapa de Identidade cruza <b>três olhares</b> sobre a sua empresa. Compartilhe cada link com
-              o público certo — quanto mais respostas, mais rica a triangulação.
+              o público certo, quanto mais respostas, mais rica a triangulação.
             </p>
 
             <div style={{ display: 'grid', gap: '0.7rem', marginTop: '1.2rem' }}>

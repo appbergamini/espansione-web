@@ -198,8 +198,8 @@ export default function MapaMaturidadePage() {
             <h1 style={sx.h1}>Mapa da Maturidade</h1>
             {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>
-              Responda às afirmações considerando a realidade atual da empresa. Avaliamos 4 sistemas —
-              Marca, Negócios, Comunicação e Pessoas — com 10 sinais cada.
+              Responda às afirmações considerando a realidade atual da empresa. Avaliamos 4 sistemas ,
+              Marca, Negócios, Comunicação e Pessoas, com 10 sinais cada.
             </p>
             <div style={sx.aviso}>
               Use <b>"Não sei/Não se aplica"</b> apenas quando a afirmação realmente não fizer sentido
@@ -215,7 +215,7 @@ export default function MapaMaturidadePage() {
         {fase === 'quiz' && sistema && (
           <Card wide>
             <Progresso atual={sistemaIdx + 1} total={SISTEMAS_MATURIDADE.length} rotulo="Bloco" />
-            <h2 style={sx.h2}>Bloco {sistemaIdx + 1} de {SISTEMAS_MATURIDADE.length} — {sistema}</h2>
+            <h2 style={sx.h2}>Bloco {sistemaIdx + 1} de {SISTEMAS_MATURIDADE.length}, {sistema}</h2>
 
             <div style={{ marginTop: '1.4rem' }}>
               {perguntas.map((q, i) => (

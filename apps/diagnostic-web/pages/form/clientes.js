@@ -61,7 +61,7 @@ export default function FormClientesPage() {
       setLoading(false);
       setErro({
         tipo: 'TOKEN_AUSENTE',
-        mensagem: 'Link inválido — token ausente na URL. Solicite um novo convite ao administrador do projeto.',
+        mensagem: 'Link inválido, token ausente na URL. Solicite um novo convite ao administrador do projeto.',
       });
       return;
     }
@@ -151,8 +151,8 @@ export default function FormClientesPage() {
     <>
       <Head>
         <title>
-          {modoPreview ? 'Pré-visualização — ' : ''}
-          Pesquisa de Percepção — {projetoMeta?.nome_marca || 'Espansione'}
+          {modoPreview ? 'Pré-visualização, ' : ''}
+          Pesquisa de Percepção, {projetoMeta?.nome_marca || 'Espansione'}
         </title>
       </Head>
       {modoPreview && (

@@ -86,7 +86,7 @@ export default function AreaCliente() {
               </>
             ) : (
               <>
-                <p style={sx.txt}>Use o mesmo e-mail da sua compra. Enviaremos um <b>código de acesso</b> — sem senha.</p>
+                <p style={sx.txt}>Use o mesmo e-mail da sua compra. Enviaremos um <b>código de acesso</b>, sem senha.</p>
                 <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" type="email"
                   style={sx.input} onKeyDown={(e) => e.key === 'Enter' && entrar()} />
                 <button className="mapa-btn" onClick={entrar} style={{ marginTop: '1rem', opacity: email.trim() && !enviando ? 1 : 0.6 }}>
@@ -162,7 +162,7 @@ function Diagnostico({ dados }) {
           <div style={sx.accent} />
           <div style={sx.eyebrow}>Mapa de Maturidade · grátis</div>
           <h2 style={{ margin: '0.3rem 0 0.2rem' }}>Faça o seu Mapa de Maturidade</h2>
-          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Um diagnóstico rápido do seu negócio em 4 sistemas — Marca, Negócios, Comunicação e Pessoas. Leva poucos minutos e gera um relatório na hora.</p>
+          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Um diagnóstico rápido do seu negócio em 4 sistemas, Marca, Negócios, Comunicação e Pessoas. Leva poucos minutos e gera um relatório na hora.</p>
           <a className="mapa-btn" href={`/mapa?email=${encodeURIComponent(dados.email || '')}`} target="_blank" rel="noreferrer"
             style={{ marginTop: '1rem', textDecoration: 'none', display: 'inline-block' }}>Fazer o Mapa de Maturidade →</a>
         </div>
@@ -172,7 +172,7 @@ function Diagnostico({ dados }) {
           <div style={sx.accent} />
           <div style={sx.eyebrow}>Mapa de Identidade Estratégica</div>
           <h2 style={{ margin: '0.3rem 0 0.2rem' }}>{d.cliente || 'Seu diagnóstico'}</h2>
-          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Compartilhe cada link com o público certo — quanto mais respostas, mais rica a triangulação.</p>
+          <p style={{ ...sx.txt, fontSize: '0.9rem' }}>Compartilhe cada link com o público certo, quanto mais respostas, mais rica a triangulação.</p>
           <div style={{ display: 'grid', gap: '0.6rem', marginTop: '1rem' }}>
             {d.publicos.map((p) => (
               <div key={p.key} style={sx.row}>

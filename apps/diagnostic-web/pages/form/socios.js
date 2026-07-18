@@ -67,7 +67,7 @@ export default function FormSociosPage() {
       setLoading(false);
       setErro({
         tipo: 'TOKEN_AUSENTE',
-        mensagem: 'Link inválido — token ausente na URL. Solicite um novo convite ao administrador do projeto.',
+        mensagem: 'Link inválido, token ausente na URL. Solicite um novo convite ao administrador do projeto.',
       });
       return;
     }
@@ -161,8 +161,8 @@ export default function FormSociosPage() {
     <>
       <Head>
         <title>
-          {modoPreview ? 'Pré-visualização — ' : ''}
-          Levantamento Inicial — {respondente?.projeto_nome || projetoMeta?.nome_marca || 'Espansione'}
+          {modoPreview ? 'Pré-visualização, ' : ''}
+          Levantamento Inicial, {respondente?.projeto_nome || projetoMeta?.nome_marca || 'Espansione'}
         </title>
       </Head>
       {modoPreview && (

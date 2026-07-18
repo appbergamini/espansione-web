@@ -101,7 +101,7 @@ export default function IntakeForm() {
                 {/* BLOCO A */}
                 <div style={{ marginBottom: '3rem' }}>
                   <h2 style={{ color: 'var(--accent-blue)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-                    {isCompleta ? 'Bloco A — ' : ''}A Empresa e sua Marca
+                    {isCompleta ? 'Bloco A, ' : ''}A Empresa e sua Marca
                   </h2>
                   
                   <div className="form-group">
@@ -162,7 +162,7 @@ export default function IntakeForm() {
                 {/* BLOCO B (Apenas Completa) */}
                 {isCompleta && (
                   <div style={{ marginBottom: '3rem' }}>
-                    <h2 style={{ color: 'var(--accent-purple)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Bloco B — Marca Empregadora e Cultura</h2>
+                    <h2 style={{ color: 'var(--accent-purple)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Bloco B, Marca Empregadora e Cultura</h2>
 
                     <div className="form-group">
                       <label>Na sua percepção, como é o clima interno da sua empresa?</label>
@@ -221,7 +221,7 @@ export default function IntakeForm() {
                 {/* BLOCO C */}
                 <div style={{ marginBottom: '3rem' }}>
                   <h2 style={{ color: 'var(--accent-green)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-                    {isCompleta ? 'Bloco C — ' : ''}Visão, Propósito e Futuro
+                    {isCompleta ? 'Bloco C, ' : ''}Visão, Propósito e Futuro
                   </h2>
 
                   <div className="form-group">

@@ -347,7 +347,7 @@ export default function EntrevistaPage() {
         <p style={txtSec}>
           Olá{respondente?.nome ? `, ${respondente.nome.split(' ')[0]}` : ''}! Vamos fazer uma conversa guiada,
           como {PAPEL_LABEL[respondente?.papel] || 'convidado'}, com {perguntas.length} perguntas. Leva cerca de
-          15–25 minutos. Não há resposta certa — quanto mais honesto e concreto, melhor.
+          15–25 minutos. Não há resposta certa, quanto mais honesto e concreto, melhor.
         </p>
         <div style={dica}>
           💡 Você pode <strong>digitar</strong> ou <strong>falar</strong>: toque em <strong>🎤 Falar</strong> e
@@ -401,7 +401,7 @@ export default function EntrevistaPage() {
         className="form-input"
         value={valorAtual}
         onChange={(e) => setCampoAtual(e.target.value)}
-        placeholder={coberturaAtual ? 'Se quiser, acrescente algo — ou pule.' : 'Escreva ou fale sua resposta…'}
+        placeholder={coberturaAtual ? 'Se quiser, acrescente algo, ou pule.' : 'Escreva ou fale sua resposta…'}
         disabled={enviando}
         style={{ width: '100%', minHeight: '170px', resize: 'vertical', padding: '0.85rem', fontSize: '1rem', lineHeight: 1.5 }}
       />

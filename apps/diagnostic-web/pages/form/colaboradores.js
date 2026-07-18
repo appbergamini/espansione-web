@@ -56,7 +56,7 @@ export default function FormColaboradoresPage() {
       setLoading(false);
       setErro({
         tipo: 'TOKEN_AUSENTE',
-        mensagem: 'Link inválido — token ausente na URL. Solicite um novo convite ao administrador do projeto.',
+        mensagem: 'Link inválido, token ausente na URL. Solicite um novo convite ao administrador do projeto.',
       });
       return;
     }
@@ -149,8 +149,8 @@ export default function FormColaboradoresPage() {
     <>
       <Head>
         <title>
-          {modoPreview ? 'Pré-visualização — ' : ''}
-          {projetoNome ? `Pesquisa Interna — ${projetoNome}` : 'Pesquisa Interna'}
+          {modoPreview ? 'Pré-visualização, ' : ''}
+          {projetoNome ? `Pesquisa Interna, ${projetoNome}` : 'Pesquisa Interna'}
         </title>
       </Head>
       {modoPreview && (
