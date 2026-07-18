@@ -34,6 +34,20 @@ const nextConfig = {
     ],
   },
 
+  // Temporário: no domínio do funil, "/" redireciona para a LP em /lp
+  // enquanto o novo site institucional não entra. Só nos hosts do funil —
+  // nos demais (*.vercel.app, painel), "/" segue abrindo o app (→ /adm).
+  // permanent: false (307) porque é provisório; não deve ficar cacheado.
+  async redirects() {
+    const FUNIL_HOSTS = ['crescimentointegrado.com.br', 'www.crescimentointegrado.com.br'];
+    return FUNIL_HOSTS.map((host) => ({
+      source: '/',
+      has: [{ type: 'host', value: host }],
+      destination: '/lp',
+      permanent: false,
+    }));
+  },
+
   // Landing page estática do Mapa do Crescimento Integrado.
   // O HTML self-contained vive em public/crescimento/index.html.
   async rewrites() {
