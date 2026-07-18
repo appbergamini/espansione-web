@@ -11,7 +11,7 @@ import {
 import { MapaShell, MapaCard as Card, sx, CORES } from '../../components/mapa/mapaTheme';
 
 // =====================================================================
-// Mapa do Crescimento Integrado Essencial (FINAL) — página pública (acesso por token).
+// Mapa do Crescimento Integrado · Essencial (FINAL) — página pública (acesso por token).
 // Fluxo: cadastro → 4 sistemas (10 perguntas cada + condicional de
 // atributos de marca) → resultado vendedor. O score exibido é o
 // AUTORITATIVO devolvido por /api/mapa/finalize (recomputado no servidor).
@@ -170,7 +170,7 @@ export default function MapaMaturidadePage() {
             <div style={sx.eyebrow}>Antes de começar</div>
             <h1 style={sx.h1}>Vamos conhecer sua empresa</h1>
             <p style={sx.txtSec}>
-              O Mapa do Crescimento Integrado Essencial é um check-up rápido do seu negócio. Preencha seus dados para
+              O Mapa do Crescimento Integrado · Essencial é um check-up rápido do seu negócio. Preencha seus dados para
               iniciar e receber o resultado.
             </p>
             <div style={{ marginTop: '1rem' }}>
@@ -195,7 +195,7 @@ export default function MapaMaturidadePage() {
         {fase === 'intro' && (
           <Card>
             <div style={sx.eyebrow}>Check-up gratuito</div>
-            <h1 style={sx.h1}>Mapa do Crescimento Integrado Essencial</h1>
+            <h1 style={sx.h1}>Mapa do Crescimento Integrado · Essencial</h1>
             {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>
               Responda às afirmações considerando a realidade atual da empresa. Avaliamos 4 pilares:
@@ -254,7 +254,7 @@ export default function MapaMaturidadePage() {
             <div style={sx.accent} />
             <div style={sx.eyebrow}>Quase lá</div>
             <h1 style={sx.h1}>Gerando o seu relatório…</h1>
-            <p style={sx.txtSec}>Estamos preparando a leitura completa do seu Mapa do Crescimento Integrado Essencial. Leva alguns segundos.</p>
+            <p style={sx.txtSec}>Estamos preparando a leitura completa do seu Mapa do Crescimento Integrado · Essencial. Leva alguns segundos.</p>
             <div style={{ width: 38, height: 38, margin: '1.4rem auto 0.3rem', borderRadius: '50%', border: `3px solid ${CORES.track}`, borderTopColor: CORES.red, animation: 'spin 0.9s linear infinite' }} />
           </Card>
         )}
