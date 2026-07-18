@@ -167,6 +167,7 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   .chip{font-family:'Poppins',sans-serif;font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--paper-2);color:var(--text);}
   .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);} .chip.off{color:var(--faint);border-style:dashed;}
   .attr-q{font-family:'Poppins',sans-serif;font-size:20px;line-height:1.4;color:var(--text);max-width:54ch;}
+  .start{border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:var(--r);background:var(--paper-2);padding:22px 24px;} .start .eyebrow{display:block;margin-bottom:8px;} .start p{font-family:'Poppins',sans-serif;font-size:18px;line-height:1.5;color:var(--text);margin:0;} .start p em{font-style:normal;font-weight:600;color:var(--brass-deep);}
   .gap-q{font-family:'Poppins',sans-serif;font-size:clamp(22px,3.4vw,30px);line-height:1.32;max-width:24ch;margin:0 auto;text-align:center;} .gap-q em{font-style:italic;color:var(--brass-deep);}
   .gap-sub{text-align:center;color:var(--muted);max-width:48ch;margin:18px auto 0;}
   .next{background:linear-gradient(180deg,#1B2A47,#001A3B);color:#EEF1F7;border-radius:22px;padding:46px 44px;text-align:center;} .next .eyebrow{color:#F19AA5;}
@@ -226,6 +227,8 @@ ${chipsHtml ? `<section class="wrap">
   <div class="chips">${chipsHtml}</div>
   ${narrativa.atributos_pergunta ? `<p class="attr-q">${emphasize(narrativa.atributos_pergunta)}</p>` : ''}
 </section>` : ''}
+
+${narrativa.ponto_de_partida ? `<section class="wrap"><div class="start"><span class="eyebrow">Por onde aprofundar</span><p>${emphasize(narrativa.ponto_de_partida)}</p></div></section>` : ''}
 
 <hr class="divider">
 

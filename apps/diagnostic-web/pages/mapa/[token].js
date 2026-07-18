@@ -198,7 +198,7 @@ export default function MapaMaturidadePage() {
             <h1 style={sx.h1}>Mapa do Crescimento Integrado</h1>
             {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>
-              Responda às afirmações considerando a realidade atual da empresa. Avaliamos 4 sistemas:
+              Responda às afirmações considerando a realidade atual da empresa. Avaliamos 4 pilares:
               Marca, Negócios, Comunicação e Pessoas, com 10 sinais cada.
             </p>
             <div style={sx.aviso}>
