@@ -5,6 +5,7 @@
 // tanto a rota web quanto a geração de PDF (chromium renderiza este HTML).
 // =====================================================================
 import { CATALOGO_MATURIDADE } from './catalog.generated.js';
+import { ESPANSIONE_LOGO_WHITE } from '../brand/logoDataUri.js';
 
 // Contato do CTA final — mesmo WhatsApp da landing (/crescimento). O próximo passo
 // é uma conversa, não um checkout.
@@ -137,7 +138,8 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   h1,h2,h3{font-family:'Poppins',sans-serif;font-weight:600;line-height:1.12;letter-spacing:-.01em;margin:0;}
   p{margin:0 0 1em;}
   .hero{background:var(--ink);color:#EEF1F7;padding:52px 0 40px;}
-  .hero .eyebrow{color:#F19AA5;} .hero .top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;}
+  .hero .eyebrow{color:#F19AA5;} .hero .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .hero .top-l{display:flex;flex-direction:column;gap:6px;} .hero-logo{width:132px;height:auto;flex:0 0 auto;margin-top:2px;}
   .hero .co{font-family:'Poppins',sans-serif;font-size:15px;color:#AEB8CE;font-weight:500;}
   .verdict{font-size:clamp(27px,4.6vw,40px);color:#fff;margin:22px 0 6px;max-width:18ch;}
   .verdict em{font-style:italic;color:#F19AA5;} .subverdict{color:#AEB8CE;max-width:54ch;margin-bottom:30px;}
@@ -205,7 +207,10 @@ if(new URLSearchParams(location.search).get('print')==='1'){
 </script>
 
 <header class="hero"><div class="wrap">
-  <div class="top"><span class="eyebrow">Mapa do Crescimento Integrado Essencial</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
+  <div class="top">
+    <div class="top-l"><span class="eyebrow">Mapa do Crescimento Integrado Essencial</span><span class="co">${esc(cliente || 'Empresa')}${dataLabel ? ' · ' + esc(dataLabel) : ''}</span></div>
+    <img class="hero-logo" src="${ESPANSIONE_LOGO_WHITE}" alt="Espansione" />
+  </div>
   <h1 class="verdict">${emphasize(narrativa.verdict || 'O retrato da sua empresa hoje.')}</h1>
   <p class="subverdict">${esc(narrativa.subverdict || 'Você respondeu 40 perguntas sobre a sua empresa. Abaixo, o que elas revelam.')}</p>
   <div class="score-row"><div class="score-big">${score}<span>%</span></div>
