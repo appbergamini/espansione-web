@@ -55,22 +55,54 @@ function trackSvg(score, sistemas = []) {
     cor: NIVEL_COR_HERO[s.nivel] || '#E7B24D',
     ini: esc((s.sistema || '?').trim().charAt(0).toUpperCase()),
   }));
-  // dodge: quando dois ou mais pilares têm nota igual/próxima, os marcadores
-  // se sobrepõem na régua. Espalha os coincidentes horizontalmente em torno do
-  // ponto médio, mantendo-os dentro dos limites.
+  // dodge em 2 fases: quando marcadores têm nota igual/próxima, as letras se
+  // sobrepõem entre si e com a linha do "você".
+  // Fase 1 — espalha as letras entre si: clusters de vizinhos a menos de MIN
+  // são mesclados e centrados na média das notas, presos aos limites da régua.
+  const MIN = 20;
   marks.sort((a, b) => a.sx - b.sx);
-  const SPREAD = 16;
-  for (let i = 0; i < marks.length; ) {
-    let j = i;
-    while (j + 1 < marks.length && marks[j + 1].sx - marks[i].sx < SPREAD) j++;
-    const n = j - i + 1;
-    if (n > 1) {
-      const mid = (marks[i].sx + marks[j].sx) / 2;
-      for (let k = i; k <= j; k++) {
-        marks[k].lx = Math.max(12, Math.min(788, Math.round(mid + (k - i - (n - 1) / 2) * SPREAD)));
+  const startDe = (c) => {
+    const w = (c.length - 1) * MIN;
+    const media = c.reduce((t, it) => t + it.sx, 0) / c.length;
+    return Math.max(12, Math.min(788 - w, media - w / 2));
+  };
+  let clusters = marks.map((m) => [m]);
+  for (let merged = true; merged; ) {
+    merged = false;
+    for (let i = 0; i + 1 < clusters.length; i++) {
+      const fim = startDe(clusters[i]) + (clusters[i].length - 1) * MIN;
+      if (startDe(clusters[i + 1]) - fim < MIN) {
+        clusters[i] = clusters[i].concat(clusters[i + 1]);
+        clusters.splice(i + 1, 1);
+        merged = true;
+        break;
       }
     }
-    i = j + 1;
+  }
+  for (const c of clusters) {
+    const s = startDe(c);
+    c.forEach((it, k) => { it.lx = Math.round(s + k * MIN); });
+  }
+  // Fase 2 — a linha do "você" é fixa na nota real: marcadores a menos de MIN
+  // dela se afastam (mudando de lado se faltar espaço na borda), mantendo MIN
+  // entre si e os limites. Sempre viável: 4 letras ocupam 80 de 776 unidades.
+  const esq = marks.filter((m) => m.lx < x);
+  const dir = marks.filter((m) => m.lx >= x);
+  const capEsq = x - MIN >= 12 ? Math.floor((x - MIN - 12) / MIN) + 1 : 0;
+  const capDir = x + MIN <= 788 ? Math.floor((788 - x - MIN) / MIN) + 1 : 0;
+  while (esq.length > capEsq) dir.unshift(esq.pop());
+  while (dir.length > capDir) esq.push(dir.shift());
+  for (let i = esq.length - 1; i >= 0; i--) {
+    esq[i].lx = Math.min(esq[i].lx, i === esq.length - 1 ? x - MIN : esq[i + 1].lx - MIN);
+  }
+  for (let i = 0; i < esq.length; i++) {
+    esq[i].lx = Math.max(esq[i].lx, i === 0 ? 12 : esq[i - 1].lx + MIN);
+  }
+  for (let i = 0; i < dir.length; i++) {
+    dir[i].lx = Math.max(dir[i].lx, i === 0 ? x + MIN : dir[i - 1].lx + MIN);
+  }
+  for (let i = dir.length - 1; i >= 0; i--) {
+    dir[i].lx = Math.min(dir[i].lx, i === dir.length - 1 ? 788 : dir[i + 1].lx - MIN);
   }
   const dots = marks.map((m) => {
     const lx = m.lx != null ? m.lx : m.sx;
