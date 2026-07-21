@@ -206,6 +206,12 @@ export default function MapaMaturidadePage() {
 
   // ── render ───────────────────────────────────────────────────────
   const multipla = pergunta?.response_type === 'multipla';
+  // progresso por bloco (1/4) — a barra avança suave dentro do bloco, mas o
+  // rótulo nunca expõe o total de perguntas
+  const blocoIdx = pergunta ? Math.max(0, SISTEMAS_MATURIDADE.indexOf(pergunta.sistema)) : 0;
+  const doBloco = pergunta ? sequencia.filter((q) => q.sistema === pergunta.sistema) : [];
+  const posNoBloco = pergunta ? doBloco.indexOf(pergunta) : 0;
+  const pctQuiz = Math.round(((blocoIdx + (posNoBloco + 1) / Math.max(1, doBloco.length)) / SISTEMAS_MATURIDADE.length) * 100);
   return (
     <MapaShell>
         <style>{`
@@ -267,7 +273,7 @@ export default function MapaMaturidadePage() {
 
         {fase === 'quiz' && pergunta && (
           <Card wide>
-            <Progresso atual={perguntaIdx + 1} total={sequencia.length} rotulo="Pergunta" />
+            <Progresso atual={blocoIdx + 1} total={SISTEMAS_MATURIDADE.length} rotulo="Bloco" pct={pctQuiz} />
             <div key={pergunta.id} className="pergunta-anim">
               <div style={{ ...sx.eyebrow, marginTop: '0.9rem' }}>{pergunta.sistema}</div>
               <p style={estiloPergunta}>{pergunta.pergunta}</p>
@@ -369,8 +375,8 @@ function CadastroCampo({ c, val, onChange, erro }) {
   );
 }
 
-function Progresso({ atual, total, rotulo }) {
-  const pct = Math.round((atual / total) * 100);
+function Progresso({ atual, total, rotulo, pct: pctProp }) {
+  const pct = pctProp ?? Math.round((atual / total) * 100);
   return (
     <div style={{ marginBottom: '0.4rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
