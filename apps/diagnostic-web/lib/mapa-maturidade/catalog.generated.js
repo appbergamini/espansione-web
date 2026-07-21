@@ -20,7 +20,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Reconhecimento de mercado",
     "indicador": "Reconhecimento espontâneo",
     "o_que_identifica": "Identifica se o mercado já reconhece a empresa sem depender de explicações longas.",
-    "pergunta": "Clientes e potenciais clientes chegam até a empresa já entendendo minimamente o que ela faz.",
+    "pergunta": "Clientes chegam até a empresa já entendendo o que ela faz.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -100,7 +100,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Confiança",
     "indicador": "Confiança inicial",
     "o_que_identifica": "Identifica se a empresa gera confiança logo de início, sem precisar se provar exaustivamente.",
-    "pergunta": "As pessoas confiam na empresa desde os primeiros contatos, mesmo antes de comprar.",
+    "pergunta": "As pessoas confiam na empresa desde os primeiros contatos.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -140,7 +140,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Indicação",
     "indicador": "Indicações espontâneas",
     "o_que_identifica": "Identifica se clientes e parceiros indicam a empresa sem estímulo constante.",
-    "pergunta": "A empresa recebe indicações espontâneas de clientes, parceiros ou pessoas do mercado.",
+    "pergunta": "A empresa recebe indicações espontâneas de clientes, parceiros ou mercado.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -180,7 +180,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Preferência",
     "indicador": "Preferência em recompra",
     "o_que_identifica": "Identifica se a marca permanece como opção natural quando surge uma nova necessidade.",
-    "pergunta": "Clientes que já compraram tendem a considerar a empresa novamente em uma necessidade semelhante.",
+    "pergunta": "Quem já comprou volta a considerar a empresa em necessidades semelhantes.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -220,7 +220,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Consistência pública",
     "indicador": "Padrão de apresentação",
     "o_que_identifica": "Identifica se a empresa se apresenta de forma consistente em materiais, canais e propostas.",
-    "pergunta": "A forma como a empresa se apresenta é consistente nos canais, materiais e propostas comerciais.",
+    "pergunta": "A apresentação da empresa é consistente em canais, materiais e propostas.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -260,7 +260,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Autoridade",
     "indicador": "Provas de capacidade",
     "o_que_identifica": "Identifica se a empresa demonstra capacidade por meio de evidências, cases, histórico ou argumentos concretos.",
-    "pergunta": "A empresa apresenta evidências claras de sua capacidade, como resultados, cases, depoimentos ou histórico.",
+    "pergunta": "A empresa mostra evidências claras de capacidade: resultados, cases, depoimentos.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -300,7 +300,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Reputação",
     "indicador": "Reputação como ativo comercial",
     "o_que_identifica": "Identifica se a reputação ajuda a abrir portas e facilitar negociações.",
-    "pergunta": "A reputação da empresa facilita a abertura de conversas e novas oportunidades.",
+    "pergunta": "A reputação da empresa abre conversas e novas oportunidades.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -340,7 +340,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Atratividade",
     "indicador": "Atratividade para talentos e parceiros",
     "o_que_identifica": "Identifica se a marca desperta interesse em pessoas e parceiros relevantes.",
-    "pergunta": "A empresa desperta interesse em bons profissionais, parceiros ou fornecedores estratégicos.",
+    "pergunta": "A empresa desperta interesse em bons profissionais, parceiros e fornecedores.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -380,7 +380,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Memória de marca",
     "indicador": "Associação positiva",
     "o_que_identifica": "Identifica se a empresa desperta associações positivas quando é lembrada.",
-    "pergunta": "Quando falam da empresa, as pessoas a associam a adjetivos positivos.",
+    "pergunta": "Quando falam da empresa, as pessoas usam adjetivos positivos.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -420,7 +420,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Memória de marca",
     "indicador": "Atributos percebidos",
     "o_que_identifica": "Capta QUAIS atributos a empresa desperta, para comparar com os desejados.",
-    "pergunta": "A quais adjetivos as pessoas mais associam a empresa hoje? (marque os que se aplicam)",
+    "pergunta": "Quais adjetivos as pessoas mais associam à empresa hoje? (escolha até 3)",
     "response_type": "multipla",
     "opcoes": [
       "Confiável",
@@ -454,7 +454,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Direção",
     "indicador": "Prioridades ativas",
     "o_que_identifica": "Identifica se as prioridades realmente orientam a rotina.",
-    "pergunta": "As principais decisões da rotina estão conectadas às prioridades do negócio.",
+    "pergunta": "As decisões da rotina estão conectadas às prioridades do negócio.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -494,7 +494,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Comercial",
     "indicador": "Previsibilidade comercial",
     "o_que_identifica": "Identifica se a geração de vendas é previsível ou irregular.",
-    "pergunta": "A empresa possui uma rotina consistente para gerar novas oportunidades comerciais.",
+    "pergunta": "A empresa tem rotina consistente para gerar novas oportunidades comerciais.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -534,7 +534,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Foco estratégico",
     "indicador": "Capacidade de dizer não",
     "o_que_identifica": "Identifica se a empresa protege o foco, recusando o que a dispersa.",
-    "pergunta": "A empresa consegue recusar demandas, projetos ou clientes que desviam o foco do que é prioritário.",
+    "pergunta": "A empresa consegue recusar demandas que desviam o foco do prioritário.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -574,7 +574,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Margem",
     "indicador": "Controle de rentabilidade",
     "o_que_identifica": "Identifica se crescimento se converte em resultado financeiro.",
-    "pergunta": "A empresa acompanha se cada venda, contrato ou projeto gera margem adequada.",
+    "pergunta": "A empresa acompanha se cada venda ou projeto gera margem adequada.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -614,7 +614,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Entrega",
     "indicador": "Cumprimento de prazos e combinados",
     "o_que_identifica": "Identifica se a operação sustenta o que foi vendido.",
-    "pergunta": "A empresa cumpre prazos, condições e entregas combinadas com os clientes.",
+    "pergunta": "A empresa cumpre prazos, condições e entregas combinadas.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -654,7 +654,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Processos",
     "indicador": "Padronização de rotinas críticas",
     "o_que_identifica": "Identifica se a empresa depende de improviso em atividades importantes.",
-    "pergunta": "As rotinas críticas do negócio possuem padrão mínimo de execução.",
+    "pergunta": "As rotinas críticas do negócio têm padrão mínimo de execução.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -694,7 +694,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Indicadores",
     "indicador": "Acompanhamento de números",
     "o_que_identifica": "Identifica se a gestão tem dados suficientes para decidir.",
-    "pergunta": "A empresa acompanha indicadores essenciais de vendas, margem, caixa, produtividade e satisfação.",
+    "pergunta": "A empresa acompanha indicadores de vendas, margem, caixa e satisfação.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -734,7 +734,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Capacidade",
     "indicador": "Capacidade de atendimento",
     "o_que_identifica": "Identifica se o volume atual já pressiona a estrutura.",
-    "pergunta": "A empresa consegue atender a demanda atual sem sobrecarga excessiva ou perda de qualidade.",
+    "pergunta": "A empresa atende a demanda atual sem sobrecarga nem perda de qualidade.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -774,7 +774,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Execução",
     "indicador": "Reuniões que geram ação",
     "o_que_identifica": "Identifica se as rotinas de gestão convertem conversa em decisão e ação.",
-    "pergunta": "As reuniões e acompanhamentos terminam com decisões, responsáveis e próximos passos claros.",
+    "pergunta": "Reuniões terminam com decisões, responsáveis e próximos passos claros.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -814,7 +814,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Escala",
     "indicador": "Dependência dos sócios no crescimento",
     "o_que_identifica": "Identifica se a empresa cresce com autonomia ou aumenta dependência dos donos.",
-    "pergunta": "A empresa consegue crescer sem aumentar excessivamente a dependência dos sócios.",
+    "pergunta": "A empresa cresce sem aumentar a dependência dos sócios.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -854,7 +854,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Clareza interna",
     "indicador": "Prioridades compreendidas",
     "o_que_identifica": "Identifica se as pessoas entendem o que é prioridade na prática.",
-    "pergunta": "As pessoas entendem com clareza quais são as prioridades da empresa no momento.",
+    "pergunta": "As pessoas entendem com clareza as prioridades atuais da empresa.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -934,7 +934,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Integração entre áreas",
     "indicador": "Repasses claros",
     "o_que_identifica": "Identifica se áreas trocam informações suficientes para atender bem o cliente.",
-    "pergunta": "Os repasses entre áreas são claros o suficiente para evitar retrabalho e falhas na entrega.",
+    "pergunta": "Os repasses entre áreas evitam retrabalho e falhas na entrega.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -974,7 +974,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Proposta comercial",
     "indicador": "Compreensão da proposta",
     "o_que_identifica": "Identifica se a proposta ajuda o cliente a decidir com segurança.",
-    "pergunta": "As propostas comerciais deixam claro escopo, valor, prazo, condições e próximos passos.",
+    "pergunta": "As propostas deixam claros escopo, valor, prazo e próximos passos.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1014,7 +1014,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Explicação da oferta",
     "indicador": "Facilidade de entendimento",
     "o_que_identifica": "Identifica se a empresa comunica seus produtos ou serviços de forma simples.",
-    "pergunta": "É fácil para um cliente entender os produtos, serviços ou soluções oferecidos pela empresa.",
+    "pergunta": "É fácil para o cliente entender o que a empresa oferece.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1054,7 +1054,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Acompanhamento do cliente",
     "indicador": "Atualizações durante a entrega",
     "o_que_identifica": "Identifica se o cliente fica informado durante a jornada.",
-    "pergunta": "Durante a entrega, o cliente recebe informações suficientes sobre andamento, prazos e próximos passos.",
+    "pergunta": "Durante a entrega, o cliente sabe andamento, prazos e próximos passos.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1094,7 +1094,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Transparência",
     "indicador": "Comunicação em problemas",
     "o_que_identifica": "Identifica se a empresa preserva confiança quando há falhas ou mudanças.",
-    "pergunta": "Quando surgem mudanças, atrasos ou problemas, a empresa comunica com transparência e agilidade.",
+    "pergunta": "Mudanças, atrasos ou problemas são comunicados com transparência e agilidade.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1134,7 +1134,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Canais",
     "indicador": "Canais definidos",
     "o_que_identifica": "Identifica se há clareza sobre onde comunicar e registrar informações.",
-    "pergunta": "A empresa possui canais claros para comunicar decisões, demandas, mudanças e informações importantes.",
+    "pergunta": "A empresa tem canais claros para comunicar decisões e mudanças.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1214,7 +1214,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Aprendizado",
     "indicador": "Feedbacks convertidos em melhoria",
     "o_que_identifica": "Identifica se a escuta gera mudança prática.",
-    "pergunta": "A empresa transforma os feedbacks dos clientes em melhorias concretas — não fica só na escuta.",
+    "pergunta": "A empresa transforma feedbacks de clientes em melhorias concretas.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1294,7 +1294,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Autonomia",
     "indicador": "Decisões no nível certo",
     "o_que_identifica": "Identifica se tudo precisa subir para sócios ou líderes.",
-    "pergunta": "As pessoas conseguem tomar decisões compatíveis com suas responsabilidades.",
+    "pergunta": "As pessoas tomam decisões compatíveis com suas responsabilidades.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1334,7 +1334,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Liderança",
     "indicador": "Acompanhamento da execução",
     "o_que_identifica": "Identifica se líderes acompanham prioridades e removem obstáculos.",
-    "pergunta": "As lideranças acompanham entregas, prioridades e obstáculos da equipe com frequência.",
+    "pergunta": "As lideranças acompanham entregas, prioridades e obstáculos com frequência.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1374,7 +1374,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Produtividade",
     "indicador": "Ritmo de entrega",
     "o_que_identifica": "Identifica se a equipe entrega com ritmo adequado ou vive apagando incêndios.",
-    "pergunta": "A equipe consegue entregar o que é prioritário sem viver em constante urgência.",
+    "pergunta": "A equipe entrega o prioritário sem viver em constante urgência.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1414,7 +1414,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Competências",
     "indicador": "Preparo para a função",
     "o_que_identifica": "Identifica se a equipe tem competências suficientes para a entrega atual.",
-    "pergunta": "As pessoas demonstram preparo técnico e comportamental para realizar bem suas funções.",
+    "pergunta": "As pessoas têm preparo técnico e comportamental para suas funções.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1454,7 +1454,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Atendimento",
     "indicador": "Padrão de atendimento",
     "o_que_identifica": "Identifica se o cliente recebe experiência consistente independentemente de quem atende.",
-    "pergunta": "O cliente recebe um padrão de atendimento consistente, independentemente da pessoa ou canal.",
+    "pergunta": "O atendimento ao cliente é consistente, independentemente da pessoa ou canal.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1494,7 +1494,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Centralização",
     "indicador": "Delegação sustentada",
     "o_que_identifica": "Identifica se a delegação se sustenta ou se o controle volta para a direção.",
-    "pergunta": "A direção delega decisões e as respeita, sem retomar o controle a todo momento.",
+    "pergunta": "A direção delega decisões e as respeita, sem retomar o controle.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1574,7 +1574,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Retenção",
     "indicador": "Manutenção de pessoas importantes",
     "o_que_identifica": "Identifica risco de perda de pessoas-chave ou dificuldade de manter talentos.",
-    "pergunta": "A empresa consegue manter profissionais importantes para a operação e o crescimento.",
+    "pergunta": "A empresa retém os profissionais importantes para operação e crescimento.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {
@@ -1614,7 +1614,7 @@ export const CATALOGO_MATURIDADE = [
     "dimensao": "Liderança estratégica",
     "indicador": "Tempo para o estratégico",
     "o_que_identifica": "Identifica se a liderança consegue sair do operacional para pensar o negócio.",
-    "pergunta": "Os líderes dedicam tempo a pensar o futuro do negócio, e não apenas a resolver o operacional do dia a dia.",
+    "pergunta": "Os líderes dedicam tempo a pensar o futuro do negócio.",
     "response_type": "escala4_frequencia",
     "opcoes": [
       {

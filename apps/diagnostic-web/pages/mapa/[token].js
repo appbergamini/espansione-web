@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   SISTEMAS_MATURIDADE,
   CADASTRO_MATURIDADE,
@@ -12,26 +12,60 @@ import { MapaShell, MapaCard as Card, sx, CORES } from '../../components/mapa/ma
 
 // =====================================================================
 // Mapa do Crescimento Integrado · Essencial (FINAL) — página pública (acesso por token).
-// Fluxo: cadastro → 4 sistemas (10 perguntas cada + condicional de
-// atributos de marca) → resultado vendedor. O score exibido é o
-// AUTORITATIVO devolvido por /api/mapa/finalize (recomputado no servidor).
+// Fluxo: cadastro → quiz estilo Typeform (uma afirmação por tela, auto-avanço
+// ao tocar na resposta, botão voltar) → resultado vendedor. A única tela com
+// botão "Continuar" é a condicional de atributos de marca (múltipla escolha).
+// O score exibido é o AUTORITATIVO devolvido por /api/mapa/finalize
+// (recomputado no servidor).
 // =====================================================================
 
 const CONDICIONAL = perguntasCondicionais()[0] || null; // MM2-MAR-10b (atributos de marca)
+const MAX_ATRIBUTOS = 3;
+const AVANCO_MS = 320;
+
+// sequência exibida: perguntas núcleo na ordem dos sistemas; a condicional
+// entra logo após a pergunta da qual depende, quando visível.
+function montarSequencia(answers) {
+  const seq = [];
+  for (const sistema of SISTEMAS_MATURIDADE) {
+    for (const q of perguntasPorSistema(sistema)) {
+      seq.push(q);
+      if (CONDICIONAL?.regra_condicional?.depende === q.id && condicionalVisivel(CONDICIONAL, answers)) {
+        seq.push(CONDICIONAL);
+      }
+    }
+  }
+  return seq;
+}
+
+function primeiraNaoRespondida(answers) {
+  const seq = montarSequencia(answers);
+  const i = seq.findIndex((q) => q.pontua && typeof answers[q.id] !== 'number');
+  return i === -1 ? 0 : i;
+}
 
 export default function MapaMaturidadePage() {
   const router = useRouter();
   const token = (router.query.token || '').toString();
 
-  const [fase, setFase] = useState('loading'); // loading|erro|cadastro|intro|quiz|enviando|resultado
+  const [fase, setFase] = useState('loading'); // loading|erro|cadastro|intro|quiz|gerando
   const [erro, setErro] = useState(null);
   const [cliente, setCliente] = useState('');
   const [cadastro, setCadastro] = useState({});
   const [cadastroTentou, setCadastroTentou] = useState(false);
   const [answers, setAnswers] = useState({});
-  const [atributos, setAtributos] = useState([]); // seleção do MM2-MAR-10b
-  const [sistemaIdx, setSistemaIdx] = useState(0);
+  const [atributos, setAtributos] = useState([]); // seleção do MM2-MAR-10b (até 3)
+  const [perguntaIdx, setPerguntaIdx] = useState(0);
   const [salvando, setSalvando] = useState(false);
+
+  // refs espelham o estado para os callbacks do auto-avanço (setTimeout)
+  const answersRef = useRef({});
+  const atributosRef = useRef([]);
+  const idxRef = useRef(0);
+  const timerRef = useRef(null);
+  useEffect(() => { atributosRef.current = atributos; }, [atributos]);
+  useEffect(() => { idxRef.current = perguntaIdx; }, [perguntaIdx]);
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   // ── carga inicial ────────────────────────────────────────────────
   useEffect(() => {
@@ -53,10 +87,13 @@ export default function MapaMaturidadePage() {
           window.location.href = `/api/mapa/report?token=${encodeURIComponent(token)}`;
           return;
         }
-        setAnswers(data.answers || {});
+        const respostas = data.answers || {};
+        answersRef.current = respostas;
+        setAnswers(respostas);
+        setPerguntaIdx(primeiraNaoRespondida(respostas)); // retomada: 1ª sem resposta
         const temCadastro = cadastroEssencialOk(data.cadastro || {});
         if (!temCadastro) { setFase('cadastro'); return; }
-        setFase(Object.keys(data.answers || {}).length > 0 ? 'quiz' : 'intro');
+        setFase(Object.keys(respostas).length > 0 ? 'quiz' : 'intro');
       } catch {
         setErro('Não foi possível abrir o check-up.');
         setFase('erro');
@@ -81,66 +118,76 @@ export default function MapaMaturidadePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ── quiz por sistema ─────────────────────────────────────────────
-  const sistema = SISTEMAS_MATURIDADE[sistemaIdx];
-  const perguntas = useMemo(() => (sistema ? perguntasPorSistema(sistema) : []), [sistema]);
-  const mostraCondicional = CONDICIONAL && sistema === CONDICIONAL.sistema && condicionalVisivel(CONDICIONAL, answers);
-  const sistemaCompleto = useMemo(
-    () => perguntas.length > 0 && perguntas.every((q) => typeof answers[q.id] === 'number'),
-    [perguntas, answers]
-  );
+  // ── quiz: uma pergunta por tela ──────────────────────────────────
+  const sequencia = useMemo(() => montarSequencia(answers), [answers]);
+  const pergunta = sequencia[Math.min(perguntaIdx, sequencia.length - 1)] || null;
+
+  // a sequência encolhe se a resposta que habilita a condicional mudar
+  useEffect(() => {
+    if (perguntaIdx > 0 && perguntaIdx >= sequencia.length) setPerguntaIdx(sequencia.length - 1);
+  }, [sequencia, perguntaIdx]);
 
   function responder(id, value) {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
-  }
-  function toggleAtributo(a) {
-    setAtributos((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+    const next = { ...answersRef.current, [id]: value };
+    answersRef.current = next;
+    setAnswers(next);
+    // auto-avanço: a seleção já é a resposta completa (escala única)
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(avancar, AVANCO_MS);
   }
 
-  async function salvarSistema() {
-    setSalvando(true);
-    const lote = {};
-    for (const q of perguntas) if (typeof answers[q.id] === 'number') lote[q.id] = answers[q.id];
+  function toggleAtributo(a) {
+    setAtributos((prev) => {
+      if (prev.includes(a)) return prev.filter((x) => x !== a);
+      if (prev.length >= MAX_ATRIBUTOS) return prev;
+      return [...prev, a];
+    });
+  }
+
+  // envia o lote completo (o servidor faz upsert por pergunta)
+  async function salvarRespostas() {
     try {
       await fetch('/api/mapa/session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, answers: lote, extras: { atributos_marca: atributos } }),
+        body: JSON.stringify({
+          token,
+          answers: answersRef.current,
+          extras: { atributos_marca: atributosRef.current },
+        }),
       });
     } catch { /* best-effort; finalize revalida */ }
-    setSalvando(false);
   }
 
-  async function proximoSistema() {
-    await salvarSistema();
-    if (sistemaIdx < SISTEMAS_MATURIDADE.length - 1) {
-      setSistemaIdx((i) => i + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      await finalizar();
-    }
+  function avancar() {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    const seq = montarSequencia(answersRef.current);
+    const idx = idxRef.current;
+    if (idx >= seq.length - 1) { finalizar(); return; }
+    const prox = idx + 1;
+    if (seq[prox].sistema !== seq[idx].sistema) salvarRespostas(); // checkpoint por bloco
+    setPerguntaIdx(prox);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  function voltarSistema() {
-    if (sistemaIdx > 0) {
-      setSistemaIdx((i) => i - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+
+  function voltar() {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    setPerguntaIdx((i) => Math.max(0, i - 1));
   }
 
   // ── finalização ──────────────────────────────────────────────────
   async function finalizar() {
-    const faltando = obrigatoriasFaltando(answers);
+    const faltando = obrigatoriasFaltando(answersRef.current);
     if (faltando.length) {
-      // volta ao primeiro sistema com pendência
-      const sisPend = SISTEMAS_MATURIDADE.findIndex((s) =>
-        perguntasPorSistema(s).some((q) => faltando.includes(q.id))
-      );
-      setSistemaIdx(sisPend >= 0 ? sisPend : 0);
+      const seq = montarSequencia(answersRef.current);
+      const i = seq.findIndex((q) => faltando.includes(q.id));
+      setPerguntaIdx(i >= 0 ? i : 0);
       setFase('quiz');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     setFase('gerando');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    await salvarRespostas(); // garante persistência antes do recompute no servidor
     try {
       const r = await fetch('/api/mapa/finalize', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -158,8 +205,13 @@ export default function MapaMaturidadePage() {
   }
 
   // ── render ───────────────────────────────────────────────────────
+  const multipla = pergunta?.response_type === 'multipla';
   return (
     <MapaShell>
+        <style>{`
+          @keyframes perguntaIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+          .pergunta-anim { animation: perguntaIn 0.28s ease; }
+        `}</style>
         {fase === 'loading' && <Card><p style={sx.txtSec}>Carregando…</p></Card>}
         {fase === 'erro' && (
           <Card><h2 style={{ marginTop: 0 }}>Não foi possível abrir</h2><p style={sx.txtSec}>{erro}</p></Card>
@@ -199,7 +251,8 @@ export default function MapaMaturidadePage() {
             {cliente && <p style={{ ...sx.txtSec, marginTop: '-0.1rem' }}>{cliente}</p>}
             <p style={sx.txtSec}>
               Responda às afirmações considerando a realidade atual da empresa. Avaliamos 4 pilares:
-              Marca, Negócios, Comunicação e Pessoas, com 10 sinais cada.
+              Marca, Negócios, Comunicação e Pessoas. É uma afirmação por vez — ao tocar na resposta,
+              você avança automaticamente.
             </p>
             <div style={sx.aviso}>
               Use <b>"Não sei/Não se aplica"</b> apenas quando a afirmação realmente não fizer sentido
@@ -212,39 +265,60 @@ export default function MapaMaturidadePage() {
           </Card>
         )}
 
-        {fase === 'quiz' && sistema && (
+        {fase === 'quiz' && pergunta && (
           <Card wide>
-            <Progresso atual={sistemaIdx + 1} total={SISTEMAS_MATURIDADE.length} rotulo="Bloco" />
-            <h2 style={sx.h2}>Bloco {sistemaIdx + 1} de {SISTEMAS_MATURIDADE.length}: {sistema}</h2>
+            <Progresso atual={perguntaIdx + 1} total={sequencia.length} rotulo="Pergunta" />
+            <div key={pergunta.id} className="pergunta-anim">
+              <div style={{ ...sx.eyebrow, marginTop: '0.9rem' }}>{pergunta.sistema}</div>
+              <p style={estiloPergunta}>{pergunta.pergunta}</p>
 
-            <div style={{ marginTop: '1.4rem' }}>
-              {perguntas.map((q, i) => (
-                <Afirmacao key={q.id} numero={i + 1} pergunta={q} valor={answers[q.id]}
-                  onSelect={(v) => responder(q.id, v)} />
-              ))}
-
-              {mostraCondicional && (
-                <div style={sx.condicional}>
-                  <p style={sx.afirmacaoTxt}>{CONDICIONAL.pergunta}</p>
+              {multipla ? (
+                <>
                   <div style={sx.opcoes}>
-                    {CONDICIONAL.opcoes.map((a) => (
-                      <button key={a} type="button" onClick={() => toggleAtributo(a)}
-                        style={sx.opcao(atributos.includes(a))}>
-                        {atributos.includes(a) ? '✓ ' : ''}{a}
-                      </button>
-                    ))}
+                    {pergunta.opcoes.map((a) => {
+                      const ativo = atributos.includes(a);
+                      const cheio = !ativo && atributos.length >= MAX_ATRIBUTOS;
+                      return (
+                        <button key={a} type="button" onClick={() => toggleAtributo(a)} disabled={cheio}
+                          style={{ ...sx.opcao(ativo), opacity: cheio ? 0.45 : 1, cursor: cheio ? 'default' : 'pointer' }}>
+                          {ativo ? '✓ ' : ''}{a}
+                        </button>
+                      );
+                    })}
                   </div>
+                  <p style={{ ...sx.txtSec, fontSize: '0.8rem', marginTop: '0.6rem' }}>
+                    {atributos.length}/{MAX_ATRIBUTOS} selecionados
+                  </p>
+                </>
+              ) : (
+                <div className="escala-opcoes">
+                  {pergunta.opcoes.map((opt) =>
+                    opt.value === -1 ? (
+                      <button key={opt.value} type="button" className="naosei"
+                        onClick={() => responder(pergunta.id, opt.value)}
+                        style={sx.opcaoNaoSei(answers[pergunta.id] === opt.value)}
+                        title="Não reduz nem aumenta a pontuação; apenas remove esta afirmação do cálculo.">
+                        {opt.label}
+                      </button>
+                    ) : (
+                      <button key={opt.value} type="button" onClick={() => responder(pergunta.id, opt.value)}
+                        style={{ ...sx.opcao(answers[pergunta.id] === opt.value), textAlign: 'center', justifyContent: 'center' }}>
+                        {opt.label}
+                      </button>
+                    )
+                  )}
                 </div>
               )}
             </div>
 
             <div style={sx.navRow}>
-              <button onClick={voltarSistema} disabled={sistemaIdx === 0 || salvando}
-                style={sx.btnGhost(sistemaIdx === 0 || salvando)}>← Voltar</button>
-              <button className="mapa-btn" onClick={proximoSistema} disabled={!sistemaCompleto || salvando}
-                style={{ opacity: sistemaCompleto && !salvando ? 1 : 0.5 }}>
-                {sistemaIdx < SISTEMAS_MATURIDADE.length - 1 ? 'Próximo bloco →' : 'Ver resultado →'}
+              <button onClick={voltar} disabled={perguntaIdx === 0} style={sx.btnGhost(perguntaIdx === 0)}>
+                ← Voltar
               </button>
+              {multipla && (
+                // única tela com botão: múltipla escolha não tem "resposta completa" num toque
+                <button className="mapa-btn" onClick={avancar}>Continuar →</button>
+              )}
             </div>
           </Card>
         )}
@@ -264,33 +338,10 @@ export default function MapaMaturidadePage() {
 
 // ── componentes de apoio ─────────────────────────────────────────────
 
+const estiloPergunta = { margin: '0.5rem 0 1.2rem', lineHeight: 1.55, fontSize: '1.12rem', color: CORES.text, fontWeight: 500 };
+
 function cadastroEssencialOk(cad) {
   return ['CAD-MM-001', 'CAD-MM-002', 'CAD-MM-006'].every((id) => String(cad?.[id] || '').trim());
-}
-
-function Afirmacao({ numero, pergunta, valor, onSelect }) {
-  return (
-    <div style={sx.afirmacao}>
-      <p style={sx.afirmacaoTxt}>
-        <span style={sx.afirmacaoNum}>{numero}.</span> {pergunta.pergunta}
-      </p>
-      <div className="escala-opcoes">
-        {pergunta.opcoes.map((opt) =>
-          opt.value === -1 ? (
-            <button key={opt.value} type="button" className="naosei" onClick={() => onSelect(opt.value)}
-              style={sx.opcaoNaoSei(valor === opt.value)}
-              title="Não reduz nem aumenta a pontuação; apenas remove esta afirmação do cálculo.">
-              {opt.label}
-            </button>
-          ) : (
-            <button key={opt.value} type="button" onClick={() => onSelect(opt.value)} style={{ ...sx.opcao(valor === opt.value), textAlign: 'center', justifyContent: 'center' }}>
-              {opt.label}
-            </button>
-          )
-        )}
-      </div>
-    </div>
-  );
 }
 
 function CadastroCampo({ c, val, onChange, erro }) {
