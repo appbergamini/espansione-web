@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+# Rotas internas / operacionais — fora da busca
+Disallow: /adm
+Disallow: /api/
+Disallow: /area
+Disallow: /dashboard
+Disallow: /cockpit
+Disallow: /dev
+Disallow: /form
+Disallow: /entrevista
+Disallow: /identidade
+Disallow: /mapa-identidade
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /auth/
+# Resultados individuais do Mapa (com token) — /mapa segue liberado
+Disallow: /mapa/
+# Formulários legados de diagnóstico
+Disallow: /cis.html
+Disallow: /mapeamento.html
+
+Sitemap: https://crescimentointegrado.com.br/sitemap.xml

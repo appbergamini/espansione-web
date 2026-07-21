@@ -55,6 +55,23 @@ const nextConfig = {
       ],
     };
   },
+
+  // SEO — só o domínio do funil deve aparecer no Google. Nos demais hosts
+  // (*.vercel.app, previews, painel) o mesmo deploy responde com o mesmo
+  // conteúdo; sem isso o Google indexaria a versão duplicada.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        missing: [
+          { type: 'host', value: 'crescimentointegrado.com.br' },
+        ],
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
