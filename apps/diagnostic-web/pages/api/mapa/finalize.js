@@ -6,6 +6,15 @@
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { obrigatoriasFaltando } from '../../../lib/mapa-maturidade/catalog';
 import { buildResultado } from '../../../lib/mapa-maturidade/score';
+import { extrairEmail, sendRelatorioEssencial } from '../../../lib/emails/sendRelatorioEssencial';
+
+// base URL do host da requisição (aprendizado do checkout: nunca confiar em
+// NEXT_PUBLIC_SITE_URL — o funil roda em mais de um domínio)
+function baseUrl(req) {
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  return host ? `${proto}://${host}` : null;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -64,6 +73,29 @@ export default async function handler(req, res) {
   if (upErr) {
     console.error('[mapa/finalize] save', upErr);
     return res.status(500).json({ success: false, error: 'Erro ao salvar resultado' });
+  }
+
+  // envia o link do relatório por e-mail (best-effort, nunca falha o finalize).
+  // O contato do cadastro é campo livre "e-mail ou WhatsApp" — só envia se for
+  // e-mail. Guarda o resultado em extras_json p/ não reenviar em re-finalize.
+  const jaEnviado = assessment.extras_json?.relatorio_email?.sent_at;
+  const email = extrairEmail(assessment.cadastro_json?.['CAD-MM-006']);
+  const base = baseUrl(req);
+  if (email && base && !jaEnviado) {
+    try {
+      await sendRelatorioEssencial({
+        to: email,
+        nome: assessment.cadastro_json?.['CAD-MM-001'],
+        empresa: assessment.cadastro_json?.['CAD-MM-002'],
+        reportUrl: `${base}/api/mapa/report?token=${encodeURIComponent(token)}`,
+      });
+      await db
+        .from('mapa_assessments')
+        .update({ extras_json: { ...(assessment.extras_json || {}), relatorio_email: { to: email, sent_at: new Date().toISOString() } } })
+        .eq('id', assessment.id);
+    } catch (e) {
+      console.error('[mapa/finalize] email do relatório falhou (segue sem enviar):', e?.message || e);
+    }
   }
 
   return res.status(200).json({ success: true, result });
