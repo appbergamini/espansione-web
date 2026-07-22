@@ -77,16 +77,21 @@
   .creed p{font-family:'Poppins',system-ui,sans-serif; font-size:clamp(19px,2.4vw,23px); line-height:1.5; color:#F3F1EA; text-align:center; margin-bottom:0;}
   .creed em{color:var(--gold);}
 
-  /* lente / sintoma-causa */
-  .lens-table{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--paper2);}
-  .lens-row{display:grid; grid-template-columns:1fr 1.4fr; border-top:1px solid var(--line);}
-  .lens-row:first-child{border-top:none;}
-  .lens-row > div{padding:18px 24px;}
-  .lens-row .sy{font-family:'Poppins',system-ui,sans-serif; font-style:italic; font-size:17px; color:var(--ink); border-right:1px solid var(--line);}
-  .lens-row .ca{font-size:14.5px; color:var(--muted);}
-  .lens-head{background:var(--ink); }
-  .lens-head .sy,.lens-head .ca{color:#C4CCDD; font-family:'Poppins',system-ui,sans-serif; font-style:normal; font-size:11px; letter-spacing:.14em; text-transform:uppercase;}
-  @media(max-width:640px){ .lens-row{grid-template-columns:1fr;} .lens-row .sy{border-right:none; border-bottom:1px solid var(--line);} }
+  /* lente / sintoma-causa — duas camadas: superfície (o sintoma) e base (a causa),
+     ligadas por uma linha que desce da primeira para a segunda. */
+  .lens-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:6px;}
+  .lens-card{border:1px solid var(--line); border-radius:18px; background:var(--paper); overflow:hidden; display:flex; flex-direction:column;}
+  .lens-card .surface{flex:1;}
+  .lens-card .k{font-family:'Poppins',system-ui,sans-serif; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin-bottom:9px;}
+  .lens-card .surface{padding:26px 28px 24px;}
+  .lens-card .surface p{margin-bottom:0;}
+  .lens-card .sy{font-family:'Poppins',system-ui,sans-serif; font-size:19px; line-height:1.32; color:var(--ink); font-weight:600;}
+  .lens-card .depth{position:relative; padding:24px 28px 26px; background:var(--paper2); border-top:1px dashed var(--line);}
+  .lens-card .depth::before{content:''; position:absolute; left:28px; top:-14px; width:1px; height:28px; background:var(--brass); opacity:.45;}
+  .lens-card .depth::after{content:''; position:absolute; left:25px; top:-4px; width:7px; height:7px; border-radius:50%; background:var(--brass);}
+  .lens-card .depth .k{color:var(--brass);}
+  .lens-card .ca{font-size:15px; line-height:1.55; color:var(--muted);}
+  @media(max-width:760px){ .lens-grid{grid-template-columns:1fr;} }
 
   /* sistemas */
   .systems{background:var(--paper2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
@@ -120,9 +125,11 @@
   .phase ul{list-style:none; margin:16px 0 0; display:grid; grid-template-columns:1fr 1fr; gap:8px 26px;}
   .phase ul li{font-size:14px; color:var(--text); padding-left:18px; position:relative;}
   .phase ul li::before{content:''; position:absolute; left:0; top:9px; width:6px; height:6px; border-radius:50%; background:var(--brass);}
-  @media(max-width:640px){ .phase ul{grid-template-columns:1fr;} }
+  .phase ul.cols-3{grid-template-columns:repeat(3,1fr); gap:8px 22px;}
+  @media(max-width:860px){ .phase ul.cols-3{grid-template-columns:1fr 1fr;} }
+  @media(max-width:640px){ .phase ul, .phase ul.cols-3{grid-template-columns:1fr;} }
 
-  /* perguntas do diagnóstico */
+  /* perguntas do Mapa Estratégico */
   .questions{background:var(--paper2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
   .q-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden;}
   .q-item{background:var(--paper); padding:18px 22px; display:flex; gap:14px; align-items:baseline;}
@@ -225,11 +232,11 @@
 <section class="hero">
   <div class="wrap">
     <span class="eyebrow">O método do Crescimento Integrado</span>
-    <h1>O que trava o seu crescimento raramente está <em>onde parece.</em></h1>
-    <p class="sub">A Espansione desenvolve pequenas e médias empresas, conectando Marca, Negócios, Comunicação e Pessoas. Antes de recomendar qualquer movimento, investigamos a causa por trás do sintoma: o que realmente limita o próximo estágio.</p>
+    <h1>O que limita o crescimento da sua empresa raramente está <em>onde o sintoma aparece.</em></h1>
+    <p class="sub">A Espansione é uma empresa de Desenvolvimento Estratégico para o Crescimento Integrado de pequenas e médias empresas. Investigamos as causas dos desalinhamentos e integramos Marca, Negócios, Comunicação e Pessoas para preparar o negócio para o próximo estágio, com mais direção, estrutura, autonomia e valor percebido.</p>
     <div class="hero-cta">
-      <a href="#metodo" class="btn btn-ghost" style="color:#EEF1F7;">Conhecer o método</a>
-      <a href="/mapa" class="btn">Fazer o Mapa do Crescimento Integrado · Essencial</a>
+      <a href="#metodo" class="btn btn-ghost" style="color:#EEF1F7;">Conheça a metodologia</a>
+      <a href="/mapa" class="btn">Faça o Mapa do Crescimento Integrado Essencial · Gratuito</a>
     </div>
   </div>
 </section>
@@ -243,33 +250,46 @@
       <iframe src="https://iframe.mediadelivery.net/embed/698223/117252ad-479f-4b86-a822-4ea7f746c363?autoplay=false&amp;preload=true&amp;responsive=true" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; border:0;" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Manifesto Espansione"></iframe>
     </div>
     <div class="creed">
-      <p>Uma empresa não cresce por partes. Não adianta crescer para fora quando, por dentro, ela está desestruturada. Acreditamos em empresas que crescem sem perder a essência, que evoluem sem se desconectar dos seus valores, que <em>não buscam crescer a qualquer custo, mas avançar na direção certa.</em></p>
+      <p>Uma empresa não cresce por partes. O crescimento se sustenta quando Marca, Negócios, Comunicação e Pessoas avançam de forma integrada.</p>
+      <p style="margin-top:22px;">Acreditamos em empresas que evoluem sem perder sua essência, desenvolvem pessoas sem se desconectar de seus valores e <em>não buscam crescer a qualquer custo, mas avançar com mais clareza, estrutura e direção.</em></p>
     </div>
   </div>
 </section>
 
 <!-- A LENTE -->
 <section id="lente">
-  <div class="wrap narrow">
+  <div class="wrap">
     <div class="sec-eyebrow"><span class="eyebrow">A lente</span></div>
-    <h2 class="sec-title">O sintoma não é a causa.</h2>
-    <p class="sec-lead">O sintoma surge num lugar; a causa costuma morar noutro, na desconexão entre os pilares da empresa. Enxergar essa conexão é o que a nossa lente faz.</p>
-    <div class="lens-table">
-      <div class="lens-row lens-head"><div class="sy">O que a empresa sente</div><div class="ca">A causa costuma ser</div></div>
-      <div class="lens-row"><div class="sy">"Precisamos vender mais."</div><div class="ca">Proposta de valor pouco diferenciada, experiência que não sustenta a promessa, ou equipe sem domínio comercial.</div></div>
-      <div class="lens-row"><div class="sy">"A equipe não tem autonomia."</div><div class="ca">Critérios de decisão pouco claros, papéis confusos ou competências ainda não desenvolvidas.</div></div>
-      <div class="lens-row"><div class="sy">"Os clientes não percebem valor."</div><div class="ca">Posicionamento, jornada e comportamento da equipe desalinhados entre si.</div></div>
-      <div class="lens-row"><div class="sy">"Tudo depende dos sócios."</div><div class="ca">A empresa cresceu sem transformar conhecimento tácito em critérios, cultura e capacidade distribuída.</div></div>
+    <h2 class="sec-title" style="max-width:34ch;">O sintoma mostra onde o problema aparece. Não necessariamente onde ele começa.</h2>
+    <p class="sec-lead">Queda nas vendas, equipe desalinhada, margem pressionada, comunicação sem resultado e sobrecarga dos sócios podem parecer problemas isolados. Mas, muitas vezes, são consequências de desalinhamentos entre estratégia, posicionamento, comunicação, cultura e pessoas.</p>
+    <div class="lens-grid">
+      <div class="lens-card">
+        <div class="surface"><div class="k">O sintoma</div><p class="sy">As vendas não avançam como deveriam.</p></div>
+        <div class="depth"><div class="k">O que pode estar por trás</div><p class="ca">Posicionamento pouco claro, valor pouco percebido ou falta de coerência entre promessa e entrega.</p></div>
+      </div>
+      <div class="lens-card">
+        <div class="surface"><div class="k">O sintoma</div><p class="sy">A equipe depende dos sócios para decidir.</p></div>
+        <div class="depth"><div class="k">O que pode estar por trás</div><p class="ca">Falta de direção, cultura, critérios claros e desenvolvimento de liderança.</p></div>
+      </div>
+      <div class="lens-card">
+        <div class="surface"><div class="k">O sintoma</div><p class="sy">A comunicação não gera o resultado esperado.</p></div>
+        <div class="depth"><div class="k">O que pode estar por trás</div><p class="ca">A empresa comunica sem uma proposta de valor clara ou não expressa aquilo que realmente a diferencia.</p></div>
+      </div>
+      <div class="lens-card">
+        <div class="surface"><div class="k">O sintoma</div><p class="sy">O crescimento aumenta a sobrecarga.</p></div>
+        <div class="depth"><div class="k">O que pode estar por trás</div><p class="ca">Estrutura insuficiente, centralização e áreas que evoluem sem alinhamento.</p></div>
+      </div>
     </div>
+    <p class="sys-note" style="max-width:52ch; margin-left:auto; margin-right:auto;">Quando cada sintoma é tratado separadamente, a empresa pode aliviar o problema sem transformar a causa.</p>
   </div>
 </section>
 
 <!-- 4 SISTEMAS -->
 <section class="systems" id="sistemas">
   <div class="wrap">
-    <div class="sec-eyebrow"><span class="eyebrow">Crescimento Integrado</span></div>
-    <h2 class="sec-title">Quatro pilares, uma direção.</h2>
-    <p class="sec-lead">Marca, Negócios, Comunicação e Pessoas não são áreas independentes. Uma decisão em um altera a entrega, a percepção e a execução dos outros.</p>
+    <div class="sec-eyebrow"><span class="eyebrow">Nossa forma de enxergar a empresa</span></div>
+    <h2 class="sec-title">Quatro dimensões. Uma única direção de crescimento.</h2>
+    <p class="sec-lead">Crescimento Integrado acontece quando Marca, Negócios, Comunicação e Pessoas deixam de evoluir separadamente e passam a funcionar como um sistema integrado.</p>
     <div class="sys-diagram-wrap">
       <div class="sys-diagram">
         <svg viewBox="0 0 460 380" role="img" aria-label="Diagrama: quatro sistemas conectados a uma direção">
@@ -306,7 +326,8 @@
         <div class="sys-hint">Toque em cada sistema no diagrama para ver o que ele representa.</div>
       </div>
     </div>
-    <p class="sys-note">Quando esses pilares caminham em direções diferentes, a empresa perde força.</p>
+    <p class="sys-note" style="max-width:60ch; margin-left:auto; margin-right:auto;">A Marca define a promessa. Os Negócios organizam a entrega. A Comunicação expressa o valor. E as Pessoas transformam tudo isso em experiência.</p>
+    <p class="sec-lead" style="margin-top:16px; margin-bottom:0; max-width:60ch;">Quando essas dimensões caminham em direções diferentes, a empresa perde força. Quando avançam juntas, o crescimento ganha coerência, estrutura e capacidade para se sustentar.</p>
   </div>
 </section>
 
@@ -315,15 +336,17 @@
   <div class="wrap">
     <div class="sec-eyebrow"><span class="eyebrow">O diferencial</span></div>
     <h2 class="sec-title">Um olhar integrado, não problemas isolados.</h2>
-    <p class="sec-lead">Uma consultoria tradicional analisa cada problema em separado. Nós lemos a empresa como um sistema: uma dificuldade de vendas pode nascer de um posicionamento pouco claro, de uma comunicação que não mostra valor ou de uma equipe que não entrega a experiência prometida. Conectamos essas informações para o empresário sair do papel de executor e assumir o de gestor.</p>
+    <p class="sec-lead" style="margin-bottom:18px;">Muitas empresas tentam resolver vendas, comunicação, equipe, posicionamento ou sobrecarga como problemas separados. Mas uma dificuldade em uma área pode nascer de desalinhamentos em outra.</p>
+    <p class="sec-lead">A Espansione lê a empresa como um sistema. Conectamos estratégia, percepção, comportamento e experiência para investigar as causas, organizar prioridades e direcionar o que precisa evoluir em Marca, Negócios, Comunicação e Pessoas.</p>
     <div class="diff-grid">
       <div class="diff-cell"><div class="dn">Método</div><p>Metodologia própria de Crescimento Integrado.</p></div>
-      <div class="diff-cell"><div class="dn">Evidência</div><p>Pesquisas reais com clientes e colaboradores.</p></div>
-      <div class="diff-cell"><div class="dn">Comportamento</div><p>Análise comportamental de sócios e líderes.</p></div>
-      <div class="diff-cell"><div class="dn">Prática</div><p>Diagnóstico transformado em direcionadores para a realidade de cada empresa.</p></div>
-      <div class="diff-cell"><div class="dn">Pessoas</div><p>Desenvolvimento contínuo de líderes e equipes, com treinamentos personalizados por competência.</p></div>
-      <div class="diff-cell"><div class="dn">Integração</div><p>Tecnologia, dados e experiência humana caminhando na mesma direção.</p></div>
+      <div class="diff-cell"><div class="dn">Evidência</div><p>Pesquisas reais com clientes e colaboradores para cruzar percepções internas e externas.</p></div>
+      <div class="diff-cell"><div class="dn">Comportamento</div><p>Análise comportamental de sócios, líderes e equipes.</p></div>
+      <div class="diff-cell"><div class="dn">Direcionamento</div><p>Leitura transformada em prioridades e direcionadores estratégicos aplicáveis à realidade da empresa.</p></div>
+      <div class="diff-cell"><div class="dn">Desenvolvimento</div><p>Trilhas de treinamentos personalizadas para líderes e equipes, de acordo com as necessidades do negócio.</p></div>
+      <div class="diff-cell"><div class="dn">Integração</div><p>Tecnologia, dados, percepção e experiência humana conectados em uma única leitura.</p></div>
     </div>
+    <p class="sys-note" style="max-width:62ch; margin-left:auto; margin-right:auto;">O diferencial não está apenas em analisar mais informações, mas em compreender como elas se conectam e transformá-las em direção, desenvolvimento e evolução mensurável.</p>
   </div>
 </section>
 
@@ -331,14 +354,14 @@
 <section class="method" id="metodo">
   <div class="wrap">
     <div class="sec-eyebrow"><span class="eyebrow" style="color:var(--brass-light);">O método Espansione</span></div>
-    <h2 class="sec-title">De leitura a capacidade real de evolução.</h2>
-    <p class="sec-lead">Não entregamos um relatório e vamos embora. Transformamos leitura em direcionamento, direcionamento em alinhamento, alinhamento em desenvolvimento, e desenvolvimento em capacidade de sustentar o crescimento.</p>
+    <h2 class="sec-title">Da clareza à capacidade de sustentar a evolução.</h2>
+    <p class="sec-lead">Transformamos leitura em direção, direção em alinhamento, alinhamento em desenvolvimento e desenvolvimento em capacidade real de sustentar o crescimento.</p>
     <div class="steps">
-      <div class="mstep"><div class="mn">01</div><h3>Mapeamento</h3><p>Um breve diagnóstico mede o grau de maturidade da empresa em Marca, Negócio, Comunicação e Pessoas. É o ponto de partida que mostra onde há algo a investigar.</p></div>
-      <div class="mstep"><div class="mn">02</div><h3>Investigação</h3><p>Aprofundamos com entrevistas com os sócios, pesquisa com colaboradores e clientes, análise do posicionamento, da experiência entregue e do perfil comportamental da equipe e de cada sócio.</p></div>
-      <div class="mstep"><div class="mn">03</div><h3>Direcionamento</h3><p>Transformamos a leitura em direcionadores estratégicos: posicionamento, proposta de valor, prioridades e critérios de decisão coerentes entre si.</p></div>
-      <div class="mstep"><div class="mn">04</div><h3>Desenvolvimento</h3><p>Desenvolvemos líderes e equipes com treinamentos personalizados, transformando a estratégia em comportamento, decisão e entrega.</p></div>
-      <div class="mstep"><div class="mn">05</div><h3>Acompanhamento</h3><p>Acompanhamos a evolução por uma plataforma que integra as frentes e metrifica o progresso, mantendo a estratégia viva enquanto a empresa cresce.</p></div>
+      <div class="mstep"><div class="mn">01</div><h3>Mapeamento</h3><p>Medimos como a empresa está em Marca, Negócios, Comunicação e Pessoas e identificamos os sinais, gaps e prioridades que precisam ser aprofundados.</p></div>
+      <div class="mstep"><div class="mn">02</div><h3>Investigação</h3><p>Aprofundamos as causas por meio da escuta dos sócios, pesquisas com clientes e colaboradores e análise comportamental de lideranças e equipes.</p></div>
+      <div class="mstep"><div class="mn">03</div><h3>Direcionamento</h3><p>Transformamos as informações analisadas em direcionadores estratégicos para posicionamento da marca, criação da proposta de valor, cultura interna, comunicação, experiência, prioridades e critérios de decisão.</p></div>
+      <div class="mstep"><div class="mn">04</div><h3>Desenvolvimento</h3><p>Desenvolvemos líderes e equipes por meio de treinamentos comportamentais personalizados, conectados às prioridades estratégicas e às necessidades reais do negócio.</p></div>
+      <div class="mstep"><div class="mn">05</div><h3>Acompanhamento</h3><p>Acompanhamos a evolução dos quatro pilares, comparamos os avanços com a medição inicial e ajustamos prioridades ao longo da jornada, com o apoio de uma plataforma proprietária e tecnologia aplicada para tornar o progresso visível, contínuo e mensurável.</p></div>
     </div>
   </div>
 </section>
@@ -348,66 +371,70 @@
   <div class="wrap">
     <div class="sec-eyebrow"><span class="eyebrow">O processo</span></div>
     <h2 class="sec-title">Como o método vira prática.</h2>
-    <p class="sec-lead">Três estágios encadeados. Cada um entrega valor sozinho e prepara o seguinte.</p>
+    <p class="sec-lead">Três etapas conectadas para medir, direcionar, desenvolver e acompanhar.</p>
 
     <div class="phase">
-      <div class="ph-top"><span class="ph-tag">Estágio 1 · Mapa do Crescimento Integrado · Essencial</span><span class="ph-free">Gratuito</span></div>
-      <h3>O espelho</h3>
-      <p>A leitura inicial da empresa. Respondida pelo sócio ou decisor em cerca de 10 minutos, mostra como a empresa está nas quatro dimensões, Marca, Negócio, Comunicação e Pessoas, e o que pode estar limitando o crescimento. É o olhar de dentro: aponta que há algo a investigar, sem ainda explicar a causa.</p>
+      <div class="ph-top"><span class="ph-tag">Passo 1 · Mapa do Crescimento Integrado · Essencial</span><span class="ph-free">Gratuito</span></div>
+      <h3>Mede e mostra onde olhar</h3>
+      <p>Em aproximadamente 10 minutos, a empresa recebe uma leitura inicial de como está em Marca, Negócios, Comunicação e Pessoas. O Mapa identifica forças, gaps, prioridades e pontos que podem limitar o crescimento, criando a referência inicial para acompanhar a evolução.</p>
       <ul>
-        <li>Gaps e pontos de atenção</li>
-        <li>Prioridades por dimensão</li>
-        <li>O que pode limitar o crescimento</li>
-        <li>Forças e fragilidades</li>
+        <li>Resultado geral</li>
+        <li>Indicadores por pilar</li>
+        <li>Forças e pontos de atenção</li>
+        <li>Prioridades de aprofundamento</li>
       </ul>
     </div>
 
     <div class="phase">
-      <div class="ph-top"><span class="ph-tag">Estágio 2 · Mapa do Crescimento Integrado · Estratégico</span><span class="ph-paid">Aprofundado</span></div>
-      <h3>A causa</h3>
-      <p>A etapa mais profunda da metodologia. Aqui você não apenas identifica os sinais, mas investiga com profundidade o que está por trás deles e constrói os direcionadores estratégicos para crescer com mais coerência, estrutura e alinhamento.</p>
-      <ul>
-        <li>Análise aprofundada dos 4 pilares</li>
+      <div class="ph-top"><span class="ph-tag">Passo 2 · Mapa do Crescimento Integrado · Estratégico</span><span class="ph-paid">Aprofundado</span></div>
+      <h3>Investiga as causas e constrói a direção</h3>
+      <p>Aprofundamos os sinais identificados no Mapa Essencial, cruzando a visão dos sócios, clientes, colaboradores e lideranças. A investigação revela desalinhamentos e constrói os direcionadores estratégicos necessários para a empresa avançar com mais coerência, estrutura e valor percebido.</p>
+      <ul class="cols-3">
+        <li>Análise aprofundada dos quatro pilares</li>
         <li>Pesquisas com clientes e colaboradores</li>
-        <li>Leitura comportamental de sócios e equipe</li>
-        <li>Cultura, valores e propósito</li>
-        <li>Proposta de valor e posicionamento</li>
+        <li>Análise comportamental de sócios e líderes</li>
+        <li>Posicionamento e proposta de valor</li>
+        <li>Definição de propósito, valores e visão</li>
+        <li>Direcionadores de experiência</li>
         <li>Tom de voz, arquétipos e plataforma de marca</li>
         <li>Jornada e experiência do cliente</li>
+        <li>Prioridades de desenvolvimento</li>
       </ul>
     </div>
 
     <div class="phase">
-      <div class="ph-top"><span class="ph-tag">Estágio 3 · Programa de Crescimento Integrado</span></div>
-      <h3>A coerência</h3>
-      <p>O diagnóstico só gera transformação quando vira rotina. Neste estágio, a direção definida é mantida viva e coerente a cada decisão, campanha e contratação, com desenvolvimento contínuo de líderes e equipes e remedição periódica da maturidade para acompanhar a evolução.</p>
-      <ul>
-        <li>Coerência estratégica contínua</li>
+      <div class="ph-top"><span class="ph-tag">Passo 3 · Programa de Desenvolvimento Contínuo</span></div>
+      <h3>Transforma direção em capacidade real de evolução</h3>
+      <p>Com base nas prioridades do Mapa Estratégico, desenvolvemos uma trilha de treinamentos personalizada para líderes e equipes. Ao longo do programa, acompanhamos os quatro pilares, medimos a evolução e ajustamos as prioridades conforme as necessidades do negócio.</p>
+      <ul class="cols-3">
+        <li>Trilhas de treinamentos personalizadas</li>
         <li>Desenvolvimento de líderes e equipes</li>
-        <li>Direção nos momentos de maior impacto</li>
-        <li>Remedição e novas prioridades</li>
+        <li>Aplicação dos direcionadores na rotina</li>
+        <li>Medição dos quatro pilares</li>
+        <li>Comparação com a leitura inicial ao longo da jornada</li>
+        <li>Revisão de prioridades e novas trilhas</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- PERGUNTAS DO DIAGNÓSTICO -->
+<!-- PERGUNTAS DO MAPA ESTRATÉGICO -->
 <section class="questions">
   <div class="wrap">
-    <div class="sec-eyebrow"><span class="eyebrow">A profundidade do diagnóstico</span></div>
-    <h2 class="sec-title">As perguntas que a sua empresa passa a responder.</h2>
-    <p class="sec-lead">O diagnóstico não termina num relatório genérico. Ele organiza, em etapas encadeadas, as respostas que orientam o crescimento na mesma direção.</p>
+    <div class="sec-eyebrow"><span class="eyebrow">A profundidade do Mapa Estratégico</span></div>
+    <h2 class="sec-title">As perguntas que sua empresa precisa responder para avançar.</h2>
+    <p class="sec-lead">O Mapa Estratégico aprofunda os sinais identificados, cruza diferentes perspectivas e organiza as respostas necessárias para que Marca, Negócios, Comunicação e Pessoas avancem na mesma direção.</p>
     <div class="q-grid">
-      <div class="q-item"><span class="qn">01</span><span class="qt">Quem somos<span class="qd">Essência e identidade</span></span></div>
-      <div class="q-item"><span class="qn">02</span><span class="qt">Como nos veem<span class="qd">Percepção de clientes e equipe</span></span></div>
-      <div class="q-item"><span class="qn">03</span><span class="qt">Onde estamos<span class="qd">Maturidade e contexto</span></span></div>
-      <div class="q-item"><span class="qn">04</span><span class="qt">O que precisamos decidir<span class="qd">Os pontos de escolha</span></span></div>
-      <div class="q-item"><span class="qn">05</span><span class="qt">No que acreditamos<span class="qd">Valores e cultura</span></span></div>
-      <div class="q-item"><span class="qn">06</span><span class="qt">Por que existimos<span class="qd">Propósito e plataforma de marca</span></span></div>
-      <div class="q-item"><span class="qn">07</span><span class="qt">Como falamos e aparecemos<span class="qd">Identidade verbal e visual</span></span></div>
-      <div class="q-item"><span class="qn">08</span><span class="qt">Como nos relacionamos<span class="qd">Jornada e experiência do cliente</span></span></div>
-      <div class="q-item"><span class="qn">09</span><span class="qt">Para onde vamos<span class="qd">Plano de comunicação</span></span></div>
-      <div class="q-item"><span class="qn">10</span><span class="qt">A nossa marca<span class="qd">Documento estratégico consolidado</span></span></div>
+      <div class="q-item"><span class="qn">01</span><span class="qt">Quem somos<span class="qd">Essência, história, identidade e cultura</span></span></div>
+      <div class="q-item"><span class="qn">02</span><span class="qt">Como somos percebidos<span class="qd">Visão de clientes, colaboradores e lideranças</span></span></div>
+      <div class="q-item"><span class="qn">03</span><span class="qt">Onde estamos<span class="qd">Contexto atual, forças, gaps e desafios prioritários</span></span></div>
+      <div class="q-item"><span class="qn">04</span><span class="qt">Para onde queremos avançar<span class="qd">Visão de futuro e próximo estágio do negócio</span></span></div>
+      <div class="q-item"><span class="qn">05</span><span class="qt">O que precisamos decidir<span class="qd">Escolhas, prioridades e critérios de decisão</span></span></div>
+      <div class="q-item"><span class="qn">06</span><span class="qt">Qual valor queremos entregar<span class="qd">Posicionamento, proposta de valor e diferenciação</span></span></div>
+      <div class="q-item"><span class="qn">07</span><span class="qt">Como transformamos a promessa em experiência<span class="qd">Jornada do cliente e direcionadores de experiência</span></span></div>
+      <div class="q-item"><span class="qn">08</span><span class="qt">Como comunicamos esse valor<span class="qd">Tom de voz, arquétipos, identidade e expressão da marca</span></span></div>
+      <div class="q-item"><span class="qn">09</span><span class="qt">Como líderes e equipes sustentam a direção<span class="qd">Cultura, comportamento, alinhamento e competências</span></span></div>
+      <div class="q-item"><span class="qn">10</span><span class="qt">Como acompanharemos a evolução<span class="qd">Indicadores, prioridades e próximos ciclos de desenvolvimento</span></span></div>
     </div>
   </div>
 </section>
@@ -417,12 +444,12 @@
   <div class="wrap">
     <div class="sec-eyebrow"><span class="eyebrow">Rigor e direção humana</span></div>
     <h2 class="sec-title">Profundidade não é opinião.</h2>
-    <p class="sec-lead">Nenhuma recomendação nasce de achismo. O que garante a qualidade é o método, e o julgamento humano no comando.</p>
+    <p class="sec-lead">Nenhuma recomendação nasce de achismo. A qualidade vem do método, do cruzamento de evidências e da análise humana conduzindo cada decisão.</p>
     <div class="rigor-grid">
-      <div class="rigor-cell"><div class="k">Cruzamento de evidências</div><h3>Nunca uma opinião isolada</h3><p>Cada leitura nasce do cruzamento de percepções, dados e comportamento, nunca da visão de uma sala só.</p></div>
-      <div class="rigor-cell"><div class="k">Camadas separadas</div><h3>Fato, interpretação e recomendação</h3><p>Mantemos separado o que é evidência, o que é leitura e o que é sugestão, para que a decisão seja sempre consciente.</p></div>
-      <div class="rigor-cell"><div class="k">Decisão humana</div><h3>A tecnologia acelera; ela não decide</h3><p>A inteligência artificial consolida os dados e otimiza as etapas. A análise, a interpretação e a personalização para cada empresa continuam humanas, as escolhas sensíveis de posicionamento e cultura passam por aprovação.</p></div>
-      <div class="rigor-cell"><div class="k">Prontidão de execução</div><h3>Só recomendamos o que se sustenta</h3><p>Antes de qualquer movimento, medimos se a cultura e a liderança conseguem carregá-lo. Estratégia que não se sustenta é fachada.</p></div>
+      <div class="rigor-cell"><div class="k">Cruzamento de evidências</div><h3>Nunca uma opinião isolada</h3><p>Cada leitura nasce do cruzamento de percepções, dados e comportamentos, nunca da visão de uma única pessoa.</p></div>
+      <div class="rigor-cell"><div class="k">Camadas de análise</div><h3>Fato, interpretação e direcionamento</h3><p>Diferenciamos o que foi evidenciado, o que precisa ser interpretado e quais direcionamentos podem ser construídos a partir dessa leitura.</p></div>
+      <div class="rigor-cell"><div class="k">Tecnologia aplicada</div><h3>A tecnologia acelera; a análise humana direciona</h3><p>A tecnologia organiza, cruza e consolida informações. A análise, a interpretação e a personalização continuam sendo conduzidas por especialistas.</p></div>
+      <div class="rigor-cell"><div class="k">Capacidade de sustentação</div><h3>Direcionamos o que a empresa consegue sustentar</h3><p>Antes de definir prioridades, consideramos a cultura, a liderança, a estrutura e a capacidade real de execução da empresa.</p></div>
     </div>
   </div>
 </section>
@@ -436,12 +463,12 @@
         <span class="mono">VB</span>
       </div>
       <div>
-        <span class="eyebrow">A fundadora</span>
+        <span class="eyebrow">Quem conduz essa metodologia</span>
         <h2>Vanessa Bergamini</h2>
         <div class="role">Fundadora da Espansione · Especialista em Crescimento Integrado</div>
-        <p class="bio">Com mais de 22 anos de experiência em estratégia de marca, comunicação, desenvolvimento de negócios e pessoas, Vanessa criou uma metodologia própria que identifica o que pode limitar o próximo estágio de uma empresa, e transforma essa leitura em direcionadores estratégicos, alinhamento interno e desenvolvimento de líderes e equipes.</p>
-        <p class="bio">Seu trabalho integra Marca, Negócio, Comunicação e Pessoas para que pequenas e médias empresas cresçam com mais clareza, estrutura, autonomia e valor percebido.</p>
-        <blockquote>"A inteligência artificial acelera e consolida os dados. Mas a análise, a interpretação e a personalização para cada empresa continuam sendo minhas."</blockquote>
+        <p class="bio">Com mais de duas décadas de experiência em estratégia de marca, comunicação, desenvolvimento de negócios e pessoas, Vanessa Bergamini criou uma metodologia própria para identificar o que pode limitar o próximo estágio de uma empresa e transformar essa leitura em direcionadores estratégicos, alinhamento interno e desenvolvimento de líderes e equipes. Seu propósito é integrar o desenvolvimento do negócio e das pessoas para que o crescimento aconteça com mais leveza, estrutura e autonomia.</p>
+        <p class="bio">Sua atuação conecta Marca, Negócios, Comunicação e Pessoas para que pequenas e médias empresas cresçam com mais clareza, coerência e valor percebido.</p>
+        <blockquote>"A tecnologia acelera e consolida as informações. Mas a análise, a interpretação e a personalização para cada empresa continuam sendo humanas."</blockquote>
       </div>
     </div>
   </div>
@@ -496,7 +523,7 @@
       </div>
       <div class="foot-links">
         <div class="foot-col"><b>O método</b><a href="#metodo">Como pensamos</a><a href="#diferencial">O diferencial</a><a href="#processo">O processo</a><a href="#fundadora">A fundadora</a></div>
-        <div class="foot-col"><b>Jornada</b><a href="/mapa">Mapa do Crescimento Integrado · Essencial</a><a href="#processo">Mapa do Crescimento Integrado · Estratégico</a><a href="#processo">Programa de Crescimento</a></div>
+        <div class="foot-col"><b>Jornada</b><a href="/mapa">Mapa do Crescimento Integrado · Essencial</a><a href="#processo">Mapa do Crescimento Integrado · Estratégico</a><a href="#processo">Programa de Desenvolvimento Contínuo</a></div>
         <div class="foot-col"><b>Contato</b><a href="https://wa.me/5511985775893">WhatsApp</a><a href="/area">Área do cliente</a></div>
       </div>
     </div>

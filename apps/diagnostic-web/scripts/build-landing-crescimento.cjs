@@ -42,8 +42,17 @@ if(burger&&mobile){burger.addEventListener('click',function(){mobile.style.displ
 const html = `<!DOCTYPE html>
 <html lang="pt-BR"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Mapa do Crescimento Integrado — diagnóstico gratuito da Espansione. Descubra em 10 minutos se a sua empresa está pronta para sustentar o crescimento nos 4 sistemas: Marca, Negócios, Comunicação e Pessoas.">
+<meta name="description" content="Mapa do Crescimento Integrado, o teste gratuito da Espansione. Em 10 minutos, descubra como a sua empresa está nos 4 pilares: Marca, Negócios, Comunicação e Pessoas.">
 <title>Mapa do Crescimento Integrado · Espansione</title>
+<link rel="canonical" href="https://crescimentointegrado.com.br/lp">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Espansione">
+<meta property="og:url" content="https://crescimentointegrado.com.br/lp">
+<meta property="og:title" content="Mapa do Crescimento Integrado · Espansione">
+<meta property="og:description" content="O teste gratuito da Espansione. Em 10 minutos, descubra como a sua empresa está nos 4 pilares: Marca, Negócios, Comunicação e Pessoas.">
+<meta property="og:image" content="https://crescimentointegrado.com.br/crescimento/brand/img-0.png">
+<meta name="twitter:card" content="summary">
 <link rel="icon" type="image/png" sizes="32x32" href="/crescimento/brand/espansione-favicon-32.png">
 <link rel="icon" type="image/png" sizes="256x256" href="/crescimento/brand/espansione-favicon-256.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/crescimento/brand/espansione-favicon-180.png">
