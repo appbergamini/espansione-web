@@ -18,7 +18,9 @@ export const TREINAMENTOS = [
     aulas: [
       { id: 'aula-1', titulo: 'Conhecendo como cada perfil funciona', duracao: '4:34', videoId: '44ebed51-51f9-469d-b9f5-9f69f2f60461', descricao: 'Como o seu perfil e o das pessoas com quem você se relaciona impactam os resultados.' },
       { id: 'aula-2', titulo: 'Aula 2', duracao: '10:00', videoId: 'b1aeba20-d6d3-4f8f-97da-d3bb381d65ce', descricao: '' },
-      { id: 'aula-3', titulo: 'Aula 3', duracao: '12:29', videoId: 'e8b20fad-842c-4b7d-bff9-f03654dcf267', descricao: '' },
+      // vídeo original (e8b20fad) foi removido da biblioteca Bunny em 22/07;
+      // sem videoId a aula aparece como "em breve" até subir o substituto.
+      { id: 'aula-3', titulo: 'Aula 3', duracao: '', videoId: '', descricao: '' },
     ],
   },
 ];
