@@ -110,7 +110,7 @@ function trackSvg(score, sistemas = []) {
       <circle cx="${lx}" cy="40" r="5.5" fill="${m.cor}" stroke="#001A3B" stroke-width="1.5"/>
       <text x="${lx}" y="30" text-anchor="middle" font-family="Poppins, sans-serif" font-size="13" font-weight="700" fill="${m.cor}">${m.ini}</text>`;
   }).join('');
-  return `<svg viewBox="0 0 800 98" role="img" aria-label="Nível de maturidade: ${score}%">
+  return `<svg viewBox="0 0 800 98" role="img" aria-label="Resultado geral: ${score}%">
       <rect x="0" y="50" width="196" height="11" rx="5.5" fill="#2C3A57"/>
       <rect x="204" y="50" width="196" height="11" rx="5.5" fill="#33507A"/>
       <rect x="408" y="50" width="196" height="11" rx="5.5" fill="#3E5F91"/>
@@ -126,7 +126,7 @@ function trackSvg(score, sistemas = []) {
     </svg>`;
 }
 
-export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narrativa = {} }) {
+export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narrativa = {}, telefonePrefill = '' }) {
   const score = result.general_score == null ? 0 : Math.round(result.general_score);
   const alertsByNome = {};
   for (const s of narrativa.sistemas || []) if (s && s.sistema) alertsByNome[s.sistema] = s;
@@ -214,17 +214,35 @@ export function buildRelatorioMaturidadeHtml({ cliente, dataLabel, result, narra
   @media (max-width:560px){.pattern,.next{padding:30px 24px;}.exp{padding:20px;}.score-big{font-size:44px;}}
   .pdf-btn{position:fixed;bottom:20px;right:20px;z-index:99;background:var(--brass);color:#fff;border:0;border-radius:10px;padding:12px 18px;font:600 14px 'Poppins',sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28);}
   .pdf-btn:hover{background:#E13345;}
+  .wa-btn{position:fixed;bottom:72px;right:20px;z-index:99;display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;border:0;border-radius:10px;padding:12px 18px;font:600 14px 'Poppins',sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28);}
+  .wa-btn:hover{background:#1EBE5A;}
+  .wa-panel{position:fixed;bottom:124px;right:20px;z-index:100;width:min(300px,calc(100vw - 40px));background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 12px 32px rgba(0,10,30,.25);display:none;}
+  .wa-panel.open{display:block;}
+  .wa-panel label{display:block;font:500 12.5px 'Poppins',sans-serif;color:var(--muted);margin-bottom:6px;}
+  .wa-panel input{width:100%;box-sizing:border-box;padding:10px 12px;font:400 15px 'Poppins',sans-serif;border:1px solid var(--line);border-radius:9px;outline:none;}
+  .wa-panel input:focus{border-color:#25D366;}
+  .wa-send{width:100%;margin-top:10px;background:#25D366;color:#fff;border:0;border-radius:9px;padding:11px 0;font:600 14px 'Poppins',sans-serif;cursor:pointer;}
+  .wa-send:disabled{opacity:.6;cursor:default;}
+  .wa-msg{font:400 12.5px 'Poppins',sans-serif;margin:8px 0 0;min-height:16px;}
+  .wa-msg.ok{color:#15803D;} .wa-msg.err{color:#C72638;}
   @page{size:A4;margin:14mm 12mm;}
   @media print{
     html,body{background:#fff!important;}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    .pdf-btn{display:none!important;}
+    .pdf-btn,.wa-btn,.wa-panel{display:none!important;}
     .hero{padding:34px 0 30px;} section{padding:24px 0;} .sec-head{margin-top:12px;margin-bottom:18px;}
     .sys,.exp,.pattern,.next,.attr-q,.gap-q,.gap-sub,.chips,.track,.score-row{break-inside:avoid;}
     h1,h2,h3{break-after:avoid;}
   }
 </style></head><body>
 <button class="pdf-btn" onclick="salvarPdf()">⬇ Salvar como PDF</button>
+<button class="wa-btn" onclick="toggleWa()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.16-1.35A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.06.8.82-2.98-.2-.31A8.2 8.2 0 1 1 12 20.2zm4.5-6.14c-.25-.12-1.46-.72-1.68-.8-.23-.09-.4-.13-.56.12-.17.25-.64.8-.79.97-.14.16-.29.18-.53.06a6.7 6.7 0 0 1-3.35-2.93c-.25-.43.25-.4.72-1.34.08-.16.04-.3-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42h-.48c-.16 0-.43.06-.66.3-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.6.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.2-.57.2-1.06.14-1.17-.06-.1-.22-.16-.47-.28z"/></svg> Receber no WhatsApp</button>
+<div class="wa-panel" id="waPanel">
+  <label for="waPhone">Seu WhatsApp (com DDD)</label>
+  <input id="waPhone" type="tel" placeholder="(11) 98765-4321" value="${esc(telefonePrefill || '')}" />
+  <button class="wa-send" id="waSend" onclick="enviarWa()">Enviar relatório</button>
+  <p class="wa-msg" id="waMsg"></p>
+</div>
 <script>
 // PDF pela impressão nativa do navegador: vetorial, texto selecionável e
 // paginação correta. O html2pdf (canvas fatiado) gerava páginas em branco no
@@ -235,6 +253,22 @@ function salvarPdf(){
 }
 if(new URLSearchParams(location.search).get('print')==='1'){
   window.addEventListener('load',function(){ salvarPdf(); });
+}
+function toggleWa(){ document.getElementById('waPanel').classList.toggle('open'); }
+function enviarWa(){
+  var btn=document.getElementById('waSend'), msg=document.getElementById('waMsg');
+  var phone=document.getElementById('waPhone').value.trim();
+  var token=new URLSearchParams(location.search).get('token');
+  if(!phone){ msg.className='wa-msg err'; msg.textContent='Informe o número com DDD.'; return; }
+  btn.disabled=true; msg.className='wa-msg'; msg.textContent='Enviando…';
+  fetch('/api/mapa/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token,phone:phone})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){ msg.className='wa-msg ok'; msg.textContent='Enviado! Confira seu WhatsApp.'; setTimeout(toggleWa, 2500); }
+      else { msg.className='wa-msg err'; msg.textContent=d.error||'Não foi possível enviar.'; }
+      btn.disabled=false;
+    })
+    .catch(function(){ msg.className='wa-msg err'; msg.textContent='Falha de conexão. Tente de novo.'; btn.disabled=false; });
 }
 </script>
 

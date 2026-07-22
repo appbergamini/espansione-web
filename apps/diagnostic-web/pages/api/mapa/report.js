@@ -5,6 +5,7 @@
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { gerarRelatorioVendedor } from '../../../lib/mapa-maturidade/reportVendedor';
 import { buildRelatorioMaturidadeHtml } from '../../../lib/mapa-maturidade/reportHtml';
+import { extrairTelefone } from '../../../lib/whatsapp/wasender';
 
 export const maxDuration = 120;
 export const config = { maxDuration: 120 };
@@ -48,7 +49,14 @@ export default async function handler(req, res) {
       await db.from('mapa_assessments').update({ result_json: { ...result, report: narrativa } }).eq('id', assessment.id);
     }
 
-    const html = buildRelatorioMaturidadeHtml({ cliente, dataLabel: mesAno(assessment.completed_at), result, narrativa });
+    const html = buildRelatorioMaturidadeHtml({
+      cliente,
+      dataLabel: mesAno(assessment.completed_at),
+      result,
+      narrativa,
+      // pré-preenche o painel de WhatsApp quando o contato do cadastro é telefone
+      telefonePrefill: extrairTelefone(assessment.cadastro_json?.['CAD-MM-006']) || '',
+    });
     // O PDF é gerado no cliente (window.print() na própria página — ver ?print=1),
     // evitando dependência de chromium serverless.
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
