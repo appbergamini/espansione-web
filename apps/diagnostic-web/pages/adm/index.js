@@ -122,6 +122,11 @@ export default function AdminPanel() {
                 </button>
               )}
               {(isMaster || userRole === 'admin') && (
+                <button onClick={() => router.push('/adm/feira')} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600 }}>
+                  📱 Feira
+                </button>
+              )}
+              {(isMaster || userRole === 'admin') && (
                 <button className="btn-primary" onClick={() => router.push('/adm/novo')} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
                   + Novo Projeto
                 </button>

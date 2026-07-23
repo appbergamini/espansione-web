@@ -192,6 +192,83 @@
   width: 100%;
 }
 
+/* ─── Página pública da feira ─────────────────────────────────────── */
+.feira-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  color: var(--brand-noir);
+  background:
+    radial-gradient(circle at 14% 6%, rgba(107, 163, 255, 0.32), transparent 32rem),
+    radial-gradient(circle at 92% 95%, rgba(218, 49, 68, 0.20), transparent 30rem),
+    #f4f5f7;
+}
+.feira-orb { position: absolute; z-index: -1; border-radius: 50%; filter: blur(2px); pointer-events: none; }
+.feira-orb-a { width: 18rem; height: 18rem; top: -9rem; right: -6rem; border: 2.5rem solid rgba(0, 50, 109, 0.08); }
+.feira-orb-b { width: 12rem; height: 12rem; bottom: -5rem; left: -4rem; border: 1.5rem solid rgba(218, 49, 68, 0.12); }
+.feira-card {
+  width: min(100%, 31rem);
+  padding: clamp(1.75rem, 6vw, 3rem);
+  border: 1px solid rgba(0, 50, 109, 0.12);
+  border-radius: 1.5rem;
+  background: rgba(254, 254, 254, 0.94);
+  box-shadow: 0 1.5rem 4rem rgba(0, 50, 109, 0.15);
+}
+.feira-brand { display: flex; justify-content: center; margin-bottom: 1.7rem; }
+.feira-brand a { pointer-events: none; }
+.feira-eyebrow { margin: 0 0 0.7rem; color: var(--brand-red); font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; }
+.feira-card h1 { margin: 0; color: var(--brand-blue); font-size: clamp(2rem, 8vw, 2.7rem); line-height: 0.98; }
+.feira-intro { margin: 1rem 0 1.9rem; color: #3d4d60; font-family: var(--font-body); font-size: 1.06rem; line-height: 1.5; }
+.feira-form { display: grid; gap: 0.55rem; }
+.feira-form label { margin-top: 0.55rem; color: #26394f; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; }
+.feira-form input {
+  width: 100%;
+  min-height: 3.2rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid #c9d1db;
+  border-radius: 0.65rem;
+  outline: none;
+  color: var(--brand-noir);
+  background: #fff;
+  font: 500 1rem var(--font-ui);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.feira-form input::placeholder { color: #8290a0; }
+.feira-form input:focus { border-color: var(--brand-blue-2); box-shadow: 0 0 0 3px rgba(0, 65, 152, .13); }
+.feira-form button, .feira-secondary {
+  width: 100%;
+  min-height: 3.35rem;
+  margin-top: 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-radius: 0.7rem;
+  color: #fff;
+  background: var(--brand-red);
+  box-shadow: 0 0.6rem 1.4rem rgba(199, 36, 55, .22);
+  cursor: pointer;
+  font: 700 0.96rem var(--font-ui);
+  text-align: center;
+  text-decoration: none;
+  transition: transform .18s ease, background .18s ease;
+}
+.feira-form button:hover, .feira-secondary:hover { background: var(--brand-red-dark); transform: translateY(-1px); }
+.feira-form button:disabled { cursor: wait; opacity: .72; transform: none; }
+.feira-error { margin: 0.8rem 0 0; color: #a21426; font-size: 0.85rem; }
+.feira-security { margin: 1.35rem 0 0; color: #64748b; font-size: 0.74rem; line-height: 1.45; text-align: center; }
+.feira-thanks { text-align: center; }
+.feira-thanks .feira-eyebrow { text-align: left; }
+.feira-thanks .feira-intro { text-align: left; }
+.feira-secondary { display: inline-flex; align-items: center; justify-content: center; margin-top: 0.4rem; background: var(--brand-blue); box-shadow: 0 0.6rem 1.4rem rgba(0, 50, 109, .18); }
+.feira-secondary:hover { background: var(--brand-blue-2); }
+@media (max-width: 420px) {
+  .feira-page { padding: 0.8rem; }
+  .feira-card { border-radius: 1.1rem; }
+}
+
 .admin-project-page {
   overflow-x: clip;
 }

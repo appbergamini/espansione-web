@@ -13,6 +13,8 @@ import { verificarPagamento } from '../../../lib/checkout/infinitepay';
 // fulfillment pelo catálogo produtos_checkout (default 'identidade' p/ orders antigos)
 async function fulfillmentDoPedido(db, orderNsu) {
   const slug = String(orderNsu || '').split('__')[0];
+  // A compra da feira é acompanhada no painel, mas não libera um assessment.
+  if (slug === 'feira') return { slug, fulfillment: 'nenhum' };
   if (!slug) return { slug: 'identidade', fulfillment: 'identidade' };
   const { data } = await db.from('produtos_checkout').select('slug, fulfillment').eq('slug', slug).maybeSingle();
   return data ? { slug: data.slug, fulfillment: data.fulfillment } : { slug: 'identidade', fulfillment: 'identidade' };
@@ -56,6 +58,19 @@ export default async function handler(req, res) {
     if (supabaseAdmin && liberar) {
       if (verif === 'unknown') console.warn('[checkout/webhook] pagamento NÃO verificado (payment_check inconclusivo) — liberando como paid_unverified', registro.order_nsu);
       const { slug, fulfillment } = await fulfillmentDoPedido(supabaseAdmin, registro.order_nsu);
+
+      // A InfinitePay pode não repetir o objeto customer no webhook. No fluxo
+      // da feira, recuperamos os dados do cadastro pelo order_nsu para que
+      // /adm/pagamentos mostre o comprador como nas demais vendas.
+      if (slug === 'feira' && !registro.cliente) {
+        const { data: lead } = await supabaseAdmin
+          .from('leads_feira')
+          .select('nome, email, whatsapp')
+          .eq('order_nsu', registro.order_nsu)
+          .maybeSingle();
+        if (lead) registro.cliente = { name: lead.nome, email: lead.email, phone_number: lead.whatsapp };
+      }
+
       const extraPagamento = {
         transaction_nsu: registro.transaction_nsu,
         slug: registro.slug,
@@ -69,6 +84,24 @@ export default async function handler(req, res) {
       } else {
         // treinamento/nenhum: só registra a compra (libera acesso à /area por compra paga)
         await registrarPagamento(supabaseAdmin, { orderNsu: registro.order_nsu, comprador: registro.cliente, produto: slug, extra: extraPagamento });
+      }
+
+      // O order_nsu é criado antes do redirecionamento em /feira. Assim, a
+      // confirmação vem do webhook, e não de uma suposição do navegador.
+      if (slug === 'feira') {
+        const { data: pagamento } = await supabaseAdmin
+          .from('pagamentos')
+          .select('id')
+          .eq('order_nsu', registro.order_nsu)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        await supabaseAdmin.from('leads_feira').update({
+          status: 'pago',
+          pagamento_id: pagamento?.id || null,
+          pago_em: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }).eq('order_nsu', registro.order_nsu);
       }
     } else if (supabaseAdmin) {
       // sem order_nsu, negado, ou unpaid: só registra o evento
