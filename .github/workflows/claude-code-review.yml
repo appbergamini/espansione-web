@@ -1,0 +1,36 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    # Descomente para limitar a certos caminhos:
+    # paths:
+    #   - "apps/**/*.ts"
+    #   - "apps/**/*.tsx"
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Revise este pull request e deixe comentários de revisão de código.
+            Foque em: qualidade do código, possíveis bugs, questões de
+            performance, segurança e cobertura de testes. Seja construtivo
+            e específico. Responda em português.
+          # Usa a CLI do gh para postar os comentários da revisão
+          claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
