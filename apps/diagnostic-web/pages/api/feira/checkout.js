@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 const INFINITEPAY_API = 'https://api.checkout.infinitepay.io/links';
-const FALLBACK_PAYMENT_URL = 'https://link.infinitepay.io/espansione/Ri0x-cwNQ6HN7hH-5,00';
+const FALLBACK_PAYMENT_URL = 'https://link.infinitepay.io/espansione/Ri1B-URqF8f0kDo-3700,00';
 
 function baseUrl(req) {
   const host = String(req.headers['x-forwarded-host'] || req.headers.host || '');
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   }
 
   const handle = process.env.FEIRA_INFINITEPAY_HANDLE || process.env.INFINITEPAY_HANDLE || 'espansione';
-  const price = Number(process.env.FEIRA_VALOR_CENTAVOS || 500);
+  const price = Number(process.env.FEIRA_VALOR_CENTAVOS || 370000);
   const description = process.env.FEIRA_PRODUTO_NOME || 'Oferta especial da feira · Espansione';
   const base = baseUrl(req);
 
