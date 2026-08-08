@@ -564,7 +564,7 @@ export const Agent_06_VisaoGeral = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Integração VI + VE + VM + prontidão de execução (IDA → De-Para → Diretrizes — Método Ana Couto)',
+      fontes: 'Integração VI + VE + VM + prontidão de execução (IDA → De-Para → Diretrizes — Método do Crescimento Integrado)',
       gaps: '',
     };
   },

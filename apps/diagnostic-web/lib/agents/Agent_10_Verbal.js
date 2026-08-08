@@ -149,7 +149,7 @@ export const Agent_10_Verbal = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Visão Geral + Plataforma (Método Ana Couto — UVV Verbal)',
+      fontes: 'Visão Geral + Plataforma (Método do Crescimento Integrado — UVV Verbal)',
       gaps: extract('gaps') || '',
     };
   },

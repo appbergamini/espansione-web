@@ -137,7 +137,7 @@ export const Agent_08_Diretrizes = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Visão Geral + Valores/Atributos (Método Ana Couto — Diretrizes Estratégicas)',
+      fontes: 'Visão Geral + Valores/Atributos (Método do Crescimento Integrado — Diretrizes Estratégicas)',
       gaps: extract('gaps') || '',
     };
   },

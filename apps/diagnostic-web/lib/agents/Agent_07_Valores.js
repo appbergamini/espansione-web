@@ -141,7 +141,7 @@ export const Agent_07_Valores = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Visão Geral consolidada (Método Ana Couto — Plataforma 1ª parte)',
+      fontes: 'Visão Geral consolidada (Método do Crescimento Integrado — Plataforma 1ª parte)',
       gaps: extract('gaps') || '',
     };
   },

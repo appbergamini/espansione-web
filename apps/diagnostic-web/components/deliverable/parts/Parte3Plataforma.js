@@ -36,7 +36,7 @@ export default function Parte3Plataforma({ outputsByAgent, vizDataPorAgent }) {
       <PartHeader
         numero="3"
         titulo="Plataforma de Marca"
-        subtitulo="A promessa — escrita em método proprietário Ana Couto."
+        subtitulo="A promessa — o que a marca sustenta, escrito para durar."
       />
 
       {plataformaSemManifesto && (

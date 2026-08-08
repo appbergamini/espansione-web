@@ -185,7 +185,7 @@ export const Agent_09_Plataforma = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Visão Geral + Valores + Diretrizes (Método Ana Couto — Plataforma)',
+      fontes: 'Visão Geral + Valores + Diretrizes (Método do Crescimento Integrado — Plataforma)',
       gaps: extract('gaps') || '',
     };
   },

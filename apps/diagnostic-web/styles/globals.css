@@ -1089,7 +1089,7 @@ select.form-input option:checked, select option:checked {
       color: #6B7280;
     }
     @bottom-left {
-      content: "Espansione · Método Ana Couto";
+      content: "Espansione · Crescimento Integrado";
       font-family: var(--font-ui);
       font-size: 9pt;
       color: #6B7280;

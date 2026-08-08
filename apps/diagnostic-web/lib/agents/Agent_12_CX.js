@@ -190,7 +190,7 @@ export const Agent_12_CX = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Visão Geral + Plataforma (Método Ana Couto — One Page de Experiência)',
+      fontes: 'Visão Geral + Plataforma (Método do Crescimento Integrado — One Page de Experiência)',
       gaps: extract('gaps') || '',
     };
   },

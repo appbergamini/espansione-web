@@ -386,7 +386,7 @@ export const Agent_01_RoteirosInternos = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: conclusoesCombinada,
       confianca: extract('confianca') || 'Media',
-      fontes: 'Formulários sócios + colaboradores + DISC + Posicionamento (VI — Método Ana Couto)',
+      fontes: 'Formulários sócios + colaboradores + DISC + Posicionamento (VI — Método do Crescimento Integrado)',
       gaps: '',
     };
   },

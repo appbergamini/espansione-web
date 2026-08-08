@@ -43,7 +43,8 @@ export default function Parte7Encerramento({ projeto, socioFundadorNome, dataGer
           </div>
           <div>
             <div className="creditos-label">Método</div>
-            <div className="creditos-valor">Ana Couto · Branding Aplicado</div>
+            <div className="creditos-valor">Crescimento Integrado</div>
+            <div className="creditos-sub">Método proprietário Espansione</div>
           </div>
           <div>
             <div className="creditos-label">Cliente</div>

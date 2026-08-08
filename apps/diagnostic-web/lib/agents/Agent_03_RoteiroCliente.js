@@ -149,7 +149,7 @@ export const Agent_03_RoteiroCliente = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Formulário clientes + Contexto Interno (VE — Método Ana Couto)',
+      fontes: 'Formulário clientes + Contexto Interno (VE — Método do Crescimento Integrado)',
       gaps: extract('gaps') || '',
     };
   },

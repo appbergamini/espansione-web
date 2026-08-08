@@ -18,7 +18,7 @@ export default function DeliverableCover({ projeto, dataGeracao }) {
       <div className="cover-title-block">
         <h1 className="cover-title">{nomeEmpresa}</h1>
         <div className="cover-sub">
-          Um trabalho editorial de Espansione · Método Ana Couto
+          Um trabalho editorial de Espansione · Método do Crescimento Integrado
         </div>
       </div>
 

@@ -536,7 +536,7 @@ export const Agent_13_Comunicacao = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Pipeline completo (Método Ana Couto — Comunicação)',
+      fontes: 'Pipeline completo (Método do Crescimento Integrado — Comunicação)',
       gaps: extract('gaps') || '',
     };
   },

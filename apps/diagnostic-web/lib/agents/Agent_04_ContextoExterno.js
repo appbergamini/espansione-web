@@ -480,7 +480,7 @@ export const Agent_04_ContextoExterno = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Formulários + entrevistas com clientes do ICP ativo (VE — Método Ana Couto)',
+      fontes: 'Formulários + entrevistas com clientes do ICP ativo (VE — Método do Crescimento Integrado)',
       gaps: '',
     };
   },

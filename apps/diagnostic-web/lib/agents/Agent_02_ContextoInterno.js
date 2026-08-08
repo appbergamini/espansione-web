@@ -787,7 +787,7 @@ export const Agent_02_ContextoInterno = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Sócios (Diagnóstico + DISC + Jung + competências + estilo + Posicionamento + entrevistas) + Colaboradores (intake anônimo + CIS agregado + entrevistas voluntárias) + Diagnóstico 360° + Agente 1 — VI v2 Método Ana Couto',
+      fontes: 'Sócios (Diagnóstico + DISC + Jung + competências + estilo + Posicionamento + entrevistas) + Colaboradores (intake anônimo + Mapeamento Comportamental agregado + entrevistas voluntárias) + Diagnóstico 360° + Agente 1 — VI v2 Método do Crescimento Integrado',
       gaps: '',
     };
   },

@@ -354,7 +354,7 @@ export const Agent_11_Visual = {
       resumo_executivo: extract('resumo_executivo'),
       conclusoes: extract('conclusoes'),
       confianca: extract('confianca') || 'Media',
-      fontes: 'Visão Geral + Plataforma + Verbal (Método Ana Couto — One Page de Personalidade)',
+      fontes: 'Visão Geral + Plataforma + Verbal (Método do Crescimento Integrado — One Page de Personalidade)',
       gaps: extract('gaps') || '',
     };
   },
