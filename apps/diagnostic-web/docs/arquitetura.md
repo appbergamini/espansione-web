@@ -475,7 +475,7 @@ O cockpit da agência (`/cockpit`) usa um tema **dark** próprio e autocontido.
 
 - **Brand Memory**: a versão do fixture GSIM está ativa em produção, mas carregada pelo **fallback legado**. O caminho próprio (export per-agente via `<brand_memory_export>`) **nunca rodou fim-a-fim**; re-execuções do Agente 16 falham em emitir o JSON.
 - **`middleware.js`**: proteção de borda de `/adm` e `/api/adm` comentada (temporária). A autorização vive nos handlers.
-- **Marca no entregável consolidado**: `DeliverableCover`, `Parte3Plataforma` e `Parte7Encerramento` ainda trazem atribuição de metodologia de terceiros em texto client-facing — pendente de reescrita para o posicionamento Espansione. (O arquivo `lib/agents/_anaCoutoKB.js` é nome interno legado de constantes do método.)
+- **Marca no entregável**: resolvido. Capa, subtítulo da Parte 3, créditos da Parte 7, rodapé de impressão (`@page` em `globals.css`) e o campo `fontes` dos agentes assinam **Método do Crescimento Integrado · Espansione**. Os *system prompts* dos agentes ainda citam a metodologia de origem — isso é **instrução interna** que molda a resposta do modelo, não texto que o cliente lê; mexer ali altera a qualidade do output. `lib/agents/_anaCoutoKB.js` segue como nome de arquivo interno legado.
 - **Cockpit da agência (`/cockpit`)**: Fase 1 no ar; parte das views ainda usa dados de exemplo.
 - **Docs defasados**: `maturidade-textos-e-regua.md` e `identidade-perguntas-por-funcao.md` descrevem os instrumentos **anteriores** (7 pilares × 7; banco de 231). Os instrumentos vigentes são os `*.generated.js` descritos aqui.
 - **Funil**: domínio do Resend a verificar; compras de teste a limpar; títulos das aulas 2 e 3 a definir.
