@@ -7,12 +7,14 @@
     "build": "next build",
     "start": "next start",
     "catalog": "node scripts/build-competencias.cjs",
-    "test": "node --test lib/competencias/__tests__/*.test.js lib/comportamental/__tests__/*.test.js"
+    "test": "node --test lib/competencias/__tests__/*.test.js lib/comportamental/__tests__/*.test.js lib/narrativa/__tests__/*.test.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@espansione/brand": "workspace:^",
     "@espansione/cis": "workspace:^",
     "@supabase/supabase-js": "^2.101.0",
+    "@vercel/functions": "^3.9.3",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"

@@ -302,15 +302,22 @@ export const TERMOS_PROIBIDOS = [
   'Índice de Ajuste', 'Índice de Coerência', 'aderência',
 ];
 
+/**
+ * `abertura` e `fechamento` são texto solto, fora dos blocos (só existem
+ * quando a IA escreve o relatório — ver lib/narrativa). Entram na
+ * varredura pelo mesmo motivo que o resto: é a única guarda de saída, e
+ * texto que escapa dela é texto que ninguém revisou.
+ */
 export function varrerRelatorio(relatorio) {
-  const texto = JSON.stringify(relatorio.blocos);
+  const avulsos = [relatorio.abertura, relatorio.fechamento].filter((s) => typeof s === 'string');
+  const texto = JSON.stringify(relatorio.blocos) + avulsos.join(' ');
   const achados = [];
 
   for (const t of TERMOS_PROIBIDOS) {
     if (new RegExp(`\\b${t}\\b`, 'i').test(texto)) achados.push(`termo proibido: "${t}"`);
   }
   // chave crua: snake_case sobrando no corpo (fora dos campos técnicos)
-  const corpo = relatorio.blocos.flatMap((b) => colherTextos(b));
+  const corpo = [...relatorio.blocos.flatMap((b) => colherTextos(b)), ...avulsos];
   for (const s of corpo) {
     const m = s.match(/\b[a-z]+_[a-z_]+\b/);
     if (m) achados.push(`chave de tradução não resolvida no texto: "${m[0]}"`);

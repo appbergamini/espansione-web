@@ -53,7 +53,14 @@ export default function Relatorio() {
     return (
       <>
         <style>{CSS}</style>
-        <main className="rel"><div className="folha"><p className="sec">Montando o seu relatório…</p></div></main>
+        <main className="rel">
+          <div className="folha">
+            {/* O relatório é escrito na primeira abertura, não montado de
+                peças prontas. Dizer isso evita que a espera pareça travamento. */}
+            <p className="sec">Escrevendo o seu relatório…</p>
+            <p className="espera">Leva cerca de um minuto. Ele é escrito uma vez, a partir das suas respostas — depois abre na hora, sempre igual.</p>
+          </div>
+        </main>
       </>
     );
   }
@@ -76,8 +83,14 @@ export default function Relatorio() {
             </p>
           </header>
 
+          {/* Abertura: a primeira frase escrita SOBRE esta pessoa. Fica
+              fora das seções numeradas de propósito — é o lede, e a
+              numeração começa quando começa o conteúdo. */}
+          {dados.abertura && <p className="abertura">{dados.abertura}</p>}
+
           {/* ── 1 ── */}
           <Secao numero="1" titulo={onde.titulo}>
+            {onde.texto && <p className="corpo">{onde.texto}</p>}
             <div className="capacidades">
               {onde.capacidades.map((c) => (
                 <div key={c.capacidade} className="capacidade">
@@ -90,6 +103,7 @@ export default function Relatorio() {
 
           {/* ── 2 ── */}
           <Secao numero="2" titulo={competencias.titulo}>
+            {competencias.texto && <p className="corpo">{competencias.texto}</p>}
             <div className="escala-legenda" aria-hidden="true">
               <span>mais frágil</span><span>mais forte</span>
             </div>
@@ -123,6 +137,7 @@ export default function Relatorio() {
 
           {/* ── 3 ── */}
           <Secao numero="3" titulo={porque.titulo}>
+            {porque.texto && <p className="corpo">{porque.texto}</p>}
             {porque.padraoRecorrente && (
               <p className="padrao">{porque.padraoRecorrente.texto}</p>
             )}
@@ -155,7 +170,9 @@ export default function Relatorio() {
                   <span className="trilha-ordem">{i.ordem}</span>
                   <div>
                     <span className="trilha-nome">{i.nome}</span>
-                    <span className="trilha-motivo">{i.motivo}</span>
+                    {/* `motivo` é a conclusão curta do motor; `texto` é ela
+                        escrita por extenso. Sem narrativa, o motor fala. */}
+                    <span className="trilha-motivo">{i.texto || i.motivo}</span>
                     {i.caracteristica && <span className="trilha-etiqueta">{i.caracteristica}</span>}
                   </div>
                 </li>
@@ -177,6 +194,8 @@ export default function Relatorio() {
             <p className="convite-texto">{convite.texto}</p>
             <a className="botao" href="https://wa.me/5511985775893">Marcar a sessão de leitura</a>
           </section>
+
+          {dados.fechamento && <p className="fechamento">{dados.fechamento}</p>}
 
           <div className="acoes sem-impressao">
             <button type="button" className="botao-vazado" onClick={() => window.print()}>
@@ -263,6 +282,15 @@ const CSS = `
                 font-size: clamp(1.25rem, 3vw, 1.6rem); letter-spacing: -.02em; line-height: 1.18; }
 .corpo { margin: 0; font-size: 1rem; line-height: 1.65; max-width: 64ch; }
 .sec { margin: 0; color: var(--slate); font-size: .95rem; }
+.espera { margin: .5rem 0 0; color: var(--slate); font-size: .85rem; line-height: 1.55; max-width: 46ch; }
+
+/* Lede: primeiro parágrafo escrito sobre esta pessoa. Maior que o corpo e
+   sem numeração — a numeração é do conteúdo, não da abertura. */
+.abertura { margin: 0; font-size: 1.2rem; line-height: 1.6; max-width: 58ch;
+            color: var(--navy); border-left: 3px solid var(--red); padding-left: 1.2rem; }
+/* Fechamento: sai do campo do convite e volta ao papel, em voz baixa. */
+.fechamento { margin: 0; font-size: .95rem; line-height: 1.6; max-width: 54ch;
+              color: var(--slate); text-align: center; align-self: center; }
 .nota { margin: .6rem 0 0; font-size: .85rem; line-height: 1.55; color: var(--slate);
         border-left: 2px solid var(--mist); padding-left: .9rem; max-width: 60ch; }
 
@@ -309,11 +337,14 @@ const CSS = `
                  font-size: clamp(1.35rem, 3.4vw, 1.8rem); letter-spacing: -.02em; line-height: 1.15; }
 .trilha-intro { margin: 0; color: #C3D2E6; font-size: 1rem; line-height: 1.6; max-width: 58ch; }
 .trilha-lista { margin: .6rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1.1rem; }
-.trilha-item { display: flex; gap: 1rem; align-items: baseline; }
+/* Alinhamento por baseline servia quando o motivo era uma frase; com um
+   parágrafo escrito, flex-start é o que segura a coluna do número. */
+.trilha-item { display: flex; gap: 1rem; align-items: flex-start; }
 .trilha-ordem { font-family: var(--display); font-weight: 700; font-size: 1.5rem; color: var(--red);
                 line-height: 1; flex: none; width: 1.4rem; font-variant-numeric: tabular-nums; }
 .trilha-nome { display: block; font-family: var(--display); font-weight: 700; font-size: 1.08rem; }
-.trilha-motivo { display: block; color: #C3D2E6; font-size: .95rem; line-height: 1.5; margin-top: .15rem; }
+.trilha-motivo { display: block; color: #C3D2E6; font-size: .95rem; line-height: 1.6;
+                 margin-top: .3rem; max-width: 58ch; }
 .trilha-etiqueta { display: block; font-family: var(--display); font-size: .68rem; font-weight: 700;
                    letter-spacing: .13em; text-transform: uppercase; color: #8FA6C4; margin-top: .3rem; }
 

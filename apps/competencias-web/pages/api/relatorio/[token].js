@@ -4,11 +4,17 @@ import { estadoDaSessao } from '../../../lib/competencias/sessao.js';
 import { consolidar } from '../../../lib/competencias/score.js';
 import { gerarRelatorio, varrerRelatorio } from '../../../lib/competencias/relatorio.js';
 import { ETAPA2_DISPONIVEL, ANCORADOS_EM_RASCUNHO } from '../../../lib/competencias/catalog.js';
+import { garantirNarrativa, aplicarNarrativa } from '../../../lib/narrativa/index.js';
 
 /**
  * O relatório integrado. Só existe com OS DOIS instrumentos concluídos —
  * é a regra que sustenta o produto: resultado parcial vira o produto na
  * cabeça de quem responde, e o segundo instrumento nunca é feito.
+ *
+ * O motor decide, a IA escreve. Se a IA não puder escrever — chave
+ * ausente, API fora, texto reprovado na varredura — o motor também
+ * escreve, e o cliente recebe o relatório assim mesmo. Não existe
+ * caminho neste arquivo em que uma falha de IA vire tela de erro.
  */
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ erro: 'Method Not Allowed' });
@@ -43,17 +49,32 @@ export default async function handler(req, res) {
       delta: sessao.delta_valor,
     });
 
-    // QA obrigatório: chave de tradução crua, termo proibido, número exposto.
-    // Instrumentos concorrentes já vazaram chave crua em relatório de cliente
-    // — erro barato de evitar, caro de explicar numa devolutiva.
-    const varredura = varrerRelatorio(relatorio);
+    // Cacheada por sessão: o relatório é um documento, e um documento que
+    // muda de texto entre duas aberturas deixa de sê-lo.
+    const narrativa = await garantirNarrativa(sessao.id, relatorio, { esperar: true });
+    let final = aplicarNarrativa(relatorio, narrativa);
+
+    // QA obrigatório: chave de tradução crua, termo proibido, número
+    // exposto. Vale para o texto do motor e para o da IA — com a IA
+    // escrevendo, isto deixou de ser conferência e virou a guarda.
+    let varredura = varrerRelatorio(final);
+    if (!varredura.limpo && final.temNarrativa) {
+      // A IA sujou. Descarta o texto dela e serve o do motor: pobre é
+      // melhor que impróprio, e infinitamente melhor que tela de erro.
+      console.error('[relatorio] varredura reprovou a narrativa', sessao.id, varredura.achados);
+      final = aplicarNarrativa(relatorio, null);
+      varredura = varrerRelatorio(final);
+    }
     if (!varredura.limpo) {
-      console.error('[relatorio] varredura sujou', sessao.id, varredura.achados);
+      // Agora é o motor que está sujo — bug de verdade, não de redação.
+      console.error('[relatorio] varredura sujou no motor', sessao.id, varredura.achados);
       return res.status(500).json({ erro: 'O seu relatório precisa de uma revisão antes de sair. A gente já foi avisado.' });
     }
 
     return res.status(200).json({
-      blocos: relatorio.blocos,
+      abertura: final.abertura,
+      blocos: final.blocos,
+      fechamento: final.fechamento,
       // Enquanto os itens ancorados forem rascunho não calibrado, o nível
       // não é para ser lido como número validado.
       nivelCalibrado: ANCORADOS_EM_RASCUNHO === 0,

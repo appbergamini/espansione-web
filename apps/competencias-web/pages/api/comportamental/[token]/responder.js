@@ -1,6 +1,7 @@
 import { sessaoPorToken } from '../../../../lib/competencias/repo.js';
 import { garantir, gravarResposta, fechar, liberado } from '../../../../lib/comportamental/repo.js';
 import { estadoDaSessao, validarResposta, estaCompleto } from '../../../../lib/comportamental/sessao.js';
+import { preaquecerNarrativa } from '../../../../lib/narrativa/preaquecer.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Method Not Allowed' });
@@ -22,6 +23,11 @@ export default async function handler(req, res) {
     if (estaCompleto(respostas)) {
       // Fecha e congela os 4 pilares. Nenhum resultado volta para a tela.
       await fechar(sessao.id, respostas);
+      // Este é o instante em que os dois instrumentos ficam prontos, ou
+      // seja: o primeiro momento em que o relatório PODE ser escrito. O
+      // cliente ainda vai passar pela tela de conclusão — aproveitar esse
+      // tempo é o que faz ele abrir o relatório pronto em vez de esperar.
+      await preaquecerNarrativa(sessao);
     }
 
     const estado = estadoDaSessao({ respostas });

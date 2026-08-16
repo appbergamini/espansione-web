@@ -62,7 +62,11 @@ export function estadoDaSessao({ respostas = {} } = {}) {
         // Sem numeração aqui também: a pessoa acabou de ver "Etapa 1 de 3"
         // no teste, e um segundo esquema de contagem só confunde.
         titulo: 'Tudo pronto',
-        texto: 'Os dois estão completos, e o seu relatório já pode ser lido.',
+        // O relatório é ESCRITO a partir daqui, e isso leva cerca de um
+        // minuto. Prometer "já pode ser lido" e entregar um spinner de 60s
+        // é pior do que avisar: a espera avisada é espera, a espera não
+        // avisada é travamento.
+        texto: 'Os dois estão completos. O seu relatório está sendo escrito agora, a partir das suas respostas — leva cerca de um minuto.',
         acao: { rotulo: 'Ver o meu relatório', destino: 'relatorio' },
       },
       progresso: { momento: null, legenda: 'Concluído', pergunta: todas.length, deTotal: todas.length, percentual: 100 },
