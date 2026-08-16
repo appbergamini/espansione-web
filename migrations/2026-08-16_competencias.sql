@@ -36,9 +36,13 @@ create table if not exists comp_assessments (
   -- randomização reproduzível da ordem das 4 opções dentro de cada bloco
   ordem_seed text not null,
 
-  -- como o corte da ramificação foi decidido. Sem 'por_ancora': as âncoras
-  -- verificam declaração contra evidência e não entram no ranking.
-  criterio_corte text check (criterio_corte in ('por_score', 'por_escolha')),
+  -- Como o corte da ramificação saiu.
+  --   'por_score'            → o corte separou sozinho: 3 competências
+  --   'ampliado_por_empate'  → houve empate no patamar e TODAS as empatadas
+  --                            foram aprofundadas (o teste fica mais longo)
+  -- Sem 'por_ancora': as âncoras verificam declaração contra evidência e não
+  -- entram no ranking. Sem 'por_escolha': quem responde não escolhe.
+  criterio_corte text check (criterio_corte in ('por_score', 'ampliado_por_empate')),
 
   catalogo_versao text not null,
   faixas_versao text not null,

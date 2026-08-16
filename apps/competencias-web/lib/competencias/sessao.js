@@ -1,22 +1,33 @@
 // =====================================================================
-// Máquina de estados das 22 telas. Pura: recebe as respostas, devolve qual
-// é a próxima tela. Nenhum acesso a banco aqui — o que a torna testável
-// sem infraestrutura, e o que mantém a regra de fluxo num lugar só.
+// Máquina de estados do teste. Pura: recebe as respostas, devolve qual
+// tela mostrar. Nenhum acesso a banco — testável sem infraestrutura, e a
+// regra de fluxo mora num lugar só.
 //
-// UX que a SPEC fixa e este arquivo faz valer:
-//  · o enunciado da escala é explicado UMA vez, na abertura;
-//  · uma questão por tela;
-//  · etapas 1 e 2 avançam sozinhas depois da marcação completa;
-//  · as âncoras EXIGEM toque em Continuar — não avançam sozinhas;
-//  · progresso é mostrado por ETAPA, nunca por questão individual.
+// DECISÕES DE 16/08 QUE DIVERGEM DA SPEC (deliberadas, do dono do produto):
+//
+//  1. PROGRESSO mostra etapa E contagem de perguntas. A SPEC §5.2 proibia
+//     contagem por questão; na tela real a barra vazia na etapa 1 produzia
+//     a mesma ansiedade por outro caminho.
+//
+//  2. EMPATE NO CORTE não vira escolha de ninguém — nem de regra
+//     arbitrária, nem do respondente. Aprofunda-se TODAS as competências
+//     empatadas no patamar mais frágil. O número de telas passa a variar:
+//     22 em 55% dos casos, 24 em 30%, 26 em 9%, p99 em 30.
+//
+//  3. AVANÇO AUTOMÁTICO EM TODAS as etapas, inclusive nas âncoras. A SPEC
+//     pedia toque em Continuar nas âncoras para evitar toque acidental numa
+//     contagem factual; com o botão Voltar isso deixou de ser necessário, e
+//     o comportamento misto confundia mais do que protegia.
+//
+//  4. DÁ PARA VOLTAR e rever/corrigir uma resposta anterior.
 // =====================================================================
 import {
   BLOCOS, ANCORAS, N_BLOCOS, ETAPA2_DISPONIVEL,
   ancoradosDe, ordemDoBloco, nomeDe,
 } from './catalog.js';
-import { pontuarEscolhaForcada, selecionarAprofundamento, confirmarSelecao, nivelAfirmado } from './score.js';
+import { pontuarEscolhaForcada, selecionarAprofundamento, nivelAfirmado } from './score.js';
 
-export const FASES = ['abertura', 'etapa1', 'escolha', 'etapa2', 'etapa3', 'concluido'];
+export const FASES = ['etapa1', 'etapa2', 'etapa3', 'concluido'];
 
 export const ROTULO_ETAPA = {
   1: 'Como você se descreve',
@@ -26,174 +37,146 @@ export const ROTULO_ETAPA = {
 
 const ANCORADOS_POR_COMPETENCIA = 2;
 
-/** Quantas telas a sessão terá, dado o que está habilitado. */
-export function totalDeTelas({ etapa2Habilitada = ETAPA2_DISPONIVEL } = {}) {
-  return N_BLOCOS + (etapa2Habilitada ? 3 * ANCORADOS_POR_COMPETENCIA : 0) + ANCORAS.length;
-}
-
-function respondido(respostas, id) {
-  return respostas[id] !== undefined && respostas[id] !== null;
-}
+const respondido = (respostas, id) => respostas[id] !== undefined && respostas[id] !== null;
 
 /**
- * Quantas das telas que CONTAM já foram respondidas.
- * A tela de desempate fica de fora: ela não é uma das 22, e incluí-la faria
- * o denominador variar de pessoa para pessoa.
- */
-function contarRespondidas(respostas, selecionadas = []) {
-  const blocos = BLOCOS.filter((b) => respondido(respostas, b.id)).length;
-  const ancoras = ANCORAS.filter((a) => respondido(respostas, a.id)).length;
-  const ancorados = selecionadas
-    .flatMap((c) => ancoradosDe(c).slice(0, ANCORADOS_POR_COMPETENCIA))
-    .filter((a) => respondido(respostas, a.id)).length;
-  return blocos + ancorados + ancoras;
-}
-
-/**
- * Estado completo da sessão a partir das respostas cruas.
+ * A lista ORDENADA de telas desta sessão.
  *
- * @param {Object} args
- * @param {Object} args.respostas — { 'B01': {mais,menos}, 'EVI-01': {valor}, 'ANC-...': {nivel} }
- * @param {string[]} args.escolhas — competências escolhidas pelo respondente no empate
- * @param {string} args.seed — para a ordem das opções
- * @param {boolean} args.etapa2Habilitada
+ * O miolo da etapa 2 só é conhecido depois que a etapa 1 fecha — antes
+ * disso a lista sai com os blocos e as âncoras, e cresce quando o corte
+ * fica definido. É por isso que o denominador do contador pode subir uma
+ * vez no meio do teste.
  */
-export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed', etapa2Habilitada = ETAPA2_DISPONIVEL } = {}) {
-  // ── etapa 1 ───────────────────────────────────────────────────────
-  const blocoPendente = BLOCOS.find((b) => !respondido(respostas, b.id));
-  const blocosRespondidos = N_BLOCOS - BLOCOS.filter((b) => !respondido(respostas, b.id)).length;
+export function telasDaSessao(respostas = {}, { etapa2Habilitada = ETAPA2_DISPONIVEL } = {}) {
+  const lista = BLOCOS.map((b) => ({ id: b.id, etapa: 1, tipo: 'escolha_forcada', bloco: b }));
 
-  if (blocoPendente) {
-    return {
-      fase: 'etapa1',
-      tela: {
-        tipo: 'escolha_forcada',
-        id: blocoPendente.id,
-        opcoes: ordemDoBloco(blocoPendente.id, seed).map((i) => blocoPendente.opcoes[i]),
-        ordemExibida: ordemDoBloco(blocoPendente.id, seed),
-        avancoAutomatico: true,
-      },
-      progresso: progresso(1, { etapa2Habilitada, respondidas: blocosRespondidos }),
-      contagem: { etapa1: `${blocosRespondidos}/${N_BLOCOS}` },
-      selecao: null,
-    };
-  }
+  const etapa1Completa = BLOCOS.every((b) => respondido(respostas, b.id));
+  let selecao = null;
 
-  // etapa 1 fechada → dá para calcular o corte
-  const { scores, porCapacidade, integridade } = pontuarEscolhaForcada(respostas);
-  const parcial = selecionarAprofundamento(scores, porCapacidade);
-
-  // ── empate no corte: quem decide é o respondente ──────────────────
-  const precisaEscolher = parcial.criterio === 'por_escolha' && escolhas.length < parcial.faltam;
-  if (etapa2Habilitada && precisaEscolher) {
-    return {
-      fase: 'escolha',
-      tela: {
-        tipo: 'escolha_de_aprofundamento',
-        // Sem números: o respondente não vê score em nenhum momento.
-        titulo: 'Estas competências ficaram no mesmo patamar.',
-        instrucao: parcial.faltam === 1
-          ? 'Escolha a que você quer aprofundar.'
-          : `Escolha ${parcial.faltam} para aprofundar.`,
-        opcoes: parcial.escolher.map((c) => ({ chave: c, nome: nomeDe(c) })),
-        escolherQuantas: parcial.faltam,
-        avancoAutomatico: false,
-      },
-      progresso: progresso(2, { etapa2Habilitada, respondidas: contarRespondidas(respostas) }),
-      selecao: parcial,
-    };
-  }
-
-  const selecionadas = etapa2Habilitada
-    ? confirmarSelecaoSegura(parcial, escolhas)
-    : parcial.selecionadas.concat(parcial.escolher.slice(0, parcial.faltam));
-
-  // ── etapa 2: itens ancorados das 3 selecionadas ───────────────────
-  if (etapa2Habilitada) {
-    const fila = selecionadas.flatMap((c) => ancoradosDe(c).slice(0, ANCORADOS_POR_COMPETENCIA));
-    const pendente = fila.find((a) => !respondido(respostas, a.id));
-    if (pendente) {
-      return {
-        fase: 'etapa2',
-        tela: {
-          tipo: 'item_ancorado',
-          id: pendente.id,
-          competencia: pendente.competencia,
-          situacao: pendente.situacao,
-          // Níveis embaralhados na exibição? NÃO — a ordem crescente de
-          // proficiência é a própria escala. Embaralhar destruiria a medida.
-          niveis: pendente.niveis,
-          avancoAutomatico: true,
-        },
-        progresso: progresso(2, { etapa2Habilitada, respondidas: contarRespondidas(respostas, selecionadas) }),
-        contagem: { etapa2: `${fila.filter((a) => respondido(respostas, a.id)).length}/${fila.length}` },
-        selecao: { ...parcial, selecionadas },
-      };
+  if (etapa1Completa && etapa2Habilitada) {
+    const { scores, porCapacidade } = pontuarEscolhaForcada(respostas);
+    selecao = selecionarAprofundamento(scores, porCapacidade);
+    for (const c of selecao.selecionadas) {
+      for (const a of ancoradosDe(c).slice(0, ANCORADOS_POR_COMPETENCIA)) {
+        lista.push({ id: a.id, etapa: 2, tipo: 'item_ancorado', ancorado: a });
+      }
     }
   }
 
-  // ── etapa 3: âncoras de evidência ─────────────────────────────────
-  const ancoraPendente = ANCORAS.find((a) => !respondido(respostas, a.id));
-  if (ancoraPendente) {
+  for (const a of ANCORAS) lista.push({ id: a.id, etapa: 3, tipo: 'ancora_evidencia', ancora: a });
+
+  return { lista, selecao, etapa1Completa };
+}
+
+/**
+ * @param {Object} args
+ * @param {Object} args.respostas
+ * @param {string} args.seed — ordem das opções, reproduzível
+ * @param {string|null} args.telaAtual — id de uma tela já respondida, para rever
+ */
+export function estadoDaSessao({ respostas = {}, seed = 'sem-seed', telaAtual = null, etapa2Habilitada = ETAPA2_DISPONIVEL } = {}) {
+  const { lista, selecao } = telasDaSessao(respostas, { etapa2Habilitada });
+
+  // Enquanto a etapa 1 não fecha, a lista ainda não tem os ancorados — o
+  // corte não existe. Mostrar `lista.length` ali daria "de 16" e depois
+  // saltaria para 22+. Mostra-se o MÍNIMO possível, que é o total real em
+  // 55% dos casos; nos demais o denominador sobe uma vez, quando o corte
+  // fica conhecido. Consequência direta de aprofundar todas as empatadas.
+  const total = Math.max(lista.length, totalMinimoDeTelas({ etapa2Habilitada }));
+  const feitas = lista.filter((t) => respondido(respostas, t.id)).length;
+
+  const iFrontier = lista.findIndex((t) => !respondido(respostas, t.id));
+
+  // Revisitar uma tela anterior só vale se ela existe nesta sessão.
+  const iPedida = telaAtual ? lista.findIndex((t) => t.id === telaAtual) : -1;
+  const revisitando = iPedida >= 0 && (iFrontier === -1 || iPedida < iFrontier);
+  const i = revisitando ? iPedida : iFrontier;
+
+  if (i === -1) {
     return {
-      fase: 'etapa3',
+      fase: 'concluido',
       tela: {
-        tipo: 'ancora_evidencia',
-        id: ancoraPendente.id,
-        pergunta: ancoraPendente.pergunta,
-        opcoes: ancoraPendente.opcoes,
-        // exige Continuar — é contagem factual, não impressão
-        avancoAutomatico: false,
+        tipo: 'fim',
+        // Sem numerar: a barra já conta as ETAPAS do teste. Numerar os
+        // INSTRUMENTOS aqui poria a mesma palavra contando duas coisas.
+        titulo: 'Teste concluído',
+        texto: 'Falta o Mapeamento Comportamental, que acabou de abrir. O seu relatório é gerado quando os dois estiverem completos.',
+        acao: { rotulo: 'Fazer o Mapeamento Comportamental', destino: 'comportamental' },
+        anterior: lista[lista.length - 1]?.id || null,
       },
-      progresso: progresso(3, { etapa2Habilitada, respondidas: contarRespondidas(respostas, selecionadas) }),
-      contagem: { etapa3: `${ANCORAS.filter((a) => respondido(respostas, a.id)).length}/${ANCORAS.length}` },
-      selecao: { ...parcial, selecionadas },
+      progresso: progressoDe(3, { etapa2Habilitada, respondidas: total, total, fim: true }),
+      selecao,
+      integridade: pontuarEscolhaForcada(respostas).integridade,
+      niveis: etapa2Habilitada && selecao ? niveisDasSelecionadas(respostas, selecao.selecionadas) : null,
     };
   }
 
-  // ── fim ───────────────────────────────────────────────────────────
+  const t = lista[i];
+  const base = {
+    fase: `etapa${t.etapa}`,
+    progresso: progressoDe(t.etapa, { etapa2Habilitada, respondidas: feitas, total }),
+    selecao,
+    navegacao: {
+      anterior: i > 0 ? lista[i - 1].id : null,
+      // Só faz sentido enquanto se está revendo: no fluxo normal, "próxima"
+      // é decidida pela resposta, não por navegação.
+      proxima: revisitando && i + 1 < lista.length ? lista[i + 1].id : null,
+      revisitando,
+      // Quando está revendo, oferece o caminho de volta para onde parou.
+      frontier: revisitando && iFrontier >= 0 ? lista[iFrontier].id : null,
+      posicao: i + 1,
+      total,
+    },
+  };
+
+  // Avanço automático em TODAS as etapas — inclusive nas âncoras.
+  if (t.tipo === 'escolha_forcada') {
+    const ordem = ordemDoBloco(t.id, seed);
+    return {
+      ...base,
+      tela: {
+        tipo: 'escolha_forcada',
+        id: t.id,
+        opcoes: ordem.map((k) => t.bloco.opcoes[k]),
+        ordemExibida: ordem,
+        resposta: respostas[t.id] || null,
+        avancoAutomatico: true,
+      },
+    };
+  }
+
+  if (t.tipo === 'item_ancorado') {
+    return {
+      ...base,
+      tela: {
+        tipo: 'item_ancorado',
+        id: t.id,
+        competencia: t.ancorado.competencia,
+        situacao: t.ancorado.situacao,
+        // Ordem crescente de proficiência: a ordem É a escala. Embaralhar
+        // destruiria a medida.
+        niveis: t.ancorado.niveis,
+        resposta: respostas[t.id] || null,
+        avancoAutomatico: true,
+      },
+    };
+  }
+
   return {
-    fase: 'concluido',
+    ...base,
     tela: {
-      tipo: 'fim',
-      // NADA DE RESULTADO PARCIAL. Só sinal de progresso: resultado parcial
-      // vira o produto na cabeça do cliente e o segundo instrumento nunca é feito.
-      // NÃO numerar aqui. A barra já conta as ETAPAS do teste (1 a 3); dizer
-      // "Etapa 1 de 2" para os dois INSTRUMENTOS na mesma tela põe a mesma
-      // palavra contando duas coisas diferentes.
-      titulo: 'Teste concluído',
-      texto: 'Falta o Mapeamento Comportamental, que acabou de abrir. O seu relatório é gerado quando os dois estiverem completos.',
-      // O elo entre os dois instrumentos é o gargalo real do funil: quem não
-      // completa os dois não recebe relatório. A tela final leva direto.
-      acao: { rotulo: 'Fazer o Mapeamento Comportamental', destino: 'comportamental' },
-      avancoAutomatico: false,
+      tipo: 'ancora_evidencia',
+      id: t.id,
+      pergunta: t.ancora.pergunta,
+      opcoes: t.ancora.opcoes,
+      resposta: respostas[t.id] || null,
+      avancoAutomatico: true,
     },
-    progresso: {
-      etapa: etapa2Habilitada ? 3 : 2,
-      de: etapa2Habilitada ? 3 : 2,
-      rotulo: 'Concluído',
-      legenda: 'Concluído',
-      pergunta: totalDeTelas({ etapa2Habilitada }),
-      deTotal: totalDeTelas({ etapa2Habilitada }),
-      respondidas: totalDeTelas({ etapa2Habilitada }),
-      percentual: 100,
-    },
-    selecao: { ...parcial, selecionadas },
-    integridade,
-    niveis: etapa2Habilitada ? niveisDasSelecionadas(respostas, selecionadas) : null,
   };
 }
 
-function confirmarSelecaoSegura(parcial, escolhas) {
-  try {
-    return confirmarSelecao(parcial, escolhas);
-  } catch {
-    return parcial.selecionadas.concat(parcial.escolher.slice(0, parcial.faltam));
-  }
-}
-
-/** Nível afirmado das 3 aprofundadas, a partir dos 2 ancorados de cada. */
-export function niveisDasSelecionadas(respostas, selecionadas) {
+/** Nível afirmado de cada competência aprofundada, dos seus 2 ancorados. */
+export function niveisDasSelecionadas(respostas, selecionadas = []) {
   const out = {};
   for (const c of selecionadas) {
     const marcados = ancoradosDe(c)
@@ -205,44 +188,33 @@ export function niveisDasSelecionadas(respostas, selecionadas) {
   return out;
 }
 
-/**
- * Progresso da sessão.
- *
- * DESVIO CONSCIENTE DA SPEC §5.2, decidido em 16/08: a SPEC pede progresso
- * por ETAPA e proíbe contagem por questão, para a pessoa não olhar "1 de 22"
- * e desanimar. Na tela real o efeito foi o contrário — na etapa 1 a barra
- * fica vazia e "Etapa 1 de 3" não diz quanto falta, o que é a mesma
- * ansiedade por outro caminho.
- *
- * Agora mostra as duas coisas: a etapa dá o CONTEXTO (o que está sendo
- * perguntado agora) e a contagem dá o TAMANHO. A barra passa a refletir
- * telas respondidas de verdade, não a etapa.
- *
- * A tela de desempate não entra na contagem: ela não é uma das 22.
- */
-export function progresso(etapa, { etapa2Habilitada = ETAPA2_DISPONIVEL, respondidas = 0, total = null } = {}) {
+function progressoDe(etapa, { etapa2Habilitada, respondidas, total, fim = false }) {
   const deEtapas = etapa2Habilitada ? 3 : 2;
   const normalizada = etapa2Habilitada ? etapa : etapa === 3 ? 2 : etapa;
-  const totalTelas = total ?? totalDeTelas({ etapa2Habilitada });
-  const atual = Math.min(respondidas + 1, totalTelas);
   return {
     etapa: normalizada,
     de: deEtapas,
-    rotulo: ROTULO_ETAPA[etapa],
-    // Montada aqui, e não na tela: assim existe UM lugar que decide como o
-    // progresso é dito, e a tela final não precisa de exceção no componente.
-    legenda: `Etapa ${normalizada} de ${deEtapas} · ${ROTULO_ETAPA[etapa]}`,
-    pergunta: atual,
-    deTotal: totalTelas,
+    rotulo: fim ? 'Concluído' : ROTULO_ETAPA[etapa],
+    // Montada aqui, não na tela: um lugar só decide como o progresso é dito.
+    legenda: fim ? 'Concluído' : `Etapa ${normalizada} de ${deEtapas} · ${ROTULO_ETAPA[etapa]}`,
+    pergunta: Math.min(respondidas + (fim ? 0 : 1), total),
+    deTotal: total,
     respondidas,
-    percentual: Math.round((respondidas / totalTelas) * 100),
+    percentual: total ? Math.round((respondidas / total) * 100) : 0,
   };
 }
 
-/**
- * Valida uma resposta antes de gravar. Rejeitar aqui é mais barato do que
- * descobrir depois que a checagem de integridade não fecha.
- */
+/** Quantas telas a sessão tem hoje. Varia com o empate no corte. */
+export function totalDeTelas(respostas = {}, opts = {}) {
+  return telasDaSessao(respostas, opts).lista.length;
+}
+
+/** Menor número possível de telas: corte limpo, 3 competências aprofundadas. */
+export function totalMinimoDeTelas({ etapa2Habilitada = ETAPA2_DISPONIVEL } = {}) {
+  return N_BLOCOS + (etapa2Habilitada ? 3 * ANCORADOS_POR_COMPETENCIA : 0) + ANCORAS.length;
+}
+
+/** Valida antes de gravar — mais barato que descobrir no cálculo. */
 export function validarResposta(itemId, payload, { seed = 'sem-seed' } = {}) {
   const bloco = BLOCOS.find((b) => b.id === itemId);
   if (bloco) {
@@ -261,11 +233,13 @@ export function validarResposta(itemId, payload, { seed = 'sem-seed' } = {}) {
     return { ok: true, etapa: 3, payload: { valor: v } };
   }
 
-  const ancorado = todosOsAncorados().find((a) => a.id === itemId);
-  if (ancorado) {
-    const n = payload?.nivel;
-    if (!Number.isInteger(n) || n < 1 || n > 4) return erro('nível deve ser inteiro de 1 a 4');
-    return { ok: true, etapa: 2, payload: { nivel: n } };
+  if (/^ANC-/.test(String(itemId))) {
+    const chave = String(itemId).replace(/^ANC-/, '').replace(/-\d+$/, '');
+    if (ancoradosDe(chave).some((a) => a.id === itemId)) {
+      const n = payload?.nivel;
+      if (!Number.isInteger(n) || n < 1 || n > 4) return erro('nível deve ser inteiro de 1 a 4');
+      return { ok: true, etapa: 2, payload: { nivel: n } };
+    }
   }
 
   return erro(`item desconhecido: ${itemId}`);
@@ -275,15 +249,4 @@ function erro(motivo) {
   return { ok: false, motivo };
 }
 
-function todosOsAncorados() {
-  const vistos = new Set();
-  const out = [];
-  for (const b of BLOCOS) {
-    for (const o of b.opcoes) {
-      if (vistos.has(o.competencia)) continue;
-      vistos.add(o.competencia);
-      out.push(...ancoradosDe(o.competencia));
-    }
-  }
-  return out;
-}
+export { nomeDe };

@@ -5,6 +5,10 @@ import TelaDeAviso from '../components/TelaDeAviso';
 
 // Fluxo do teste. Uma questão por tela; o enunciado da escala foi explicado
 // uma única vez, na abertura, e não se repete aqui.
+//
+// Avanço automático em TODAS as etapas, e sempre com Voltar disponível —
+// o comportamento misto (bloco avança sozinho, âncora pede Continuar)
+// confundia mais do que protegia.
 export default function Teste() {
   const router = useRouter();
   const { token } = router.query;
@@ -14,28 +18,36 @@ export default function Teste() {
   const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
-  const carregar = useCallback(async () => {
-    const r = await fetch(`/teste/api/sessao/${token}`);
+  const carregar = useCallback(async (telaId = null) => {
+    const url = telaId
+      ? `/teste/api/sessao/${token}?tela=${encodeURIComponent(telaId)}`
+      : `/teste/api/sessao/${token}`;
+    const r = await fetch(url);
     const d = await r.json();
-    // 404 é beco sem saída e merece tela própria, com uma saída.
     if (r.status === 404) return setNaoEncontrado(true);
     if (!r.ok) return setErro(d.erro || 'Não foi possível carregar o teste.');
+    setErro(null);
     setEstado(d);
+    window.scrollTo({ top: 0 });
   }, [token]);
 
   useEffect(() => { if (token) carregar(); }, [token, carregar]);
 
-  async function enviar(url, corpo) {
+  async function responder(itemId, payload) {
+    const revisitando = estado?.navegacao?.revisitando;
+    const proxima = estado?.navegacao?.proxima;
     setEnviando(true);
     setErro(null);
     try {
-      const r = await fetch(url, {
+      const r = await fetch(`/teste/api/sessao/${token}/responder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(corpo),
+        body: JSON.stringify({ itemId, payload }),
       });
       const d = await r.json();
       if (!r.ok) { setErro(d.erro || 'Não foi possível salvar.'); return; }
+      // Corrigindo uma resposta antiga: segue na ordem, não pula para o fim.
+      if (revisitando && proxima) { await carregar(proxima); return; }
       setEstado(d);
       window.scrollTo({ top: 0 });
     } catch {
@@ -44,9 +56,6 @@ export default function Teste() {
       setEnviando(false);
     }
   }
-
-  const responder = (itemId, payload) => enviar(`/teste/api/sessao/${token}/responder`, { itemId, payload });
-  const escolher = (escolhas) => enviar(`/teste/api/sessao/${token}/escolher`, { escolhas });
 
   if (naoEncontrado) {
     return (
@@ -60,7 +69,7 @@ export default function Teste() {
   if (erro && !estado) return <Moldura><p style={S.erro}>{erro}</p></Moldura>;
   if (!estado) return <Moldura><p style={S.sec}>Carregando…</p></Moldura>;
 
-  const { tela, progresso } = estado;
+  const { tela, progresso, navegacao } = estado;
 
   return (
     <Moldura progresso={progresso}>
@@ -69,28 +78,55 @@ export default function Teste() {
       {tela.tipo === 'escolha_forcada' && (
         <EscolhaForcada key={tela.id} tela={tela} enviando={enviando} onResponder={responder} />
       )}
-      {tela.tipo === 'escolha_de_aprofundamento' && (
-        <EscolhaAprofundamento key="esc" tela={tela} enviando={enviando} onEscolher={escolher} />
-      )}
       {tela.tipo === 'item_ancorado' && (
-        <ItemAncorado key={tela.id} tela={tela} enviando={enviando} onResponder={responder} />
+        <UmaEscolha key={tela.id} enunciado={tela.situacao} enviando={enviando}
+          opcoes={tela.niveis.map((n) => ({ chave: n.nivel, texto: n.texto }))}
+          marcada={tela.resposta?.nivel ?? null}
+          onEscolher={(nivel) => responder(tela.id, { nivel })} />
       )}
       {tela.tipo === 'ancora_evidencia' && (
-        <Ancora key={tela.id} tela={tela} enviando={enviando} onResponder={responder} />
+        <UmaEscolha key={tela.id} enunciado={tela.pergunta} enviando={enviando}
+          opcoes={tela.opcoes.map((o) => ({ chave: o.valor, texto: o.label }))}
+          marcada={tela.resposta?.valor ?? null}
+          onEscolher={(valor) => responder(tela.id, { valor })} />
       )}
       {tela.tipo === 'fim' && <Fim tela={tela} token={token} />}
+
+      <Rodape navegacao={navegacao} tela={tela} enviando={enviando} onIr={carregar} />
     </Moldura>
+  );
+}
+
+// ── navegação ────────────────────────────────────────────────────────
+function Rodape({ navegacao, tela, enviando, onIr }) {
+  const anterior = navegacao?.anterior ?? tela?.anterior ?? null;
+  if (!anterior && !navegacao?.frontier) return null;
+  return (
+    <div style={S.rodape}>
+      {anterior ? (
+        <button type="button" style={S.voltar} disabled={enviando} onClick={() => onIr(anterior)}>
+          ← Voltar
+        </button>
+      ) : <span />}
+      {navegacao?.frontier && (
+        <button type="button" style={S.voltar} disabled={enviando} onClick={() => onIr(null)}>
+          Ir para onde parei →
+        </button>
+      )}
+    </div>
   );
 }
 
 // ── etapa 1 ──────────────────────────────────────────────────────────
 function EscolhaForcada({ tela, enviando, onResponder }) {
-  const [mais, setMais] = useState(null);
-  const [menos, setMenos] = useState(null);
+  const [mais, setMais] = useState(tela.resposta?.mais ?? null);
+  const [menos, setMenos] = useState(tela.resposta?.menos ?? null);
 
-  // Avanço automático assim que a marcação estiver completa (SPEC §5.2).
   useEffect(() => {
-    if (mais && menos && mais !== menos && !enviando) onResponder(tela.id, { mais, menos });
+    if (!mais || !menos || mais === menos || enviando) return;
+    // Não reenvia o que já estava gravado quando a pessoa só está revendo.
+    if (mais === tela.resposta?.mais && menos === tela.resposta?.menos) return;
+    onResponder(tela.id, { mais, menos });
   }, [mais, menos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function marcar(tipo, chave) {
@@ -113,19 +149,13 @@ function EscolhaForcada({ tela, enviando, onResponder }) {
       <div style={S.listaOpcoes}>
         {tela.opcoes.map((o) => (
           <div key={o.competencia} style={S.linhaOpcao}>
-            <Marcador
-              ativo={mais === o.competencia}
-              cor={CORES.red}
+            <Marcador ativo={mais === o.competencia} cor={CORES.red}
               rotulo={`Marcar "${o.afirmacao}" como mais parecida`}
-              onClick={() => marcar('mais', o.competencia)}
-            />
+              onClick={() => marcar('mais', o.competencia)} />
             <p style={S.afirmacao}>{o.afirmacao}</p>
-            <Marcador
-              ativo={menos === o.competencia}
-              cor={CORES.textSec}
+            <Marcador ativo={menos === o.competencia} cor={CORES.textSec}
               rotulo={`Marcar "${o.afirmacao}" como menos parecida`}
-              onClick={() => marcar('menos', o.competencia)}
-            />
+              onClick={() => marcar('menos', o.competencia)} />
           </div>
         ))}
       </div>
@@ -135,103 +165,30 @@ function EscolhaForcada({ tela, enviando, onResponder }) {
 
 function Marcador({ ativo, cor, rotulo, onClick }) {
   return (
-    <button
-      type="button"
-      aria-label={rotulo}
-      aria-pressed={ativo}
-      onClick={onClick}
-      style={{
-        ...S.marcador,
-        borderColor: ativo ? cor : CORES.border,
-        background: ativo ? cor : 'transparent',
-      }}
-    />
+    <button type="button" aria-label={rotulo} aria-pressed={ativo} onClick={onClick}
+      style={{ ...S.marcador, borderColor: ativo ? cor : CORES.border, background: ativo ? cor : 'transparent' }} />
   );
 }
 
-// ── empate no corte ──────────────────────────────────────────────────
-function EscolhaAprofundamento({ tela, enviando, onEscolher }) {
-  const [sel, setSel] = useState([]);
-  const completo = sel.length === tela.escolherQuantas;
-
-  function alternar(chave) {
-    setSel((s) => (s.includes(chave)
-      ? s.filter((x) => x !== chave)
-      : s.length < tela.escolherQuantas ? [...s, chave] : s));
-  }
-
+// ── etapas 2 e 3: mesma mecânica, um toque escolhe e avança ──────────
+function UmaEscolha({ enunciado, opcoes, marcada, enviando, onEscolher }) {
   return (
     <>
-      <h2 style={S.titulo}>{tela.titulo}</h2>
-      <p style={S.sec}>{tela.instrucao}</p>
+      <p style={S.situacao}>{enunciado}</p>
       <div style={S.listaOpcoes}>
-        {tela.opcoes.map((o) => (
-          <button
-            key={o.chave}
-            type="button"
-            onClick={() => alternar(o.chave)}
-            aria-pressed={sel.includes(o.chave)}
-            style={{
-              ...S.cartaoEscolha,
-              borderColor: sel.includes(o.chave) ? CORES.red : CORES.border,
-              background: sel.includes(o.chave) ? CORES.redSoft : CORES.card,
-            }}
-          >
-            {o.nome}
-          </button>
-        ))}
-      </div>
-      <button type="button" style={{ ...S.btn, opacity: completo && !enviando ? 1 : .5 }}
-        disabled={!completo || enviando} onClick={() => onEscolher(sel)}>
-        Continuar
-      </button>
-    </>
-  );
-}
-
-// ── etapa 2 ──────────────────────────────────────────────────────────
-function ItemAncorado({ tela, enviando, onResponder }) {
-  return (
-    <>
-      <p style={S.situacao}>{tela.situacao}</p>
-      <div style={S.listaOpcoes}>
-        {tela.niveis.map((n) => (
-          <button key={n.nivel} type="button" disabled={enviando}
-            onClick={() => onResponder(tela.id, { nivel: n.nivel })}
-            style={S.cartaoOpcao}>
-            {n.texto}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-}
-
-// ── etapa 3 ──────────────────────────────────────────────────────────
-function Ancora({ tela, enviando, onResponder }) {
-  const [valor, setValor] = useState(null);
-  return (
-    <>
-      <p style={S.situacao}>{tela.pergunta}</p>
-      <div style={S.listaOpcoes}>
-        {tela.opcoes.map((o) => (
-          <button key={o.valor} type="button" onClick={() => setValor(o.valor)}
-            aria-pressed={valor === o.valor}
+        {opcoes.map((o) => (
+          <button key={o.chave} type="button" disabled={enviando}
+            aria-pressed={marcada === o.chave}
+            onClick={() => onEscolher(o.chave)}
             style={{
               ...S.cartaoOpcao,
-              borderColor: valor === o.valor ? CORES.red : CORES.border,
-              background: valor === o.valor ? CORES.redSoft : CORES.card,
+              borderColor: marcada === o.chave ? CORES.red : CORES.border,
+              background: marcada === o.chave ? CORES.redSoft : CORES.card,
             }}>
-            {o.label}
+            {o.texto}
           </button>
         ))}
       </div>
-      {/* Âncora exige Continuar — é contagem factual, não impressão. */}
-      <button type="button" style={{ ...S.btn, opacity: valor !== null && !enviando ? 1 : .5 }}
-        disabled={valor === null || enviando}
-        onClick={() => onResponder(tela.id, { valor })}>
-        Continuar
-      </button>
     </>
   );
 }
@@ -244,18 +201,14 @@ function Fim({ tela, token }) {
       <h2 style={S.titulo}>{tela.titulo}</h2>
       <p style={S.sec}>{tela.texto}</p>
       {tela.acao?.destino === 'comportamental' && (
-        // Dentro da zona: navegação normal do Next.
         <button type="button" style={S.btn} onClick={() => router.push(`/comportamental/${token}`)}>
           {tela.acao.rotulo}
         </button>
       )}
-      {/* Para fora da zona: <a>, nunca <Link>. */}
-      <a href="/area" style={{ ...S.sec, textDecoration: 'underline' }}>Depois, na minha conta</a>
     </div>
   );
 }
 
-// ── moldura ──────────────────────────────────────────────────────────
 function Moldura({ children, progresso }) {
   return (
     <main style={S.shell}>
@@ -265,13 +218,10 @@ function Moldura({ children, progresso }) {
             <div style={S.trilho}>
               <div style={{ ...S.barra, width: `${progresso.percentual}%` }} />
             </div>
-            {/* A etapa dá o contexto; a contagem dá o tamanho. */}
             <div style={S.linhaProgresso}>
               <span style={S.legendaProgresso}>{progresso.legenda}</span>
               {progresso.deTotal && (
-                <span style={S.contador}>
-                  {progresso.pergunta} de {progresso.deTotal}
-                </span>
+                <span style={S.contador}>{progresso.pergunta} de {progresso.deTotal}</span>
               )}
             </div>
           </div>
@@ -297,9 +247,7 @@ const S = {
     fontSize: '.78rem', color: CORES.textSec, fontWeight: 700,
     fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', flex: 'none',
   },
-  cabecalhoColunas: {
-    display: 'grid', gridTemplateColumns: '44px 1fr 44px', alignItems: 'end', gap: '.6rem',
-  },
+  cabecalhoColunas: { display: 'grid', gridTemplateColumns: '44px 1fr 44px', alignItems: 'end', gap: '.6rem' },
   rotuloColuna: {
     fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em',
     color: CORES.textSec, textAlign: 'center', lineHeight: 1.25,
@@ -313,11 +261,7 @@ const S = {
   },
   cartaoOpcao: {
     textAlign: 'left', padding: '.9rem 1rem', borderRadius: '12px', border: `1.5px solid ${CORES.border}`,
-    background: CORES.card, fontSize: '.98rem', lineHeight: 1.45, cursor: 'pointer', font: 'inherit', color: CORES.text,
-  },
-  cartaoEscolha: {
-    textAlign: 'left', padding: '.85rem 1rem', borderRadius: '12px', border: `1.5px solid ${CORES.border}`,
-    fontSize: '1rem', cursor: 'pointer', font: 'inherit', color: CORES.text, fontWeight: 600,
+    fontSize: '.98rem', lineHeight: 1.45, cursor: 'pointer', font: 'inherit', color: CORES.text,
   },
   situacao: { margin: 0, fontSize: '1.1rem', lineHeight: 1.45, fontWeight: 600 },
   titulo: { margin: 0, fontSize: '1.3rem', lineHeight: 1.25, fontWeight: 700 },
@@ -325,6 +269,14 @@ const S = {
   btn: {
     background: CORES.red, color: '#fff', fontWeight: 600, fontSize: '1rem', padding: '.85rem 1.6rem',
     border: 'none', borderRadius: '12px', cursor: 'pointer', font: 'inherit', textAlign: 'center',
+  },
+  rodape: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.75rem',
+    borderTop: `1px solid ${CORES.border}`, paddingTop: '.9rem', marginTop: '.2rem',
+  },
+  voltar: {
+    background: 'none', border: 'none', padding: '.35rem .1rem', cursor: 'pointer', font: 'inherit',
+    fontSize: '.88rem', fontWeight: 600, color: CORES.textSec,
   },
   erro: {
     margin: 0, padding: '.7rem .9rem', borderRadius: '10px', fontSize: '.9rem',

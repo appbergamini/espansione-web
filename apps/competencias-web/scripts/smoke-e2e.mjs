@@ -20,7 +20,7 @@
 // =====================================================================
 import { supabaseAdmin } from '../lib/supabaseAdmin.js';
 import { BLOCOS } from '../lib/competencias/catalog.js';
-import { estadoDaSessao, validarResposta } from '../lib/competencias/sessao.js';
+import { estadoDaSessao, validarResposta, totalDeTelas } from '../lib/competencias/sessao.js';
 import { consolidar } from '../lib/competencias/score.js';
 import { gerarRelatorio, varrerRelatorio } from '../lib/competencias/relatorio.js';
 import { indiceCoerencia } from '../lib/competencias/indices.js';
@@ -54,18 +54,12 @@ try {
   if (comportamental.liberado(sessao)) falhar('comportamental deveria estar bloqueado antes do teste');
   else ok('comportamental bloqueado enquanto o teste não conclui');
 
-  console.log('\n── 3. teste de competências (22 telas) ──');
+  console.log('\n── 3. teste de competências ──');
   let respostas = {};
-  let escolhas = [];
   let telas = 0;
   for (let guarda = 0; guarda < 60; guarda++) {
-    const e = estadoDaSessao({ respostas, escolhas, seed: sessao.ordem_seed, etapa2Habilitada: true });
+    const e = estadoDaSessao({ respostas, seed: sessao.ordem_seed, etapa2Habilitada: true });
     if (e.fase === 'concluido') break;
-    if (e.tela.tipo === 'escolha_de_aprofundamento') {
-      escolhas = e.tela.opcoes.slice(0, e.tela.escolherQuantas).map((o) => o.chave);
-      await repo.gravarEscolha(sessao.id, escolhas);
-      continue;
-    }
     const payload = e.tela.tipo === 'escolha_forcada'
       ? { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[3].competencia }
       : e.tela.tipo === 'item_ancorado' ? { nivel: 1 + Math.floor(rnd() * 4) } : { valor: Math.floor(rnd() * 5) };
@@ -75,13 +69,13 @@ try {
     respostas = await repo.respostasDaSessao(sessao.id);
     telas++;
   }
-  ok(`${telas} telas gravadas e relidas do banco`);
-  if (telas !== 22) falhar(`esperadas 22 telas, foram ${telas}`);
+  const esperadas = totalDeTelas(respostas, { etapa2Habilitada: true });
+  ok(`${telas} telas gravadas e relidas do banco (${esperadas === 22 ? 'corte limpo' : 'ampliado por empate'})`);
+  if (telas !== esperadas) falhar(`esperadas ${esperadas} telas, foram ${telas}`);
 
   console.log('\n── 4. reentrada (sair e voltar) ──');
   const relidas = await repo.respostasDaSessao(sessao.id);
-  const escolhasRelidas = await repo.escolhasDaSessao(sessao.id);
-  const retomada = estadoDaSessao({ respostas: relidas, escolhas: escolhasRelidas, seed: sessao.ordem_seed, etapa2Habilitada: true });
+  const retomada = estadoDaSessao({ respostas: relidas, seed: sessao.ordem_seed, etapa2Habilitada: true });
   retomada.fase === 'concluido' ? ok('estado reconstruído do banco bate com o da memória') : falhar(`retomada caiu em ${retomada.fase}`);
 
   console.log('\n── 5. fechamento da etapa ──');
@@ -91,7 +85,7 @@ try {
   const scores = await repo.scoresDaSessao(sessao.id);
   scores.length === 12 ? ok('12 linhas em comp_scores') : falhar(`${scores.length} linhas em comp_scores`);
   const comNivel = scores.filter((s) => s.nivel_afirmado !== null);
-  comNivel.length === 3 ? ok('nível afirmado só nas 3 aprofundadas') : falhar(`${comNivel.length} competências com nível`);
+  comNivel.length === retomada.selecao.selecionadas.length ? ok(`nível afirmado só nas ${retomada.selecao.selecionadas.length} aprofundadas`) : falhar(`${comNivel.length} competências com nível`);
 
   console.log('\n── 6. comportamental (28 telas) ──');
   const atualizada = await repo.sessaoPorToken(sessao.token);
@@ -183,3 +177,4 @@ try {
   }
   console.log(process.exitCode ? '\nRESULTADO: FALHOU\n' : '\nRESULTADO: OK\n');
 }
+

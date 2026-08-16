@@ -65,7 +65,14 @@ export async function respostasDaSessao(assessmentId) {
     .from('comp_answers').select('item_id, etapa, payload')
     .eq('assessment_id', assessmentId);
   if (error) throw error;
-  return Object.fromEntries((data || []).map((r) => [r.item_id, r.payload]));
+  return Object.fromEntries(
+    (data || [])
+      // `__escolha_aprofundamento` é resquício do desenho antigo, em que o
+      // respondente desempatava o corte. Sessões daquela época ainda têm a
+      // linha; ela não é resposta de tela nenhuma.
+      .filter((r) => !String(r.item_id).startsWith('__'))
+      .map((r) => [r.item_id, r.payload])
+  );
 }
 
 /** Grava uma resposta. Reenvio da mesma tela sobrescreve, não duplica. */
@@ -89,28 +96,6 @@ export async function gravarResposta(assessmentId, { itemId, etapa, payload, ord
   await client.from('comp_assessments')
     .update({ status: 'in_progress' })
     .eq('id', assessmentId).eq('status', 'not_started');
-}
-
-/** Escolha do respondente no empate do corte. */
-export async function gravarEscolha(assessmentId, escolhas) {
-  const { error } = await db()
-    .from('comp_answers')
-    .upsert([{
-      assessment_id: assessmentId,
-      item_id: '__escolha_aprofundamento',
-      etapa: 1,
-      payload: { escolhas },
-      respondido_em: new Date().toISOString(),
-    }], { onConflict: 'assessment_id,item_id' });
-  if (error) throw error;
-}
-
-export async function escolhasDaSessao(assessmentId) {
-  const { data } = await db()
-    .from('comp_answers').select('payload')
-    .eq('assessment_id', assessmentId).eq('item_id', '__escolha_aprofundamento')
-    .maybeSingle();
-  return data?.payload?.escolhas || [];
 }
 
 /**

@@ -10,7 +10,7 @@ import {
 
 import {
   pontuarEscolhaForcada, posicaoRelativa, ranquear, selecionarAprofundamento,
-  confirmarSelecao, nivelAfirmado, consolidar, POSICOES,
+  nivelAfirmado, consolidar, POSICOES,
 } from '../score.js';
 
 import {
@@ -218,48 +218,45 @@ test('score igual sempre dá posição igual', () => {
 // ── ramificação ──────────────────────────────────────────────────────
 test('selecionarAprofundamento devolve 3 quando o corte é limpo', () => {
   const scores = Object.fromEntries(CHAVES.map((c, i) => [c, i - 6]));
-  const { porCapacidade } = { porCapacidade: Object.fromEntries(CAPACIDADES.map((c) => [c, 0])) };
+  const porCapacidade = Object.fromEntries(CAPACIDADES.map((c) => [c, 0]));
   const sel = selecionarAprofundamento(scores, porCapacidade);
   assert.equal(sel.criterio, 'por_score');
   assert.equal(sel.selecionadas.length, 3);
-  assert.equal(sel.escolher.length, 0);
+  assert.equal(sel.ampliadoPorEmpate, false);
 });
 
-test('empate no corte NÃO é resolvido por regra — vira escolha do respondente', () => {
+test('empate no corte aprofunda TODAS as empatadas — ninguém escolhe', () => {
   // 5 competências no fundo com o mesmo score: o corte não separa.
   const scores = Object.fromEntries(CHAVES.map((c, i) => [c, i < 5 ? -2 : 1]));
   const porCapacidade = Object.fromEntries(CAPACIDADES.map((c) => [c, 0]));
   const sel = selecionarAprofundamento(scores, porCapacidade);
-  assert.equal(sel.criterio, 'por_escolha');
-  assert.equal(sel.selecionadas.length, 0);
-  assert.equal(sel.escolher.length, 5);
-  assert.equal(sel.faltam, 3);
-
-  const final = confirmarSelecao(sel, sel.escolher.slice(0, 3));
-  assert.equal(final.length, 3);
-  assert.throws(() => confirmarSelecao(sel, sel.escolher.slice(0, 2)), /esperadas 3 escolhas/);
-  assert.throws(() => confirmarSelecao(sel, ['nao_existe', 'x', 'y']), /esperadas 3 escolhas/);
+  assert.equal(sel.criterio, 'ampliado_por_empate');
+  assert.equal(sel.selecionadas.length, 5, 'as 5 empatadas entram');
+  assert.equal(sel.ampliadoPorEmpate, true);
+  assert.equal(sel.escolher, undefined, 'não existe mais conjunto para escolher');
 });
 
-test('empate parcial: parte entra por score, o resto vai para escolha', () => {
+test('empate parcial: entram as abaixo do corte E as empatadas nele', () => {
   const scores = {};
   CHAVES.forEach((c, i) => { scores[c] = i === 0 ? -4 : i < 4 ? -2 : 2; });
   const porCapacidade = Object.fromEntries(CAPACIDADES.map((c) => [c, 0]));
   const sel = selecionarAprofundamento(scores, porCapacidade);
-  assert.equal(sel.criterio, 'por_escolha');
-  assert.equal(sel.selecionadas.length, 1);
-  assert.equal(sel.escolher.length, 3);
-  assert.equal(sel.faltam, 2);
-  assert.equal(confirmarSelecao(sel, sel.escolher.slice(0, 2)).length, 3);
+  assert.equal(sel.criterio, 'ampliado_por_empate');
+  assert.equal(sel.selecionadas.length, 4, '1 abaixo + 3 empatadas no corte');
 });
 
-test('a seleção nunca devolve competência repetida, em qualquer resposta', () => {
+test('a seleção nunca repete competência, e nunca fica abaixo de 3', () => {
   for (let i = 0; i < 500; i++) {
     const { scores, porCapacidade } = pontuarEscolhaForcada(respostasAleatorias());
     const sel = selecionarAprofundamento(scores, porCapacidade);
-    const todas = [...sel.selecionadas, ...sel.escolher];
-    assert.equal(new Set(todas).size, todas.length);
-    assert.ok(sel.selecionadas.length + sel.faltam === 3);
+    assert.equal(new Set(sel.selecionadas).size, sel.selecionadas.length);
+    assert.ok(sel.selecionadas.length >= 3, `só ${sel.selecionadas.length} selecionadas`);
+    // toda selecionada tem score <= o do corte
+    for (const c of sel.selecionadas) assert.ok(scores[c] <= sel.scoreCorte);
+    // e nenhuma de fora tem score menor que o corte
+    for (const c of CHAVES.filter((x) => !sel.selecionadas.includes(x))) {
+      assert.ok(scores[c] > sel.scoreCorte, `${c} ficou de fora com score ${scores[c]} <= corte ${sel.scoreCorte}`);
+    }
   }
 });
 

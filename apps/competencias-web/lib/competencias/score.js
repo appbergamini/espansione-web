@@ -105,11 +105,16 @@ export function ranquear(scores, porCapacidade) {
 /**
  * Seleciona as competências que vão para a ramificação (etapa 2).
  *
- * NÃO resolve empate no corte por regra arbitrária. Quando o corte cai sobre
- * competências empatadas, devolve o conjunto empatado para o RESPONDENTE
- * escolher. Medição que motiva isso: o bottom-3 automático só se repete em
- * ~72% num teste-reteste, e o corte é empatado em ~44% dos casos — mais
- * blocos não resolvem (24 blocos levam o overlap a 78%).
+ * O empate no corte NÃO é resolvido nem por regra arbitrária nem pelo
+ * respondente: aprofunda-se TODAS as competências empatadas no patamar mais
+ * frágil. Quem responde não tem como saber qual escolher, e o desempate
+ * automático era instável — o bottom-3 só se repete em ~72% num
+ * teste-reteste, e o corte empata em ~44% dos casos. Mais blocos não
+ * resolvem (24 blocos levam o overlap a apenas 78%).
+ *
+ * Custo medido em 50 mil respondentes simulados: 3 competências em 55% dos
+ * casos (22 telas), 4 em 30% (24 telas), 5 em 9% (26), p99 em 30 telas.
+ * Mediana inalterada.
  *
  * As âncoras de evidência NÃO entram aqui: elas verificam declaração contra
  * evidência, e se influenciassem o ranking o Índice de Coerência passaria a
@@ -119,39 +124,18 @@ export function selecionarAprofundamento(scores, porCapacidade, n = 3) {
   const doMaisFragil = ranquear(scores, porCapacidade).reverse();
   const scoreCorte = doMaisFragil[n - 1].score;
 
-  const abaixo = doMaisFragil.filter((c) => c.score < scoreCorte);
-  const noCorte = doMaisFragil.filter((c) => c.score === scoreCorte);
-
-  if (abaixo.length + noCorte.length === n) {
-    return {
-      criterio: 'por_score',
-      selecionadas: [...abaixo, ...noCorte].map((c) => c.chave),
-      escolher: [],
-      faltam: 0,
-      scoreCorte,
-    };
-  }
+  // Todas as que estão no corte ou abaixo dele.
+  const selecionadas = doMaisFragil.filter((c) => c.score <= scoreCorte).map((c) => c.chave);
 
   return {
-    criterio: 'por_escolha',
-    selecionadas: abaixo.map((c) => c.chave),
-    // ordenadas por capacidade de menor score primeiro: é sugestão de
-    // ordem de exibição, não decisão.
-    escolher: noCorte.map((c) => c.chave),
-    faltam: n - abaixo.length,
+    // 'ampliado_por_empate' é dado de calibração: mede quantas vezes o corte
+    // não separou sozinho.
+    criterio: selecionadas.length === n ? 'por_score' : 'ampliado_por_empate',
+    selecionadas,
+    ampliadoPorEmpate: selecionadas.length > n,
+    minimo: n,
     scoreCorte,
   };
-}
-
-/** Fecha a seleção depois que o respondente escolheu entre as empatadas. */
-export function confirmarSelecao(parcial, escolhidas = []) {
-  if (parcial.criterio === 'por_score') return parcial.selecionadas;
-  const validas = escolhidas.filter((c) => parcial.escolher.includes(c));
-  const unicas = [...new Set(validas)].slice(0, parcial.faltam);
-  if (unicas.length !== parcial.faltam) {
-    throw new Error(`esperadas ${parcial.faltam} escolhas entre as empatadas, recebidas ${unicas.length}`);
-  }
-  return [...parcial.selecionadas, ...unicas];
 }
 
 /**
