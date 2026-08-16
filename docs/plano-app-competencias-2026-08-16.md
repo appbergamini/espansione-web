@@ -108,7 +108,7 @@ Testei em toda a faixa plausível de dispersão de perfil (desvio-padrão de 14 
 
 A causa é estrutural: faixas de 35 a 40 pontos de largura, quatro delas, sobre pilares que somam 200. Estar dentro das quatro ao mesmo tempo é raro por construção.
 
-**Decisão — tolerância de borda.** Um pilar só é sinalizado quando a distância até a borda da faixa for **≥ δ**, e não meramente por estar fora. Com δ = 10:
+**Decisão — tolerância de borda.** Um pilar só é sinalizado quando a distância até a borda da faixa for **maior que δ**, e não meramente por estar fora. *(Estritamente maior, não `≥`: com δ = 0 a condição precisa recair no comportamento original — qualquer pilar fora é sinalizado — e `≥ 0` marcaria até quem está dentro, cuja distância é zero. É também a convenção da simulação que produziu os números abaixo.)* Com δ = 10:
 
 | δ | regra 4 dispara | pilares sinalizados por competência | competências com ≥2 sinalizados |
 |---|---|---|---|

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "catalog": "node scripts/build-competencias.cjs",
+    "test": "node --test lib/competencias/__tests__/*.test.js"
   },
   "dependencies": {
     "@espansione/brand": "workspace:^",
@@ -13,5 +15,8 @@
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "xlsx": "^0.18.5"
   }
 }
