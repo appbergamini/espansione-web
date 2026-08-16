@@ -16,6 +16,15 @@ Reconcilia a `SPEC_App_Teste_Competencias_Espansione.md` (ago/2026) com o que j�
 
 Nenhuma das três decisões apaga código existente. O plano inteiro é aditivo, e a única alteração em arquivo que hoje está em produção é o bloco de `rewrites` do `next.config.mjs` (fase F6).
 
+**Duas decisões seguem abertas, em momentos diferentes:**
+
+| Nº | Decisão | Natureza | Trava | Onde |
+|---|---|---|---|---|
+| 1 | 12 ou 15 blocos de escolha forçada | instrumento — muda o banco de itens | **antes da F1** | §2.1 |
+| 2 | Caminho A, B ou C da captura grátis | comercial | antes da F6 | §4 |
+
+*Revisão de 16/08 aplicada: a proposta original de desempatar pelas âncoras foi descartada por circularidade (§2.1); "aderência" era três conceitos com um nome só (§2.5); a rota `confianca_baixa` e os dois índices ganharam storage (§5); o comportamento da trilha inteiramente técnica foi definido (§5.1); a conversão da sessão grátis foi especificada (§4).*
+
 ---
 
 ## 1. Inventário — o que já existe e o que acontece com cada coisa
@@ -59,12 +68,33 @@ A mesma pessoa, respondendo duas vezes, troca aproximadamente **1 das 3 competê
 
 Cada competência aparece em 4 blocos e recebe +1/−1/0 em cada um: a resolução máxima do instrumento é uma escala de 9 pontos (−4 a +4) para ordenar 12 itens. Empate é o comportamento esperado, não a exceção.
 
-**Decisão — duas mudanças, nenhuma delas cara:**
+**Desempate por âncora foi descartado.** A revisão de 16/08 derrubou a proposta original deste plano, e com razão: as âncoras existem para checar declaração contra evidência. Se passassem a influenciar o ranking, o índice que compara as duas coisas estaria verificando um resultado que ele mesmo ajudou a produzir. Some-se a isso que as âncoras cobrem 8 das 12 competências — `persistir_ajustar`, `coerencia_etica`, `formular_valor` e `comunicar_posicionar` ficam de fora, e um empate entre duas delas não teria desempate nenhum. **As âncoras permanecem onde a SPEC as colocou, no fim, e não entram no ranking.**
 
-1. **Mover as 4 âncoras de evidência para antes da ramificação.** Continuam 22 telas; muda só a ordem (12 blocos → 4 âncoras → 6 ancorados). As âncoras já mapeiam 8 das 12 competências e são factuais, então servem de desempate com sinal externo ao autorrelato. Custo: a pessoa entra na etapa 2 já ciente de que está sendo checada — pode enrijecer a resposta dos ancorados. Aceitável frente ao ganho.
-2. **Empate remanescente vira escolha do respondente.** "Estas competências ficaram no mesmo patamar — escolha as que você quer aprofundar." Substitui um desempate arbitrário por uma decisão informada, e aumenta a percepção de relevância do que vem depois.
+**Decisão — a escolha do respondente é o mecanismo, não o remendo.** Quando o corte cair sobre competências empatadas: *"Estas competências ficaram no mesmo patamar — escolha as que você quer aprofundar."* Isso troca um desempate arbitrário por uma decisão informada, mantém o Índice de Coerência limpo, e funciona para as 12 competências igualmente.
 
-Registrar em `comp_assessments` como o corte foi decidido (`por_score` | `por_ancora` | `por_escolha`) — é dado de calibração.
+Registrar em `comp_assessments` como o corte foi decidido (`por_score` | `por_escolha`) — é dado de calibração.
+
+**Sobre aumentar o número de blocos.** A revisão propôs 18 blocos (6 aparições por competência) ao custo de 24 afirmações novas e 6 telas. Medi, com desenho de pareamento variado e balanceado:
+
+| Desenho | k | Telas | Pares cobertos | Empate no corte | Overlap teste-reteste | Bottom-3 idêntico |
+|---|---|---|---|---|---|---|
+| banco real | 4 | 22 | 51/54 | 44,9% | 71,6% | 29,6% |
+| variado 12 | 4 | 22 | 49/54 | 44,6% | 71,6% | 29,3% |
+| variado 15 | 5 | 25 | 54/54 | 39,9% | 73,8% | 32,7% |
+| variado 18 | 6 | 28 | 52/54 | 34,4% | 76,0% | 37,1% |
+| variado 24 | 8 | 34 | 54/54 | 28,2% | 78,1% | 41,0% |
+| variado 30 | 10 | 40 | 54/54 | 23,3% | 80,2% | 45,8% |
+
+Duas conclusões, e a segunda importa mais que a primeira:
+
+1. **O banco v1 já está no teto do que 12 blocos permitem.** Ele empata com um desenho sintético equivalente (71,6% nos dois). O problema não é a qualidade do pareamento; é o k.
+2. **Mais blocos não compram estabilidade em quantidade útil.** Dobrar o instrumento para 24 blocos leva o overlap de 71,6% para 78,1%. Trinta blocos — 40 telas, quase o triplo do banco — chegam a 80,2%. **A instabilidade não é comprável a preço razoável**, porque ela é intrínseca a cortar exatamente 3 de 12 por ranking sobre dado ipsativo.
+
+Portanto a pergunta "22 telas ou 30% de instabilidade?" tem uma terceira resposta: nenhuma contagem de blocos plausível elimina os 30%. O que elimina é parar de tratar o corte como uma seleção precisa — que é exatamente o que a escolha do respondente faz.
+
+**Recomendação: 15 blocos.** Não porque estabiliza a trilha (não estabiliza), mas por dois motivos independentes — é o menor desenho em que a cobertura completa dos 54 pares entre capacidades passa a ser folgada, o que torna o ranking das 12 mais justo e a escala de 5 posições do relatório mais confiável; e custa 12 afirmações novas e 3 telas, não 24 e 6. Se o orçamento de redação estiver apertado, **manter 12 e ir de escolha do respondente é defensável** — a diferença de estabilidade entre 12 e 15 é de 2 pontos.
+
+**Decisão aberta nº 1 — de instrumento, e precisa sair antes da F1.** Manter 12 blocos ou ir para 15. A revisão de 16/08 está certa ao apontar que o plano original errou o sequenciamento: isto muda o banco de itens, então entra no caminho crítico junto com os 22 ancorados — não pode esperar a F6 como a decisão comercial. Se for 15, são **12 afirmações novas** a escrever, com o mesmo cuidado de desejabilidade equilibrada das 48 existentes.
 
 ### 2.2 A válvula de honestidade do motor quase nunca abre
 
@@ -102,6 +132,30 @@ A SPEC chama o Instrumento 2 de "Perfil Comportamental". O termo estabelecido em
 Mantidas as demais regras da SPEC §2: nenhum termo DISC em superfície de cliente (com teste de string no build), as 16 do CIS são **características**, as 12 do teste são **competências**, e as duas nunca aparecem com o mesmo nome na mesma tela.
 
 ⚠️ *Assertividade* e *Sociabilidade* existem **nas duas taxonomias** — nas 16 características do CIS e nas 24 do acervo — com definições diferentes. Namespace obrigatório desde a primeira linha do de-para (pendência 2 da SPEC), senão o nó é impossível de desfazer depois.
+
+### 2.5 "Aderência" significa três coisas diferentes no material de origem
+
+A revisão de 16/08 apontou que o nome do Índice de Aderência colide com a tabela de posição na faixa. É pior do que isso — são **três** significados, e os três já estão nos documentos de origem:
+
+| Onde | O que chama de aderência | O que realmente é |
+|---|---|---|
+| Matriz v5, aba *Instrucoes* | "REGRA DE ADERÊNCIA — dentro da faixa = ADERENTE" | posição de **um pilar** frente a **uma faixa** |
+| Matriz v5, aba *Regra de Trilha* | "ÍNDICE DE ADERÊNCIA COMPORTAMENTAL" | **% dos 48 checks** dentro da faixa — o quanto o perfil serve ao papel |
+| Banco de itens, aba *Ancoras de Evidencia* | "ÍNDICE DE ADERÊNCIA" | **declaração × evidência** — o quanto o autorrelato bate com o factual |
+
+A SPEC herdou o primeiro e o terceiro, e perdeu o segundo no caminho — ele existe na planilha e não aparece no documento, apesar de ser gratuito de calcular e de ser um bom gancho comercial.
+
+É exatamente a classe de erro que a SPEC §2 passa o tempo todo desmontando: mesma palavra, significados diferentes, no mesmo sistema.
+
+**Decisão — a palavra "aderência" é aposentada do sistema.** Três nomes distintos:
+
+| Conceito | Nome | Storage | Visibilidade |
+|---|---|---|---|
+| Posição de um pilar frente a uma faixa | **posição na faixa** | `comp_faixa_posicao` | interno; vira texto no relatório |
+| % dos 48 checks dentro da faixa | **Índice de Ajuste** | `comp_indice_ajuste` | só painel do avaliador |
+| Declaração × evidência (as 4 âncoras) | **Índice de Coerência** | `comp_indice_coerencia` | só painel do avaliador |
+
+Nenhum dos dois índices aparece para o respondente, como a SPEC já determina.
 
 ---
 
@@ -180,9 +234,16 @@ Isso é uma decisão comercial legítima — testes pagos na porta funcionam qua
 | **B — Troca seca** | O teste pago vira a porta. Sem versão grátis. | Mais simples e mais honesto com o posicionamento. Mais caro de encher o topo. |
 | **C — `/mapa` recuado, não removido** | O teste vira a porta, e o Mapa de Maturidade passa a ser oferecido depois — ou no caminho B2B. | Complementa A ou B; não é alternativa a elas. |
 
+**Se for o caminho A, duas coisas precisam estar especificadas antes de construir:**
+
+1. **A sessão grátis converte; a pessoa não refaz.** Mesma linha em `comp_assessments`, `origem` passa de `gratuito` para `pago` e `pagamento_id` é preenchido. As respostas da etapa 1 são preservadas. Refazer quebraria a checagem de integridade (soma = 0), permitiria calibrar a resposta depois de ver o resultado, e destruiria o dado de calibração de desejabilidade, que é o mais caro de obter.
+2. **O grátis não gera relatório nem PDF, e não dispara e-mail com resultado.** Só a tela, só a posição, sem exportação. O que sai de lá não pode virar um artefato que a pessoa guarda.
+
+E a ressalva da revisão procede: quatro barras com rótulo já são um resultado na cabeça de quem recebe, mesmo sem texto. **Isso é testável antes de construir** — mostrar as duas variantes (posição com rótulo × posição sem rótulo, só ordem) para 10 ou 15 pessoas do perfil e perguntar o que elas acham que receberam. Custa uma tarde e evita descobrir o problema com o funil já trocado.
+
 **O Mapa de Maturidade não sai do ar em nenhum dos caminhos.** Ele mede a *empresa*; o teste mede a *pessoa*. Na sequência da SPEC — teste → sessão de leitura → workshop → programa — Maturidade e Identidade encaixam do workshop em diante, que é onde a conversa deixa de ser sobre o dono e passa a ser sobre o negócio. Rotas preservadas, CTA da home e da LP redirecionados.
 
-**Esta é a única decisão deste plano que ainda está aberta.** Escolher A, B ou C antes da fase F6.
+**Decisão aberta nº 2 — comercial.** Escolher A, B ou C antes da fase F6. Não bloqueia as fases anteriores.
 
 ---
 
@@ -195,7 +256,8 @@ comp_assessments (
   id, projeto_id, pagamento_id, email,
   status,                       -- 'not_started' | 'in_progress' | 'done'
   ordem_seed,                   -- randomização reproduzível das 4 opções
-  criterio_corte,               -- 'por_score' | 'por_ancora' | 'por_escolha'
+  criterio_corte,               -- 'por_score' | 'por_escolha'
+  origem,                       -- 'gratuito' | 'pago'  (caminho A do §4)
   catalogo_versao, faixas_versao, delta_versao,
   iniciado_em, concluido_em
 )
@@ -224,21 +286,52 @@ comp_faixas (                   -- seed da SPEC §7.2, VERSIONADO
   versao, competencia_key, pilar, minimo, maximo, confianca
 )
 
-comp_aderencia (
+comp_faixa_posicao (            -- era 'comp_aderencia'; renomeado no §2.5
   assessment_id, competencia_key, pilar,
   posicao,                      -- 'abaixo' | 'dentro' | 'acima'
   distancia,                    -- pontos até a borda; alimenta o limiar δ
   sinalizado boolean            -- distancia >= δ
 )
 
+comp_indice_ajuste (            -- % dos 48 checks dentro da faixa
+  assessment_id, valor, faixa_leitura   -- só painel do avaliador
+)
+
+comp_indice_coerencia (         -- declaração × evidência (as 4 âncoras)
+  assessment_id, evidencia_media, declaracao_media, valor,
+  leitura                       -- 'coerente' | 'atencao' | 'revisar_na_sessao'
+)
+
 comp_trilha (
   assessment_id, ordem, competencia_key,
-  rota,                         -- 'regular' | 'desenvolver' | 'compensar' | 'tecnica'
+  rota,                         -- 'regular' | 'desenvolver' | 'compensar'
+                                -- | 'tecnica'         (regra 4: todos dentro)
+                                -- | 'confianca_baixa' (regra 5: leitura explica pouco)
   pilar_alvo, conteudo_id
 )
 ```
 
 `comp_pilares` materializa os 4 pilares no fechamento em vez de ler `cis_assessments` na hora de gerar o relatório: congela o resultado e mantém o relatório reproduzível.
+
+**`confianca_baixa` como rota** fechava uma lacuna: a regra 5 da SPEC manda não gerar recomendação comportamental e sinalizar a limitação quando a competência tem Confiança BAIXA. Isso não é `tecnica` — em `tecnica` a leitura comportamental funcionou e não achou nada; em `confianca_baixa` a leitura não se aplica. Hoje só `coerencia_etica` está marcada BAIXA, mas a recalibração pode marcar outras.
+
+### 5.1 Quando a trilha inteira volta sem conteúdo comportamental
+
+Com δ = 10 isso deixa de ser hipotético. Medido sobre o banco real de 12 blocos:
+
+| δ | 0 competências `tecnica` | 1 | 2 | **3 — trilha sem nada comportamental** |
+|---|---|---|---|---|
+| 0 (SPEC) | 85,4% | 12,1% | 2,1% | 0,3% |
+| **10** | **56,7%** | **29,8%** | **10,5%** | **3,0%** |
+| 15 | 41,6% | 35,1% | 16,6% | 6,7% |
+
+*(competência e perfil sorteados de forma independente; como a SPEC supõe que se relacionam, o número real tende a ficar acima destes)*
+
+Ou seja: em ~43% dos relatórios pelo menos um dos três itens da trilha é técnico, e em 3% os três são. **Comportamento definido:**
+
+- **1 ou 2 técnicas** — normal, e é o motor funcionando. O bloco 3 do relatório diz explicitamente "sem pontos de atenção comportamentais nesta competência", como a regra editorial 3 já manda.
+- **3 técnicas** — o relatório **não** força um achado comportamental. O bloco 3 vira uma leitura curta de perfil (o que o conjunto dos 4 pilares favorece e o que cobra esforço, via gap natural × em contexto), e a trilha inteira aponta para conteúdo técnico. O bloco 5 muda de título: "Sua trilha" vira "O que desenvolver". O Índice de Ajuste alto entra no painel do avaliador como sinal de que a conversa da sessão de leitura é sobre execução, não sobre comportamento.
+- Nos dois casos, **nunca** baixar o δ retroativamente para "achar alguma coisa". O δ é versionado justamente para tornar isso impossível sem deixar rastro.
 
 ---
 
@@ -249,7 +342,7 @@ Cada fase entrega algo verificável e não deixa o repositório em estado quebra
 | Fase | Entrega | Desbloqueia |
 |---|---|---|
 | **F0 · Fundação** | `apps/competencias-web` criado e deployado em projeto Vercel próprio, respondendo em URL própria. `@espansione/cis` e `@espansione/brand` extraídos. Nada roteado no domínio ainda. | Tudo. Produção intocada. |
-| **F1 · Motor** | Banco de itens gerado do XLSX. `score.js`, `faixas.js` com δ, viabilidade 185–215 e integridade soma = 0 como **testes automatizados** (`node --test`, padrão do repo). Sem UI. | Testável antes de existir tela. |
+| **F1 · Motor** | Banco de itens gerado do XLSX. `score.js`, `faixas.js` com δ, viabilidade 185–215 e integridade soma = 0 como **testes automatizados** (`node --test`, padrão do repo). Sem UI. **Depende da decisão nº 1** — 12 ou 15 blocos muda o catálogo. | Testável antes de existir tela. |
 | **F2 · Fluxo do teste** | Migration `comp_*`. 22 telas: abertura → 12 blocos (ordem randomizada e gravada) → 4 âncoras → 6 ancorados. Salvamento item a item, retomada. Etapa 2 atrás de flag até os itens ancorados existirem. | O teste roda ponta a ponta. |
 | **F3 · Compra e liberação** | `provisionarCompetencias`. Cookie no apex. `liberado` como trava da ordem imposta. | Comprador entra e responde. |
 | **F4 · Mapeamento Comportamental** | VERTHO do pacote, dentro do app novo, consumindo só `disc`/`dA`. Matriz `CC` não roda aqui. | Instrumento 2 concluído na conta. |
@@ -268,7 +361,8 @@ F7 não é opcional: sem a distribuição de escolha MAIS por afirmação, o equ
 | 1 | **22 itens ancorados** (88 opções calibradas) | A etapa 2 inteira — a única saída não-ipsativa do produto. Com os 2 exemplos da SPEC, só `vender_negociar` e `gestao_recursos` podem ser aprofundadas. | Redação + calibração da Vanessa. Posso entregar o rascunho completo seguindo as regras da SPEC e os 2 gabaritos. |
 | 2 | **De-para 4 pilares → 24 características do acervo** | A entrega de conteúdo da trilha. O motor identifica o pilar e para ali. | Contorno da SPEC (recomendação da trilha sai da sessão de leitura, na mão, nas primeiras turmas) é o certo. |
 | 3 | **Base normativa** | Percentil no relatório. Até lá: posição relativa, e nível "estimado" onde os dois ancorados discordarem. | 150–200 respondentes. |
-| 4 | **Domínio do Resend** | O lembrete de 48h da SPEC. Já é pendência conhecida do funil. | Configuração. Alternativa imediata: WhatsApp, que já está integrado. |
+| 4 | **Lembrete de 48h** | A conclusão dos **dois** instrumentos — a métrica-chefe da SPEC. No caminho A fica ainda mais crítico, porque a pessoa entra pelo grátis e o relatório só existe com os dois feitos. | **Não está bloqueado pelo Resend.** O WhatsApp já está integrado (`lib/whatsapp`, `api/mapa/whatsapp`) e é o canal certo para esse público. Entra na F3, não em pendência. |
+| 5 | Domínio do Resend | E-mail transacional com remetente próprio. Pendência conhecida do funil, independente deste produto. | Configuração. |
 
 **A pendência 1 é o caminho crítico.** Sem ela, F2 entrega o teste sem a etapa 2 e o relatório sai sem nível afirmado — que é a parte que justifica o preço.
 
@@ -312,8 +406,14 @@ Herda a SPEC §14 e acrescenta o que este plano introduziu.
 - [ ] Métrica de conclusão dos **dois** instrumentos instrumentada
 
 **Deste plano**
-- [ ] Âncoras respondidas antes da ramificação; `criterio_corte` gravado
-- [ ] Empate remanescente resolvido por escolha do respondente, nunca por regra arbitrária
+- [ ] Âncoras **não** entram no ranking nem no desempate; `criterio_corte` gravado
+- [ ] Empate no corte resolvido por escolha do respondente, nunca por regra arbitrária
+- [ ] A palavra "aderência" não aparece em nome de tabela, campo, índice ou texto — teste de string, como o de DISC
+- [ ] `comp_trilha.rota` aceita `confianca_baixa`, e a regra 5 da SPEC dispara por ela
+- [ ] Trilha com as 3 competências `tecnica` tem comportamento próprio; nada de baixar δ para achar achado
+- [ ] Sessão grátis **converte** para paga; respostas da etapa 1 preservadas, sem refazer
+- [ ] Camada grátis não gera relatório, PDF nem e-mail com resultado
+- [ ] Lembrete de conclusão dos dois instrumentos por WhatsApp, na F3
 - [ ] Tolerância δ aplicada e versionada; regra 4 dispara em ≥ 15% dos casos reais
 - [ ] `faixas_versao`, `delta_versao` e `catalogo_versao` gravados em toda sessão
 - [ ] Instrumento CIS existe em **uma** cópia, no pacote
@@ -334,4 +434,6 @@ Acrescento: **sem migrar Maturidade ou Identidade para o app novo**. Eles medem 
 
 ## Resumo em uma linha
 
-A SPEC é implementável e encaixa num eixo que o produto ainda não cobria — a pessoa, e não a empresa. Metade dela já está construída. Antes de escrever código, três coisas precisam ser decididas ou corrigidas: **a estabilidade da ramificação** (§2.1), **a tolerância das faixas** (§2.2) e **o que substitui a captura grátis no topo do funil** (§4).
+A SPEC é implementável e encaixa num eixo que o produto ainda não cobria — a pessoa, e não a empresa. Metade dela já está construída.
+
+O que a revisão de 16/08 mudou no diagnóstico: a instabilidade da ramificação **não se resolve com mais blocos** — nem 30 blocos chegam a 81% de overlap. Ela se resolve deixando de fingir que o corte é preciso, e devolvendo a escolha para quem está respondendo. As duas decisões abertas são a nº 1 (12 ou 15 blocos, antes da F1) e a nº 2 (o que substitui a captura grátis, antes da F6).
