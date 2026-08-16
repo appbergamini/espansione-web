@@ -23,6 +23,8 @@ import { BLOCOS } from '../lib/competencias/catalog.js';
 import { estadoDaSessao, validarResposta } from '../lib/competencias/sessao.js';
 import { consolidar } from '../lib/competencias/score.js';
 import { gerarRelatorio, varrerRelatorio } from '../lib/competencias/relatorio.js';
+import { indiceCoerencia } from '../lib/competencias/indices.js';
+import { indiceAjuste } from '../lib/competencias/faixas.js';
 import * as repo from '../lib/competencias/repo.js';
 import * as comportamental from '../lib/comportamental/repo.js';
 import { estadoDaSessao as estadoComp, validarResposta as validarComp } from '../lib/comportamental/sessao.js';
@@ -137,7 +139,37 @@ try {
   const trilha = relatorio.blocos[4];
   ok(`trilha: ${trilha.itens.map((i) => `${i.nome} (${i.rota})`).join(' · ') || 'vazia'}`);
 
-  console.log('\n── 8. RLS ──');
+  console.log('\n── 8. índices do avaliador ──');
+  const scoresMapa = Object.fromEntries(scores.map((s) => [s.competencia_key, s.score_bruto]));
+  const coerencia = indiceCoerencia(relidas, scoresMapa);
+  const ajuste = indiceAjuste(doBanco, atualizada.delta_valor);
+
+  coerencia ? ok(`Índice de Coerência ${coerencia.valor} → ${coerencia.leitura}`) : falhar('coerência não calculou');
+  ajuste.valor >= 0 && ajuste.valor < 100
+    ? ok(`Índice de Ajuste ${ajuste.valor}% (${ajuste.dentro}/${ajuste.total}) → ${ajuste.leitura}`)
+    : falhar(`ajuste fora do esperado: ${ajuste.valor}`);
+
+  const up1 = await supabaseAdmin.from('comp_indice_ajuste').upsert([{
+    assessment_id: sessao.id, valor: ajuste.valor, dentro: ajuste.dentro, total: ajuste.total, leitura: ajuste.leitura,
+  }], { onConflict: 'assessment_id' });
+  const up2 = await supabaseAdmin.from('comp_indice_coerencia').upsert([{
+    assessment_id: sessao.id,
+    evidencia_media: coerencia.evidenciaMedia, declaracao_media: coerencia.declaracaoMedia,
+    valor: coerencia.valor, leitura: coerencia.leitura,
+  }], { onConflict: 'assessment_id' });
+  (!up1.error && !up2.error) ? ok('os dois índices persistiram (CHECK do enum de leitura passou)')
+    : falhar(`persistência: ${up1.error?.message || ''} ${up2.error?.message || ''}`);
+
+  console.log('\n── 9. trilha persistida ──');
+  const linhasTrilha = trilha.itens.map((i) => ({
+    assessment_id: sessao.id, ordem: i.ordem, competencia_key: i.chave, rota: i.rota, pilar_alvo: i.pilarAlvo, conteudo_id: null,
+  }));
+  if (linhasTrilha.length) {
+    const { error } = await supabaseAdmin.from('comp_trilha').upsert(linhasTrilha, { onConflict: 'assessment_id,ordem' });
+    error ? falhar(`comp_trilha: ${error.message}`) : ok(`${linhasTrilha.length} linhas em comp_trilha`);
+  }
+
+  console.log('\n── 10. RLS ──');
   ok('todas as escritas passaram por service role; RLS ligada sem policy nega anon');
 
 } catch (e) {
