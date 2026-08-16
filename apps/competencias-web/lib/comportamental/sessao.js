@@ -62,7 +62,8 @@ export function estadoDaSessao({ respostas = {} } = {}) {
         // Sem numeração aqui também: a pessoa acabou de ver "Etapa 1 de 3"
         // no teste, e um segundo esquema de contagem só confunde.
         titulo: 'Tudo pronto',
-        texto: 'Os dois estão completos. O seu relatório está sendo gerado — a gente avisa quando estiver disponível.',
+        texto: 'Os dois estão completos, e o seu relatório já pode ser lido.',
+        acao: { rotulo: 'Ver o meu relatório', destino: 'relatorio' },
       },
       progresso: { momento: null, legenda: 'Concluído', pergunta: todas.length, deTotal: todas.length, percentual: 100 },
     };

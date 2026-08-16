@@ -95,6 +95,7 @@ test('NÃO existe tela de resultado no fim — só sinal de progresso', () => {
     assert.ok(!texto.includes(proibido), `a tela final vazou "${proibido}"`);
   }
   assert.match(e.tela.titulo, /Tudo pronto/);
+  assert.equal(e.tela.acao?.destino, 'relatorio', 'a tela final precisa levar ao relatorio');
   assert.doesNotMatch(e.tela.titulo, /etapa/i, 'não criar um segundo esquema de numeração');
 });
 
@@ -193,3 +194,4 @@ test('resposta parcial monta raw parcial sem quebrar', () => {
   assert.equal(raw.r2.length, 0);
   assert.equal(estaCompleto({ 'R1-01': { ordem: [0, 1, 2, 3] } }), false);
 });
+

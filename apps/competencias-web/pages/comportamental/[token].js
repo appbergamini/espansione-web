@@ -88,7 +88,7 @@ export default function Comportamental() {
       {erro && <p style={S.erro}>{erro}</p>}
       {tela.tipo === 'ranking' && <Ranking key={tela.id} tela={tela} enviando={enviando} onResponder={responder} />}
       {tela.tipo === 'par' && <Par key={tela.id} tela={tela} enviando={enviando} onResponder={responder} />}
-      {tela.tipo === 'fim' && <Fim tela={tela} />}
+      {tela.tipo === 'fim' && <Fim tela={tela} token={token} />}
     </Moldura>
   );
 }
@@ -154,13 +154,17 @@ function Par({ tela, enviando, onResponder }) {
   );
 }
 
-function Fim({ tela }) {
+function Fim({ tela, token }) {
+  const router = useRouter();
   return (
     <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h2 style={S.titulo}>{tela.titulo}</h2>
       <p style={S.sec}>{tela.texto}</p>
-      {/* Fora da zona: <a>, nunca <Link>. */}
-      <a href="/area" style={{ ...S.btn, textDecoration: 'none' }}>Ir para a minha conta</a>
+      {tela.acao?.destino === 'relatorio' && (
+        <button type="button" style={S.btn} onClick={() => router.push(`/relatorio/${token}`)}>
+          {tela.acao.rotulo}
+        </button>
+      )}
     </div>
   );
 }
