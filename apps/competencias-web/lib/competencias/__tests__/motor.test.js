@@ -86,10 +86,52 @@ test('âncoras: 4 perguntas, 5 opções (0 a 4), cobrindo 8 das 12', () => {
   ]);
 });
 
-test('etapa 2 continua indisponível enquanto faltarem itens ancorados', () => {
-  assert.equal(ETAPA2_DISPONIVEL, false, 'se virou true, os 22 itens entraram — atualizar este teste');
-  assert.equal(ANCORADOS.length, 2);
-  assert.ok(temAncoradosCompletos('vender_negociar') === false, 'gabarito tem 1 item, não 2');
+test('etapa 2 disponível: 2 itens ancorados por competência', () => {
+  assert.equal(ANCORADOS.length, 24);
+  for (const c of CHAVES) {
+    assert.ok(temAncoradosCompletos(c), `${c} não tem os 2 ancorados`);
+  }
+  assert.equal(ETAPA2_DISPONIVEL, true);
+});
+
+test('todo item ancorado tem 4 níveis em ordem crescente e id único', () => {
+  const ids = new Set();
+  for (const a of ANCORADOS) {
+    assert.deepEqual(a.niveis.map((n) => n.nivel), [1, 2, 3, 4], `${a.id} fora de ordem`);
+    assert.equal(new Set(a.niveis.map((n) => n.texto)).size, 4, `${a.id} tem nível repetido`);
+    assert.ok(!ids.has(a.id), `id repetido: ${a.id}`);
+    ids.add(a.id);
+    assert.ok(CHAVES.includes(a.competencia));
+  }
+});
+
+test('REGRAS DE ESCRITA: situação ≤15 palavras, opção ≤18, sem a palavra que nomeia', async () => {
+  const { COMPETENCIAS: comps } = await import('../catalog.js');
+  const nomeDaChave = Object.fromEntries(comps.map((c) => [c.chave, c.nome]));
+  const semAcento = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const conta = (s) => s.split(/\s+/).filter(Boolean).length;
+  const irrelevantes = new Set(['e', 'de', 'do', 'da', 'sob', 'para', 'com', 'sua', 'seu']);
+
+  for (const a of ANCORADOS) {
+    assert.ok(conta(a.situacao) <= 15, `${a.id}: situação com ${conta(a.situacao)} palavras`);
+    const proibidas = semAcento(nomeDaChave[a.competencia])
+      .split(/[^a-z0-9]+/).filter((p) => p.length >= 4 && !irrelevantes.has(p));
+    for (const n of a.niveis) {
+      assert.ok(conta(n.texto) <= 18, `${a.id} nível ${n.nivel}: ${conta(n.texto)} palavras`);
+      const corpo = semAcento(n.texto).split(/[^a-z0-9]+/);
+      for (const p of proibidas) {
+        assert.ok(!corpo.includes(p), `${a.id} nível ${n.nivel} contém "${p}", que nomeia a competência`);
+      }
+    }
+  }
+});
+
+test('o catálogo declara quantos ancorados ainda são rascunho — não esconder isso', async () => {
+  const { ANCORADOS_EM_RASCUNHO, SEM_ANCORADOS_COMPLETOS } = await import('../catalog.generated.js');
+  assert.deepEqual(SEM_ANCORADOS_COMPLETOS, []);
+  assert.ok(ANCORADOS_EM_RASCUNHO > 0,
+    'se chegou a zero, os itens foram calibrados — confirmar antes de afirmar nível como validado');
+  assert.equal(ANCORADOS.filter((a) => a.rascunho).length, ANCORADOS_EM_RASCUNHO);
 });
 
 test('ordemDoBloco é permutação e é reproduzível pela seed', () => {

@@ -155,6 +155,71 @@ function lerAncorados(wb) {
   return out;
 }
 
+// ── 4b. rascunho dos ancorados que faltavam, com as regras aplicadas ─
+const SRC_RASCUNHO = path.join(DIR, 'ancorados_rascunho_v1.json');
+const MAX_PALAVRAS_SITUACAO = 15;
+const MAX_PALAVRAS_OPCAO = 18;
+const IRRELEVANTES = new Set(['e', 'de', 'do', 'da', 'sob', 'para', 'com', 'sua', 'seu']);
+
+const contarPalavras = (s) => txt(s).split(/\s+/).filter(Boolean).length;
+
+/** Palavras distintivas do nome da competência — nenhuma pode vazar nas opções. */
+function palavrasProibidas(nome) {
+  return semAcento(nome)
+    .split(/[^a-z0-9]+/)
+    .filter((p) => p.length >= 4 && !IRRELEVANTES.has(p));
+}
+
+function lerRascunho(porChave) {
+  if (!fs.existsSync(SRC_RASCUNHO)) return [];
+  const doc = JSON.parse(fs.readFileSync(SRC_RASCUNHO, 'utf8'));
+  return (doc.itens || []).map((it) => {
+    const c = porChave.get(it.competencia);
+    if (!c) throw new Error(`rascunho: competência desconhecida "${it.competencia}"`);
+    if (!Array.isArray(it.niveis) || it.niveis.length !== 4) {
+      throw new Error(`rascunho/${it.competencia}: precisa de exatamente 4 níveis`);
+    }
+    return {
+      competencia: it.competencia,
+      situacao: txt(it.situacao),
+      niveis: it.niveis.map((texto, i) => ({ nivel: i + 1, texto: txt(texto) })),
+      rascunho: true,
+      versao: doc.versao,
+    };
+  });
+}
+
+/**
+ * REGRAS DE ESCRITA DA SPEC §5.5, verificadas em vez de conferidas no olho.
+ * Vale para os itens do Excel e para os do rascunho igualmente.
+ */
+function validarAncorados(ancorados, porChave) {
+  const problemas = [];
+  for (const a of ancorados) {
+    const nome = porChave.get(a.competencia).nome;
+    const proibidas = palavrasProibidas(nome);
+    const onde = `${a.competencia}/"${a.situacao.slice(0, 34)}…"`;
+
+    if (contarPalavras(a.situacao) > MAX_PALAVRAS_SITUACAO) {
+      problemas.push(`${onde}: situação com ${contarPalavras(a.situacao)} palavras (máx ${MAX_PALAVRAS_SITUACAO})`);
+    }
+    for (const n of a.niveis) {
+      if (contarPalavras(n.texto) > MAX_PALAVRAS_OPCAO) {
+        problemas.push(`${onde} nível ${n.nivel}: ${contarPalavras(n.texto)} palavras (máx ${MAX_PALAVRAS_OPCAO})`);
+      }
+      const corpo = semAcento(n.texto).split(/[^a-z0-9]+/);
+      for (const p of proibidas) {
+        if (corpo.includes(p)) problemas.push(`${onde} nível ${n.nivel}: contém "${p}", que nomeia a competência`);
+      }
+    }
+    const textos = a.niveis.map((n) => semAcento(n.texto));
+    if (new Set(textos).size !== 4) problemas.push(`${onde}: níveis repetidos`);
+  }
+  if (problemas.length) {
+    throw new Error(`regras de escrita dos ancorados violadas:\n  - ${problemas.join('\n  - ')}`);
+  }
+}
+
 // ── 5. as 48 faixas ──────────────────────────────────────────────────
 function lerFaixas(wb, porNome) {
   const rows = aba(wb, 'Faixas');
@@ -213,7 +278,18 @@ function build() {
 
   const blocos = lerBlocos(wbItens);
   const ancoras = lerAncoras(wbItens);
-  const ancorados = lerAncorados(wbItens);
+
+  // Gabaritos do Excel + rascunho dos que faltavam. Os IDs são reatribuídos
+  // depois da junção para ficarem estáveis e sequenciais por competência.
+  const ancorados = [...lerAncorados(wbItens), ...lerRascunho(porChave)];
+  const seq = new Map();
+  for (const a of ancorados) {
+    const n = (seq.get(a.competencia) || 0) + 1;
+    seq.set(a.competencia, n);
+    a.id = `ANC-${a.competencia}-${n}`;
+  }
+  validarAncorados(ancorados, porChave);
+
   const faixas = lerFaixas(wbFaixas, porNome);
   const leitura = lerLeitura(wbFaixas, porNome);
 
@@ -275,6 +351,11 @@ function build() {
   const cobertasPorAncora = new Set(ancoras.flatMap((a) => a.verifica));
   const semAncora = competencias.filter((c) => !cobertasPorAncora.has(c.chave)).map((c) => c.chave);
 
+  const semAncoradosCompletos = competencias
+    .filter((c) => ancorados.filter((a) => a.competencia === c.chave).length < 2)
+    .map((c) => c.chave);
+  const emRascunho = ancorados.filter((a) => a.rascunho).length;
+
   const header = `// =====================================================================
 // GERADO AUTOMATICAMENTE — NÃO EDITAR À MÃO.
 // Fonte: data/competencias/itens_v1.xlsx + data/competencias/faixas_v5.xlsx
@@ -282,7 +363,7 @@ function build() {
 //
 // Desenho: ${N_BLOCOS} blocos · ${competencias.length} competências · ${K_APARICOES} aparições cada
 // Score por competência varia de -${K_APARICOES} a +${K_APARICOES}; a soma dos 12 é sempre 0.
-// Itens ancorados escritos: ${ancorados.length} de ${competencias.length * 2} (etapa 2 fica atrás de flag até fechar)
+// Itens ancorados: ${ancorados.length} de ${competencias.length * 2} · ${emRascunho} ainda em RASCUNHO (não calibrados)
 // =====================================================================
 
 export const CATALOGO_VERSAO = ${JSON.stringify(CATALOGO_VERSAO)};
@@ -305,7 +386,16 @@ export const BANCO_ITENS = ${JSON.stringify(itens, null, 2)};
 
 export const ANCORAS = ${JSON.stringify(ancoras, null, 2)};
 
-/** Itens ancorados da etapa 2. Incompleto por enquanto — ver SEM_ANCORADOS. */
+/** Competências que ainda não têm os 2 itens ancorados. Vazio = etapa 2 completa. */
+export const SEM_ANCORADOS_COMPLETOS = ${JSON.stringify(semAncoradosCompletos, null, 2)};
+
+/**
+ * Quantos itens ancorados ainda são RASCUNHO — escritos seguindo as regras,
+ * mas sem calibração de piloto. Enquanto for > 0, o relatório não deve
+ * afirmar nível como se fosse validado.
+ */
+export const ANCORADOS_EM_RASCUNHO = ${emRascunho};
+
 export const ANCORADOS = ${JSON.stringify(ancorados, null, 2)};
 
 export const FAIXAS = ${JSON.stringify(faixas, null, 2)};
@@ -320,7 +410,8 @@ export const LEITURA_FAIXA = ${JSON.stringify(leitura, null, 2)};
     `OK → lib/competencias/catalog.generated.js\n` +
     `   ${N_BLOCOS} blocos · ${competencias.length} competências × ${K_APARICOES} aparições · ${itens.length} afirmações\n` +
     `   ${ancoras.length} âncoras (não cobrem: ${semAncora.join(', ') || '—'})\n` +
-    `   ${faixas.length} linhas de faixa · ${leitura.length} de leitura · ${ancorados.length} ancorados escritos`
+    `   ${faixas.length} linhas de faixa · ${leitura.length} de leitura\n` +
+    `   ${ancorados.length}/${competencias.length * 2} ancorados · ${emRascunho} em RASCUNHO · faltam: ${semAncoradosCompletos.join(', ') || '—'}`
   );
 }
 build();

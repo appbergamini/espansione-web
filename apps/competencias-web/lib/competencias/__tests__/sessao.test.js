@@ -182,6 +182,67 @@ test('a resposta gravada é só o que interessa — nada de campo extra vindo do
   assert.deepEqual(Object.keys(r.payload).sort(), ['mais', 'menos']);
 });
 
+// ── caminhada completa ───────────────────────────────────────────────
+test('caminhada E2E: 22 telas, sem repetir, terminando em concluído', () => {
+  const respostas = {};
+  let escolhas = [];
+  const telas = [];
+  let guarda = 0;
+
+  while (guarda++ < 60) {
+    const e = estadoDaSessao({ respostas, escolhas, seed: SEED, etapa2Habilitada: true });
+    if (e.fase === 'concluido') break;
+
+    if (e.tela.tipo === 'escolha_de_aprofundamento') {
+      escolhas = e.tela.opcoes.slice(0, e.tela.escolherQuantas).map((o) => o.chave);
+      continue; // a tela de escolha não é uma das 22
+    }
+
+    telas.push(`${e.fase}:${e.tela.id}`);
+    if (e.tela.tipo === 'escolha_forcada') {
+      respostas[e.tela.id] = { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[3].competencia };
+    } else if (e.tela.tipo === 'item_ancorado') {
+      respostas[e.tela.id] = { nivel: 3 };
+    } else if (e.tela.tipo === 'ancora_evidencia') {
+      respostas[e.tela.id] = { valor: 3 };
+    }
+  }
+
+  assert.ok(guarda < 60, 'o fluxo não terminou — possível laço');
+  assert.equal(telas.length, 22, `esperadas 22 telas, foram ${telas.length}`);
+  assert.equal(new Set(telas).size, 22, 'alguma tela apareceu duas vezes');
+
+  const final = estadoDaSessao({ respostas, escolhas, seed: SEED, etapa2Habilitada: true });
+  assert.equal(final.fase, 'concluido');
+  assert.equal(final.selecao.selecionadas.length, 3);
+  assert.ok(final.integridade.somaZero, 'a soma dos 12 scores tem de ser 0');
+  // 3 competências aprofundadas × 2 ancorados cada
+  assert.equal(Object.keys(final.niveis).length, 3);
+  for (const n of Object.values(final.niveis)) {
+    assert.equal(n.nivel, 3);
+    assert.equal(n.confianca, 'afirmado', 'dois itens concordando devem afirmar o nível');
+  }
+});
+
+test('a etapa 2 só cobre as 3 selecionadas — 6 telas, nunca mais', () => {
+  const respostas = responderTodosOsBlocos();
+  let escolhas = [];
+  const ancoradas = new Set();
+  let guarda = 0;
+
+  while (guarda++ < 40) {
+    const e = estadoDaSessao({ respostas, escolhas, seed: SEED, etapa2Habilitada: true });
+    if (e.tela.tipo === 'escolha_de_aprofundamento') {
+      escolhas = e.tela.opcoes.slice(0, e.tela.escolherQuantas).map((o) => o.chave);
+      continue;
+    }
+    if (e.tela.tipo !== 'item_ancorado') break;
+    ancoradas.add(e.tela.competencia);
+    respostas[e.tela.id] = { nivel: 2 };
+  }
+  assert.equal(ancoradas.size, 3, 'a etapa 2 tocou um número errado de competências');
+});
+
 // ── itens ancorados: a ordem dos níveis é a escala ───────────────────
 test('os níveis de um item ancorado saem em ordem crescente, nunca embaralhados', () => {
   const anc = ancoradosDe('vender_negociar')[0] || ancoradosDe('gestao_recursos')[0];

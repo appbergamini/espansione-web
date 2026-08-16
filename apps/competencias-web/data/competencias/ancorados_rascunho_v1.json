@@ -1,0 +1,233 @@
+{
+  "versao": "ancorados-rascunho-v1",
+  "status": "RASCUNHO — escrito por IA seguindo as regras da SPEC §5.5 e os 2 gabaritos. NÃO CALIBRADO.",
+  "aviso": "Antes de vender com nível afirmado, estes 22 itens precisam de revisão editorial e da checagem 2 do piloto (a opção 3 é de fato mais avançada que a 2 na percepção do respondente?). Até lá o nível sai como estimado.",
+  "regras": [
+    "Nível 1 evita ou terceiriza · 2 age por hábito · 3 age com critério explícito · 4 age com critério e reconfigura a situação",
+    "Nenhuma opção pode ser obviamente errada — todas plausíveis para um dono de PME",
+    "Nenhuma opção contém a palavra que nomeia a competência",
+    "Situação em até 15 palavras; cada opção em até 18"
+  ],
+  "itens": [
+    {
+      "competencia": "autoconsciencia",
+      "situacao": "Uma decisão sua deu errado e a equipe percebeu.",
+      "niveis": [
+        "Sigo em frente sem voltar ao assunto",
+        "Assumo o erro na hora e mudo de rumo",
+        "Explico o que me levou àquilo e o que faria diferente",
+        "Peço à equipe o que eu não enxerguei e reviso o combinado"
+      ]
+    },
+    {
+      "competencia": "autoconsciencia",
+      "situacao": "Você repete um mesmo tipo de erro há alguns meses.",
+      "niveis": [
+        "Atribuo ao ritmo do período e sigo",
+        "Redobro o cuidado nas próximas vezes",
+        "Escrevo em que situações isso acontece e o que dispara",
+        "Coloco alguém para me avisar quando o padrão aparecer"
+      ]
+    },
+    {
+      "competencia": "persistir_ajustar",
+      "situacao": "Uma frente do negócio está no vermelho há três meses.",
+      "niveis": [
+        "Espero o mercado melhorar antes de mexer",
+        "Aumento o esforço na mesma direção",
+        "Defino um prazo e um número que decidem se continuo",
+        "Testo uma versão menor da frente antes de encerrar ou dobrar"
+      ]
+    },
+    {
+      "competencia": "persistir_ajustar",
+      "situacao": "Uma negociação importante travou e o cliente parou de responder.",
+      "niveis": [
+        "Deixo de lado e foco em quem responde",
+        "Insisto no mesmo contato até obter resposta",
+        "Procuro entender o que mudou do lado dele antes de voltar",
+        "Retomo com um desenho diferente, feito para o que travou"
+      ]
+    },
+    {
+      "competencia": "coerencia_etica",
+      "situacao": "Um fornecedor oferece vantagem pessoal para você fechar com ele.",
+      "niveis": [
+        "Evito o assunto e adio a decisão",
+        "Recuso e sigo com a cotação normal",
+        "Recuso e digo a ele qual regra eu uso para escolher",
+        "Recuso e deixo essa regra escrita para quem compra aqui"
+      ]
+    },
+    {
+      "competencia": "coerencia_etica",
+      "situacao": "Dá para entregar menos do que combinou e ninguém vai notar.",
+      "niveis": [
+        "Entrego como está, o cliente não vai perceber",
+        "Entrego o combinado, mesmo custando mais",
+        "Aviso o cliente do que mudou e reviso o prazo",
+        "Mudo o jeito de fechar contrato para não prometer o que aperta"
+      ]
+    },
+    {
+      "competencia": "leitura_oportunidade",
+      "situacao": "Um cliente antigo comprou bem menos este ano.",
+      "niveis": [
+        "Espero ele voltar quando precisar",
+        "Ofereço uma condição melhor para reativar",
+        "Ligo para entender o que mudou no negócio dele",
+        "Uso o que descobri para rever a oferta de clientes parecidos"
+      ]
+    },
+    {
+      "competencia": "leitura_oportunidade",
+      "situacao": "Você ouve a mesma reclamação de três clientes diferentes.",
+      "niveis": [
+        "Anoto e sigo, cada caso é um caso",
+        "Resolvo o problema de cada um deles",
+        "Procuro o que há em comum entre os três",
+        "Mudo a etapa que gera a reclamação e aviso os demais"
+      ]
+    },
+    {
+      "competencia": "julgamento_incerteza",
+      "situacao": "Aparece uma chance boa, mas com informação incompleta.",
+      "niveis": [
+        "Deixo passar, sem dado eu não decido",
+        "Vou pelo que a experiência diz",
+        "Defino quanto posso perder e entro até esse limite",
+        "Faço uma versão pequena que me dá o dado que falta"
+      ]
+    },
+    {
+      "competencia": "julgamento_incerteza",
+      "situacao": "Dois caminhos possíveis e prazo curto para escolher.",
+      "niveis": [
+        "Peço a alguém de fora que escolha por mim",
+        "Escolho o que parece mais seguro",
+        "Comparo os dois pelo que cada um custa se der errado",
+        "Escolho um e defino o sinal que me faria voltar atrás"
+      ]
+    },
+    {
+      "competencia": "direcao_modelo",
+      "situacao": "Chega um pedido grande, fora do que a empresa faz.",
+      "niveis": [
+        "Aceito, é dinheiro entrando",
+        "Aceito e depois vejo como entregar",
+        "Calculo o que atender isso tira das outras entregas",
+        "Recuso e digo ao cliente onde a empresa é realmente boa"
+      ]
+    },
+    {
+      "competencia": "direcao_modelo",
+      "situacao": "Alguém pergunta em uma frase como a empresa ganha dinheiro.",
+      "niveis": [
+        "Depende, cada mês é de um jeito",
+        "Falo do que a gente mais vende",
+        "Digo de onde vem a maior parte da margem",
+        "Uso essa frase para decidir o que a empresa não faz"
+      ]
+    },
+    {
+      "competencia": "formular_valor",
+      "situacao": "Um cliente pede algo que você não faz hoje.",
+      "niveis": [
+        "Digo que não trabalhamos com isso",
+        "Encaminho para alguém que faça",
+        "Pergunto que resultado ele espera com aquilo",
+        "Viro o pedido numa oferta que serve a outros clientes"
+      ]
+    },
+    {
+      "competencia": "formular_valor",
+      "situacao": "Um cliente novo pergunta por que deveria escolher a sua empresa.",
+      "niveis": [
+        "Falo do tempo de mercado e da estrutura",
+        "Listo tudo o que a empresa entrega",
+        "Digo o problema específico que a gente resolve melhor",
+        "Mostro um caso parecido com o dele e o resultado"
+      ]
+    },
+    {
+      "competencia": "comunicar_posicionar",
+      "situacao": "Sua equipe descreve a empresa de um jeito diferente do seu.",
+      "niveis": [
+        "Cada um fala do seu jeito, tudo bem",
+        "Corrijo quando ouço algo diferente",
+        "Escrevo a frase que todos devem usar",
+        "Monto a frase com eles a partir do que os clientes repetem"
+      ]
+    },
+    {
+      "competencia": "comunicar_posicionar",
+      "situacao": "Você vai falar para um público que não conhece o seu setor.",
+      "niveis": [
+        "Uso a mesma apresentação de sempre",
+        "Tiro os termos técnicos da apresentação",
+        "Começo pelo problema que aquele público reconhece",
+        "Reescrevo o exemplo central com a realidade deles"
+      ]
+    },
+    {
+      "competencia": "vender_negociar",
+      "situacao": "Uma proposta enviada há duas semanas não teve resposta.",
+      "niveis": [
+        "Espero, se tiver interesse ele procura",
+        "Reenvio o documento perguntando se chegou",
+        "Ligo para saber o que falta para ele decidir",
+        "Ofereço um primeiro passo menor para destravar a decisão"
+      ]
+    },
+    {
+      "competencia": "iniciativa_experimentacao",
+      "situacao": "Você tem uma ideia que pode melhorar a operação.",
+      "niveis": [
+        "Guardo para quando sobrar tempo",
+        "Aplico de uma vez em toda a operação",
+        "Começo por uma parte pequena antes de estender",
+        "Defino antes o que vou olhar para saber se funcionou"
+      ]
+    },
+    {
+      "competencia": "iniciativa_experimentacao",
+      "situacao": "Um concorrente lançou algo que você vinha pensando em fazer.",
+      "niveis": [
+        "Deixo para lá, ele saiu na frente",
+        "Faço o mesmo, o quanto antes",
+        "Vejo o que ele deixou de fora e começo por ali",
+        "Coloco no ar uma versão simples para ouvir cliente rápido"
+      ]
+    },
+    {
+      "competencia": "gestao_recursos",
+      "situacao": "Um custo fixo da empresa subiu bastante este mês.",
+      "niveis": [
+        "Descubro quando o contador fecha o mês",
+        "Corto o que der para cortar rápido",
+        "Vejo quanto isso pesa na margem antes de mexer",
+        "Reviso o preço ou o processo que criou esse custo"
+      ]
+    },
+    {
+      "competencia": "liderar_mobilizar",
+      "situacao": "Alguém do time entrega abaixo do combinado há semanas.",
+      "niveis": [
+        "Assumo a parte dela para não atrasar",
+        "Chamo a atenção quando o atraso aparece",
+        "Marco uma conversa e digo o que espero, com prazo",
+        "Refaço o combinado e acompanho num ritmo fixo"
+      ]
+    },
+    {
+      "competencia": "liderar_mobilizar",
+      "situacao": "Você precisa passar uma entrega importante para outra pessoa.",
+      "niveis": [
+        "Faço eu mesmo, sai mais rápido",
+        "Passo e vou conferindo cada etapa",
+        "Explico o resultado esperado e combino pontos de checagem",
+        "Deixo a pessoa decidir o caminho e respondo quando ela chama"
+      ]
+    }
+  ]
+}

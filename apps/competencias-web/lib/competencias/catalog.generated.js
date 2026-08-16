@@ -5,7 +5,7 @@
 //
 // Desenho: 12 blocos · 12 competências · 4 aparições cada
 // Score por competência varia de -4 a +4; a soma dos 12 é sempre 0.
-// Itens ancorados escritos: 2 de 24 (etapa 2 fica atrás de flag até fechar)
+// Itens ancorados: 24 de 24 · 22 ainda em RASCUNHO (não calibrados)
 // =====================================================================
 
 export const CATALOGO_VERSAO = "itens-v1";
@@ -863,7 +863,16 @@ export const ANCORAS = [
   }
 ];
 
-/** Itens ancorados da etapa 2. Incompleto por enquanto — ver SEM_ANCORADOS. */
+/** Competências que ainda não têm os 2 itens ancorados. Vazio = etapa 2 completa. */
+export const SEM_ANCORADOS_COMPLETOS = [];
+
+/**
+ * Quantos itens ancorados ainda são RASCUNHO — escritos seguindo as regras,
+ * mas sem calibração de piloto. Enquanto for > 0, o relatório não deve
+ * afirmar nível como se fosse validado.
+ */
+export const ANCORADOS_EM_RASCUNHO = 22;
+
 export const ANCORADOS = [
   {
     "id": "ANC-vender_negociar-1",
@@ -910,6 +919,556 @@ export const ANCORADOS = [
         "texto": "Defino quanto posso perder e a que ponto eu desisto"
       }
     ]
+  },
+  {
+    "competencia": "autoconsciencia",
+    "situacao": "Uma decisão sua deu errado e a equipe percebeu.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Sigo em frente sem voltar ao assunto"
+      },
+      {
+        "nivel": 2,
+        "texto": "Assumo o erro na hora e mudo de rumo"
+      },
+      {
+        "nivel": 3,
+        "texto": "Explico o que me levou àquilo e o que faria diferente"
+      },
+      {
+        "nivel": 4,
+        "texto": "Peço à equipe o que eu não enxerguei e reviso o combinado"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-autoconsciencia-1"
+  },
+  {
+    "competencia": "autoconsciencia",
+    "situacao": "Você repete um mesmo tipo de erro há alguns meses.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Atribuo ao ritmo do período e sigo"
+      },
+      {
+        "nivel": 2,
+        "texto": "Redobro o cuidado nas próximas vezes"
+      },
+      {
+        "nivel": 3,
+        "texto": "Escrevo em que situações isso acontece e o que dispara"
+      },
+      {
+        "nivel": 4,
+        "texto": "Coloco alguém para me avisar quando o padrão aparecer"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-autoconsciencia-2"
+  },
+  {
+    "competencia": "persistir_ajustar",
+    "situacao": "Uma frente do negócio está no vermelho há três meses.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Espero o mercado melhorar antes de mexer"
+      },
+      {
+        "nivel": 2,
+        "texto": "Aumento o esforço na mesma direção"
+      },
+      {
+        "nivel": 3,
+        "texto": "Defino um prazo e um número que decidem se continuo"
+      },
+      {
+        "nivel": 4,
+        "texto": "Testo uma versão menor da frente antes de encerrar ou dobrar"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-persistir_ajustar-1"
+  },
+  {
+    "competencia": "persistir_ajustar",
+    "situacao": "Uma negociação importante travou e o cliente parou de responder.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Deixo de lado e foco em quem responde"
+      },
+      {
+        "nivel": 2,
+        "texto": "Insisto no mesmo contato até obter resposta"
+      },
+      {
+        "nivel": 3,
+        "texto": "Procuro entender o que mudou do lado dele antes de voltar"
+      },
+      {
+        "nivel": 4,
+        "texto": "Retomo com um desenho diferente, feito para o que travou"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-persistir_ajustar-2"
+  },
+  {
+    "competencia": "coerencia_etica",
+    "situacao": "Um fornecedor oferece vantagem pessoal para você fechar com ele.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Evito o assunto e adio a decisão"
+      },
+      {
+        "nivel": 2,
+        "texto": "Recuso e sigo com a cotação normal"
+      },
+      {
+        "nivel": 3,
+        "texto": "Recuso e digo a ele qual regra eu uso para escolher"
+      },
+      {
+        "nivel": 4,
+        "texto": "Recuso e deixo essa regra escrita para quem compra aqui"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-coerencia_etica-1"
+  },
+  {
+    "competencia": "coerencia_etica",
+    "situacao": "Dá para entregar menos do que combinou e ninguém vai notar.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Entrego como está, o cliente não vai perceber"
+      },
+      {
+        "nivel": 2,
+        "texto": "Entrego o combinado, mesmo custando mais"
+      },
+      {
+        "nivel": 3,
+        "texto": "Aviso o cliente do que mudou e reviso o prazo"
+      },
+      {
+        "nivel": 4,
+        "texto": "Mudo o jeito de fechar contrato para não prometer o que aperta"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-coerencia_etica-2"
+  },
+  {
+    "competencia": "leitura_oportunidade",
+    "situacao": "Um cliente antigo comprou bem menos este ano.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Espero ele voltar quando precisar"
+      },
+      {
+        "nivel": 2,
+        "texto": "Ofereço uma condição melhor para reativar"
+      },
+      {
+        "nivel": 3,
+        "texto": "Ligo para entender o que mudou no negócio dele"
+      },
+      {
+        "nivel": 4,
+        "texto": "Uso o que descobri para rever a oferta de clientes parecidos"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-leitura_oportunidade-1"
+  },
+  {
+    "competencia": "leitura_oportunidade",
+    "situacao": "Você ouve a mesma reclamação de três clientes diferentes.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Anoto e sigo, cada caso é um caso"
+      },
+      {
+        "nivel": 2,
+        "texto": "Resolvo o problema de cada um deles"
+      },
+      {
+        "nivel": 3,
+        "texto": "Procuro o que há em comum entre os três"
+      },
+      {
+        "nivel": 4,
+        "texto": "Mudo a etapa que gera a reclamação e aviso os demais"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-leitura_oportunidade-2"
+  },
+  {
+    "competencia": "julgamento_incerteza",
+    "situacao": "Aparece uma chance boa, mas com informação incompleta.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Deixo passar, sem dado eu não decido"
+      },
+      {
+        "nivel": 2,
+        "texto": "Vou pelo que a experiência diz"
+      },
+      {
+        "nivel": 3,
+        "texto": "Defino quanto posso perder e entro até esse limite"
+      },
+      {
+        "nivel": 4,
+        "texto": "Faço uma versão pequena que me dá o dado que falta"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-julgamento_incerteza-1"
+  },
+  {
+    "competencia": "julgamento_incerteza",
+    "situacao": "Dois caminhos possíveis e prazo curto para escolher.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Peço a alguém de fora que escolha por mim"
+      },
+      {
+        "nivel": 2,
+        "texto": "Escolho o que parece mais seguro"
+      },
+      {
+        "nivel": 3,
+        "texto": "Comparo os dois pelo que cada um custa se der errado"
+      },
+      {
+        "nivel": 4,
+        "texto": "Escolho um e defino o sinal que me faria voltar atrás"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-julgamento_incerteza-2"
+  },
+  {
+    "competencia": "direcao_modelo",
+    "situacao": "Chega um pedido grande, fora do que a empresa faz.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Aceito, é dinheiro entrando"
+      },
+      {
+        "nivel": 2,
+        "texto": "Aceito e depois vejo como entregar"
+      },
+      {
+        "nivel": 3,
+        "texto": "Calculo o que atender isso tira das outras entregas"
+      },
+      {
+        "nivel": 4,
+        "texto": "Recuso e digo ao cliente onde a empresa é realmente boa"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-direcao_modelo-1"
+  },
+  {
+    "competencia": "direcao_modelo",
+    "situacao": "Alguém pergunta em uma frase como a empresa ganha dinheiro.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Depende, cada mês é de um jeito"
+      },
+      {
+        "nivel": 2,
+        "texto": "Falo do que a gente mais vende"
+      },
+      {
+        "nivel": 3,
+        "texto": "Digo de onde vem a maior parte da margem"
+      },
+      {
+        "nivel": 4,
+        "texto": "Uso essa frase para decidir o que a empresa não faz"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-direcao_modelo-2"
+  },
+  {
+    "competencia": "formular_valor",
+    "situacao": "Um cliente pede algo que você não faz hoje.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Digo que não trabalhamos com isso"
+      },
+      {
+        "nivel": 2,
+        "texto": "Encaminho para alguém que faça"
+      },
+      {
+        "nivel": 3,
+        "texto": "Pergunto que resultado ele espera com aquilo"
+      },
+      {
+        "nivel": 4,
+        "texto": "Viro o pedido numa oferta que serve a outros clientes"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-formular_valor-1"
+  },
+  {
+    "competencia": "formular_valor",
+    "situacao": "Um cliente novo pergunta por que deveria escolher a sua empresa.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Falo do tempo de mercado e da estrutura"
+      },
+      {
+        "nivel": 2,
+        "texto": "Listo tudo o que a empresa entrega"
+      },
+      {
+        "nivel": 3,
+        "texto": "Digo o problema específico que a gente resolve melhor"
+      },
+      {
+        "nivel": 4,
+        "texto": "Mostro um caso parecido com o dele e o resultado"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-formular_valor-2"
+  },
+  {
+    "competencia": "comunicar_posicionar",
+    "situacao": "Sua equipe descreve a empresa de um jeito diferente do seu.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Cada um fala do seu jeito, tudo bem"
+      },
+      {
+        "nivel": 2,
+        "texto": "Corrijo quando ouço algo diferente"
+      },
+      {
+        "nivel": 3,
+        "texto": "Escrevo a frase que todos devem usar"
+      },
+      {
+        "nivel": 4,
+        "texto": "Monto a frase com eles a partir do que os clientes repetem"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-comunicar_posicionar-1"
+  },
+  {
+    "competencia": "comunicar_posicionar",
+    "situacao": "Você vai falar para um público que não conhece o seu setor.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Uso a mesma apresentação de sempre"
+      },
+      {
+        "nivel": 2,
+        "texto": "Tiro os termos técnicos da apresentação"
+      },
+      {
+        "nivel": 3,
+        "texto": "Começo pelo problema que aquele público reconhece"
+      },
+      {
+        "nivel": 4,
+        "texto": "Reescrevo o exemplo central com a realidade deles"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-comunicar_posicionar-2"
+  },
+  {
+    "competencia": "vender_negociar",
+    "situacao": "Uma proposta enviada há duas semanas não teve resposta.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Espero, se tiver interesse ele procura"
+      },
+      {
+        "nivel": 2,
+        "texto": "Reenvio o documento perguntando se chegou"
+      },
+      {
+        "nivel": 3,
+        "texto": "Ligo para saber o que falta para ele decidir"
+      },
+      {
+        "nivel": 4,
+        "texto": "Ofereço um primeiro passo menor para destravar a decisão"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-vender_negociar-2"
+  },
+  {
+    "competencia": "iniciativa_experimentacao",
+    "situacao": "Você tem uma ideia que pode melhorar a operação.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Guardo para quando sobrar tempo"
+      },
+      {
+        "nivel": 2,
+        "texto": "Aplico de uma vez em toda a operação"
+      },
+      {
+        "nivel": 3,
+        "texto": "Começo por uma parte pequena antes de estender"
+      },
+      {
+        "nivel": 4,
+        "texto": "Defino antes o que vou olhar para saber se funcionou"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-iniciativa_experimentacao-1"
+  },
+  {
+    "competencia": "iniciativa_experimentacao",
+    "situacao": "Um concorrente lançou algo que você vinha pensando em fazer.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Deixo para lá, ele saiu na frente"
+      },
+      {
+        "nivel": 2,
+        "texto": "Faço o mesmo, o quanto antes"
+      },
+      {
+        "nivel": 3,
+        "texto": "Vejo o que ele deixou de fora e começo por ali"
+      },
+      {
+        "nivel": 4,
+        "texto": "Coloco no ar uma versão simples para ouvir cliente rápido"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-iniciativa_experimentacao-2"
+  },
+  {
+    "competencia": "gestao_recursos",
+    "situacao": "Um custo fixo da empresa subiu bastante este mês.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Descubro quando o contador fecha o mês"
+      },
+      {
+        "nivel": 2,
+        "texto": "Corto o que der para cortar rápido"
+      },
+      {
+        "nivel": 3,
+        "texto": "Vejo quanto isso pesa na margem antes de mexer"
+      },
+      {
+        "nivel": 4,
+        "texto": "Reviso o preço ou o processo que criou esse custo"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-gestao_recursos-2"
+  },
+  {
+    "competencia": "liderar_mobilizar",
+    "situacao": "Alguém do time entrega abaixo do combinado há semanas.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Assumo a parte dela para não atrasar"
+      },
+      {
+        "nivel": 2,
+        "texto": "Chamo a atenção quando o atraso aparece"
+      },
+      {
+        "nivel": 3,
+        "texto": "Marco uma conversa e digo o que espero, com prazo"
+      },
+      {
+        "nivel": 4,
+        "texto": "Refaço o combinado e acompanho num ritmo fixo"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-liderar_mobilizar-1"
+  },
+  {
+    "competencia": "liderar_mobilizar",
+    "situacao": "Você precisa passar uma entrega importante para outra pessoa.",
+    "niveis": [
+      {
+        "nivel": 1,
+        "texto": "Faço eu mesmo, sai mais rápido"
+      },
+      {
+        "nivel": 2,
+        "texto": "Passo e vou conferindo cada etapa"
+      },
+      {
+        "nivel": 3,
+        "texto": "Explico o resultado esperado e combino pontos de checagem"
+      },
+      {
+        "nivel": 4,
+        "texto": "Deixo a pessoa decidir o caminho e respondo quando ela chama"
+      }
+    ],
+    "rascunho": true,
+    "versao": "ancorados-rascunho-v1",
+    "id": "ANC-liderar_mobilizar-2"
   }
 ];
 
