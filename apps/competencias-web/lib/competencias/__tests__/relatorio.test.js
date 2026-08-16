@@ -80,6 +80,48 @@ test('o relatório tem os 7 blocos, na ordem', () => {
   ]);
 });
 
+test('a escala desenhada tem 5 passos e bate com o rótulo', async () => {
+  const { ESCALA_CRESCENTE, NOME_NIVEL } = await import('../relatorio.js');
+  const { ROTULO_POSICAO } = await import('../score.js');
+  assert.equal(ESCALA_CRESCENTE.length, 5);
+  assert.equal(ESCALA_CRESCENTE[0], 'mais_fragil', 'a escala cresce da esquerda para a direita');
+  assert.equal(ESCALA_CRESCENTE[4], 'mais_forte');
+  assert.deepEqual([...ESCALA_CRESCENTE].sort(), Object.keys(ROTULO_POSICAO).sort());
+
+  const r = relatorioAleatorio();
+  for (const c of r.blocos[1].capacidades.flatMap((x) => x.competencias)) {
+    assert.ok(c.passo >= 1 && c.passo <= 5, `${c.chave}: passo ${c.passo} fora de 1–5`);
+    assert.equal(c.de, 5);
+    assert.equal(ROTULO_POSICAO[ESCALA_CRESCENTE[c.passo - 1]], c.posicao, `${c.chave}: passo e rótulo discordam`);
+  }
+});
+
+test('o nível é nomeado, não só numerado', async () => {
+  const { NOME_NIVEL } = await import('../relatorio.js');
+  for (const n of [1, 2, 3, 4]) assert.ok(NOME_NIVEL[n]?.length > 4, `nível ${n} sem nome`);
+
+  const consolidado = consolidar(respostasAleatorias());
+  const aprofundadas = consolidado.ranking.slice(-3).map((x) => x.chave);
+  const niveis = Object.fromEntries(aprofundadas.map((c) => [c, { nivel: 2, confianca: 'estimado' }]));
+  const r = gerarRelatorio({ consolidado, pilares: pilaresDe(50, 50, 50, 50), niveis, aprofundadas });
+  const todas = r.blocos[1].capacidades.flatMap((x) => x.competencias);
+  for (const c of todas) {
+    if (aprofundadas.includes(c.chave)) {
+      assert.equal(c.nivelNome, NOME_NIVEL[2]);
+      assert.equal(c.nivelEstimado, true);
+    } else {
+      assert.equal(c.nivelNome, null, `${c.chave} não pode ter nome de nível`);
+    }
+  }
+});
+
+test('a ordem das capacidades vem pronta para desenhar', () => {
+  const r = relatorioAleatorio();
+  const caps = r.blocos[0].capacidades;
+  assert.deepEqual(caps.map((c) => c.ordem), [1, 2, 3, 4]);
+  for (const c of caps) assert.equal(c.de, 4);
+});
+
 test('bloco 2 lista as 12 agrupadas nas 4 capacidades', () => {
   const r = relatorioAleatorio();
   const b2 = r.blocos[1];

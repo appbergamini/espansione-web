@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { CORES } from '@espansione/brand';
 import TelaDeAviso from '../../components/TelaDeAviso';
 
-// Relatório integrado. Fundo claro (é documento, não fluxo), impressão
-// direta pelo navegador — mesmo caminho do relatório do Mapa, já que
-// html2pdf foi revertido no repo por gerar páginas em branco.
+// =====================================================================
+// Relatório integrado.
+//
+// DIREÇÃO: a metodologia é FAIXA — posição dentro de um intervalo. Não é
+// nota, não é gauge, não é percentil. Isso vira a assinatura do documento:
+// uma marca de posição em 5 células que se repete a cada competência e dá
+// o ritmo da página. É a medida desenhada.
+//
+// COR: o calor não vem de bege (default genérico, e briga com a marca) —
+// vem do próprio vermelho Espansione em tinta baixa, e o peso vem de
+// campos navy cheios alternando com branco. Cor codifica POSIÇÃO, nunca
+// "bom/ruim": a escala vai de cheia a aberta, jamais verde→vermelho,
+// porque frágil aqui não é defeito.
+//
+// Tema único e claro, de propósito: é documento para ler e imprimir.
+// =====================================================================
 export default function Relatorio() {
   const router = useRouter();
   const { token } = router.query;
@@ -30,228 +42,314 @@ export default function Relatorio() {
       texto="O teste ligado a ele não existe mais." acao={{ href: '/teste', rotulo: 'Começar um teste novo' }} />;
   }
   if (pendente) {
-    return <TelaDeAviso
-      titulo="Ainda falta uma parte"
-      texto={pendente.motivo}
+    return <TelaDeAviso titulo="Ainda falta uma parte" texto={pendente.motivo}
       acao={pendente.pendente === 'comportamental'
         ? { href: `/teste/comportamental/${token}`, rotulo: 'Fazer o Mapeamento Comportamental' }
-        : { href: `/teste/${token}`, rotulo: 'Voltar ao teste' }}
-    />;
+        : { href: `/teste/${token}`, rotulo: 'Voltar ao teste' }} />;
   }
   if (erro) return <TelaDeAviso titulo="Não consegui montar" texto={erro} />;
-  if (!dados) return <main style={S.fundo}><div style={S.folha}><p style={S.sec}>Montando o seu relatório…</p></div></main>;
+
+  if (!dados) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <main className="rel"><div className="folha"><p className="sec">Montando o seu relatório…</p></div></main>
+      </>
+    );
+  }
 
   const [onde, competencias, porque, sustenta, trilha, passo, convite] = dados.blocos;
 
   return (
-    <main style={S.fundo}>
-      <style>{IMPRESSAO}</style>
-      <article style={S.folha}>
+    <>
+      <style>{CSS}</style>
+      <main className="rel">
+        <article className="folha">
 
-        <header style={S.capa}>
-          <p style={S.eyebrow}>Espansione</p>
-          <h1 style={S.h1}>Competências Empreendedoras</h1>
-          <p style={S.sec}>
-            O que este relatório traz não é um retrato de personalidade. É onde as suas
-            competências estão hoje, e o que no seu jeito de trabalhar ajuda ou atrapalha cada uma.
-          </p>
-        </header>
+          {/* ── capa: campo navy, a tese antes do dado ── */}
+          <header className="capa">
+            <p className="marca">Espansione</p>
+            <h1 className="titulo">Competências<br />Empreendedoras</h1>
+            <p className="tese">
+              Não é um retrato de personalidade. É onde as suas competências estão hoje —
+              e o que, no seu jeito de trabalhar, ajuda ou atrapalha cada uma delas.
+            </p>
+          </header>
 
-        {/* 1 · Onde você está */}
-        <Bloco n="1" titulo={onde.titulo}>
-          <ul style={S.lista}>
-            {onde.capacidades.map((c) => (
-              <li key={c.capacidade} style={S.itemCapacidade}>
-                <strong style={S.nomeCapacidade}>{c.capacidade}</strong>
-                <span style={S.sec}>{c.posicao}</span>
-              </li>
-            ))}
-          </ul>
-        </Bloco>
+          {/* ── 1 ── */}
+          <Secao numero="1" titulo={onde.titulo}>
+            <div className="capacidades">
+              {onde.capacidades.map((c) => (
+                <div key={c.capacidade} className="capacidade">
+                  <span className="cap-nome">{c.capacidade}</span>
+                  <span className="cap-pos">{c.posicao}</span>
+                </div>
+              ))}
+            </div>
+          </Secao>
 
-        {/* 2 · Suas competências */}
-        <Bloco n="2" titulo={competencias.titulo}>
-          {competencias.capacidades.map((cap) => (
-            <div key={cap.capacidade} style={S.grupo}>
-              <h3 style={S.h3}>{cap.capacidade}</h3>
-              <div style={S.tabela}>
+          {/* ── 2 ── */}
+          <Secao numero="2" titulo={competencias.titulo}>
+            <div className="escala-legenda" aria-hidden="true">
+              <span>mais frágil</span><span>mais forte</span>
+            </div>
+            {competencias.capacidades.map((cap) => (
+              <div key={cap.capacidade} className="grupo">
+                <h3 className="grupo-nome">{cap.capacidade}</h3>
                 {cap.competencias.map((c) => (
-                  <div key={c.chave} style={S.linha}>
-                    <span style={S.nomeComp}>{c.nome}</span>
-                    <span style={S.posicao}>{c.posicao}</span>
-                    {c.nivel && (
-                      <span style={S.nivel}>
-                        nível {c.nivel}{c.nivelEstimado ? ' (estimado)' : ''}
-                      </span>
-                    )}
+                  <div key={c.chave} className="comp">
+                    <div className="comp-cabeca">
+                      <span className="comp-nome">{c.nome}</span>
+                      <Faixa passo={c.passo} de={c.de} rotulo={c.posicao} />
+                    </div>
+                    <div className="comp-pe">
+                      <span className="comp-rotulo">{c.posicao}</span>
+                      {c.nivelNome && (
+                        <span className="comp-nivel">
+                          {c.nivelNome}{c.nivelEstimado ? ' · estimado' : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          ))}
-          {!dados.nivelCalibrado && (
-            <p style={S.nota}>
-              O nível aparece só nas competências aprofundadas. Ele indica a posição
-              relativa dentro do seu perfil — não é uma nota, e não compara você com outras pessoas.
-            </p>
-          )}
-        </Bloco>
-
-        {/* 3 · Por que você está aí */}
-        <Bloco n="3" titulo={porque.titulo}>
-          {porque.padraoRecorrente && (
-            <p style={S.destaque}>{porque.padraoRecorrente.texto}</p>
-          )}
-          {porque.leituras.map((l) => (
-            <div key={l.chave} style={S.leitura}>
-              <h3 style={S.h3}>{l.nome}</h3>
-              <p style={S.corpo}>{l.texto}</p>
-              {l.caracteristicas.length > 0 && (
-                <p style={S.etiquetas}>
-                  {l.caracteristicas.map((c) => c.caracteristica).join(' · ')}
-                </p>
-              )}
-            </div>
-          ))}
-        </Bloco>
-
-        {/* 4 · O que sustenta e o que custa */}
-        <Bloco n="4" titulo={sustenta.titulo}>
-          {sustenta.texto && <p style={S.corpo}>{sustenta.texto}</p>}
-          {sustenta.leituras.map((l) => (
-            <p key={l.pilar} style={S.corpo}>{l.texto}</p>
-          ))}
-        </Bloco>
-
-        {/* 5 · Sua trilha */}
-        <Bloco n="5" titulo={trilha.titulo}>
-          <p style={S.corpo}>{trilha.introducao}</p>
-          <ol style={S.trilha}>
-            {trilha.itens.map((i) => (
-              <li key={i.chave} style={S.itemTrilha}>
-                <strong style={S.nomeComp}>{i.nome}</strong>
-                <span style={S.sec}>{i.motivo}</span>
-                {i.caracteristica && <span style={S.etiquetas}>{i.caracteristica}</span>}
-              </li>
             ))}
-          </ol>
-        </Bloco>
+            <p className="nota">
+              A leitura é da sua ordem interna: onde cada competência está em relação às
+              outras onze, dentro de você. Não é nota, e não compara você com ninguém.
+              {!dados.nivelCalibrado && ' O nível aparece só nas competências aprofundadas.'}
+            </p>
+          </Secao>
 
-        {/* 6 · Um passo para os próximos 7 dias */}
-        {passo.texto && (
-          <Bloco n="6" titulo={passo.titulo}>
-            <p style={S.passo}>{passo.texto}</p>
-          </Bloco>
-        )}
+          {/* ── 3 ── */}
+          <Secao numero="3" titulo={porque.titulo}>
+            {porque.padraoRecorrente && (
+              <p className="padrao">{porque.padraoRecorrente.texto}</p>
+            )}
+            {porque.leituras.map((l) => (
+              <div key={l.chave} className="leitura">
+                <h3 className="leitura-nome">{l.nome}</h3>
+                {l.caracteristicas.length > 0 && (
+                  <p className="etiquetas">
+                    {l.caracteristicas.map((c) => c.caracteristica).join(' · ')}
+                  </p>
+                )}
+                <p className="corpo">{l.texto}</p>
+              </div>
+            ))}
+          </Secao>
 
-        {/* 7 · Convite */}
-        <section style={S.convite}>
-          <h2 style={S.h2Convite}>{convite.titulo}</h2>
-          <p style={S.corpo}>{convite.texto}</p>
-          <a href="https://wa.me/5511985775893" style={S.btn}>Marcar a sessão de leitura</a>
-        </section>
+          {/* ── 4 ── */}
+          <Secao numero="4" titulo={sustenta.titulo} campo="blush">
+            {sustenta.texto && <p className="corpo">{sustenta.texto}</p>}
+            {sustenta.leituras.map((l) => <p key={l.pilar} className="corpo">{l.texto}</p>)}
+          </Secao>
 
-        <div style={S.acoes} className="sem-impressao">
-          <button type="button" style={S.btnSecundario} onClick={() => window.print()}>
-            Salvar em PDF
-          </button>
-        </div>
-      </article>
-    </main>
+          {/* ── 5 · o pagamento do relatório: campo navy ── */}
+          <section className="trilha">
+            <h2 className="trilha-titulo">{trilha.titulo}</h2>
+            <p className="trilha-intro">{trilha.introducao}</p>
+            <ol className="trilha-lista">
+              {trilha.itens.map((i) => (
+                <li key={i.chave} className="trilha-item">
+                  <span className="trilha-ordem">{i.ordem}</span>
+                  <div>
+                    <span className="trilha-nome">{i.nome}</span>
+                    <span className="trilha-motivo">{i.motivo}</span>
+                    {i.caracteristica && <span className="trilha-etiqueta">{i.caracteristica}</span>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {/* ── 6 ── */}
+          {passo.texto && (
+            <section className="passo">
+              <p className="passo-rotulo">{passo.titulo}</p>
+              <p className="passo-texto">{passo.texto}</p>
+            </section>
+          )}
+
+          {/* ── 7 ── */}
+          <section className="convite">
+            <h2 className="convite-titulo">{convite.titulo}</h2>
+            <p className="convite-texto">{convite.texto}</p>
+            <a className="botao" href="https://wa.me/5511985775893">Marcar a sessão de leitura</a>
+          </section>
+
+          <div className="acoes sem-impressao">
+            <button type="button" className="botao-vazado" onClick={() => window.print()}>
+              Salvar em PDF
+            </button>
+          </div>
+        </article>
+      </main>
+    </>
   );
 }
 
-function Bloco({ n, titulo, children }) {
+function Secao({ numero, titulo, campo, children }) {
   return (
-    <section style={S.bloco}>
-      <div style={S.cabecalhoBloco}>
-        <span style={S.numeroBloco}>{n}</span>
-        <h2 style={S.h2}>{titulo}</h2>
+    <section className={`secao${campo ? ` secao--${campo}` : ''}`}>
+      <div className="secao-cabeca">
+        <span className="secao-numero">{numero}</span>
+        <h2 className="secao-titulo">{titulo}</h2>
       </div>
       {children}
     </section>
   );
 }
 
-const IMPRESSAO = `
-  @media print {
-    body { background: #fff !important; }
-    .sem-impressao { display: none !important; }
-    section { break-inside: avoid; }
-    h2, h3 { break-after: avoid; }
-    @page { margin: 18mm 16mm; }
-  }
-`;
+/**
+ * A assinatura do documento: posição em 5 células.
+ * Mesma informação do rótulo, em forma de posição. Não é barra de
+ * progresso nem nota — é onde a competência está na escala.
+ */
+function Faixa({ passo, de, rotulo }) {
+  return (
+    <span className="faixa" role="img" aria-label={`Posição: ${rotulo}`}>
+      {Array.from({ length: de }, (_, i) => (
+        <span key={i} className={`celula${i < passo ? ' celula--cheia' : ''}`} />
+      ))}
+    </span>
+  );
+}
 
-const S = {
-  fundo: { minHeight: '100vh', background: CORES.card, padding: '2.5rem 1rem 4rem' },
-  folha: {
-    maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2.5rem',
-    color: CORES.text,
-  },
-  capa: { display: 'flex', flexDirection: 'column', gap: '.7rem', paddingBottom: '.5rem' },
-  eyebrow: {
-    margin: 0, fontSize: '.7rem', fontWeight: 700, letterSpacing: '.18em',
-    textTransform: 'uppercase', color: CORES.red,
-  },
-  h1: { margin: 0, fontSize: 'clamp(1.7rem, 4vw, 2.3rem)', lineHeight: 1.12, letterSpacing: '-.025em', fontWeight: 700 },
-  bloco: { display: 'flex', flexDirection: 'column', gap: '.9rem' },
-  cabecalhoBloco: {
-    display: 'flex', alignItems: 'baseline', gap: '.7rem',
-    borderTop: `2px solid ${CORES.text}`, paddingTop: '.9rem',
-  },
-  numeroBloco: { fontSize: '.85rem', fontWeight: 700, color: CORES.red, fontVariantNumeric: 'tabular-nums' },
-  h2: { margin: 0, fontSize: '1.3rem', fontWeight: 700, letterSpacing: '-.015em', lineHeight: 1.2 },
-  h3: { margin: 0, fontSize: '1rem', fontWeight: 700 },
-  corpo: { margin: 0, fontSize: '1rem', lineHeight: 1.62, maxWidth: '62ch' },
-  sec: { margin: 0, color: CORES.textSec, fontSize: '.95rem', lineHeight: 1.55 },
-  nota: {
-    margin: 0, fontSize: '.85rem', color: CORES.textSec, lineHeight: 1.5,
-    borderLeft: `2px solid ${CORES.border}`, paddingLeft: '.8rem',
-  },
-  lista: { margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '.6rem' },
-  itemCapacidade: {
-    display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '.2rem .7rem',
-    borderBottom: `1px solid ${CORES.border}`, paddingBottom: '.6rem',
-  },
-  nomeCapacidade: { fontSize: '1.05rem', fontWeight: 700 },
-  grupo: { display: 'flex', flexDirection: 'column', gap: '.5rem' },
-  tabela: { display: 'flex', flexDirection: 'column' },
-  linha: {
-    display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '.2rem .6rem',
-    padding: '.5rem 0', borderBottom: `1px solid ${CORES.border}`,
-  },
-  nomeComp: { fontSize: '1rem', fontWeight: 600, flex: '1 1 16rem' },
-  posicao: { fontSize: '.9rem', color: CORES.textSec, fontWeight: 600 },
-  nivel: { fontSize: '.82rem', color: CORES.red, fontWeight: 700, whiteSpace: 'nowrap' },
-  leitura: { display: 'flex', flexDirection: 'column', gap: '.4rem', paddingTop: '.4rem' },
-  etiquetas: {
-    margin: 0, fontSize: '.8rem', fontWeight: 700, letterSpacing: '.05em',
-    textTransform: 'uppercase', color: CORES.textSec,
-  },
-  destaque: {
-    margin: 0, fontSize: '1.02rem', lineHeight: 1.55, fontWeight: 600,
-    background: CORES.track, borderRadius: '12px', padding: '1rem 1.1rem',
-  },
-  trilha: { margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '.8rem' },
-  itemTrilha: { display: 'flex', flexDirection: 'column', gap: '.15rem' },
-  passo: {
-    margin: 0, fontSize: '1.08rem', lineHeight: 1.55, fontWeight: 600,
-    borderLeft: `3px solid ${CORES.red}`, paddingLeft: '1rem',
-  },
-  convite: {
-    display: 'flex', flexDirection: 'column', gap: '.8rem', alignItems: 'flex-start',
-    background: CORES.track, borderRadius: '16px', padding: '1.6rem',
-  },
-  h2Convite: { margin: 0, fontSize: '1.2rem', fontWeight: 700 },
-  btn: {
-    background: CORES.red, color: '#fff', fontWeight: 600, fontSize: '1rem',
-    padding: '.8rem 1.5rem', borderRadius: '12px', textDecoration: 'none',
-  },
-  acoes: { display: 'flex', justifyContent: 'center' },
-  btnSecundario: {
-    background: 'none', border: `1.5px solid ${CORES.border}`, color: CORES.textSec,
-    fontWeight: 600, fontSize: '.92rem', padding: '.7rem 1.4rem', borderRadius: '12px',
-    cursor: 'pointer', font: 'inherit',
-  },
-};
+const CSS = `
+:root {
+  --navy: #001A3B;
+  --navy-2: #013063;
+  --red: #C72638;
+  --blush: #FBEEF0;
+  --mist: #E4EAF2;
+  --slate: #5B6B7F;
+  --papel: #FFFFFF;
+  --display: 'Poppins', system-ui, sans-serif;
+  --corpo: 'Manrope', 'Poppins', system-ui, sans-serif;
+}
+
+.rel { min-height: 100vh; background: var(--papel); color: var(--navy); padding: 0 1rem 5rem;
+       font-family: var(--corpo); -webkit-font-smoothing: antialiased; }
+.folha { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+
+.rel section, .rel header { animation: sobe .5s ease both; }
+@keyframes sobe { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rel section, .rel header { animation: none; } }
+
+/* ── capa ─────────────────────────────────────────────── */
+.capa {
+  margin: 0 -1rem; padding: 4rem 2rem 3.5rem;
+  background: radial-gradient(120% 140% at 50% -20%, var(--navy-2), var(--navy) 62%);
+  color: #fff; display: flex; flex-direction: column; gap: 1.1rem;
+  border-bottom: 5px solid var(--red);
+}
+.marca { margin: 0; font-family: var(--display); font-size: .68rem; font-weight: 700;
+         letter-spacing: .22em; text-transform: uppercase; color: var(--red); }
+.capa .marca { color: #FF8A97; }
+.titulo { margin: 0; font-family: var(--display); font-weight: 700;
+          font-size: clamp(2.1rem, 6.5vw, 3.4rem); line-height: 1.02; letter-spacing: -.03em; }
+.tese { margin: .4rem 0 0; max-width: 46ch; font-size: 1.02rem; line-height: 1.6; color: #C3D2E6; }
+
+/* ── seções ───────────────────────────────────────────── */
+.secao { display: flex; flex-direction: column; gap: 1.1rem; }
+.secao--blush { background: var(--blush); border-radius: 18px; padding: 1.8rem; }
+.secao-cabeca { display: flex; align-items: baseline; gap: .8rem;
+                border-top: 2px solid var(--navy); padding-top: 1rem; }
+.secao--blush .secao-cabeca { border-top-color: var(--red); }
+.secao-numero { font-family: var(--display); font-weight: 700; font-size: .8rem;
+                color: var(--red); font-variant-numeric: tabular-nums; }
+.secao-titulo { margin: 0; font-family: var(--display); font-weight: 700;
+                font-size: clamp(1.25rem, 3vw, 1.6rem); letter-spacing: -.02em; line-height: 1.18; }
+.corpo { margin: 0; font-size: 1rem; line-height: 1.65; max-width: 64ch; }
+.sec { margin: 0; color: var(--slate); font-size: .95rem; }
+.nota { margin: .6rem 0 0; font-size: .85rem; line-height: 1.55; color: var(--slate);
+        border-left: 2px solid var(--mist); padding-left: .9rem; max-width: 60ch; }
+
+/* ── 1 · capacidades ──────────────────────────────────── */
+.capacidades { display: flex; flex-direction: column; }
+.capacidade { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+              gap: .2rem 1rem; padding: .85rem 0; border-bottom: 1px solid var(--mist); }
+.capacidade:first-child { border-top: 1px solid var(--mist); }
+.cap-nome { font-family: var(--display); font-weight: 700; font-size: 1.12rem; letter-spacing: -.01em; }
+.cap-pos { font-size: .93rem; color: var(--slate); }
+
+/* ── 2 · competências + a faixa ───────────────────────── */
+.escala-legenda { display: flex; justify-content: space-between; font-size: .66rem; font-weight: 700;
+                  letter-spacing: .1em; text-transform: uppercase; color: var(--slate);
+                  max-width: 190px; margin-left: auto; }
+.grupo { display: flex; flex-direction: column; margin-top: 1rem; }
+.grupo-nome { margin: 0 0 .3rem; font-family: var(--display); font-size: .72rem; font-weight: 700;
+              letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+.comp { padding: .7rem 0; border-bottom: 1px solid var(--mist); }
+.comp-cabeca { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.comp-nome { font-size: 1.02rem; font-weight: 600; line-height: 1.35; }
+.comp-pe { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; margin-top: .25rem; }
+.comp-rotulo { font-size: .82rem; color: var(--slate); font-weight: 600; }
+.comp-nivel { font-family: var(--display); font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+              text-transform: uppercase; color: var(--red); }
+
+.faixa { display: inline-flex; gap: 3px; flex: none; }
+.celula { width: 34px; height: 9px; border-radius: 2px; border: 1px solid var(--mist); background: transparent; }
+.celula--cheia { background: var(--navy); border-color: var(--navy); }
+@media (max-width: 560px) { .celula { width: 22px; } }
+
+/* ── 3 · leituras ─────────────────────────────────────── */
+.padrao { margin: 0; font-size: 1.03rem; line-height: 1.55; font-weight: 600;
+          background: var(--blush); border-radius: 14px; padding: 1.1rem 1.2rem; max-width: 62ch; }
+.leitura { display: flex; flex-direction: column; gap: .35rem; padding-top: .8rem; }
+.leitura-nome { margin: 0; font-family: var(--display); font-size: 1.05rem; font-weight: 700; }
+.etiquetas { margin: 0; font-family: var(--display); font-size: .68rem; font-weight: 700;
+             letter-spacing: .13em; text-transform: uppercase; color: var(--slate); }
+
+/* ── 5 · trilha, o campo navy do meio ─────────────────── */
+.trilha { margin: 0 -1rem; padding: 2.5rem 2rem; background: var(--navy); color: #fff;
+          display: flex; flex-direction: column; gap: 1rem; border-radius: 0; }
+.trilha-titulo { margin: 0; font-family: var(--display); font-weight: 700;
+                 font-size: clamp(1.35rem, 3.4vw, 1.8rem); letter-spacing: -.02em; line-height: 1.15; }
+.trilha-intro { margin: 0; color: #C3D2E6; font-size: 1rem; line-height: 1.6; max-width: 58ch; }
+.trilha-lista { margin: .6rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1.1rem; }
+.trilha-item { display: flex; gap: 1rem; align-items: baseline; }
+.trilha-ordem { font-family: var(--display); font-weight: 700; font-size: 1.5rem; color: var(--red);
+                line-height: 1; flex: none; width: 1.4rem; font-variant-numeric: tabular-nums; }
+.trilha-nome { display: block; font-family: var(--display); font-weight: 700; font-size: 1.08rem; }
+.trilha-motivo { display: block; color: #C3D2E6; font-size: .95rem; line-height: 1.5; margin-top: .15rem; }
+.trilha-etiqueta { display: block; font-family: var(--display); font-size: .68rem; font-weight: 700;
+                   letter-spacing: .13em; text-transform: uppercase; color: #8FA6C4; margin-top: .3rem; }
+
+/* ── 6 · o passo ──────────────────────────────────────── */
+.passo { border-left: 4px solid var(--red); padding: .3rem 0 .3rem 1.3rem;
+         display: flex; flex-direction: column; gap: .4rem; }
+.passo-rotulo { margin: 0; font-family: var(--display); font-size: .68rem; font-weight: 700;
+                letter-spacing: .16em; text-transform: uppercase; color: var(--red); }
+.passo-texto { margin: 0; font-size: 1.18rem; line-height: 1.5; font-weight: 600; max-width: 54ch; }
+
+/* ── 7 · convite ──────────────────────────────────────── */
+.convite { background: var(--navy); color: #fff; border-radius: 18px; padding: 2rem;
+           display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; }
+.convite-titulo { margin: 0; font-family: var(--display); font-size: 1.3rem; font-weight: 700; }
+.convite-texto { margin: 0; color: #C3D2E6; font-size: 1rem; line-height: 1.6; max-width: 52ch; }
+.botao { background: var(--red); color: #fff; font-family: var(--display); font-weight: 600;
+         font-size: 1rem; padding: .85rem 1.6rem; border-radius: 12px; text-decoration: none;
+         transition: background .18s, transform .18s; }
+.botao:hover { background: #E13345; transform: translateY(-1px); }
+.acoes { display: flex; justify-content: center; }
+.botao-vazado { background: none; border: 1.5px solid var(--mist); color: var(--slate);
+                font-family: var(--corpo); font-weight: 600; font-size: .92rem;
+                padding: .7rem 1.5rem; border-radius: 12px; cursor: pointer; }
+.botao-vazado:hover { border-color: var(--slate); color: var(--navy); }
+.botao:focus-visible, .botao-vazado:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+
+/* ── impressão ────────────────────────────────────────── */
+@media print {
+  .rel { padding: 0; }
+  .folha { max-width: none; gap: 2rem; }
+  .sem-impressao { display: none !important; }
+  .capa, .trilha, .convite { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .capa, .trilha { margin: 0; }
+  .secao, .leitura, .comp, .trilha-item, .passo { break-inside: avoid; }
+  .secao-titulo, .grupo-nome, .leitura-nome { break-after: avoid; }
+  .celula { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 14mm; }
+}
+`;

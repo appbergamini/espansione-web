@@ -21,6 +21,24 @@ const FRAGEIS = new Set(['fragil', 'mais_fragil', 'intermediaria']);
 const MAX_TRILHA = 3;
 
 /**
+ * Os 4 níveis, nomeados pelo que cada um DESCREVE — não por número solto.
+ * Vêm direto das regras de escrita dos itens ancorados (SPEC §5.5):
+ * 1 evita ou terceiriza · 2 age por hábito · 3 age com critério explícito ·
+ * 4 age com critério e reconfigura a situação.
+ *
+ * "nível 3" não diz nada a quem lê; "Age com critério" diz.
+ */
+export const NOME_NIVEL = {
+  1: 'Evita ou passa adiante',
+  2: 'Age pelo hábito',
+  3: 'Age com critério',
+  4: 'Age e reconfigura',
+};
+
+/** Ordem da escala, do mais frágil ao mais forte — é assim que ela é desenhada. */
+export const ESCALA_CRESCENTE = ['mais_fragil', 'fragil', 'intermediaria', 'forte', 'mais_forte'];
+
+/**
  * @param {Object} args
  * @param {Object} args.consolidado — saída de score.consolidar()
  * @param {Object} args.pilares — { determinacao: {natural, emContexto}, ... }
@@ -66,6 +84,9 @@ function ondeVoceEsta(consolidado) {
       posicao: i === 0 ? 'a mais forte do seu perfil'
         : i === ordenadas.length - 1 ? 'a que mais exige intenção'
         : 'no meio do seu perfil',
+      // Posição relativa entre as 4, para desenhar. Sem número exposto.
+      ordem: i + 1,
+      de: ordenadas.length,
     })),
   };
 }
@@ -84,8 +105,13 @@ function suasCompetencias(consolidado, niveis, aprofundadas) {
           chave: c.chave,
           nome: c.nome,
           posicao: ROTULO_POSICAO[r.posicao],
+          // Índice de 1 a 5 na escala desenhada. É a MESMA informação do
+          // rótulo, em forma de posição — não é score nem percentil.
+          passo: ESCALA_CRESCENTE.indexOf(r.posicao) + 1,
+          de: ESCALA_CRESCENTE.length,
           // Nível só nas 3 aprofundadas, e sempre dizendo quando é estimado.
           nivel: n?.nivel ?? null,
+          nivelNome: n?.nivel ? NOME_NIVEL[n.nivel] : null,
           nivelEstimado: n?.confianca === 'estimado',
         };
       }),

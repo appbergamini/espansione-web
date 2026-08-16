@@ -25,10 +25,14 @@ export const CORES = {
   track: '#E9EEF5',
 };
 
+// Poppins para display, Manrope para leitura longa — o mesmo par que a LP
+// do funil já usa. Poppins em texto corrido de relatório cansa; Manrope
+// segura parágrafo sem sair da família visual da marca.
 export const FONTE = {
   display: "'Poppins', system-ui, sans-serif",
-  corpo: "'Poppins', system-ui, sans-serif",
-  googleFontsHref: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap',
+  corpo: "'Manrope', 'Poppins', system-ui, sans-serif",
+  googleFontsHref:
+    'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap',
 };
 
 // Fundo padrão das telas do funil: azul com o mesmo gradiente da /mapa.
