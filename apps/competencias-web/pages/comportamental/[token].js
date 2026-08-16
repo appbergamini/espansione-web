@@ -160,9 +160,14 @@ function Moldura({ children, progresso }) {
         {progresso && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.45rem' }}>
             <div style={S.trilho}><div style={{ ...S.barra, width: `${progresso.percentual}%` }} /></div>
-            <span style={S.legenda}>
-              {progresso.momento === 'natural' ? 'Como você é' : progresso.momento === 'contexto' ? 'O que o papel pede' : 'Concluído'}
-            </span>
+            <div style={S.linhaProgresso}>
+              <span style={S.legenda}>
+                {progresso.momento === 'natural' ? 'Como você é' : progresso.momento === 'contexto' ? 'O que o papel pede' : 'Concluído'}
+              </span>
+              {progresso.deTotal && (
+                <span style={S.contador}>{progresso.pergunta} de {progresso.deTotal}</span>
+              )}
+            </div>
           </div>
         )}
         {children}
@@ -179,7 +184,12 @@ const S = {
   },
   trilho: { height: '6px', background: CORES.track, borderRadius: '99px', overflow: 'hidden' },
   barra: { height: '100%', background: CORES.red, borderRadius: '99px', transition: 'width .3s' },
+  linhaProgresso: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '.75rem' },
   legenda: { fontSize: '.78rem', color: CORES.textSec, fontWeight: 600 },
+  contador: {
+    fontSize: '.78rem', color: CORES.textSec, fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', flex: 'none',
+  },
   instrucao: { margin: 0, fontSize: '1.05rem', lineHeight: 1.45, fontWeight: 600 },
   lista: { display: 'flex', flexDirection: 'column', gap: '.7rem' },
   palavra: {

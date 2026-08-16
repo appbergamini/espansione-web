@@ -119,21 +119,65 @@ test('escolha do respondente destrava o fluxo', () => {
 });
 
 // ── progresso ────────────────────────────────────────────────────────
-test('progresso é por etapa, e nunca por questão', () => {
-  const respostas = {};
-  const e = estadoDaSessao({ respostas, seed: SEED });
+// A SPEC §5.2 proibia contagem por questão. Decisão de 16/08 reverteu:
+// mostra a etapa (contexto) E a contagem (tamanho). Ver comentário em
+// sessao.js#progresso para o porquê.
+test('progresso traz etapa E contagem de perguntas', () => {
+  const e = estadoDaSessao({ respostas: {}, seed: SEED });
   assert.equal(e.progresso.etapa, 1);
-  assert.ok(e.progresso.de <= 3);
   assert.equal(e.progresso.rotulo, ROTULO_ETAPA[1]);
-  // a contagem fina existe para instrumentação, não para a barra
-  assert.ok(e.contagem.etapa1.includes('/'));
+  assert.equal(e.progresso.pergunta, 1, 'na primeira tela, é a pergunta 1');
+  assert.equal(e.progresso.deTotal, totalDeTelas({ etapa2Habilitada: true }));
+  assert.equal(e.progresso.percentual, 0, '0% realizado antes de responder qualquer coisa');
 });
 
-test('com a etapa 2 desabilitada o progresso mostra 2 etapas, não 3', () => {
-  const p = progresso(1, false);
+test('a contagem avança junto com as respostas, e o percentual acompanha', () => {
+  const respostas = {};
+  for (let i = 0; i < 5; i++) {
+    const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+    assert.equal(e.progresso.pergunta, i + 1, `na ${i + 1}ª tela deveria dizer ${i + 1}`);
+    assert.equal(e.progresso.respondidas, i);
+    assert.equal(e.progresso.percentual, Math.round((i / e.progresso.deTotal) * 100));
+    respostas[e.tela.id] = { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[1].competencia };
+  }
+});
+
+test('a contagem nunca passa do total, e fecha em 100% no fim', () => {
+  const respostas = responderTodasAsAncoras(responderTodosOsBlocos());
+  const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: false });
+  assert.equal(e.fase, 'concluido');
+  assert.equal(e.progresso.percentual, 100);
+  assert.equal(e.progresso.pergunta, e.progresso.deTotal);
+});
+
+test('a tela de desempate NÃO entra na contagem — ela não é uma das 22', () => {
+  const respostas = responderTodosOsBlocos();
+  const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+  if (e.fase !== 'escolha') return; // corte limpo neste fixture
+  assert.equal(e.progresso.respondidas, N_BLOCOS, 'só os blocos contam até aqui');
+  assert.equal(e.progresso.deTotal, totalDeTelas({ etapa2Habilitada: true }));
+});
+
+test('o denominador é o mesmo para todo mundo — não varia com o empate', () => {
+  const vistos = new Set();
+  for (let i = 0; i < 50; i++) {
+    const respostas = {};
+    for (const b of BLOCOS) {
+      const j = i % 4;
+      respostas[b.id] = { mais: b.opcoes[j].competencia, menos: b.opcoes[(j + 1) % 4].competencia };
+    }
+    vistos.add(estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true }).progresso.deTotal);
+  }
+  assert.equal(vistos.size, 1, `denominador variou entre respondentes: ${[...vistos].join(', ')}`);
+});
+
+test('com a etapa 2 desabilitada, são 2 etapas e o total cai para 16', () => {
+  const p = progresso(1, { etapa2Habilitada: false });
   assert.equal(p.de, 2);
-  assert.equal(progresso(3, false).etapa, 2);
-  assert.equal(progresso(3, true).de, 3);
+  assert.equal(p.deTotal, N_BLOCOS + ANCORAS.length);
+  assert.equal(progresso(3, { etapa2Habilitada: false }).etapa, 2);
+  assert.equal(progresso(3, { etapa2Habilitada: true }).de, 3);
+  assert.equal(progresso(1, { etapa2Habilitada: true }).deTotal, N_BLOCOS + 6 + ANCORAS.length);
 });
 
 test('totalDeTelas acompanha o desenho', () => {

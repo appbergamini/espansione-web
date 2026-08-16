@@ -252,10 +252,17 @@ function Moldura({ children, progresso }) {
             <div style={S.trilho}>
               <div style={{ ...S.barra, width: `${progresso.percentual}%` }} />
             </div>
-            {/* Progresso por etapa, nunca por questão. */}
-            <span style={S.legendaProgresso}>
-              Etapa {progresso.etapa} de {progresso.de} · {progresso.rotulo}
-            </span>
+            {/* A etapa dá o contexto; a contagem dá o tamanho. */}
+            <div style={S.linhaProgresso}>
+              <span style={S.legendaProgresso}>
+                Etapa {progresso.etapa} de {progresso.de} · {progresso.rotulo}
+              </span>
+              {progresso.deTotal && (
+                <span style={S.contador}>
+                  {progresso.pergunta} de {progresso.deTotal}
+                </span>
+              )}
+            </div>
           </div>
         )}
         {children}
@@ -273,7 +280,12 @@ const S = {
   progresso: { display: 'flex', flexDirection: 'column', gap: '.45rem' },
   trilho: { height: '6px', background: CORES.track, borderRadius: '99px', overflow: 'hidden' },
   barra: { height: '100%', background: CORES.red, borderRadius: '99px', transition: 'width .3s' },
+  linhaProgresso: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '.75rem' },
   legendaProgresso: { fontSize: '.78rem', color: CORES.textSec, fontWeight: 600, letterSpacing: '.02em' },
+  contador: {
+    fontSize: '.78rem', color: CORES.textSec, fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', flex: 'none',
+  },
   cabecalhoColunas: {
     display: 'grid', gridTemplateColumns: '44px 1fr 44px', alignItems: 'end', gap: '.6rem',
   },

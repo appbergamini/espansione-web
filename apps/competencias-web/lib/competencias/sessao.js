@@ -36,6 +36,20 @@ function respondido(respostas, id) {
 }
 
 /**
+ * Quantas das telas que CONTAM já foram respondidas.
+ * A tela de desempate fica de fora: ela não é uma das 22, e incluí-la faria
+ * o denominador variar de pessoa para pessoa.
+ */
+function contarRespondidas(respostas, selecionadas = []) {
+  const blocos = BLOCOS.filter((b) => respondido(respostas, b.id)).length;
+  const ancoras = ANCORAS.filter((a) => respondido(respostas, a.id)).length;
+  const ancorados = selecionadas
+    .flatMap((c) => ancoradosDe(c).slice(0, ANCORADOS_POR_COMPETENCIA))
+    .filter((a) => respondido(respostas, a.id)).length;
+  return blocos + ancorados + ancoras;
+}
+
+/**
  * Estado completo da sessão a partir das respostas cruas.
  *
  * @param {Object} args
@@ -59,7 +73,7 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
         ordemExibida: ordemDoBloco(blocoPendente.id, seed),
         avancoAutomatico: true,
       },
-      progresso: progresso(1, etapa2Habilitada),
+      progresso: progresso(1, { etapa2Habilitada, respondidas: blocosRespondidos }),
       contagem: { etapa1: `${blocosRespondidos}/${N_BLOCOS}` },
       selecao: null,
     };
@@ -85,7 +99,7 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
         escolherQuantas: parcial.faltam,
         avancoAutomatico: false,
       },
-      progresso: progresso(2, etapa2Habilitada),
+      progresso: progresso(2, { etapa2Habilitada, respondidas: contarRespondidas(respostas) }),
       selecao: parcial,
     };
   }
@@ -111,7 +125,7 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
           niveis: pendente.niveis,
           avancoAutomatico: true,
         },
-        progresso: progresso(2, etapa2Habilitada),
+        progresso: progresso(2, { etapa2Habilitada, respondidas: contarRespondidas(respostas, selecionadas) }),
         contagem: { etapa2: `${fila.filter((a) => respondido(respostas, a.id)).length}/${fila.length}` },
         selecao: { ...parcial, selecionadas },
       };
@@ -131,7 +145,7 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
         // exige Continuar — é contagem factual, não impressão
         avancoAutomatico: false,
       },
-      progresso: progresso(3, etapa2Habilitada),
+      progresso: progresso(3, { etapa2Habilitada, respondidas: contarRespondidas(respostas, selecionadas) }),
       contagem: { etapa3: `${ANCORAS.filter((a) => respondido(respostas, a.id)).length}/${ANCORAS.length}` },
       selecao: { ...parcial, selecionadas },
     };
@@ -151,7 +165,15 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
       acao: { rotulo: 'Fazer o Mapeamento Comportamental', destino: 'comportamental' },
       avancoAutomatico: false,
     },
-    progresso: { etapa: 3, de: 3, rotulo: 'Concluído', percentual: 100 },
+    progresso: {
+      etapa: etapa2Habilitada ? 3 : 2,
+      de: etapa2Habilitada ? 3 : 2,
+      rotulo: 'Concluído',
+      pergunta: totalDeTelas({ etapa2Habilitada }),
+      deTotal: totalDeTelas({ etapa2Habilitada }),
+      respondidas: totalDeTelas({ etapa2Habilitada }),
+      percentual: 100,
+    },
     selecao: { ...parcial, selecionadas },
     integridade,
     niveis: etapa2Habilitada ? niveisDasSelecionadas(respostas, selecionadas) : null,
@@ -179,15 +201,34 @@ export function niveisDasSelecionadas(respostas, selecionadas) {
   return out;
 }
 
-/** Progresso por ETAPA, nunca por questão. */
-export function progresso(etapa, etapa2Habilitada = ETAPA2_DISPONIVEL) {
-  const de = etapa2Habilitada ? 3 : 2;
+/**
+ * Progresso da sessão.
+ *
+ * DESVIO CONSCIENTE DA SPEC §5.2, decidido em 16/08: a SPEC pede progresso
+ * por ETAPA e proíbe contagem por questão, para a pessoa não olhar "1 de 22"
+ * e desanimar. Na tela real o efeito foi o contrário — na etapa 1 a barra
+ * fica vazia e "Etapa 1 de 3" não diz quanto falta, o que é a mesma
+ * ansiedade por outro caminho.
+ *
+ * Agora mostra as duas coisas: a etapa dá o CONTEXTO (o que está sendo
+ * perguntado agora) e a contagem dá o TAMANHO. A barra passa a refletir
+ * telas respondidas de verdade, não a etapa.
+ *
+ * A tela de desempate não entra na contagem: ela não é uma das 22.
+ */
+export function progresso(etapa, { etapa2Habilitada = ETAPA2_DISPONIVEL, respondidas = 0, total = null } = {}) {
+  const deEtapas = etapa2Habilitada ? 3 : 2;
   const normalizada = etapa2Habilitada ? etapa : etapa === 3 ? 2 : etapa;
+  const totalTelas = total ?? totalDeTelas({ etapa2Habilitada });
+  const atual = Math.min(respondidas + 1, totalTelas);
   return {
     etapa: normalizada,
-    de,
+    de: deEtapas,
     rotulo: ROTULO_ETAPA[etapa],
-    percentual: Math.round(((normalizada - 1) / de) * 100),
+    pergunta: atual,
+    deTotal: totalTelas,
+    respondidas,
+    percentual: Math.round((respondidas / totalTelas) * 100),
   };
 }
 

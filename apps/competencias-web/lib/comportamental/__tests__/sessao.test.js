@@ -105,6 +105,34 @@ test('a tela de ranking não expõe o fator por trás da palavra', () => {
   assert.ok(!JSON.stringify(e.tela).includes('"d"'), 'o fator não pode ir ao cliente');
 });
 
+test('progresso traz contagem de perguntas, e o denominador é fixo em 28', () => {
+  const respostas = {};
+  for (let i = 0; i < 6; i++) {
+    const e = estadoDaSessao({ respostas });
+    assert.equal(e.progresso.pergunta, i + 1);
+    assert.equal(e.progresso.deTotal, 28);
+    assert.equal(e.progresso.percentual, Math.round((i / 28) * 100));
+    respostas[e.tela.id] = respostaPara(e.tela.id);
+  }
+});
+
+test('a contagem NÃO reinicia na virada para o momento contexto', () => {
+  const respostas = {};
+  for (const t of telas().filter((x) => x.momento === 'natural')) respostas[t.id] = respostaPara(t.id);
+  const e = estadoDaSessao({ respostas });
+  // 14 do natural já respondidas: a próxima é a 15, não a 1
+  assert.equal(e.progresso.pergunta, 15);
+  assert.equal(e.progresso.percentual, 50);
+});
+
+test('no fim, 28 de 28 e 100%', () => {
+  const { respostas } = caminharTudo();
+  const e = estadoDaSessao({ respostas });
+  assert.equal(e.progresso.percentual, 100);
+  assert.equal(e.progresso.pergunta, 28);
+  assert.equal(e.progresso.deTotal, 28);
+});
+
 // ── validação ────────────────────────────────────────────────────────
 test('validarResposta exige permutação completa de 4 no ranking', () => {
   assert.equal(validarResposta('R1-01', { ordem: [0, 1, 2, 3] }).ok, true);

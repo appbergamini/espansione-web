@@ -62,7 +62,7 @@ export function estadoDaSessao({ respostas = {} } = {}) {
         titulo: 'Etapa 2 de 2 concluída',
         texto: 'Os dois instrumentos estão completos. O seu relatório está sendo gerado.',
       },
-      progresso: { momento: null, etapa: 2, de: 2, percentual: 100 },
+      progresso: { momento: null, etapa: 2, de: 2, pergunta: todas.length, deTotal: todas.length, percentual: 100 },
     };
   }
 
@@ -77,6 +77,11 @@ export function estadoDaSessao({ respostas = {} } = {}) {
       momento: pendente.momento,
       etapa: pendente.momento === 'natural' ? 1 : 2,
       de: 2,
+      // Mesma decisão da tela do teste: o momento dá o contexto, a contagem
+      // dá o tamanho. Aqui importa mais ainda, porque as mesmas palavras
+      // voltam na segunda passagem e sem contador parece que travou.
+      pergunta: feitas + 1,
+      deTotal: todas.length,
       percentual: Math.round((feitas / todas.length) * 100),
     },
   };
