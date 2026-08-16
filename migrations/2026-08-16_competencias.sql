@@ -95,6 +95,29 @@ create table if not exists comp_scores (
   primary key (assessment_id, competencia_key)
 );
 
+-- ── Mapeamento Comportamental (instrumento 2) ───────────────
+-- Respostas cruas + saída do instrumento. Fica na zona porque o caminho
+-- self-serve não tem projeto nem participante liberado — esse é o caminho
+-- B2B, que segue usando cis_participantes/cis_assessments sem alteração.
+create table if not exists comp_comportamental (
+  assessment_id uuid primary key references comp_assessments(id) on delete cascade,
+
+  status text not null default 'not_started'
+    check (status in ('not_started', 'in_progress', 'done')),
+
+  -- { r1: [[idx,...]x8], p1: ['a'|'b' x6], r2: [...], p2: [...] }
+  -- Índices dentro do bloco, não rótulos: reconstrói contra o catálogo do
+  -- pacote e sobrevive a mudança de texto do item.
+  respostas jsonb not null default '{}'::jsonb,
+
+  -- saída de calcularScores: disc, dA, lead, comp (as 16), profile
+  scores_json jsonb,
+
+  iniciado_em timestamptz,
+  concluido_em timestamptz,
+  created_at timestamptz not null default now()
+);
+
 -- ── os 4 pilares, congelados no fechamento ──────────────────
 -- Materializados em vez de lidos de cis_assessments na hora de gerar o
 -- relatório: congela o resultado e o mantém reproduzível.

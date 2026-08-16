@@ -145,7 +145,10 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
       // NADA DE RESULTADO PARCIAL. Só sinal de progresso: resultado parcial
       // vira o produto na cabeça do cliente e o segundo instrumento nunca é feito.
       titulo: 'Etapa 1 de 2 concluída',
-      texto: 'O Mapeamento Comportamental foi liberado na sua conta. O relatório é gerado quando os dois estiverem completos.',
+      texto: 'O Mapeamento Comportamental acabou de abrir. O relatório é gerado quando os dois estiverem completos — e a taxa de quem conclui os dois é o que decide se você recebe o seu.',
+      // O elo entre os dois instrumentos é o gargalo real do funil: quem não
+      // completa os dois não recebe relatório. A tela final leva direto.
+      acao: { rotulo: 'Fazer o Mapeamento Comportamental', destino: 'comportamental' },
       avancoAutomatico: false,
     },
     progresso: { etapa: 3, de: 3, rotulo: 'Concluído', percentual: 100 },

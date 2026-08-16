@@ -65,7 +65,7 @@ export default function Teste() {
       {tela.tipo === 'ancora_evidencia' && (
         <Ancora key={tela.id} tela={tela} enviando={enviando} onResponder={responder} />
       )}
-      {tela.tipo === 'fim' && <Fim tela={tela} />}
+      {tela.tipo === 'fim' && <Fim tela={tela} token={token} />}
     </Moldura>
   );
 }
@@ -224,15 +224,20 @@ function Ancora({ tela, enviando, onResponder }) {
 }
 
 // ── fim ──────────────────────────────────────────────────────────────
-function Fim({ tela }) {
+function Fim({ tela, token }) {
+  const router = useRouter();
   return (
     <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h2 style={S.titulo}>{tela.titulo}</h2>
       <p style={S.sec}>{tela.texto}</p>
-      {/* Link para fora da zona usa <a>, nunca <Link>. */}
-      <a href="/area" style={{ ...S.btn, textDecoration: 'none', display: 'inline-block' }}>
-        Ir para a minha conta
-      </a>
+      {tela.acao?.destino === 'comportamental' && (
+        // Dentro da zona: navegação normal do Next.
+        <button type="button" style={S.btn} onClick={() => router.push(`/comportamental/${token}`)}>
+          {tela.acao.rotulo}
+        </button>
+      )}
+      {/* Para fora da zona: <a>, nunca <Link>. */}
+      <a href="/area" style={{ ...S.sec, textDecoration: 'underline' }}>Depois, na minha conta</a>
     </div>
   );
 }
