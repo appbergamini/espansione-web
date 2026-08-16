@@ -23,6 +23,10 @@ O Vercel **pula o build quando o commit não toca `apps/competencias-web/`**. Is
 | `NEXT_PUBLIC_SUPABASE_URL` | conexão | ✅ | ⚠️ | ✅ |
 | `SUPABASE_SERVICE_ROLE_KEY` | **todo** acesso da zona passa por aqui | ✅ | ⚠️ | ✅ |
 | `AVALIADOR_TOKEN` | protege `/api/avaliador/*` | ✅ | ⚠️ | ✅ |
+| `ANTHROPIC_API_KEY` | escreve o texto do relatório | ✅ | ⚠️ | ✅ |
+| `NARRATIVA_ESFORCO` | opcional, sobrepõe o esforço (`high` por padrão) | — | — | — |
+
+> **Sem `ANTHROPIC_API_KEY` a zona não quebra:** `narrativaDisponivel()` devolve falso, nada tenta chamar a API e o relatório sai com o texto do motor. É o mesmo caminho de degradação de quando a API falha.
 
 ⚠️ **Preview está pendente.** O `vercel@51` tem um bug: pede `<gitbranch>` mesmo no comando que ele próprio sugere para "todas as branches de preview". Como o fluxo do repo é push direto em `master`, preview vale pouco. Para resolver: painel do Vercel → Settings → Environment Variables → marcar Preview nas três. Ou atualizar o CLI (`npm i -g vercel@latest`) e repetir.
 
@@ -167,8 +171,53 @@ Sessão individual: `/teste/api/avaliador/<token>`. É o **único** lugar onde n
 
 ---
 
+## O texto do relatório (`lib/narrativa/`)
+
+O relatório inteiro é escrito por `claude-opus-5` a partir de um brief de fatos. A divisão é estrita e é o que sustenta a metodologia:
+
+> **o motor DECIDE** — posição, nível, rota da trilha, pilar fora de faixa
+> **a IA ESCREVE** — só prosa, sobre fatos que já estavam decididos
+
+`aplicar.js` costura os dois: a estrutura vem sempre do motor, e o texto da IA só entra se for string não-vazia. Não existe campo no esquema onde a IA pudesse escrever um resultado — e há teste comparando a estrutura com e sem narrativa em 60 perfis aleatórios.
+
+O brief é montado a partir dos **blocos que o motor já produziu**, nunca dos scores: a IA enxerga estritamente menos do que o relatório determinístico já mostraria ao cliente.
+
+### Afinar a voz sem fazer um teste inteiro
+
+```bash
+node --env-file=../diagnostic-web/.env.local scripts/previa-narrativa.mjs
+node --env-file=... scripts/previa-narrativa.mjs --perfil=coerente
+node --env-file=... scripts/previa-narrativa.mjs --brief     # só os fatos, sem chamar a API
+```
+
+Perfis: `desequilibrado` (padrão), `coerente`, `tecnico`. **Sempre conferir o `coerente`** depois de mexer no prompt: é o perfil sem achado comportamental, e o modo de falha editorial mais caro é o modelo inventar um achado onde não há.
+
+### Depois de mexer no prompt, suba `NARRATIVA_VERSAO`
+
+Em `lib/narrativa/esquema.js`. Sem o bump, a correção de voz só alcança quem ainda não gerou — quem já tem relatório continua com o texto antigo, porque o cache é aproveitado por versão.
+
+### Números medidos (16/08)
+
+| | |
+|---|---|
+| Tempo de geração | ~80s com esforço `high`, ~68s com `medium` |
+| Custo | ~US$ 0,16 por relatório |
+| Cache | 1ª abertura ~61s, 2ª ~2s |
+
+`medium` economiza 13s e encurta o texto em ~15%. Não compensa: o pré-aquecimento já cobre a latência.
+
+### Onde o texto é gerado
+
+No fim do comportamental (`waitUntil`, pré-aquecimento) **e** na abertura do relatório, se ainda não houver cache. A trava é um `UPDATE` condicional no Postgres, não lógica em JavaScript — dois requests simultâneos não geram nem cobram em dobro.
+
+`after()` do Next **não serve aqui**: é só App Router, e esta zona é Pages Router. Por isso a dependência `@vercel/functions`.
+
+---
+
 ## Coisas que não podem regredir
 
+- **A IA nunca decide nada.** Se um campo de resultado passar a vir da narrativa, o teste de estrutura em `lib/narrativa/__tests__` quebra. Ele é o invariante do produto, não um teste de unidade — reconciliar, nunca afrouxar.
+- **O brief nunca recebe score.** `conferirBrief()` roda antes de cada chamada. Se alguém acrescentar um campo "só para dar contexto ao modelo", é isso que pega.
 - **Nenhum resultado antes dos dois instrumentos.** Nem no fim do teste, nem no fim do comportamental. Há teste varrendo as duas telas finais.
 - **A varredura de QA** (`varrerRelatorio`) roda antes de publicar qualquer relatório: termo proibido, chave de tradução crua no corpo, número exposto.
 - **Nunca baixar o δ** para "achar alguma coisa" num respondente. Ele é versionado justamente para que isso não passe sem rastro.
