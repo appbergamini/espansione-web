@@ -66,16 +66,34 @@ test('a troca de momento anexa a transição à primeira tela do contexto', () =
   assert.ok(e.tela.id.startsWith('R2-'));
 });
 
-test('a transição aparece uma vez só, e nunca no momento natural', () => {
-  assert.equal(estadoDaSessao({}).transicao, null, 'não há transição na primeira tela de todas');
+/**
+ * Antes este teste cobrava o contrário: "nunca no momento natural". A
+ * decisão foi invertida em 16/08, e o motivo fica aqui para não ser
+ * desfeita por engano.
+ *
+ * Contra: quem chega aqui acabou de clicar em "Fazer o Mapeamento
+ * Comportamental" na tela de conclusão do teste, e passa a ver duas telas
+ * de aviso seguidas.
+ *
+ * A favor, e é o que pesou: a instrução do momento natural é "pense em
+ * você fora da pressão do dia a dia", e é ela que separa os dois momentos.
+ * O enunciado do ranking natural diz só "a que mais se parece com você" —
+ * ambíguo sobre QUAL você, enquanto o do contexto já diz "o que o seu
+ * papel exige" e fica bem enquadrado sozinho. Essa assimetria fazia o
+ * primeiro bloco ser respondido em modo trabalho, os dois blocos saírem
+ * parecidos e o vão entre eles encolher — que é exatamente o que o
+ * relatório mede. Custo: um clique. Benefício: o instrumento medir o que
+ * diz medir.
+ */
+test('a transição some depois de a primeira tela do momento ser respondida', () => {
   const respostas = {};
   const naturais = telas().filter((x) => x.momento === 'natural');
   for (const t of naturais) respostas[t.id] = respostaPara(t.id);
-  assert.ok(estadoDaSessao({ respostas }).transicao);
-  // respondida a primeira do contexto, a transição some
+  assert.ok(estadoDaSessao({ respostas }).transicao, 'a virada para o contexto precisa avisar');
+
   const primeiraContexto = telas().find((t) => t.momento === 'contexto');
   respostas[primeiraContexto.id] = respostaPara(primeiraContexto.id);
-  assert.equal(estadoDaSessao({ respostas }).transicao, null);
+  assert.equal(estadoDaSessao({ respostas }).transicao, null, 'a transição não pode reaparecer no meio do bloco');
 });
 
 test('caminhada E2E: 28 telas, nenhuma repetida, terminando em concluído', () => {
@@ -195,3 +213,41 @@ test('resposta parcial monta raw parcial sem quebrar', () => {
   assert.equal(estaCompleto({ 'R1-01': { ordem: [0, 1, 2, 3] } }), false);
 });
 
+
+// ── instrução na virada de momento ───────────────────────────────────
+/**
+ * A instrução do momento `natural` — "pense em você fora da pressão do dia
+ * a dia" — é o que separa os dois momentos. Ela existia escrita em
+ * TEXTO_MOMENTO e nunca era mostrada: quem começava caía direto no
+ * ranking. Sem ela a pessoa responde o primeiro bloco já pensando no
+ * trabalho, os dois blocos ficam parecidos e o vão entre eles some — que
+ * é justamente o que o relatório mede. Não é aviso de UX, é validade.
+ */
+test('os DOIS momentos abrem com a sua instrução, uma vez cada', () => {
+  const respostas = {};
+  const vistas = [];
+  let guarda = 0;
+
+  while (guarda++ < 60) {
+    const e = estadoDaSessao({ respostas });
+    if (e.tela.tipo === 'fim') break;
+    if (e.transicao) vistas.push(e.transicao);
+    respostas[e.tela.id] = e.tela.tipo === 'ranking' ? { ordem: [0, 1, 2, 3] } : { escolha: 0 };
+  }
+
+  assert.deepEqual(vistas.map((t) => t.id), ['natural', 'contexto'], 'faltou a instrução de um dos momentos');
+  for (const t of vistas) {
+    assert.ok(t.titulo && t.texto && t.rotulo, `transição ${t.id} incompleta`);
+  }
+  // O que a instrução do primeiro momento precisa fazer.
+  assert.match(vistas[0].texto, /fora da pressão/i);
+  assert.match(vistas[1].texto, /papel|exige/i);
+});
+
+test('a transição vem ANEXADA à tela, não no lugar dela', () => {
+  // Sem isso, dispensar o aviso custaria uma ida ao servidor — e quem
+  // volta uma pergunta perderia a tela real por causa do aviso.
+  const e = estadoDaSessao({ respostas: {} });
+  assert.ok(e.transicao, 'a primeira tela deveria trazer a instrução');
+  assert.ok(e.tela?.id, 'a tela real precisa vir junto com a transição');
+});

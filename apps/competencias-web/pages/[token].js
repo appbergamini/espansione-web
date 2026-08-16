@@ -17,6 +17,7 @@ export default function Teste() {
   const [erro, setErro] = useState(null);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [transicoesVistas, setTransicoesVistas] = useState({});
 
   const carregar = useCallback(async (telaId = null) => {
     const url = telaId
@@ -69,7 +70,28 @@ export default function Teste() {
   if (erro && !estado) return <Moldura><p style={S.erro}>{erro}</p></Moldura>;
   if (!estado) return <Moldura><p style={S.sec}>Carregando…</p></Moldura>;
 
-  const { tela, progresso, navegacao } = estado;
+  const { tela, progresso, navegacao, transicao } = estado;
+
+  // Instrução na virada de etapa. Fica no lugar da pergunta, não antes
+  // dela: as três etapas têm formatos diferentes e emendavam em silêncio.
+  // Guardada por id — dispensar a da etapa 2 não pode engolir a da 3.
+  if (transicao && !transicoesVistas[transicao.id]) {
+    return (
+      <Moldura progresso={progresso}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '.9rem' }}>
+          {/* Sobrancelha nomeia o bloco que começa; o título diz o que
+              muda. Os dois juntos respondem "onde estou" e "o que agora". */}
+          <p style={S.sobrancelha}>{progresso?.rotulo}</p>
+          <h2 style={S.titulo}>{transicao.titulo}</h2>
+          <p style={S.sec}>{transicao.texto}</p>
+          <button type="button" style={{ ...S.btn, alignSelf: 'flex-start' }}
+                  onClick={() => setTransicoesVistas((v) => ({ ...v, [transicao.id]: true }))}>
+            {transicao.rotulo || 'Continuar'}
+          </button>
+        </div>
+      </Moldura>
+    );
+  }
 
   return (
     <Moldura progresso={progresso}>
@@ -276,6 +298,10 @@ const S = {
   },
   situacao: { margin: 0, fontSize: '1.1rem', lineHeight: 1.45, fontWeight: 600 },
   titulo: { margin: 0, fontSize: '1.3rem', lineHeight: 1.25, fontWeight: 700 },
+  sobrancelha: {
+    margin: 0, color: CORES.red, fontSize: '.7rem', fontWeight: 700,
+    letterSpacing: '.14em', textTransform: 'uppercase',
+  },
   sec: { margin: 0, color: CORES.textSec, fontSize: '.98rem', lineHeight: 1.55 },
   btn: {
     background: CORES.red, color: '#fff', fontWeight: 600, fontSize: '1rem', padding: '.85rem 1.6rem',

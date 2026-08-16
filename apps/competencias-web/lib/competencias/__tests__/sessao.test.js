@@ -339,3 +339,48 @@ test('os níveis de um item ancorado saem em ordem crescente, nunca embaralhados
   const anc = lista.find((t) => t.etapa === 2);
   assert.deepEqual(anc.ancorado.niveis.map((n) => n.nivel), [1, 2, 3, 4]);
 });
+
+// ── instrução na virada de etapa ─────────────────────────────────────
+/**
+ * As três etapas têm três FORMATOS de pergunta diferentes e emendavam em
+ * silêncio: quem estava escolhendo palavras sobre si de repente lia um
+ * cenário, e depois de repente informava quantos clientes atendeu no mês.
+ * Troca de formato sem aviso lê como erro do sistema.
+ *
+ * Não há transição para a etapa 1 de propósito — a abertura do teste já
+ * explica a escala, e duas telas de aviso antes da primeira pergunta é
+ * uma a mais.
+ */
+test('cada virada de etapa traz a sua instrução, uma vez e no lugar certo', () => {
+  const respostas = responderTodosOsBlocos();
+  const vistas = [];
+  let guarda = 0;
+
+  while (guarda++ < 80) {
+    const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+    if (e.fase === 'concluido') break;
+    if (e.transicao) vistas.push({ id: e.transicao.id, fase: e.fase, tela: e.tela.tipo });
+    respostas[e.tela.id] = e.tela.tipo === 'escolha_forcada'
+      ? { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[3].competencia }
+      : e.tela.tipo === 'item_ancorado' ? { nivel: 3 } : { valor: 2 };
+  }
+
+  assert.deepEqual(vistas.map((v) => v.id), ['etapa2', 'etapa3'], 'faltou ou sobrou instrução de etapa');
+  // Cada uma anexada à PRIMEIRA tela da sua etapa, e do formato daquela etapa.
+  assert.equal(vistas[0].fase, 'etapa2');
+  assert.equal(vistas[0].tela, 'item_ancorado');
+  assert.equal(vistas[1].fase, 'etapa3');
+  assert.equal(vistas[1].tela, 'ancora_evidencia');
+});
+
+test('a instrução da etapa 3 avisa que faixa e estimativa servem', async () => {
+  // Sem isso a pessoa sai para procurar o número exato, e boa parte não volta.
+  const { TRANSICAO_ETAPA } = await import('../sessao.js');
+  assert.match(TRANSICAO_ETAPA[3].texto, /faixas|sem consultar/i);
+  // E a da etapa 2 precisa pedir o que a pessoa FAZ, não o que seria certo.
+  assert.match(TRANSICAO_ETAPA[2].texto, /costuma fazer/i);
+  // Nenhuma pode revelar que a etapa 2 é sobre as competências mais frágeis.
+  for (const t of Object.values(TRANSICAO_ETAPA)) {
+    assert.equal(/frágil|fraca|pior|dificuldade/i.test(t.texto), false, `"${t.id}" entrega o corte ao respondente`);
+  }
+});

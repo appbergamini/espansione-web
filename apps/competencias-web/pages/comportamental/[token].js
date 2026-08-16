@@ -15,7 +15,10 @@ export default function Comportamental() {
   const [erro, setErro] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
-  const [transicaoVista, setTransicaoVista] = useState(false);
+  // Por id, não booleano: com duas transições (natural e contexto) um
+  // booleano só faria a segunda nunca aparecer, porque a primeira já o
+  // teria levantado.
+  const [transicoesVistas, setTransicoesVistas] = useState({});
 
   const carregar = useCallback(async () => {
     const r = await fetch(`/teste/api/comportamental/${token}`);
@@ -73,12 +76,15 @@ export default function Comportamental() {
   const { tela, progresso, transicao } = estado;
 
   // A transição vem anexada à tela real; dispensá-la é decisão do cliente.
-  if (transicao && !transicaoVista) {
+  if (transicao && !transicoesVistas[transicao.id]) {
     return (
       <Moldura progresso={progresso}>
         <h2 style={S.titulo}>{transicao.titulo}</h2>
         <p style={S.sec}>{transicao.texto}</p>
-        <button type="button" style={S.btn} onClick={() => setTransicaoVista(true)}>Continuar</button>
+        <button type="button" style={S.btn}
+                onClick={() => setTransicoesVistas((v) => ({ ...v, [transicao.id]: true }))}>
+          {transicao.rotulo || 'Continuar'}
+        </button>
       </Moldura>
     );
   }

@@ -95,8 +95,22 @@ export function estadoDaSessao({ respostas = {} } = {}) {
   // A transição vem ANEXADA à tela real, não no lugar dela: quem decide
   // quando passar é o cliente, sem precisar de uma ida ao servidor só para
   // dispensar um aviso.
-  base.transicao = trocouDeMomento && pendente.momento === 'contexto'
-    ? { titulo: TEXTO_MOMENTO.contexto.titulo, texto: TEXTO_MOMENTO.contexto.instrucao }
+  // Vale para OS DOIS momentos, não só o segundo.
+  //
+  // Antes, quem começava caía direto em "ordene estas quatro palavras" sem
+  // nunca ler `natural.instrucao` — que estava escrita e nunca era usada.
+  // Isso não era só falta de aviso: a instrução é "pense em você fora da
+  // pressão do dia a dia", e é ela que separa o momento natural do momento
+  // de contexto. Sem ela a pessoa responde o primeiro bloco já pensando no
+  // trabalho, os dois blocos ficam parecidos, e o vão entre eles — que é o
+  // que o bloco dos pilares mostra e o seguinte explica — some.
+  base.transicao = trocouDeMomento
+    ? {
+        id: pendente.momento,
+        titulo: TEXTO_MOMENTO[pendente.momento].titulo,
+        texto: TEXTO_MOMENTO[pendente.momento].instrucao,
+        rotulo: pendente.momento === 'natural' ? 'Começar' : 'Continuar',
+      }
     : null;
 
   if (pendente.tipo === 'ranking') {

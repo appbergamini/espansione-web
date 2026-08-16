@@ -35,6 +35,41 @@ export const ROTULO_ETAPA = {
   3: 'Alguns números do seu negócio',
 };
 
+/**
+ * Tela de instrução na virada de etapa.
+ *
+ * As três etapas têm três FORMATOS de pergunta diferentes, e até aqui elas
+ * emendavam em silêncio: quem estava escolhendo palavras sobre si de
+ * repente lia um cenário, e depois de repente informava quantos clientes
+ * atendeu no mês. A troca sem aviso lê como erro do sistema, e a etapa 3
+ * ainda por cima assusta — parece que vão pedir dados que a pessoa não
+ * tem à mão.
+ *
+ * Cada texto faz uma coisa que o instrumento precisa:
+ *   etapa 2 — pede o que a pessoa FAZ, não o que seria o certo fazer.
+ *             Sem isso o item ancorado vira teste de conhecimento.
+ *   etapa 3 — avisa que faixa e estimativa servem. Sem isso a pessoa sai
+ *             para procurar o número exato, e boa parte não volta.
+ *
+ * Não há transição para a etapa 1: a abertura do teste já explica a
+ * escala, e duas telas de aviso seguidas antes da primeira pergunta é
+ * uma a mais.
+ */
+export const TRANSICAO_ETAPA = {
+  2: {
+    id: 'etapa2',
+    titulo: 'Agora muda o tipo de pergunta',
+    texto: 'Em vez de escolher palavras, você vai ler uma situação concreta e marcar o que costuma fazer — não o que seria o certo fazer. São poucas telas, só sobre as competências em que as suas respostas pediram mais detalhe.',
+    rotulo: 'Continuar',
+  },
+  3: {
+    id: 'etapa3',
+    titulo: 'As últimas, e são de outro tipo',
+    texto: 'Quatro perguntas sobre o que acontece no seu negócio, não sobre como você se vê. Elas existem para comparar uma coisa com a outra. São faixas, não números exatos: responda de cabeça, sem consultar nada.',
+    rotulo: 'Continuar',
+  },
+};
+
 const ANCORADOS_POR_COMPETENCIA = 2;
 
 const respondido = (respostas, id) => respostas[id] !== undefined && respostas[id] !== null;
@@ -107,9 +142,17 @@ export function estadoDaSessao({ respostas = {}, seed = 'sem-seed', telaAtual = 
   }
 
   const t = lista[i];
+  const anterior = i > 0 ? lista[i - 1] : null;
+
   const base = {
     fase: `etapa${t.etapa}`,
     progresso: progressoDe(t.etapa, { etapa2Habilitada, lista, respostas }),
+    // Vem ANEXADA à tela real, não no lugar dela — mesma decisão do
+    // comportamental: dispensar um aviso não deve custar uma ida ao
+    // servidor, e quem decide quando passar é quem está respondendo.
+    // A tela sabe qual transição é (`id`), então a de etapa 2 dispensada
+    // não engole a de etapa 3.
+    transicao: anterior && anterior.etapa !== t.etapa ? TRANSICAO_ETAPA[t.etapa] || null : null,
     selecao,
     navegacao: {
       anterior: i > 0 ? lista[i - 1].id : null,
