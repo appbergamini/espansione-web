@@ -1,8 +1,32 @@
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { CORES } from '@espansione/brand';
 
 // Tela de abertura. O enunciado da escala é explicado UMA única vez, aqui —
 // depois disso nenhuma tela repete a instrução (SPEC §5.2).
 export default function Abertura() {
+  const router = useRouter();
+  const [abrindo, setAbrindo] = useState(false);
+  const [erro, setErro] = useState(null);
+
+  async function comecar() {
+    setAbrindo(true);
+    setErro(null);
+    try {
+      const r = await fetch('/teste/api/sessao/criar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const d = await r.json();
+      if (!r.ok) { setErro(d.erro || 'Não foi possível abrir o teste.'); setAbrindo(false); return; }
+      router.push(`/${d.token}`);
+    } catch {
+      setErro('Sem conexão. Tente de novo em instantes.');
+      setAbrindo(false);
+    }
+  }
+
   return (
     <main style={S.shell}>
       <div style={S.card}>
@@ -19,11 +43,13 @@ export default function Abertura() {
           <strong>mais parecida</strong> e a <strong>menos parecida</strong> com você.
         </div>
 
-        <button type="button" style={S.btn} disabled>
-          Começar
+        {erro && <p style={S.erro}>{erro}</p>}
+
+        <button type="button" style={{ ...S.btn, opacity: abrindo ? .6 : 1 }} disabled={abrindo} onClick={comecar}>
+          {abrindo ? 'Abrindo…' : 'Começar'}
         </button>
         <p style={S.nota}>
-          Fase F0 — fundação. O fluxo das 22 telas entra na F2.
+          As suas respostas são salvas a cada tela. Dá para sair e voltar depois.
         </p>
       </div>
     </main>
@@ -75,8 +101,12 @@ const S = {
     padding: '.85rem 1.6rem',
     border: 'none',
     borderRadius: '12px',
-    cursor: 'not-allowed',
-    opacity: .55,
+    cursor: 'pointer',
+    font: 'inherit',
   },
   nota: { margin: 0, fontSize: '.8rem', color: CORES.textSec },
+  erro: {
+    margin: 0, padding: '.7rem .9rem', borderRadius: '10px', fontSize: '.9rem',
+    background: CORES.redSoft, border: `1px solid ${CORES.redBorder}`, color: CORES.text,
+  },
 };
