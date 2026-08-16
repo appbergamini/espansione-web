@@ -71,7 +71,17 @@ export default function Relatorio() {
     );
   }
 
-  const [onde, competencias, porque, sustenta, trilha, passo, convite] = dados.blocos;
+  // Busca por id, não por posição: inserir um bloco no meio não pode
+  // deslocar silenciosamente o significado de todos os seguintes.
+  const B = (id) => dados.blocos.find((b) => b.id === id);
+  const onde = B('onde_voce_esta');
+  const competencias = B('suas_competencias');
+  const jeito = B('jeito_de_trabalhar');
+  const porque = B('por_que');
+  const sustenta = B('sustenta_custa');
+  const trilha = B('trilha');
+  const passo = B('passo_7_dias');
+  const convite = B('convite');
 
   return (
     <>
@@ -142,8 +152,35 @@ export default function Relatorio() {
             </p>
           </Secao>
 
-          {/* ── 3 ── */}
-          <Secao numero="3" titulo={porque.titulo}>
+          {/* ── 3 · o resultado do comportamental ── */}
+          <Secao numero="3" titulo={jeito.titulo}>
+            {jeito.texto && <p className="corpo">{jeito.texto}</p>}
+            <div className="regua-legenda">
+              <span className="marca marca--natural" aria-hidden="true" />
+              <span>como você é</span>
+              <span className="marca marca--contexto" aria-hidden="true" />
+              <span>como você tem operado</span>
+            </div>
+            {jeito.pilares.map((p) => (
+              <div key={p.pilar} className="pilar">
+                <div className="pilar-cabeca">
+                  <span className="pilar-nome">{p.nome}</span>
+                  <span className="pilar-faz">{p.descricao}</span>
+                </div>
+                <Regua natural={p.natural} emContexto={p.emContexto}
+                       equilibrio={jeito.equilibrio} nome={p.nome} distante={p.distante} />
+                <p className="pilar-texto">{p.texto}</p>
+              </div>
+            ))}
+            <p className="nota">
+              As quatro se dividem entre si — nenhuma sobe sem que outra desça. Por isso
+              o que importa aqui é a ordem entre elas e a distância entre as duas marcas,
+              nunca o quanto cada uma "tem".
+            </p>
+          </Secao>
+
+          {/* ── 4 ── */}
+          <Secao numero="4" titulo={porque.titulo}>
             {porque.texto && <p className="corpo">{porque.texto}</p>}
             {porque.padraoRecorrente && (
               <p className="padrao">{porque.padraoRecorrente.texto}</p>
@@ -161,13 +198,13 @@ export default function Relatorio() {
             ))}
           </Secao>
 
-          {/* ── 4 ── */}
-          <Secao numero="4" titulo={sustenta.titulo} campo="blush">
+          {/* ── 5 ── */}
+          <Secao numero="5" titulo={sustenta.titulo} campo="blush">
             {sustenta.texto && <p className="corpo">{sustenta.texto}</p>}
             {sustenta.leituras.map((l) => <p key={l.pilar} className="corpo">{l.texto}</p>)}
           </Secao>
 
-          {/* ── 5 · o pagamento do relatório: campo navy ── */}
+          {/* ── 6 · o pagamento do relatório: campo navy ── */}
           <section className="trilha">
             <h2 className="trilha-titulo">{trilha.titulo}</h2>
             <p className="trilha-intro">{trilha.introducao}</p>
@@ -187,7 +224,7 @@ export default function Relatorio() {
             </ol>
           </section>
 
-          {/* ── 6 ── */}
+          {/* ── 7 ── */}
           {passo.texto && (
             <section className="passo">
               <p className="passo-rotulo">{passo.titulo}</p>
@@ -195,7 +232,7 @@ export default function Relatorio() {
             </section>
           )}
 
-          {/* ── 7 ── */}
+          {/* ── 8 ── */}
           <section className="convite">
             <h2 className="convite-titulo">{convite.titulo}</h2>
             <p className="convite-texto">{convite.texto}</p>
@@ -238,6 +275,36 @@ function Secao({ numero, titulo, campo, children }) {
  * Geometria: raio externo 11, interno 4,8 num viewBox 24 — ponta afiada o
  * bastante para não virar flor no tamanho pequeno.
  */
+/**
+ * A régua de um pilar: duas marcas no mesmo eixo — como a pessoa é
+ * (vazada) e como ela tem operado (cheia) — com o ponto de equilíbrio
+ * marcado. A distância entre as marcas É o assunto do bloco seguinte,
+ * então ela precisa ser vista, não descrita.
+ *
+ * Sem número em lugar nenhum: os 4 pilares se dividem entre si, então
+ * um valor isolado não quer dizer nada. A posição relativa quer.
+ */
+function Regua({ natural, emContexto, equilibrio, nome, distante }) {
+  const [de, ate] = natural <= emContexto ? [natural, emContexto] : [emContexto, natural];
+  const rotulo = distante
+    ? `${nome}: como você é e como você tem operado ficam distantes`
+    : `${nome}: como você é e como você tem operado ficam próximos`;
+
+  return (
+    <div className="regua" role="img" aria-label={rotulo}>
+      <span className="regua-trilho" />
+      <span className="regua-equilibrio" style={{ left: `${equilibrio}%` }} aria-hidden="true" />
+      {/* O vão só é desenhado quando há vão: a barra entre as marcas é a
+          informação, e desenhá-la com 1px de largura vira sujeira. */}
+      {distante && (
+        <span className="regua-vao" style={{ left: `${de}%`, width: `${ate - de}%` }} aria-hidden="true" />
+      )}
+      <span className="marca marca--natural" style={{ left: `${natural}%` }} aria-hidden="true" />
+      <span className="marca marca--contexto" style={{ left: `${emContexto}%` }} aria-hidden="true" />
+    </div>
+  );
+}
+
 const ESTRELA = 'M12 1 L14.82 8.12 L22.46 8.6 L16.57 13.48 L18.47 20.9 L12 16.8 '
   + 'L5.53 20.9 L7.43 13.48 L1.54 8.6 L9.18 8.12 Z';
 
@@ -341,6 +408,35 @@ const CSS = `
 .comp-nivel { font-family: var(--display); font-size: .72rem; font-weight: 700; letter-spacing: .04em;
               text-transform: uppercase; color: var(--red); }
 
+/* ── 3 · os 4 pilares ─────────────────────────────────── */
+.regua-legenda { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+                 font-size: .74rem; color: var(--slate); margin-top: .2rem; }
+.regua-legenda span:nth-child(2) { margin-right: .8rem; }
+.pilar { padding: .95rem 0; border-bottom: 1px solid var(--mist); }
+.pilar:first-of-type { border-top: 1px solid var(--mist); }
+.pilar-cabeca { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.pilar-nome { font-family: var(--display); font-weight: 700; font-size: 1.02rem; }
+.pilar-faz { font-size: .82rem; color: var(--slate); }
+.pilar-texto { margin: .55rem 0 0; font-size: .95rem; line-height: 1.6; max-width: 62ch; }
+
+/* Folga lateral do raio da marca: em 0% ou 100% ela é centrada no ponto e
+   metade dela ficaria fora do container. */
+.regua { position: relative; height: 13px; margin: .7rem 6px 0; }
+.regua-trilho { position: absolute; top: 50%; left: 0; right: 0; height: 3px;
+                margin-top: -1.5px; border-radius: 2px; background: var(--mist); }
+/* O equilíbrio é referência, não resultado: fica atrás, em tinta baixa. */
+.regua-equilibrio { position: absolute; top: 0; bottom: 0; width: 1px;
+                    background: #C3D2E6; transform: translateX(-.5px); }
+/* Vermelho da marca só no vão, e só quando o vão existe: é o único lugar
+   do documento onde a cor sinaliza esforço acontecendo. */
+.regua-vao { position: absolute; top: 50%; height: 3px; margin-top: -1.5px;
+             border-radius: 2px; background: var(--red); opacity: .45; }
+.marca { position: relative; display: inline-block; width: 11px; height: 11px;
+         border-radius: 50%; box-sizing: border-box; flex: none; }
+.regua .marca { position: absolute; top: 50%; margin: -5.5px 0 0 -5.5px; }
+.marca--natural { background: #FFF; border: 2px solid var(--navy); }
+.marca--contexto { background: var(--navy); border: 2px solid var(--navy); }
+
 .faixa { display: inline-flex; gap: 5px; flex: none; align-items: center; }
 /* Vazia é silhueta cheia em tinta baixa, não contorno: contorno some na
    impressão e a contagem de cheias fica sem referência para comparar.
@@ -408,7 +504,9 @@ const CSS = `
   .capa, .trilha { margin: 0; }
   .secao, .leitura, .comp, .trilha-item, .passo { break-inside: avoid; }
   .secao-titulo, .grupo-nome, .leitura-nome { break-after: avoid; }
-  .estrela { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .estrela, .regua-trilho, .regua-vao, .regua-equilibrio, .marca {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pilar { break-inside: avoid; }
   @page { margin: 14mm; }
 }
 `;

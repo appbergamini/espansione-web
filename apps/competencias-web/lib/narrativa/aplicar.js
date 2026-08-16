@@ -49,6 +49,15 @@ export function aplicarNarrativa(relatorio, narrativa) {
         // Blocos que o motor entrega só com dados — o texto é adição pura.
         return { ...base, texto: pick(n.texto, base.texto ?? null) };
 
+      case 'jeito_de_trabalhar':
+        return {
+          ...base,
+          texto: pick(n.texto, b.texto),
+          // A régua (natural/emContexto/equilibrio) fica intocada: ela é o
+          // resultado do instrumento, e a IA não escreve resultado.
+          pilares: casarPorPilar(b.pilares, n.pilares),
+        };
+
       case 'por_que':
         return {
           ...base,

@@ -113,6 +113,19 @@ for (const b of final.blocos) {
       }
     }
   }
+  if (b.id === 'jeito_de_trabalhar') {
+    // Régua em ASCII: ○ como a pessoa é, ● como tem operado, | equilíbrio.
+    for (const p of b.pilares) {
+      const L = 46;
+      const cel = new Array(L).fill('·');
+      cel[Math.round((b.equilibrio / 100) * (L - 1))] = '|';
+      cel[Math.round((p.natural / 100) * (L - 1))] = '○';
+      cel[Math.round((p.emContexto / 100) * (L - 1))] = '●';
+      console.log(`\n  ${p.nome.padEnd(14)} ${cel.join('')}`);
+      console.log(`  ${''.padEnd(14)} ${p.descricao}`);
+      par('  ' + p.texto);
+    }
+  }
   if (b.padraoRecorrente) par('» ' + b.padraoRecorrente.texto);
   for (const l of b.leituras || []) {
     console.log(`\n  ▸ ${l.nome || l.pilar}${l.caracteristicas?.length ? `  [${l.caracteristicas.map((e) => e.caracteristica).join(' · ')}]` : ''}`);

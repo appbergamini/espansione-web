@@ -1,5 +1,5 @@
 // =====================================================================
-// Relatório integrado — os 7 blocos.
+// Relatório integrado — os 8 blocos.
 //
 // O relatório SÓ é gerado com os dois instrumentos concluídos. Antes disso
 // não existe relatório parcial: resultado parcial vira o produto na cabeça
@@ -14,7 +14,7 @@
 import { CAPACIDADES, PILARES, nomeDe, leituraDe, faixaDe, competenciasDaCapacidade } from './catalog.js';
 import { ROTULO_POSICAO } from './score.js';
 import { avaliarCompetencia, rotaDaTrilha, TOLERANCIA_PADRAO } from './faixas.js';
-import { etiquetasDe, PASSO_7_DIAS } from './lexico.js';
+import { etiquetasDe, PASSO_7_DIAS, DESCRICAO_PILAR } from './lexico.js';
 import { ROTULO_PILAR, lerGap } from '@espansione/cis';
 
 const FRAGEIS = new Set(['fragil', 'mais_fragil', 'intermediaria']);
@@ -55,17 +55,22 @@ export function gerarRelatorio({ consolidado, pilares, niveis = {}, aprofundadas
 
   const bloco1 = ondeVoceEsta(consolidado);
   const bloco2 = suasCompetencias(consolidado, niveis, aprofundadas);
-  const bloco3 = porQueVoceEstaAi(consolidado, avaliacoes);
-  const bloco4 = oQueSustentaEOQueCusta(gap);
-  const bloco5 = trilha(consolidado, avaliacoes, niveis, aprofundadas);
-  const bloco6 = passoDaSemana(bloco5);
-  const bloco7 = convite();
+  // O resultado do Mapeamento Comportamental vem ANTES de ser usado. Sem
+  // este bloco o instrumento só aparecia como explicação (as
+  // características no bloco seguinte, o custo de energia no outro) e o
+  // cliente nunca via o que ele mediu — pagou por dois e recebeu um.
+  const bloco3 = jeitoDeTrabalhar(pilares, gap);
+  const bloco4 = porQueVoceEstaAi(consolidado, avaliacoes);
+  const bloco5 = oQueSustentaEOQueCusta(gap);
+  const bloco6 = trilha(consolidado, avaliacoes, niveis, aprofundadas);
+  const bloco7 = passoDaSemana(bloco6);
+  const bloco8 = convite();
 
   return {
-    blocos: [bloco1, bloco2, bloco3, bloco4, bloco5, bloco6, bloco7],
+    blocos: [bloco1, bloco2, bloco3, bloco4, bloco5, bloco6, bloco7, bloco8],
     // metadado interno; não é para renderizar
     meta: {
-      trilhaToda1Tecnica: bloco5.itens.length > 0 && bloco5.itens.every((i) => i.rota === 'tecnica'),
+      trilhaToda1Tecnica: bloco6.itens.length > 0 && bloco6.itens.every((i) => i.rota === 'tecnica'),
       delta,
     },
   };
@@ -119,7 +124,66 @@ function suasCompetencias(consolidado, niveis, aprofundadas) {
   };
 }
 
-// ── 3 · Por que você está aí ─────────────────────────────────────────
+// ── 3 · O seu jeito de trabalhar (resultado do comportamental) ───────
+/**
+ * O que o Mapeamento Comportamental mediu, mostrado como POSIÇÃO.
+ *
+ * Os 4 pilares somam 200, então o valor de um só significa alguma coisa
+ * em relação aos outros três. Por isso o eixo é a fatia: 50 é a divisão
+ * igual entre os quatro, e é o ponto de equilíbrio marcado na régua.
+ * Nenhum número vai para a tela — a régua É o número.
+ *
+ * Duas marcas por pilar, e a distância entre elas é o assunto do bloco
+ * seguinte: `natural` é como a pessoa é, `emContexto` é como ela tem
+ * operado no negócio.
+ */
+const EQUILIBRIO = 50;   // 200 dividido entre os 4 pilares
+const TETO_EIXO = 100;   // metade do total: acima disso um pilar domina o perfil
+
+const naRegua = (v) => Math.max(0, Math.min(100, (v / TETO_EIXO) * 100));
+
+function jeitoDeTrabalhar(pilares, gap) {
+  const ordenados = [...PILARES].sort((a, b) => pilares[b].natural - pilares[a].natural);
+
+  return {
+    id: 'jeito_de_trabalhar',
+    titulo: 'O seu jeito de trabalhar',
+    texto: gap?.adaptacaoGeneralizada
+      ? 'Em várias frentes ao mesmo tempo, o que o negócio pede de você está longe do seu jeito. Vale olhar as quatro juntas antes de olhar uma por uma.'
+      : gap?.coerente
+        ? 'As quatro aparecem no seu negócio como aparecem em você. É menos comum do que parece.'
+        : 'Cada uma tem duas leituras: como ela é em você, e como ela tem aparecido no negócio. Onde as duas se afastam, há esforço acontecendo.',
+    // Marca do eixo, para a régua desenhar. Não é resultado de ninguém.
+    equilibrio: naRegua(EQUILIBRIO),
+    pilares: ordenados.map((p, i) => {
+      const g = gap?.porPilar[p];
+      return {
+        pilar: p,
+        nome: ROTULO_PILAR[p],
+        // Uma linha de verbos, NÃO as 4 características do pilar: listar
+        // as 4 de cada um poria as 16 na tela, e aí o relatório vira
+        // leitura de perfil de traços — que é a proibição do cabeçalho.
+        descricao: DESCRICAO_PILAR[p],
+        ordem: i + 1,
+        de: PILARES.length,
+        natural: naRegua(pilares[p].natural),
+        emContexto: naRegua(pilares[p].emContexto),
+        direcao: g?.direcao || 'igual',
+        distante: Boolean(g?.grande),
+        texto: textoDoPilar(ROTULO_PILAR[p], g),
+      };
+    }),
+  };
+}
+
+function textoDoPilar(nome, g) {
+  if (!g || !g.grande) return `Como você é e como você tem operado ficam no mesmo lugar em ${nome.toLowerCase()}.`;
+  return g.direcao === 'acima'
+    ? `${nome} aparece mais no seu dia do que no seu jeito. Você tem puxado por ela.`
+    : `${nome} aparece menos no seu dia do que no seu jeito. Alguma coisa no contexto tem segurado.`;
+}
+
+// ── 4 · Por que você está aí ─────────────────────────────────────────
 function porQueVoceEstaAi(consolidado, avaliacoes) {
   const alvo = consolidado.ranking.filter((r) => FRAGEIS.has(r.posicao));
   const leituras = alvo.map((r) => leituraDeUmaCompetencia(r.chave, avaliacoes[r.chave]));
@@ -185,7 +249,7 @@ function leituraDeUmaCompetencia(chave, av) {
   };
 }
 
-// ── 4 · O que sustenta e o que custa ─────────────────────────────────
+// ── 5 · O que sustenta e o que custa ─────────────────────────────────
 function oQueSustentaEOQueCusta(gap) {
   // Opera sobre os 4 pilares brutos. Nenhum número de gap é exposto.
   if (!gap) return { id: 'sustenta_custa', titulo: 'O que sustenta e o que custa', texto: null, leituras: [] };
@@ -222,7 +286,7 @@ function oQueSustentaEOQueCusta(gap) {
   };
 }
 
-// ── 5 · Sua trilha ───────────────────────────────────────────────────
+// ── 6 · Sua trilha ───────────────────────────────────────────────────
 function trilha(consolidado, avaliacoes, niveis, aprofundadas) {
   const candidatas = consolidado.ranking
     .filter((r) => FRAGEIS.has(r.posicao))
@@ -271,7 +335,7 @@ function maiorDistancia(av) {
   return Math.max(...PILARES.map((p) => av.porPilar[p].distancia));
 }
 
-// ── 6 · Um passo para os próximos 7 dias ─────────────────────────────
+// ── 7 · Um passo para os próximos 7 dias ─────────────────────────────
 function passoDaSemana(blocoTrilha) {
   const primeira = blocoTrilha.itens[0];
   return {
@@ -282,7 +346,7 @@ function passoDaSemana(blocoTrilha) {
   };
 }
 
-// ── 7 · Convite ──────────────────────────────────────────────────────
+// ── 8 · Convite ──────────────────────────────────────────────────────
 function convite() {
   return {
     id: 'convite',

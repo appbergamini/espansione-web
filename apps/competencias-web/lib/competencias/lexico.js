@@ -60,6 +60,25 @@ export function etiquetasDe(competencia, pilaresSinalizados = [], porPilar = {},
  * Escrito para funcionar tanto quando a rota é comportamental quanto
  * quando é técnica — o que muda é a moldura em volta, não a ação.
  */
+/**
+ * O que cada pilar FAZ num dia de trabalho.
+ *
+ * Existe porque "Precisão" sozinho é uma palavra vaga, e porque a
+ * alternativa óbvia — listar as 4 características de cada pilar — daria
+ * as 16 na tela, que é exatamente o que o relatório não pode virar
+ * (leitura de perfil de traços). Uma linha de verbos resolve o
+ * concreto sem abrir o instrumento.
+ *
+ * Verbos, não adjetivos: adjetivo descreve pessoa, verbo descreve
+ * trabalho — e o produto mede trabalho.
+ */
+export const DESCRICAO_PILAR = {
+  determinacao: 'decidir rápido, encarar risco, ir direto ao ponto',
+  conexao: 'convencer, engajar, abrir porta',
+  constancia: 'sustentar ritmo, ouvir, planejar antes',
+  precisao: 'organizar, conferir, não deixar ponta solta',
+};
+
 export const PASSO_7_DIAS = {
   autoconsciencia: 'Peça a duas pessoas do time um retorno franco sobre uma decisão sua das últimas semanas.',
   persistir_ajustar: 'Escolha a frente que mais te preocupa e defina o número e o prazo que decidem se ela continua.',

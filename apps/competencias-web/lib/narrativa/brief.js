@@ -56,6 +56,26 @@ export function montarBrief(relatorio) {
       }))
     ),
 
+    // O resultado do Mapeamento Comportamental. Qualitativo de ponta a
+    // ponta: a régua da tela é geometria (posição em 0–100), e geometria
+    // não vai para o modelo — ele escreveria o número.
+    jeito: {
+      observacao: bloco('jeito_de_trabalhar').texto,
+      pilares: bloco('jeito_de_trabalhar').pilares.map((p) => ({
+        pilar: p.nome,
+        faz: p.descricao,
+        peso: p.ordem === 1 ? 'o que mais te define'
+          : p.ordem === p.de ? 'o que menos aparece em você'
+          : 'no meio do seu perfil',
+        // `alinhado` é informação, não ausência de informação: é o pilar
+        // em que a pessoa não gasta energia se traduzindo.
+        relacaoComOContexto: !p.distante ? 'alinhado'
+          : p.direcao === 'acima' ? 'você tem puxado por ela mais do que ela vem'
+          : 'o contexto tem segurado o que vem natural',
+        observacao: p.texto,
+      })),
+    },
+
     // A leitura que o motor fez de cada competência em desenvolvimento.
     // `observacao` é a conclusão dele — a IA reescreve, não revisa.
     fragilidades: (porQue.leituras || []).map((l) => ({

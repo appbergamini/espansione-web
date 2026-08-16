@@ -72,12 +72,32 @@ test('há um passo de 7 dias para cada uma das 12', () => {
   }
 });
 
+/**
+ * Busca por id. Os testes indexavam blocos por posição, e inserir um
+ * bloco no meio quebrou doze de uma vez — o que é exatamente o sintoma
+ * de que a posição nunca foi a identidade do bloco.
+ */
+const B = (r, id) => {
+  const b = r.blocos.find((x) => x.id === id);
+  assert.ok(b, `bloco "${id}" sumiu do relatório`);
+  return b;
+};
+
 // ── estrutura ────────────────────────────────────────────────────────
-test('o relatório tem os 7 blocos, na ordem', () => {
+test('o relatório tem os 8 blocos, na ordem', () => {
   const r = relatorioAleatorio();
   assert.deepEqual(r.blocos.map((b) => b.id), [
-    'onde_voce_esta', 'suas_competencias', 'por_que', 'sustenta_custa', 'trilha', 'passo_7_dias', 'convite',
+    'onde_voce_esta', 'suas_competencias', 'jeito_de_trabalhar', 'por_que',
+    'sustenta_custa', 'trilha', 'passo_7_dias', 'convite',
   ]);
+});
+
+test('o resultado do comportamental aparece ANTES de ser usado para explicar', () => {
+  const ids = relatorioAleatorio().blocos.map((b) => b.id);
+  assert.ok(
+    ids.indexOf('jeito_de_trabalhar') < ids.indexOf('por_que'),
+    'o leitor precisa conhecer os pilares antes de vê-los explicando as fragilidades'
+  );
 });
 
 test('a escala desenhada tem 5 passos e bate com o rótulo', async () => {
@@ -89,7 +109,7 @@ test('a escala desenhada tem 5 passos e bate com o rótulo', async () => {
   assert.deepEqual([...ESCALA_CRESCENTE].sort(), Object.keys(ROTULO_POSICAO).sort());
 
   const r = relatorioAleatorio();
-  for (const c of r.blocos[1].capacidades.flatMap((x) => x.competencias)) {
+  for (const c of B(r, 'suas_competencias').capacidades.flatMap((x) => x.competencias)) {
     assert.ok(c.passo >= 1 && c.passo <= 5, `${c.chave}: passo ${c.passo} fora de 1–5`);
     assert.equal(c.de, 5);
     assert.equal(ROTULO_POSICAO[ESCALA_CRESCENTE[c.passo - 1]], c.posicao, `${c.chave}: passo e rótulo discordam`);
@@ -104,7 +124,7 @@ test('o nível é nomeado, não só numerado', async () => {
   const aprofundadas = consolidado.ranking.slice(-3).map((x) => x.chave);
   const niveis = Object.fromEntries(aprofundadas.map((c) => [c, { nivel: 2, confianca: 'estimado' }]));
   const r = gerarRelatorio({ consolidado, pilares: pilaresDe(50, 50, 50, 50), niveis, aprofundadas });
-  const todas = r.blocos[1].capacidades.flatMap((x) => x.competencias);
+  const todas = B(r, 'suas_competencias').capacidades.flatMap((x) => x.competencias);
   for (const c of todas) {
     if (aprofundadas.includes(c.chave)) {
       assert.equal(c.nivelNome, NOME_NIVEL[2]);
@@ -117,14 +137,14 @@ test('o nível é nomeado, não só numerado', async () => {
 
 test('a ordem das capacidades vem pronta para desenhar', () => {
   const r = relatorioAleatorio();
-  const caps = r.blocos[0].capacidades;
+  const caps = B(r, 'onde_voce_esta').capacidades;
   assert.deepEqual(caps.map((c) => c.ordem), [1, 2, 3, 4]);
   for (const c of caps) assert.equal(c.de, 4);
 });
 
 test('bloco 2 lista as 12 agrupadas nas 4 capacidades', () => {
   const r = relatorioAleatorio();
-  const b2 = r.blocos[1];
+  const b2 = B(r, 'suas_competencias');
   assert.equal(b2.capacidades.length, 4);
   const todas = b2.capacidades.flatMap((c) => c.competencias);
   assert.equal(todas.length, 12);
@@ -136,7 +156,7 @@ test('nível aparece SÓ nas 3 aprofundadas', () => {
   const aprofundadas = consolidado.ranking.slice(-3).map((r) => r.chave);
   const niveis = Object.fromEntries(aprofundadas.map((c) => [c, { nivel: 3, confianca: 'afirmado' }]));
   const r = gerarRelatorio({ consolidado, pilares: pilaresDe(50, 50, 50, 50), niveis, aprofundadas });
-  const todas = r.blocos[1].capacidades.flatMap((c) => c.competencias);
+  const todas = B(r, 'suas_competencias').capacidades.flatMap((c) => c.competencias);
   for (const c of todas) {
     if (aprofundadas.includes(c.chave)) assert.equal(c.nivel, 3, `${c.chave} deveria ter nível`);
     else assert.equal(c.nivel, null, `${c.chave} não pode ter nível`);
@@ -145,7 +165,7 @@ test('nível aparece SÓ nas 3 aprofundadas', () => {
 
 test('a trilha tem no máximo 3 itens e não repete competência', () => {
   for (let i = 0; i < 100; i++) {
-    const t = relatorioAleatorio().blocos[4];
+    const t = B(relatorioAleatorio(), 'trilha');
     assert.ok(t.itens.length <= 3);
     assert.equal(new Set(t.itens.map((x) => x.chave)).size, t.itens.length);
   }
@@ -153,7 +173,7 @@ test('a trilha tem no máximo 3 itens e não repete competência', () => {
 
 test('nenhuma leitura nomeia mais de 3 características, nunca duas do mesmo pilar', () => {
   for (let i = 0; i < 200; i++) {
-    for (const l of relatorioAleatorio().blocos[2].leituras) {
+    for (const l of B(relatorioAleatorio(), 'por_que').leituras) {
       assert.ok(l.caracteristicas.length <= 3, `${l.chave} nomeou ${l.caracteristicas.length}`);
       assert.equal(new Set(l.caracteristicas.map((c) => c.pilar)).size, l.caracteristicas.length);
     }
@@ -170,7 +190,7 @@ test('sem pilar sinalizado, o texto DIZ que não há ponto de atenção — não
     pilares: pilaresDe(meio('determinacao'), meio('conexao'), meio('constancia'), meio('precisao')),
     niveis: {}, aprofundadas: [],
   });
-  const leitura = r.blocos[2].leituras.find((l) => l.chave === 'gestao_recursos');
+  const leitura = B(r, 'por_que').leituras.find((l) => l.chave === 'gestao_recursos');
   if (leitura) {
     assert.equal(leitura.semPontoDeAtencao, true);
     assert.match(leitura.texto, /Sem pontos de atenção comportamentais/);
@@ -183,7 +203,7 @@ test('Confiança BAIXA sinaliza a limitação ao cliente, em vez de fingir preci
   const r = gerarRelatorio({
     consolidado, pilares: pilaresDe(95, 10, 10, 85), niveis: {}, aprofundadas: [],
   });
-  const l = r.blocos[2].leituras.find((x) => x.chave === 'coerencia_etica');
+  const l = B(r, 'por_que').leituras.find((x) => x.chave === 'coerencia_etica');
   if (l) {
     assert.equal(l.leituraLimitada, true);
     assert.match(l.texto, /explica pouco/);
@@ -194,7 +214,7 @@ test('Confiança BAIXA sinaliza a limitação ao cliente, em vez de fingir preci
 test('pilar recorrente é dito UMA vez, não repetido N vezes', () => {
   let achou = false;
   for (let i = 0; i < 200 && !achou; i++) {
-    const b3 = relatorioAleatorio().blocos[2];
+    const b3 = B(relatorioAleatorio(), 'por_que');
     if (b3.padraoRecorrente) {
       achou = true;
       assert.ok(b3.padraoRecorrente.pilar);
@@ -208,7 +228,7 @@ test('trilha inteiramente técnica muda o título do bloco e não inventa compor
   // Perfil no meio de todas as faixas possíveis → nada sinalizado
   const consolidado = consolidar(respostasAleatorias());
   const r = gerarRelatorio({ consolidado, pilares: pilaresDe(50, 50, 50, 50), niveis: {}, aprofundadas: [], delta: 60 });
-  const t = r.blocos[4];
+  const t = B(r, 'trilha');
   assert.equal(r.meta.trilhaToda1Tecnica || t.itens.every((i) => i.rota === 'tecnica'), true);
   assert.equal(t.titulo, 'O que desenvolver');
   assert.match(t.introducao, /não é o que está no caminho/);
@@ -221,7 +241,7 @@ test('gap grande em 3+ pilares abre a conversa de próximo estágio', () => {
     pilares: pilaresDe(70, 40, 50, 40, [30, 80, 20, 70]),
     niveis: {}, aprofundadas: [],
   });
-  assert.match(r.blocos[3].texto, /cobra energia|configuração diferente/);
+  assert.match(B(r, 'sustenta_custa').texto, /cobra energia|configuração diferente/);
 });
 
 test('gap pequeno em toda a linha é lido como força, não como fragilidade', () => {
@@ -229,7 +249,7 @@ test('gap pequeno em toda a linha é lido como força, não como fragilidade', (
   const r = gerarRelatorio({
     consolidado, pilares: pilaresDe(50, 50, 50, 50, [52, 48, 51, 49]), niveis: {}, aprofundadas: [],
   });
-  assert.match(r.blocos[3].texto, /é uma força/);
+  assert.match(B(r, 'sustenta_custa').texto, /é uma força/);
 });
 
 // ── varredura de QA ──────────────────────────────────────────────────

@@ -78,6 +78,7 @@ ${JSON.stringify(brief, null, 2)}
 Notas de leitura dos fatos:
 
 - \`capacidades\` vem ordenada da mais forte à que mais exige intenção.
+- \`jeito\` é o resultado do segundo instrumento — os quatro pilares, ordenados do que mais define a pessoa ao que menos aparece. Na tela cada um ganha uma régua com duas marcas: como a pessoa é, e como ela tem operado. \`relacaoComOContexto: 'alinhado'\` é informação boa, não ausência de achado: é onde ela não gasta energia se traduzindo. Este bloco DESCREVE; o custo dessa diferença é assunto do bloco seguinte, não repita aqui.
 - \`fragilidades[].tipo\` muda o que há para dizer:
   - \`comportamental\` — o comportamento explica a fragilidade; as \`caracteristicas\` são o material da leitura.
   - \`sem_ponto_comportamental\` — o comportamento não explica. Diga isso com todas as letras: o caminho ali é técnico, é sobre saber fazer. Não force um achado comportamental.

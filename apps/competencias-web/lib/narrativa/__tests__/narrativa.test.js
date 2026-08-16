@@ -54,6 +54,11 @@ function narrativaFalsa(relatorio) {
     fechamento: 'IA:fechamento',
     onde_voce_esta: { titulo: 'IA:t1', texto: 'IA:onde' },
     suas_competencias: { titulo: 'IA:t2', texto: 'IA:competencias' },
+    jeito_de_trabalhar: {
+      titulo: 'IA:t2b',
+      texto: 'IA:jeito',
+      pilares: bloco('jeito_de_trabalhar').pilares.map((p) => ({ pilar: p.nome, texto: `IA:pilar-jeito:${p.pilar}` })),
+    },
     por_que: {
       titulo: 'IA:t3',
       texto: 'IA:porque',
@@ -128,21 +133,64 @@ test('narrativa inútil (undefined, string, array) degrada para o motor', () => 
 test('o texto da IA entra em todos os blocos', () => {
   const rel = relatorioAleatorio();
   const com = aplicarNarrativa(rel, narrativaFalsa(rel));
-  const [onde, comps, porque, sustenta, trilha, passo, convite] = com.blocos;
+  const b = (id) => com.blocos.find((x) => x.id === id);
 
   assert.equal(com.abertura, 'IA:abertura');
   assert.equal(com.fechamento, 'IA:fechamento');
-  assert.equal(onde.texto, 'IA:onde');
-  assert.equal(comps.texto, 'IA:competencias');
-  assert.equal(porque.texto, 'IA:porque');
-  assert.equal(sustenta.texto, 'IA:sustenta');
-  assert.equal(trilha.introducao, 'IA:trilha-intro');
-  assert.equal(convite.texto, 'IA:convite');
-  if (passo.competencia) assert.equal(passo.texto, 'IA:passo');
+  assert.equal(b('onde_voce_esta').texto, 'IA:onde');
+  assert.equal(b('suas_competencias').texto, 'IA:competencias');
+  assert.equal(b('jeito_de_trabalhar').texto, 'IA:jeito');
+  assert.equal(b('por_que').texto, 'IA:porque');
+  assert.equal(b('sustenta_custa').texto, 'IA:sustenta');
+  assert.equal(b('trilha').introducao, 'IA:trilha-intro');
+  assert.equal(b('convite').texto, 'IA:convite');
+  if (b('passo_7_dias').competencia) assert.equal(b('passo_7_dias').texto, 'IA:passo');
 
-  for (const l of porque.leituras) assert.equal(l.texto, `IA:leitura:${l.chave}`);
-  for (const l of sustenta.leituras) assert.equal(l.texto, `IA:pilar:${l.pilar}`);
-  for (const i of trilha.itens) assert.equal(i.texto, `IA:trilha:${i.chave}`);
+  for (const p of b('jeito_de_trabalhar').pilares) assert.equal(p.texto, `IA:pilar-jeito:${p.pilar}`);
+  for (const l of b('por_que').leituras) assert.equal(l.texto, `IA:leitura:${l.chave}`);
+  for (const l of b('sustenta_custa').leituras) assert.equal(l.texto, `IA:pilar:${l.pilar}`);
+  for (const i of b('trilha').itens) assert.equal(i.texto, `IA:trilha:${i.chave}`);
+});
+
+test('a régua dos pilares é intocável pela narrativa', () => {
+  for (let n = 0; n < 40; n++) {
+    const rel = relatorioAleatorio();
+    const motor = rel.blocos.find((b) => b.id === 'jeito_de_trabalhar');
+    const com = aplicarNarrativa(rel, narrativaFalsa(rel)).blocos.find((b) => b.id === 'jeito_de_trabalhar');
+
+    assert.equal(com.equilibrio, motor.equilibrio);
+    for (const [i, p] of com.pilares.entries()) {
+      const m = motor.pilares[i];
+      assert.equal(p.pilar, m.pilar, 'a ordem dos pilares mudou');
+      assert.equal(p.natural, m.natural);
+      assert.equal(p.emContexto, m.emContexto);
+      assert.equal(p.direcao, m.direcao);
+      assert.equal(p.distante, m.distante);
+      assert.equal(p.descricao, m.descricao, 'a linha de verbos é do produto, não da IA');
+      // Geometria válida: as marcas ficam dentro do eixo.
+      for (const v of [p.natural, p.emContexto]) assert.ok(v >= 0 && v <= 100, `marca fora do eixo: ${v}`);
+    }
+  }
+});
+
+test('os 4 pilares vêm ordenados do que mais define ao que menos aparece', () => {
+  const rel = relatorioAleatorio();
+  const b = rel.blocos.find((x) => x.id === 'jeito_de_trabalhar');
+  assert.equal(b.pilares.length, 4);
+  assert.deepEqual(b.pilares.map((p) => p.ordem), [1, 2, 3, 4]);
+  for (let i = 1; i < b.pilares.length; i++) {
+    assert.ok(b.pilares[i - 1].natural >= b.pilares[i].natural, 'a ordem não é decrescente');
+  }
+});
+
+test('o relatório NÃO lista as 16 características — é a proibição do módulo', async () => {
+  const { LEXICO_PILAR } = await import('@espansione/cis');
+  const todas = Object.values(LEXICO_PILAR).flat();
+  for (let n = 0; n < 30; n++) {
+    const texto = JSON.stringify(relatorioAleatorio().blocos.find((b) => b.id === 'jeito_de_trabalhar'));
+    const apareceram = todas.filter((c) => texto.includes(c));
+    assert.deepEqual(apareceram, [], `o bloco dos pilares vazou característica: ${apareceram.join(', ')}`);
+  }
 });
 
 test('texto vazio ou só espaço cai no motor, não apaga o bloco', () => {

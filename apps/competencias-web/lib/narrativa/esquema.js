@@ -17,7 +17,7 @@ import { PILARES, ROTULO_PILAR } from '@espansione/cis';
  * próxima abertura — é assim que uma correção de voz alcança quem já
  * tem relatório gerado. Formato: v<n>-<data>.
  */
-export const NARRATIVA_VERSAO = 'v1-2026-08-16';
+export const NARRATIVA_VERSAO = 'v2-2026-08-16';
 
 export const MODELO = 'claude-opus-5';
 
@@ -47,6 +47,23 @@ export const ESQUEMA_NARRATIVA = objeto({
     texto: texto(
       'Um parágrafo curto introduzindo o mapa das doze competências, que é mostrado logo abaixo em forma de faixa. Não repita a lista.'
     ),
+  }),
+
+  jeito_de_trabalhar: objeto({
+    titulo: texto('Título do bloco.'),
+    texto: texto(
+      'Um a dois parágrafos lendo os quatro pilares como um conjunto: o que essa combinação faz de quem toca um negócio. Não descreva um por um aqui.'
+    ),
+    pilares: {
+      type: 'array',
+      description: 'Uma entrada por pilar, na mesma ordem dos fatos.',
+      items: objeto({
+        pilar: { type: 'string', enum: PILARES.map((p) => ROTULO_PILAR[p]), description: 'O nome do pilar, copiado dos fatos.' },
+        texto: texto(
+          'Uma ou duas frases: o que este pilar faz no dia dessa pessoa, e o que a relação dele com o contexto significa. Sem repetir a linha de verbos que já aparece na tela.'
+        ),
+      }),
+    },
   }),
 
   por_que: objeto({
