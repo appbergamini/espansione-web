@@ -1,0 +1,16 @@
+{
+  "name": "@espansione/brand",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "test": "node --test __tests__/*.test.js",
+    "clean": "rimraf .turbo node_modules"
+  },
+  "devDependencies": { "rimraf": "^6.0.1" }
+}

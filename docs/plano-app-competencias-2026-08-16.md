@@ -194,9 +194,9 @@ Hoje, `crescimentointegrado.com.br` é servido pelos rewrites host-based dentro 
 
 Com dois apps sob o mesmo domínio, a saída é **multi-zone** — confirmado no guia do Next 16 instalado (`node_modules/next/dist/docs/01-app/02-guides/multi-zones.md`):
 
-- O app novo declara `assetPrefix: '/teste-static'`.
-- O `diagnostic-web` permanece **dono do domínio e roteador de borda**, e ganha três rewrites: `/teste`, `/teste/:path+` e `/teste-static/:path+` → `${TESTE_ORIGIN}/…`.
-- O rewrite extra de `/teste-static/_next/:path+` **não é necessário** — deixou de ser a partir do Next 15.
+- O app novo declara **`basePath: '/teste'`**. *(Ajustado na F0: o guia sugere `assetPrefix`, que exige que as páginas vivam fisicamente em `pages/teste/…` e pede três regras de rewrite. Com `basePath`, rotas e assets já saem sob `/teste`, os links internos são prefixados automaticamente pelo Next, e bastam duas regras. O `assetPrefix` existe no guia porque ele assume que a zona não quer `basePath` — aqui queremos.)*
+- O `diagnostic-web` permanece **dono do domínio e roteador de borda**, e ganha dois rewrites: `/teste` e `/teste/:path+` → `${TESTE_ORIGIN}/teste/…` (o destino inclui o basePath).
+- O rewrite extra para os assets **não é necessário** — deixou de ser a partir do Next 15.
 - Navegação entre zonas usa `<a>`, nunca `<Link>`: prefetch cruzando zona não funciona.
 - `TESTE_ORIGIN` é variável de ambiente, apontando para `localhost` em dev e para o domínio de produção do app novo em prod.
 

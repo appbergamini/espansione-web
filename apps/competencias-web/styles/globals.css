@@ -1,0 +1,34 @@
+/* Tokens da marca vindos de @espansione/brand (cópia única, testada). */
+:root {
+  --esp-navy: #001A3B;
+  --esp-navy2: #013063;
+  --esp-red: #C72638;
+  --esp-red-hover: #E13345;
+  --esp-card: #FFFFFF;
+  --esp-text: #0C2340;
+  --esp-text-sec: #5B6B7F;
+  --esp-border: #E2E8F0;
+  --esp-track: #E9EEF5;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  color: var(--esp-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 50% -10%, var(--esp-navy2), var(--esp-navy) 60%);
+}
+
+a { color: inherit; }
+
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--esp-red);
+  outline-offset: 3px;
+}
