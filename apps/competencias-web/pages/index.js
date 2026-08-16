@@ -33,9 +33,12 @@ export default function Abertura() {
         <p style={S.eyebrow}>Espansione</p>
         <h1 style={S.h1}>Teste de Competências Empreendedoras</h1>
 
+        {/* Sem número de telas: ele varia. O teste aprofunda quantas
+            competências precisar, então prometer "22" seria mentira em
+            metade dos casos. Tempo é o que importa para quem vai começar. */}
         <p style={S.lead}>
-          São 22 telas, entre 9 e 10 minutos. Não existe resposta certa —
-          existe a que descreve você.
+          Leva cerca de 10 minutos. Não existe resposta certa — existe a que
+          descreve você.
         </p>
 
         <div style={S.enunciado}>

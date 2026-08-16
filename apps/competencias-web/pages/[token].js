@@ -215,12 +215,22 @@ function Moldura({ children, progresso }) {
       <div style={S.card}>
         {progresso && (
           <div style={S.progresso}>
-            <div style={S.trilho}>
-              <div style={{ ...S.barra, width: `${progresso.percentual}%` }} />
+            {/* Um segmento por bloco. Cada um enche no seu próprio ritmo, e
+                nenhum recua quando o bloco seguinte é maior do que o mínimo. */}
+            <div style={S.trilhos}>
+              {(progresso.segmentos || []).map((s) => (
+                <div key={s.etapa} style={S.trilho}>
+                  <div style={{
+                    ...S.barra,
+                    width: `${s.estado === 'completo' ? 100 : s.percentual}%`,
+                    background: s.estado === 'pendente' ? CORES.track : CORES.red,
+                  }} />
+                </div>
+              ))}
             </div>
             <div style={S.linhaProgresso}>
               <span style={S.legendaProgresso}>{progresso.legenda}</span>
-              {progresso.deTotal && (
+              {progresso.deTotal > 0 && (
                 <span style={S.contador}>{progresso.pergunta} de {progresso.deTotal}</span>
               )}
             </div>
@@ -239,7 +249,8 @@ const S = {
     boxShadow: '0 24px 60px -20px rgba(0,0,0,.45)', display: 'flex', flexDirection: 'column', gap: '1.2rem',
   },
   progresso: { display: 'flex', flexDirection: 'column', gap: '.45rem' },
-  trilho: { height: '6px', background: CORES.track, borderRadius: '99px', overflow: 'hidden' },
+  trilhos: { display: 'flex', gap: '5px' },
+  trilho: { flex: 1, height: '6px', background: CORES.track, borderRadius: '99px', overflow: 'hidden' },
   barra: { height: '100%', background: CORES.red, borderRadius: '99px', transition: 'width .3s' },
   linhaProgresso: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '.75rem' },
   legendaProgresso: { fontSize: '.78rem', color: CORES.textSec, fontWeight: 600, letterSpacing: '.02em' },

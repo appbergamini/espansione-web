@@ -118,9 +118,66 @@ test('o total nunca fica abaixo do mínimo, e cresce com o empate', () => {
   }
 });
 
-test('antes de fechar a etapa 1, o total mostrado é o mínimo', () => {
+// ── contador POR BLOCO: o denominador nunca muda no meio do bloco ────
+test('o contador é local ao bloco, não global', () => {
   const e = estadoDaSessao({ respostas: {}, seed: SEED, etapa2Habilitada: true });
-  assert.equal(e.progresso.deTotal, totalMinimoDeTelas({ etapa2Habilitada: true }));
+  assert.equal(e.progresso.deTotal, N_BLOCOS, 'na etapa 1 o denominador é o nº de blocos');
+  assert.equal(e.progresso.pergunta, 1);
+});
+
+test('o denominador de um bloco NÃO muda enquanto se está dentro dele', () => {
+  const respostas = {};
+  const denominadores = new Set();
+  for (let i = 0; i < N_BLOCOS; i++) {
+    const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+    denominadores.add(e.progresso.deTotal);
+    assert.equal(e.progresso.pergunta, i + 1);
+    respostas[e.tela.id] = { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[1].competencia };
+  }
+  assert.equal(denominadores.size, 1, `denominador oscilou dentro da etapa 1: ${[...denominadores]}`);
+});
+
+test('o aprofundamento é um bloco próprio, com o seu tamanho', () => {
+  const respostas = responderTodosOsBlocos();
+  const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+  assert.equal(e.fase, 'etapa2');
+  const { selecao } = telasDaSessao(respostas, { etapa2Habilitada: true });
+  assert.equal(e.progresso.deTotal, selecao.selecionadas.length * 2);
+  assert.equal(e.progresso.pergunta, 1, 'o bloco novo começa em 1, não continua a contagem anterior');
+});
+
+test('o progresso traz um segmento por bloco, e nenhum recua', () => {
+  const respostas = {};
+  let anteriores = null;
+  let guarda = 0;
+  while (guarda++ < 80) {
+    const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+    const segs = e.progresso.segmentos;
+    assert.equal(segs.length, 3, 'três blocos');
+    assert.deepEqual(segs.map((s) => s.etapa), [1, 2, 3]);
+    if (anteriores) {
+      for (let i = 0; i < segs.length; i++) {
+        const antes = anteriores[i].estado === 'completo' ? 100 : anteriores[i].percentual;
+        const agora = segs[i].estado === 'completo' ? 100 : segs[i].percentual;
+        assert.ok(agora >= antes, `segmento ${i + 1} recuou de ${antes}% para ${agora}%`);
+      }
+    }
+    anteriores = segs;
+    if (e.fase === 'concluido') break;
+    respostas[e.tela.id] = e.tela.tipo === 'escolha_forcada'
+      ? { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[3].competencia }
+      : e.tela.tipo === 'item_ancorado' ? { nivel: 2 } : { valor: 1 };
+  }
+  assert.ok(guarda < 80);
+});
+
+test('crescer a etapa 2 não mexe no bloco 1, que já estava completo', () => {
+  const respostas = responderTodosOsBlocos();
+  const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
+  const bloco1 = e.progresso.segmentos.find((s) => s.etapa === 1);
+  assert.equal(bloco1.estado, 'completo');
+  assert.equal(bloco1.feitas, N_BLOCOS);
+  assert.equal(bloco1.total, N_BLOCOS);
 });
 
 // ── VOLTAR ───────────────────────────────────────────────────────────
@@ -190,7 +247,7 @@ test('a contagem avança junto com as respostas', () => {
   for (let i = 0; i < 5; i++) {
     const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: true });
     assert.equal(e.progresso.pergunta, i + 1);
-    assert.equal(e.progresso.respondidas, i);
+    assert.equal(e.progresso.segmentos[0].feitas, i);
     respostas[e.tela.id] = { mais: e.tela.opcoes[0].competencia, menos: e.tela.opcoes[1].competencia };
   }
 });

@@ -77,13 +77,8 @@ export function telasDaSessao(respostas = {}, { etapa2Habilitada = ETAPA2_DISPON
 export function estadoDaSessao({ respostas = {}, seed = 'sem-seed', telaAtual = null, etapa2Habilitada = ETAPA2_DISPONIVEL } = {}) {
   const { lista, selecao } = telasDaSessao(respostas, { etapa2Habilitada });
 
-  // Enquanto a etapa 1 não fecha, a lista ainda não tem os ancorados — o
-  // corte não existe. Mostrar `lista.length` ali daria "de 16" e depois
-  // saltaria para 22+. Mostra-se o MÍNIMO possível, que é o total real em
-  // 55% dos casos; nos demais o denominador sobe uma vez, quando o corte
-  // fica conhecido. Consequência direta de aprofundar todas as empatadas.
+  // Só para navegação. O contador visível é POR BLOCO — ver progressoDe.
   const total = Math.max(lista.length, totalMinimoDeTelas({ etapa2Habilitada }));
-  const feitas = lista.filter((t) => respondido(respostas, t.id)).length;
 
   const iFrontier = lista.findIndex((t) => !respondido(respostas, t.id));
 
@@ -104,7 +99,7 @@ export function estadoDaSessao({ respostas = {}, seed = 'sem-seed', telaAtual = 
         acao: { rotulo: 'Fazer o Mapeamento Comportamental', destino: 'comportamental' },
         anterior: lista[lista.length - 1]?.id || null,
       },
-      progresso: progressoDe(3, { etapa2Habilitada, respondidas: total, total, fim: true }),
+      progresso: progressoDe(3, { etapa2Habilitada, lista, respostas, fim: true }),
       selecao,
       integridade: pontuarEscolhaForcada(respostas).integridade,
       niveis: etapa2Habilitada && selecao ? niveisDasSelecionadas(respostas, selecao.selecionadas) : null,
@@ -114,7 +109,7 @@ export function estadoDaSessao({ respostas = {}, seed = 'sem-seed', telaAtual = 
   const t = lista[i];
   const base = {
     fase: `etapa${t.etapa}`,
-    progresso: progressoDe(t.etapa, { etapa2Habilitada, respondidas: feitas, total }),
+    progresso: progressoDe(t.etapa, { etapa2Habilitada, lista, respostas }),
     selecao,
     navegacao: {
       anterior: i > 0 ? lista[i - 1].id : null,
@@ -188,19 +183,53 @@ export function niveisDasSelecionadas(respostas, selecionadas = []) {
   return out;
 }
 
-function progressoDe(etapa, { etapa2Habilitada, respondidas, total, fim = false }) {
-  const deEtapas = etapa2Habilitada ? 3 : 2;
-  const normalizada = etapa2Habilitada ? etapa : etapa === 3 ? 2 : etapa;
+/**
+ * Progresso POR BLOCO, não global.
+ *
+ * Um contador global teria denominador móvel: o tamanho da etapa 2 só é
+ * conhecido depois que a etapa 1 fecha, então "12 de 22" viraria "12 de 26"
+ * no meio do teste, e a barra recuaria. Denominador que muda parece defeito.
+ *
+ * Com um segmento por etapa, cada denominador já é conhecido quando o seu
+ * bloco começa, e nada anda para trás. A etapa 2 crescer deixa de ser
+ * visível como anomalia — ela é um bloco próprio, do tamanho que precisar.
+ */
+function progressoDe(etapa, { etapa2Habilitada, lista, respostas, fim = false }) {
+  const etapas = etapa2Habilitada ? [1, 2, 3] : [1, 3];
+  const contarEtapa = (n) => {
+    const doBloco = lista.filter((t) => t.etapa === n);
+    return { total: doBloco.length, feitas: doBloco.filter((t) => respondido(respostas, t.id)).length };
+  };
+
+  const segmentos = etapas.map((n, i) => {
+    const { total, feitas } = contarEtapa(n);
+    // A etapa 2 ainda não tem tamanho antes de a etapa 1 fechar.
+    const totalMostrado = total || (n === 2 ? 3 * ANCORADOS_POR_COMPETENCIA : 0);
+    return {
+      etapa: n,
+      indice: i + 1,
+      rotulo: ROTULO_ETAPA[n],
+      total: totalMostrado,
+      feitas,
+      percentual: totalMostrado ? Math.round((feitas / totalMostrado) * 100) : 0,
+      estado: fim || feitas >= totalMostrado ? 'completo' : n === etapa ? 'atual' : feitas > 0 ? 'atual' : 'pendente',
+    };
+  });
+
+  const atual = segmentos.find((s) => s.etapa === etapa) || segmentos[segmentos.length - 1];
+  const indiceAtual = segmentos.indexOf(atual) + 1;
+
   return {
-    etapa: normalizada,
-    de: deEtapas,
+    etapa: indiceAtual,
+    de: segmentos.length,
     rotulo: fim ? 'Concluído' : ROTULO_ETAPA[etapa],
     // Montada aqui, não na tela: um lugar só decide como o progresso é dito.
-    legenda: fim ? 'Concluído' : `Etapa ${normalizada} de ${deEtapas} · ${ROTULO_ETAPA[etapa]}`,
-    pergunta: Math.min(respondidas + (fim ? 0 : 1), total),
-    deTotal: total,
-    respondidas,
-    percentual: total ? Math.round((respondidas / total) * 100) : 0,
+    legenda: fim ? 'Concluído' : `Etapa ${indiceAtual} de ${segmentos.length} · ${ROTULO_ETAPA[etapa]}`,
+    // Contagem LOCAL do bloco atual.
+    pergunta: fim ? atual.total : Math.min(atual.feitas + 1, atual.total),
+    deTotal: atual.total,
+    segmentos,
+    percentual: fim ? 100 : atual.percentual,
   };
 }
 
