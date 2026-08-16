@@ -76,12 +76,23 @@ O `diagnostic-web` é o dono do domínio e o roteador de borda. As regras de rew
 
 1. No projeto `appbergamini` (o do funil), adicionar em Production:
    ```
-   TESTE_ORIGIN = https://competencias-web-appbergaminis-projects.vercel.app
+   TESTE_ORIGIN = https://competencias-web.vercel.app
    ```
-2. Redeployar o `appbergamini` (a variável é lida em build time).
-3. `crescimentointegrado.com.br/teste` passa a servir a zona.
+2. **A variável precisa estar declarada em `turbo.json` → `tasks.build.env`.** Já está.
+3. Fazer o funil **rebuildar de verdade** (ver armadilha abaixo).
+4. `crescimentointegrado.com.br/teste` passa a servir a zona.
 
-Para desligar: apagar a variável e redeployar. Não precisa mexer em código.
+Para desligar: apagar a variável e rebuildar. Não precisa mexer em código.
+
+### ⚠️ Duas armadilhas que custaram tempo aqui
+
+**1. Turbo filtra variáveis de ambiente.** O que não está em `turbo.json` → `tasks.build.env` **não chega ao build** — e, pior, não entra no hash do cache, então o turbo replica o build anterior em vez de refazer. O sintoma é cruel: variável setada, deploy `READY`, e a rota continua 404.
+
+O aviso aparece nos logs de build (*"set on your Vercel project, but missing from turbo.json"*) e é fácil de ignorar por estar entre outros avisos.
+
+Só variável lida em **build time** precisa estar ali. As lidas em runtime pelas funções (chaves de API, service role) a Vercel injeta na função — declará-las no turbo só aumentaria cache miss.
+
+**2. `vercel redeploy` reusa o build.** Ele cria um deployment novo com `action: redeploy` e `originalDeploymentId`, mas aproveita o build anterior — então **não** pega variável de ambiente nova. Para forçar rebuild: um commit que toque o app (ou o `turbo.json`), ou o botão de redeploy no painel com o cache desmarcado.
 
 ---
 
