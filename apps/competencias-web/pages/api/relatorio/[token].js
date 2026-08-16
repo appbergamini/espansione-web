@@ -7,6 +7,14 @@ import { ETAPA2_DISPONIVEL, ANCORADOS_EM_RASCUNHO } from '../../../lib/competenc
 import { garantirNarrativa, aplicarNarrativa } from '../../../lib/narrativa/index.js';
 
 /**
+ * Escrever o relatório leva ~100s. O padrão da função na Vercel é 60s, e
+ * o sintoma de estourar não é um erro claro: a geração morre no meio, a
+ * sessão fica marcada como falhada e o cliente recebe o texto do motor
+ * sem que nada pareça quebrado. Já aconteceu uma vez.
+ */
+export const config = { maxDuration: 300 };
+
+/**
  * O relatório integrado. Só existe com OS DOIS instrumentos concluídos —
  * é a regra que sustenta o produto: resultado parcial vira o produto na
  * cabeça de quem responde, e o segundo instrumento nunca é feito.

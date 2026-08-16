@@ -55,7 +55,16 @@ export async function garantirNarrativa(assessmentId, relatorio, { esperar = tru
     console.log('[narrativa] gerada', assessmentId, modelo, uso);
     return narrativa;
   } catch (e) {
-    console.error('[narrativa] falhou', assessmentId, e?.message || e);
+    // Detalhe, não só a mensagem: um 400 da API e um timeout de função
+    // produzem sintomas idênticos do lado do cliente (texto do motor, sem
+    // erro visível) e só o log distingue os dois. `status` e `error` vêm
+    // do SDK da Anthropic; `code` vem do Supabase.
+    console.error('[narrativa] falhou', assessmentId, {
+      mensagem: e?.message,
+      status: e?.status ?? null,
+      tipo: e?.error?.error?.type ?? e?.name ?? null,
+      code: e?.code ?? null,
+    });
     try { await marcarFalha(assessmentId); } catch { /* o log acima já basta */ }
     return null;
   }

@@ -3,6 +3,13 @@ import { garantir, gravarResposta, fechar, liberado } from '../../../../lib/comp
 import { estadoDaSessao, validarResposta, estaCompleto } from '../../../../lib/comportamental/sessao.js';
 import { preaquecerNarrativa } from '../../../../lib/narrativa/preaquecer.js';
 
+/**
+ * A resposta sai em milissegundos, mas o `waitUntil` do pré-aquecimento
+ * continua rodando depois dela e conta contra a duração da função. Sem
+ * este teto ele morre aos 60s, no meio da geração.
+ */
+export const config = { maxDuration: 300 };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Method Not Allowed' });
   try {
