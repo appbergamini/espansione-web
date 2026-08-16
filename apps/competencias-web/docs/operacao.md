@@ -68,6 +68,24 @@ Cria uma sessão descartável, responde os dois instrumentos, gera o relatório 
 
 ⚠️ As respostas são uniformemente aleatórias, o que produz um perfil comportamental artificialmente **central** — os 4 pilares saem perto de 50. Isso faz o Índice de Ajuste sair alto e a trilha cair em `tecnica` com muito mais frequência que em produção. **Não calibrar nada por este script.**
 
+### 🔴 Limpar sessão de teste: NUNCA por filtro largo
+
+Incidente em 16/08: rodei `delete from comp_assessments where email is null` para limpar sessões de smoke, e **apaguei a sessão de um usuário real que estava respondendo naquele momento**. O `/api/sessao/criar` não pede email, então `email is null` casa com **toda** sessão do fluxo normal — não só com as de teste.
+
+Regra: apagar **por id ou por token**, um a um, e só o que você mesmo acabou de criar.
+
+```sql
+-- certo
+delete from comp_assessments where token = '<token que eu criei agora>';
+
+-- errado, em qualquer variação
+delete from comp_assessments where email is null;
+delete from comp_assessments where concluido_em is null;
+delete from comp_assessments;
+```
+
+O `smoke-e2e.mjs` já faz o certo: guarda o id da sessão que criou e apaga só ele, num `finally`.
+
 ---
 
 ## Ligar a zona no domínio
