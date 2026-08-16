@@ -59,10 +59,12 @@ export function estadoDaSessao({ respostas = {} } = {}) {
       fase: 'concluido',
       tela: {
         tipo: 'fim',
-        titulo: 'Etapa 2 de 2 concluída',
-        texto: 'Os dois instrumentos estão completos. O seu relatório está sendo gerado.',
+        // Sem numeração aqui também: a pessoa acabou de ver "Etapa 1 de 3"
+        // no teste, e um segundo esquema de contagem só confunde.
+        titulo: 'Tudo pronto',
+        texto: 'Os dois estão completos. O seu relatório está sendo gerado — a gente avisa quando estiver disponível.',
       },
-      progresso: { momento: null, etapa: 2, de: 2, pergunta: todas.length, deTotal: todas.length, percentual: 100 },
+      progresso: { momento: null, legenda: 'Concluído', pergunta: todas.length, deTotal: todas.length, percentual: 100 },
     };
   }
 
@@ -75,8 +77,7 @@ export function estadoDaSessao({ respostas = {} } = {}) {
     fase: pendente.momento,
     progresso: {
       momento: pendente.momento,
-      etapa: pendente.momento === 'natural' ? 1 : 2,
-      de: 2,
+      legenda: pendente.momento === 'natural' ? 'Como você é' : 'O que o papel pede',
       // Mesma decisão da tela do teste: o momento dá o contexto, a contagem
       // dá o tamanho. Aqui importa mais ainda, porque as mesmas palavras
       // voltam na segunda passagem e sem contador parece que travou.

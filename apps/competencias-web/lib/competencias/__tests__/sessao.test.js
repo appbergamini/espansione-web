@@ -80,7 +80,25 @@ test('a tela final NÃO mostra resultado — só sinal de progresso', () => {
   for (const proibido of ['score', 'mais_forte', 'mais_fragil', 'frágil', 'pontuação', 'resultado d']) {
     assert.ok(!texto.includes(proibido), `a tela final vazou "${proibido}"`);
   }
-  assert.match(e.tela.titulo, /Etapa 1 de 2/);
+  assert.match(e.tela.titulo, /Teste concluído/);
+});
+
+test('a tela final NÃO cria um segundo esquema de numeração', () => {
+  // A barra conta as ETAPAS do teste (1 a 3). O título não pode contar os
+  // INSTRUMENTOS (1 de 2) com a mesma palavra, na mesma tela.
+  const respostas = responderTodasAsAncoras(responderTodosOsBlocos());
+  const e = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: false });
+  assert.doesNotMatch(e.tela.titulo, /etapa/i, `título não pode numerar etapa: "${e.tela.titulo}"`);
+  assert.doesNotMatch(e.tela.texto, /etapa \d/i);
+  assert.equal(e.progresso.legenda, 'Concluído', 'a barra também não repete "Etapa X de Y" no fim');
+});
+
+test('o texto final não fala de métrica de funil com quem está respondendo', () => {
+  const respostas = responderTodasAsAncoras(responderTodosOsBlocos());
+  const { texto } = estadoDaSessao({ respostas, seed: SEED, etapa2Habilitada: false }).tela;
+  for (const jargao of ['taxa', 'conversão', 'funil', 'percentual de quem']) {
+    assert.ok(!texto.toLowerCase().includes(jargao), `jargão interno vazou para o cliente: "${jargao}"`);
+  }
 });
 
 // ── empate e escolha ─────────────────────────────────────────────────

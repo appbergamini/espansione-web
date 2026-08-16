@@ -158,8 +158,11 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
       tipo: 'fim',
       // NADA DE RESULTADO PARCIAL. Só sinal de progresso: resultado parcial
       // vira o produto na cabeça do cliente e o segundo instrumento nunca é feito.
-      titulo: 'Etapa 1 de 2 concluída',
-      texto: 'O Mapeamento Comportamental acabou de abrir. O relatório é gerado quando os dois estiverem completos — e a taxa de quem conclui os dois é o que decide se você recebe o seu.',
+      // NÃO numerar aqui. A barra já conta as ETAPAS do teste (1 a 3); dizer
+      // "Etapa 1 de 2" para os dois INSTRUMENTOS na mesma tela põe a mesma
+      // palavra contando duas coisas diferentes.
+      titulo: 'Teste concluído',
+      texto: 'Falta o Mapeamento Comportamental, que acabou de abrir. O seu relatório é gerado quando os dois estiverem completos.',
       // O elo entre os dois instrumentos é o gargalo real do funil: quem não
       // completa os dois não recebe relatório. A tela final leva direto.
       acao: { rotulo: 'Fazer o Mapeamento Comportamental', destino: 'comportamental' },
@@ -169,6 +172,7 @@ export function estadoDaSessao({ respostas = {}, escolhas = [], seed = 'sem-seed
       etapa: etapa2Habilitada ? 3 : 2,
       de: etapa2Habilitada ? 3 : 2,
       rotulo: 'Concluído',
+      legenda: 'Concluído',
       pergunta: totalDeTelas({ etapa2Habilitada }),
       deTotal: totalDeTelas({ etapa2Habilitada }),
       respondidas: totalDeTelas({ etapa2Habilitada }),
@@ -225,6 +229,9 @@ export function progresso(etapa, { etapa2Habilitada = ETAPA2_DISPONIVEL, respond
     etapa: normalizada,
     de: deEtapas,
     rotulo: ROTULO_ETAPA[etapa],
+    // Montada aqui, e não na tela: assim existe UM lugar que decide como o
+    // progresso é dito, e a tela final não precisa de exceção no componente.
+    legenda: `Etapa ${normalizada} de ${deEtapas} · ${ROTULO_ETAPA[etapa]}`,
     pergunta: atual,
     deTotal: totalTelas,
     respondidas,

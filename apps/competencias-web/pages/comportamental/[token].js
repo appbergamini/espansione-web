@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { CORES } from '@espansione/brand';
+import TelaDeAviso from '../../components/TelaDeAviso';
 
 // Mapeamento Comportamental. Respondido duas vezes — como você é, e o que o
 // papel pede — porque é da diferença entre os dois que sai a leitura de
@@ -13,12 +14,14 @@ export default function Comportamental() {
   const [bloqueio, setBloqueio] = useState(null);
   const [erro, setErro] = useState(null);
   const [enviando, setEnviando] = useState(false);
+  const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [transicaoVista, setTransicaoVista] = useState(false);
 
   const carregar = useCallback(async () => {
     const r = await fetch(`/teste/api/comportamental/${token}`);
     const d = await r.json();
     if (r.status === 423) return setBloqueio(d.motivo);
+    if (r.status === 404) return setNaoEncontrado(true);
     if (!r.ok) return setErro(d.erro || 'Não foi possível carregar.');
     setEstado(d);
   }, [token]);
@@ -45,6 +48,15 @@ export default function Comportamental() {
     }
   }
 
+  if (naoEncontrado) {
+    return (
+      <TelaDeAviso
+        titulo="Este link não abre mais"
+        texto="O teste ligado a ele não existe mais. Use o link original que você recebeu; se ele também não abrir, a gente resolve por aqui."
+        acao={{ href: '/teste', rotulo: 'Começar um teste novo' }}
+      />
+    );
+  }
   if (bloqueio) {
     return (
       <Moldura>
@@ -161,9 +173,7 @@ function Moldura({ children, progresso }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.45rem' }}>
             <div style={S.trilho}><div style={{ ...S.barra, width: `${progresso.percentual}%` }} /></div>
             <div style={S.linhaProgresso}>
-              <span style={S.legenda}>
-                {progresso.momento === 'natural' ? 'Como você é' : progresso.momento === 'contexto' ? 'O que o papel pede' : 'Concluído'}
-              </span>
+              <span style={S.legenda}>{progresso.legenda}</span>
               {progresso.deTotal && (
                 <span style={S.contador}>{progresso.pergunta} de {progresso.deTotal}</span>
               )}

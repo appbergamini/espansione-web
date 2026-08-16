@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { CORES } from '@espansione/brand';
+import TelaDeAviso from '../components/TelaDeAviso';
 
 // Fluxo do teste. Uma questão por tela; o enunciado da escala foi explicado
 // uma única vez, na abertura, e não se repete aqui.
@@ -10,11 +11,14 @@ export default function Teste() {
 
   const [estado, setEstado] = useState(null);
   const [erro, setErro] = useState(null);
+  const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   const carregar = useCallback(async () => {
     const r = await fetch(`/teste/api/sessao/${token}`);
     const d = await r.json();
+    // 404 é beco sem saída e merece tela própria, com uma saída.
+    if (r.status === 404) return setNaoEncontrado(true);
     if (!r.ok) return setErro(d.erro || 'Não foi possível carregar o teste.');
     setEstado(d);
   }, [token]);
@@ -44,6 +48,15 @@ export default function Teste() {
   const responder = (itemId, payload) => enviar(`/teste/api/sessao/${token}/responder`, { itemId, payload });
   const escolher = (escolhas) => enviar(`/teste/api/sessao/${token}/escolher`, { escolhas });
 
+  if (naoEncontrado) {
+    return (
+      <TelaDeAviso
+        titulo="Este link não abre mais"
+        texto="O teste ligado a ele não existe mais. Se você começou e parou no meio, use o link original que recebeu; se ele também não abrir, a gente resolve por aqui."
+        acao={{ href: '/teste', rotulo: 'Começar um teste novo' }}
+      />
+    );
+  }
   if (erro && !estado) return <Moldura><p style={S.erro}>{erro}</p></Moldura>;
   if (!estado) return <Moldura><p style={S.sec}>Carregando…</p></Moldura>;
 
@@ -254,9 +267,7 @@ function Moldura({ children, progresso }) {
             </div>
             {/* A etapa dá o contexto; a contagem dá o tamanho. */}
             <div style={S.linhaProgresso}>
-              <span style={S.legendaProgresso}>
-                Etapa {progresso.etapa} de {progresso.de} · {progresso.rotulo}
-              </span>
+              <span style={S.legendaProgresso}>{progresso.legenda}</span>
               {progresso.deTotal && (
                 <span style={S.contador}>
                   {progresso.pergunta} de {progresso.deTotal}

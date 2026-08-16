@@ -94,7 +94,8 @@ test('NÃO existe tela de resultado no fim — só sinal de progresso', () => {
   for (const proibido of ['determinação', 'conexão', 'constância', 'precisão', 'perfil', 'score', 'ousadia']) {
     assert.ok(!texto.includes(proibido), `a tela final vazou "${proibido}"`);
   }
-  assert.match(e.tela.titulo, /Etapa 2 de 2/);
+  assert.match(e.tela.titulo, /Tudo pronto/);
+  assert.doesNotMatch(e.tela.titulo, /etapa/i, 'não criar um segundo esquema de numeração');
 });
 
 test('a tela de ranking não expõe o fator por trás da palavra', () => {
