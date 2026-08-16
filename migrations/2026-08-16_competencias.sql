@@ -179,6 +179,24 @@ create table if not exists comp_trilha (
   primary key (assessment_id, ordem)
 );
 
+-- ── RLS ─────────────────────────────────────────────────────
+-- A chave anon é pública (NEXT_PUBLIC_). Sem RLS, o PostgREST exporia a
+-- resposta de todo respondente para qualquer um com a chave.
+--
+-- Ligar RLS SEM policy nenhuma nega anon e authenticated por completo.
+-- Não quebra a zona: todo acesso passa por lib/supabaseAdmin.js (service
+-- role), e service_role ignora RLS por definição. Se um dia a zona
+-- precisar ler direto do browser, aí sim entra policy — nunca antes.
+alter table comp_assessments      enable row level security;
+alter table comp_answers          enable row level security;
+alter table comp_scores           enable row level security;
+alter table comp_comportamental   enable row level security;
+alter table comp_pilares          enable row level security;
+alter table comp_faixa_posicao    enable row level security;
+alter table comp_indice_ajuste    enable row level security;
+alter table comp_indice_coerencia enable row level security;
+alter table comp_trilha           enable row level security;
+
 -- ── updated_at ──────────────────────────────────────────────
 create or replace function comp_touch_updated_at() returns trigger as $$
 begin
