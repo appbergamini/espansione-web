@@ -52,6 +52,27 @@ const nextConfig = {
         // LP do Mapa (URL principal + alias histórico WhatsApp/links).
         { source: '/lp', destination: '/crescimento/index.html' },
         { source: '/crescimento', destination: '/crescimento/index.html' },
+
+        // ── Zona do Teste de Competências (multi-zone) ──────────────
+        // Este app continua dono do domínio e roteador de borda; o teste
+        // vive em apps/competencias-web, com deploy próprio.
+        //
+        // A zona declara basePath '/teste', então rotas E assets já saem
+        // sob /teste e o destino inclui o prefixo. Duas regras bastam — o
+        // rewrite extra de assets deixou de ser necessário no Next 15+.
+        //
+        // Gated por TESTE_ORIGIN: sem a variável, isto é uma lista vazia e
+        // nada muda. Ligar a zona é setar a env, não editar código.
+        //
+        // afterFiles (e não beforeFiles) de propósito: /teste não colide
+        // com nenhuma página nem arquivo público deste app, então não há
+        // motivo para passar na frente do roteamento normal.
+        ...(process.env.TESTE_ORIGIN
+          ? [
+              { source: '/teste', destination: `${process.env.TESTE_ORIGIN}/teste` },
+              { source: '/teste/:path+', destination: `${process.env.TESTE_ORIGIN}/teste/:path+` },
+            ]
+          : []),
       ],
     };
   },
