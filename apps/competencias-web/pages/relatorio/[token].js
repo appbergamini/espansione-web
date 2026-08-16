@@ -6,9 +6,15 @@ import TelaDeAviso from '../../components/TelaDeAviso';
 // Relatório integrado.
 //
 // DIREÇÃO: a metodologia é FAIXA — posição dentro de um intervalo. Não é
-// nota, não é gauge, não é percentil. Isso vira a assinatura do documento:
-// uma marca de posição em 5 células que se repete a cada competência e dá
-// o ritmo da página. É a medida desenhada.
+// nota, não é gauge, não é percentil. A marca de posição em 5 se repete a
+// cada competência e dá o ritmo da página: é a medida desenhada.
+//
+// As 5 células viraram 5 ESTRELAS em 16/08, a pedido do cliente. Vale
+// saber o que se trocou: estrela é o dispositivo de nota por excelência,
+// e isso puxa contra "frágil não é defeito". O que compensa é que o
+// rótulo ("Frágil", "Mais forte") saiu de baixo do nome da competência —
+// ele lia como veredicto e a contagem já diz a mesma coisa. Saldo
+// provavelmente neutro. Não reverter sem falar com o cliente.
 //
 // COR: o calor não vem de bege (default genérico, e briga com a marca) —
 // vem do próprio vermelho Espansione em tinta baixa, e o peso vem de
@@ -116,14 +122,15 @@ export default function Relatorio() {
                       <span className="comp-nome">{c.nome}</span>
                       <Faixa passo={c.passo} de={c.de} rotulo={c.posicao} />
                     </div>
-                    <div className="comp-pe">
-                      <span className="comp-rotulo">{c.posicao}</span>
-                      {c.nivelNome && (
+                    {/* Só as 3 aprofundadas têm nível. Sem ele o pé fica
+                        vazio — e um pé vazio abre um vão que parece erro. */}
+                    {c.nivelNome && (
+                      <div className="comp-pe">
                         <span className="comp-nivel">
                           {c.nivelNome}{c.nivelEstimado ? ' · estimado' : ''}
                         </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -225,11 +232,29 @@ function Secao({ numero, titulo, campo, children }) {
  * Mesma informação do rótulo, em forma de posição. Não é barra de
  * progresso nem nota — é onde a competência está na escala.
  */
+/**
+ * Estrela de 5 pontas em SVG, não caractere Unicode (★): o glifo muda de
+ * desenho e de peso a cada fonte e sistema, e o relatório é impresso.
+ * Geometria: raio externo 11, interno 4,8 num viewBox 24 — ponta afiada o
+ * bastante para não virar flor no tamanho pequeno.
+ */
+const ESTRELA = 'M12 1 L14.82 8.12 L22.46 8.6 L16.57 13.48 L18.47 20.9 L12 16.8 '
+  + 'L5.53 20.9 L7.43 13.48 L1.54 8.6 L9.18 8.12 Z';
+
+/**
+ * O rótulo da posição saiu da tela (16/08, pedido do cliente): a contagem
+ * de estrelas já diz a mesma coisa, e "Frágil" carimbado embaixo do nome
+ * da competência lia como veredicto. Ele continua no `aria-label` — quem
+ * usa leitor de tela não conta estrela.
+ */
 function Faixa({ passo, de, rotulo }) {
   return (
     <span className="faixa" role="img" aria-label={`Posição: ${rotulo}`}>
       {Array.from({ length: de }, (_, i) => (
-        <span key={i} className={`celula${i < passo ? ' celula--cheia' : ''}`} />
+        <svg key={i} className={`estrela${i < passo ? ' estrela--cheia' : ''}`}
+             viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d={ESTRELA} />
+        </svg>
       ))}
     </span>
   );
@@ -305,22 +330,25 @@ const CSS = `
 /* ── 2 · competências + a faixa ───────────────────────── */
 .escala-legenda { display: flex; justify-content: space-between; font-size: .66rem; font-weight: 700;
                   letter-spacing: .1em; text-transform: uppercase; color: var(--slate);
-                  max-width: 190px; margin-left: auto; }
+                  max-width: 158px; margin-left: auto; }
 .grupo { display: flex; flex-direction: column; margin-top: 1rem; }
 .grupo-nome { margin: 0 0 .3rem; font-family: var(--display); font-size: .72rem; font-weight: 700;
               letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
 .comp { padding: .7rem 0; border-bottom: 1px solid var(--mist); }
 .comp-cabeca { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .comp-nome { font-size: 1.02rem; font-weight: 600; line-height: 1.35; }
-.comp-pe { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; margin-top: .25rem; }
-.comp-rotulo { font-size: .82rem; color: var(--slate); font-weight: 600; }
+.comp-pe { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; margin-top: .3rem; }
 .comp-nivel { font-family: var(--display); font-size: .72rem; font-weight: 700; letter-spacing: .04em;
               text-transform: uppercase; color: var(--red); }
 
-.faixa { display: inline-flex; gap: 3px; flex: none; }
-.celula { width: 34px; height: 9px; border-radius: 2px; border: 1px solid var(--mist); background: transparent; }
-.celula--cheia { background: var(--navy); border-color: var(--navy); }
-@media (max-width: 560px) { .celula { width: 22px; } }
+.faixa { display: inline-flex; gap: 5px; flex: none; align-items: center; }
+/* Vazia é silhueta cheia em tinta baixa, não contorno: contorno some na
+   impressão e a contagem de cheias fica sem referência para comparar.
+   Tinta um pouco acima do --mist das bordas — no --mist puro a estrela
+   vazia lê como falha de renderização, não como posição não alcançada. */
+.estrela { width: 22px; height: 22px; flex: none; fill: #CBD8E7; }
+.estrela--cheia { fill: var(--navy); }
+@media (max-width: 560px) { .estrela { width: 17px; height: 17px; } .escala-legenda { max-width: 150px; } }
 
 /* ── 3 · leituras ─────────────────────────────────────── */
 .padrao { margin: 0; font-size: 1.03rem; line-height: 1.55; font-weight: 600;
@@ -380,7 +408,7 @@ const CSS = `
   .capa, .trilha { margin: 0; }
   .secao, .leitura, .comp, .trilha-item, .passo { break-inside: avoid; }
   .secao-titulo, .grupo-nome, .leitura-nome { break-after: avoid; }
-  .celula { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .estrela { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { margin: 14mm; }
 }
 `;
