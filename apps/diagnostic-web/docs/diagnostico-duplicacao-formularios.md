@@ -129,21 +129,24 @@ Estes quatro pontos são o motivo de as duas famílias ainda coexistirem. Qualqu
 
 ---
 
-## 5. Resíduo morto encontrado
+## 5. Resíduo morto — REMOVIDO em 27/08
 
-Independentemente da decisão, isto pode ser removido sem risco:
+Eram seis diretórios das gerações anteriores do módulo de identidade (as versões "Estratégica" e "v2" que o FINAL substituiu):
 
-- `lib/mapa-identidade/` — contém apenas `__tests__`
-- `lib/identidade-v2/` — contém apenas `__tests__`
-- `pages/form/identidade/` — pasta vazia
-- `pages/form/identidade-v2/` — pasta vazia
-- `pages/api/identidade/` — pasta vazia
-- `pages/api/identidade-v2/` — pasta vazia
+- `lib/mapa-identidade/`
+- `lib/identidade-v2/` (e o `__tests__` dentro dela)
+- `pages/form/identidade/`
+- `pages/form/identidade-v2/`
+- `pages/api/identidade/`
+- `pages/api/identidade-v2/`
 
-São restos das gerações anteriores do módulo de identidade (as versões "Estratégica" e "v2" que o FINAL substituiu).
+**Correção do que este documento dizia antes:** não era "resíduo no repositório". Os arquivos já tinham sido apagados em 05/07; o que sobrou foram **diretórios completamente vazios** — `lib/identidade-v2/__tests__` inclusive — que o **git nunca rastreou** (git não versiona diretório vazio). Nada no monorepo importava desses caminhos.
+
+Removidos com `rmdir` (que se recusa a apagar diretório não-vazio, e por isso é a verificação e a ação ao mesmo tempo). **`git status` ficou inalterado: a limpeza não produziu commit nenhum**, porque não havia nada versionado para remover.
+
+⚠️ Não confundir com as tabelas `id_v2_*` em produção: `id_v2_assessments` / `id_v2_respondents` / `id_v2_answers` são a persistência **viva** do Mapa de Identidade FINAL. O prefixo é herança de nome; as tabelas estão em uso.
 
 ---
-
 ## 6. A decisão já está tomada
 
 **Os formulários corretos são os da família B** — os que o cliente recebe em `crescimentointegrado.com.br/area`. Os que o `/adm/[id]` distribui hoje (família A) estão desatualizados.
@@ -185,12 +188,12 @@ Cada um entra no catálogo FINAL como módulo do perfil "consultoria", ou é apo
 
 ---
 
-## 8. Ordem de execução sugerida
+## 8. Ordem de execução
 
-1. **Limpar o resíduo morto** da §5 — seis pastas, risco zero, independe de tudo.
-2. **Levar ao catálogo FINAL, como módulo de consultoria**, os blocos da §7.3 que a Vanessa decidir manter.
-3. **Escrever o adapter** `id_v2_answers` → formato que os agentes esperam, mantendo `AGENT_FORM_TYPES` funcionando.
+1. ~~**Limpar o resíduo morto** da §5~~ — **FEITO em 27/08.** Custou menos que o previsto: eram diretórios vazios não-versionados, sem commit.
+2. **Levar ao catálogo FINAL, como módulo de consultoria**, os blocos da §7.3 que a Vanessa decidir manter. — *bloqueado na decisão de metodologia.*
+3. **Escrever o adapter** `id_v2_answers` → formato que os agentes esperam, mantendo `AGENT_FORM_TYPES` funcionando. — *não depende da Vanessa para os ~20 construtos que já existem nos dois instrumentos; os blocos exclusivos ficam como lacuna que degrada.*
 4. **Só então** trocar o `/adm` para distribuir `/form/identidade-final/*` via `hub`.
 5. Aposentar `/form/socios|colaboradores|clientes` e os schemas em JSX.
 
-Os passos 1 e 2 podem começar hoje. O passo 4 é o único que quebra algo se for feito fora de ordem.
+O passo 4 é o único que quebra algo se for feito fora de ordem. O passo 3 é o caminho crítico.
