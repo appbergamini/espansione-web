@@ -215,7 +215,11 @@ export const CATALOGO_AGENTES = [
     nome_metodo: 'EVP / Marca Empregadora',
     nome_cliente: 'Por Que Trabalhar Conosco',
     stage: 'marca_empregadora',
-    modular: true,   // só roda se o projeto contratou escopo EVP
+    // 27/08/2026 — EVP deixou de ser escopo opcional: o Agente 14 passa a
+    // fazer parte do fluxo padrão de todo projeto. Era `modular: true`,
+    // gated por `projetos.tem_evp`. A flag continua na tabela (não gate
+    // mais nada) e a tela de criação não pergunta mais.
+    modular: false,
     ordem_exibicao: 14,
     inputs: [2, 6, 7, 9],
     checkpoint: null,
@@ -332,19 +336,22 @@ export function buildAgentConfigs(agentsMap = {}) {
 /**
  * Calcula progresso do projeto a partir da lista de agent_num que já
  * geraram output. Agentes modulares entram no denominador apenas se
- * `incluiEvp=true`. Próximo agente é o primeiro esperado que ainda
+ * `incluiModulares=true`. Próximo agente é o primeiro esperado que ainda
  * não tem output — corrige o bug "maior output + 1" que pulava gaps.
  *
+ * O parâmetro se chamava `incluiEvp` porque o Agente 14 era modular. Desde
+ * 27/08/2026 o EVP faz parte do fluxo padrão e o único modular é o 16.
+ *
  * @param {number[]} agentNumsCompletos
- * @param {boolean}  [incluiEvp=false]
+ * @param {boolean}  [incluiModulares=false]
  * @returns {{ completos: number, total: number, pct: number, proximoAgente: AgenteMeta | null }}
  */
-export function calcularProgresso(agentNumsCompletos = [], incluiEvp = false) {
+export function calcularProgresso(agentNumsCompletos = [], incluiModulares = false) {
   const completosSet = new Set(
     (agentNumsCompletos || []).map(n => Number(n)).filter(Number.isFinite),
   );
 
-  const esperados = CATALOGO_AGENTES.filter(a => !a.modular || incluiEvp)
+  const esperados = CATALOGO_AGENTES.filter(a => !a.modular || incluiModulares)
     .sort((a, b) => a.ordem_exibicao - b.ordem_exibicao);
 
   const total = esperados.length;
@@ -459,18 +466,18 @@ export function getDependentes(agentNum) {
 /**
  * Retorna o primeiro agent_num esperado que ainda não tem output —
  * detecta buracos na esteira (ex.: outputs [1, 2, 4, 5] → 3, não 6).
- * Agentes modulares só entram quando `incluiEvp=true`.
+ * Agentes modulares só entram quando `incluiModulares=true`.
  *
  * @param {number[]} agentNumsPresentes
- * @param {boolean}  [incluiEvp=false]
+ * @param {boolean}  [incluiModulares=false]
  * @returns {number|null}
  */
-export function getPrimeiroFaltante(agentNumsPresentes = [], incluiEvp = false) {
+export function getPrimeiroFaltante(agentNumsPresentes = [], incluiModulares = false) {
   const set = new Set(
     (agentNumsPresentes || []).map(n => Number(n)).filter(Number.isFinite),
   );
   const esperados = CATALOGO_AGENTES
-    .filter(a => !a.modular || incluiEvp)
+    .filter(a => !a.modular || incluiModulares)
     .map(a => a.agent_num)
     .sort((a, b) => a - b);
   for (const n of esperados) {

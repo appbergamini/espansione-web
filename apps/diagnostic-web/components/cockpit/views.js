@@ -93,10 +93,11 @@ export function ViewDiagnostico({ projeto }) {
   const confByNum = {};
   outputs.forEach(o => { if (confByNum[o.agent_num] == null) confByNum[o.agent_num] = o.confianca; });
   const pendingCkpt = new Set((data.pendingCheckpoints || []).map(c => c.checkpoint_num));
-  const temEvp = !!data.projeto?.tem_evp;
   const isDone = (n) => doneNums.includes(n);
 
-  const agentes = CATALOGO_AGENTES.filter(a => a.agent_num !== 14 || temEvp);
+  // 27/08/2026 — o Agente 14 (EVP) deixou de ser opcional: aparece na
+  // esteira de todo projeto, sem depender de projetos.tem_evp.
+  const agentes = CATALOGO_AGENTES;
 
   let currentNum = null;
   for (const a of agentes) {

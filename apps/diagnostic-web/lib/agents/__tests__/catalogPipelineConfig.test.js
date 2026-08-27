@@ -11,7 +11,12 @@ test('buildAgentConfigs deriva configuração estrutural do catálogo', () => {
   assert.equal(configs[1].stage, 'pre_diagnostico');
   assert.deepEqual(configs[13].inputs, [6, 7, 8, 9, 10, 11, 12]);
   assert.equal(configs[13].checkpoint, 4);
-  assert.equal(configs[14].modular, true);
+  // 27/08/2026 — EVP deixou de ser escopo opcional: o Agente 14 entra na
+  // esteira de todo projeto. O único modular que sobrou é o 16.
+  // buildAgentConfigs só emite a chave quando o agente é modular, então
+  // "não modular" se verifica pela ausência dela.
+  assert.equal(configs[14].modular, undefined);
+  assert.equal(configs[16].modular, true);
 });
 
 test('buildAgentConfigs mantém contexto opcional sem virar dependência', () => {

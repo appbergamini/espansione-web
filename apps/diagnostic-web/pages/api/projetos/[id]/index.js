@@ -48,8 +48,13 @@ export default async function handler(req, res) {
     }
   }
 
-  // FIX.15 — PATCH para alternar tem_evp (e futuras flags do projeto).
-  // Whitelist explícita; nada além dos campos abaixo é gravado.
+  // FIX.15 — PATCH para alternar flags do projeto. Whitelist explícita;
+  // nada além dos campos abaixo é gravado.
+  //
+  // ⚠️ 27/08/2026 — `tem_evp` NÃO GATE MAIS NADA. O Agente 14 (EVP) virou
+  // parte do fluxo padrão (`modular: false` no catálogo) e nenhuma tela
+  // chama mais este PATCH. A coluna e a whitelist ficam porque projetos
+  // antigos têm o valor gravado; virar a flag hoje não muda a esteira.
   if (req.method === 'PATCH') {
     try {
       const allowed = ['tem_evp'];

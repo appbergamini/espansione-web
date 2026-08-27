@@ -424,9 +424,6 @@ export default function ProjetoDetalhes() {
   const [savingResp, setSavingResp] = useState(false);
   const [respMsg, setRespMsg] = useState('');
 
-  // FIX.15 — toggle de escopo EVP (Agente 14)
-  const [togglingEvp, setTogglingEvp] = useState(false);
-
   // Modal do resultado do posicionamento
   const [posModalOpen, setPosModalOpen] = useState(false);
 
@@ -1227,12 +1224,11 @@ export default function ProjetoDetalhes() {
   // Próximo agente = primeiro faltante na ordem do catálogo (FIX.3).
   // Antes: "maior output + 1" — pulava gaps (output 2, 4, 5 existia →
   // sugeria 6 em vez de 3). Agora respeita a ordem sequencial.
-  // FIX.15 — EVP (Agente 14, modular) entra no denominador via flag
-  // explícita projetos.tem_evp (antes era proxy galinha-e-ovo:
-  // includes(14), que escondia o agente até ele já ter rodado).
+  // 27/08/2026 — EVP (Agente 14) deixou de ser modular: entra no denominador
+  // de todo projeto, sem depender de projetos.tem_evp. O `true` aqui é o
+  // único modular que sobrou (Agente 16), que o painel sempre mostra.
   const agentNumsCompletos = latestOutputs.map(o => o.agent_num);
-  const projetoTemEvp = !!data?.projeto?.tem_evp;
-  const progresso = calcularProgresso(agentNumsCompletos, projetoTemEvp);
+  const progresso = calcularProgresso(agentNumsCompletos, true);
   const nextAgent = progresso.proximoAgente?.agent_num || null;
   
   const { pendingCheckpoints = [] } = data;
@@ -1247,7 +1243,7 @@ export default function ProjetoDetalhes() {
   const veOutput = latestOutputs.find(o => Number(o.agent_num) === 4) || null;
   const vmOutput = latestOutputs.find(o => Number(o.agent_num) === 5) || null;
   const brandMemoryExportDeps = podeExecutar(16, agentNumsCompletos);
-  const brandMemoryExportReadiness = buildBrandMemoryExportReadiness(latestOutputs, { includeEvp: projetoTemEvp });
+  const brandMemoryExportReadiness = buildBrandMemoryExportReadiness(latestOutputs, { includeEvp: true });
   const brandMemoryOutput = latestOutputs.find(o => o.agent_num === 16) || null;
   const brandMemoryExportDone = hasAgentOutput(16);
   const brandMemoryExportValid = hasUsableAgent16BrandMemoryExport(brandMemoryOutput);
@@ -1275,7 +1271,7 @@ export default function ProjetoDetalhes() {
     hasEditorialOutput: editorialOutputDone,
   });
   const fluxoAgentes = CATALOGO_AGENTES
-    .filter(a => !a.modular || a.agent_num === 16 || (a.agent_num === 14 && projetoTemEvp))
+    .filter(a => !a.modular || a.agent_num === 16)
     .sort((a, b) => a.ordem_exibicao - b.ordem_exibicao);
   const etapaAtualLabel = pendingCkpt
     ? `Checkpoint ${pendingCkpt.checkpoint_num} pendente`
@@ -1623,46 +1619,9 @@ export default function ProjetoDetalhes() {
               {/* FIX.29 (Fase B) — Card: Clusters de Comunicação (insumo do Agente 13) */}
               <ClustersCard projetoId={id} />
 
-              {/* FIX.15 — Card: Escopo do Projeto (toggle EVP) */}
-              <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
-                <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, marginBottom: '0.75rem' }}>Escopo do Projeto</h3>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: togglingEvp ? 'wait' : 'pointer', opacity: togglingEvp ? 0.6 : 1 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!projeto.tem_evp}
-                    disabled={togglingEvp}
-                    onChange={async (e) => {
-                      const novoValor = e.target.checked;
-                      setTogglingEvp(true);
-                      try {
-                        const res = await fetch(`/api/projetos/${id}`, {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ tem_evp: novoValor }),
-                        });
-                        const json = await res.json();
-                        if (!res.ok || !json.success) throw new Error(json.error || 'Falha ao salvar');
-                        await loadData();
-                      } catch (err) {
-                        alert('Erro ao alternar escopo EVP: ' + err.message);
-                      } finally {
-                        setTogglingEvp(false);
-                      }
-                    }}
-                    style={{ marginTop: '0.2rem' }}
-                  />
-                  <span>
-                    <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                      Marca Empregadora (EVP) — Agente 14
-                    </span>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                      {projeto.tem_evp
-                        ? 'Habilitado: o Agente 14 entra na esteira após a Plataforma (9).'
-                        : 'Desabilitado: pipeline pula direto do 13 para o 15.'}
-                    </span>
-                  </span>
-                </label>
-              </div>
+              {/* 27/08/2026 — o card "Escopo do Projeto" (toggle EVP) saiu:
+                  Marca Empregadora (Agente 14) entra na esteira de todo
+                  projeto, depois da Plataforma (9). Não há mais o que alternar. */}
 
               {/* Diagnósticos Essenciais — Formulários + Entrevistas */}
               <div className="glass-card" style={{ padding: '1.25rem' }}>

@@ -260,8 +260,9 @@ async function validarPreExecucao(projetoId, agentNum) {
   }
 
   if (agentNum === 16) {
-    const projeto = await db.getProject(projetoId);
-    assertBrandMemoryExportsReadyForAgent16(existentes, { includeEvp: !!projeto?.tem_evp });
+    // 27/08/2026 — EVP entra em todo projeto, então o export do Agente 14
+    // é sempre exigido aqui. Antes dependia de projetos.tem_evp.
+    assertBrandMemoryExportsReadyForAgent16(existentes, { includeEvp: true });
   }
 }
 

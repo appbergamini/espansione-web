@@ -155,9 +155,10 @@ export default async function handler(req, res) {
       .update({ status: newStatus, etapa_atual: ultimaEtapa })
       .eq('id', projetoId);
 
-    // Sugere próximo agente (primeiro faltante + dep-aware)
-    const projetoTemEvp = outputsRestantes.some(o => o.agent_num === 14);
-    const proximo = determinarProximoAgente(outputsRestantes, projetoTemEvp);
+    // Sugere próximo agente (primeiro faltante + dep-aware). 27/08/2026 —
+    // o Agente 14 (EVP) não é mais modular, então some do proxy antigo
+    // ("já tem output 14?"), que escondia o agente até ele já ter rodado.
+    const proximo = determinarProximoAgente(outputsRestantes, true);
 
     return res.status(200).json({
       success: true,
