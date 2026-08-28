@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Logo from '../../components/Logo';
 
 // Painel de leads do funil do Mapa (teste grátis em /mapa). Master/admin.
@@ -13,11 +13,50 @@ function dataBr(iso) {
   try { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return '—'; }
 }
 
+const COLUNAS = [
+  { key: 'started_at', label: 'Data' },
+  { key: 'nome', label: 'Lead' },
+  { key: 'empresa', label: 'Empresa' },
+  { key: 'contato', label: 'Contato' },
+  { key: 'segmento', label: 'Segmento' },
+  { key: 'status', label: 'Status' },
+  { key: 'score', label: 'Score' },
+  { key: 'relatorio', label: 'Relatório', align: 'right' },
+];
+
+function valorOrdenacao(lead, key) {
+  if (key === 'started_at') return lead.started_at ? new Date(lead.started_at).getTime() : null;
+  if (key === 'score') return lead.score;
+  if (key === 'relatorio') return lead.status === 'concluido' ? 1 : 0;
+  if (key === 'status') return STATUS[lead.status]?.txt || lead.status;
+  return lead[key];
+}
+
+function comparar(a, b, key, direction) {
+  const valorA = valorOrdenacao(a, key);
+  const valorB = valorOrdenacao(b, key);
+  const vazioA = valorA == null || valorA === '';
+  const vazioB = valorB == null || valorB === '';
+
+  // Valores ausentes permanecem no fim nas duas direções.
+  if (vazioA || vazioB) {
+    if (vazioA && vazioB) return 0;
+    return vazioA ? 1 : -1;
+  }
+
+  const resultado = typeof valorA === 'number' && typeof valorB === 'number'
+    ? valorA - valorB
+    : String(valorA).localeCompare(String(valorB), 'pt-BR', { sensitivity: 'base', numeric: true });
+
+  return direction === 'asc' ? resultado : -resultado;
+}
+
 export default function AdminLeads() {
   const router = useRouter();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
+  const [ordenacao, setOrdenacao] = useState({ key: 'started_at', direction: 'desc' });
 
   useEffect(() => {
     (async () => {
@@ -34,6 +73,17 @@ export default function AdminLeads() {
   }, [router]);
 
   const concluidos = leads.filter((l) => l.status === 'concluido').length;
+  const leadsOrdenados = useMemo(() => leads
+    .map((lead, indice) => ({ lead, indice }))
+    .sort((a, b) => comparar(a.lead, b.lead, ordenacao.key, ordenacao.direction) || a.indice - b.indice)
+    .map(({ lead }) => lead), [leads, ordenacao]);
+
+  function ordenarPor(key) {
+    setOrdenacao((atual) => ({
+      key,
+      direction: atual.key === key && atual.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  }
 
   return (
     <>
@@ -69,18 +119,34 @@ export default function AdminLeads() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
-                      <th style={sx.th}>Data</th>
-                      <th style={sx.th}>Lead</th>
-                      <th style={sx.th}>Empresa</th>
-                      <th style={sx.th}>Contato</th>
-                      <th style={sx.th}>Segmento</th>
-                      <th style={sx.th}>Status</th>
-                      <th style={sx.th}>Score</th>
-                      <th style={{ ...sx.th, textAlign: 'right' }}>Relatório</th>
+                      {COLUNAS.map((coluna) => {
+                        const ativa = ordenacao.key === coluna.key;
+                        const direcao = ativa ? ordenacao.direction : null;
+                        return (
+                          <th
+                            key={coluna.key}
+                            scope="col"
+                            aria-sort={ativa ? (direcao === 'asc' ? 'ascending' : 'descending') : 'none'}
+                            style={{ ...sx.th, textAlign: coluna.align || 'left' }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => ordenarPor(coluna.key)}
+                              title={`Ordenar por ${coluna.label}`}
+                              style={{ ...sx.sortButton, justifyContent: coluna.align === 'right' ? 'flex-end' : 'flex-start' }}
+                            >
+                              <span>{coluna.label}</span>
+                              <span aria-hidden="true" style={{ ...sx.sortIcon, opacity: ativa ? 1 : 0.45 }}>
+                                {direcao === 'asc' ? '↑' : direcao === 'desc' ? '↓' : '↕'}
+                              </span>
+                            </button>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
-                    {leads.map((l) => {
+                    {leadsOrdenados.map((l) => {
                       const st = STATUS[l.status] || { txt: l.status || '—', cor: '#9aa3ad', bg: 'rgba(255,255,255,0.06)' };
                       const progresso = l.status !== 'concluido' ? ` · ${l.respondidas}/${l.total_perguntas}` : '';
                       return (
@@ -124,6 +190,8 @@ export default function AdminLeads() {
 const sx = {
   back: { padding: '0.5rem 1rem', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 8, color: 'var(--text-secondary)', cursor: 'pointer' },
   th: { padding: '0.8rem 1rem', fontWeight: 500 },
+  sortButton: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem', width: '100%', padding: 0, border: 0, background: 'transparent', color: 'inherit', font: 'inherit', fontWeight: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' },
+  sortIcon: { width: '1rem', color: '#fca5b0', fontSize: '0.85rem' },
   td: { padding: '0.8rem 1rem', verticalAlign: 'top' },
   sub: { color: 'var(--text-secondary)', fontSize: '0.78rem', marginTop: 2 },
   empty: { textAlign: 'center', padding: '2.5rem', color: 'var(--text-secondary)' },
