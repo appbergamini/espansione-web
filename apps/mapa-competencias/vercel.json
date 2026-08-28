@@ -1,11 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-
-  "//": "SPA: o roteador e client-side, entao toda rota nao-arquivo cai no index.html. As rewrites da Vercel rodam DEPOIS da checagem de arquivo estatico, entao /assets/* continua sendo servido.",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
-
-  "//noindex": "Prototipo em evolucao, com o banco de itens da metodologia dentro. Nao pode ser indexado.",
   "headers": [
     {
       "source": "/(.*)",

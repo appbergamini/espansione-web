@@ -51,3 +51,22 @@ script, não o resultado.
 (são instrumentos diferentes, não duas versões do mesmo) e o que está pendente
 antes de qualquer deploy — com destaque para o SDK de analytics que ainda aponta
 para `api.enter.pro`.
+
+## Publicação
+
+Vive em **`desenvolvimento.crescimentointegrado.com.br`**, projeto Vercel
+`mapa-competencias` (`prj_EvSuXaVJnABjWbj2X8gwTyAGlzl5`), Root Directory
+`apps/mapa-competencias`.
+
+**Subdomínio, e não um subcaminho do funil, por causa do somente-leitura:** o app
+assume que vive na raiz (`base: '/'` no `vite.config.ts`, `createBrowserRouter`
+sem `basename`, as 10 rotas absolutas). Servi-lo sob `/desenvolvimento` exigiria
+mexer no `App.tsx` — mudança que sumiria no sync seguinte. Se um dia o subcaminho
+for necessário, o caminho certo é pedir à Vanessa o
+`basename: import.meta.env.BASE_URL` **no Enter**, para vir pela fonte.
+
+O `vercel.json` daqui não aceita comentários (a Vercel rejeita chaves `//`), por
+isso ficam aqui: o rewrite catch-all é o fallback de SPA — as rewrites rodam
+depois da checagem de arquivo estático, então `/assets/*` continua servido; e o
+`X-Robots-Tag: noindex` existe porque isto é protótipo em evolução e carrega o
+banco de itens da metodologia.
