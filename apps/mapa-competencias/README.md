@@ -149,5 +149,3 @@ Your app will automatically build and go live at your production URL.
 ---
 
 ✨ Keep prompting, keep building — Enter.pro handles the rest.
-
-<!-- MARCADOR-DE-TESTE-DO-SYNC: esta linha nao existe no Enter e deve ser removida pelo proximo sync -->
