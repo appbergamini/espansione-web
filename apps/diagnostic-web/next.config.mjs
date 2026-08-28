@@ -44,11 +44,12 @@ const nextConfig = {
       beforeFiles: FUNIL_HOSTS.map((host) => ({
         source: '/',
         has: [{ type: 'host', value: host }],
-        destination: '/home/index.html',
+        destination: '/portal/index.html',
       })),
       afterFiles: [
         // URL limpa da home institucional.
         { source: '/home', destination: '/home/index.html' },
+        { source: '/branding', destination: '/home/index.html' },
         // LP do Mapa (URL principal + alias histórico WhatsApp/links).
         { source: '/lp', destination: '/crescimento/index.html' },
         { source: '/crescimento', destination: '/crescimento/index.html' },

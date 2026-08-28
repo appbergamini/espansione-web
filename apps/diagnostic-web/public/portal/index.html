@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espansione · Crescimento Integrado</title>
+  <meta name="description" content="Escolha entre as jornadas de Branding e Desenvolvimento da Espansione.">
+  <link rel="canonical" href="https://crescimentointegrado.com.br/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Espansione">
+  <meta property="og:url" content="https://crescimentointegrado.com.br/">
+  <meta property="og:title" content="Espansione · Crescimento Integrado">
+  <meta property="og:description" content="Branding e Desenvolvimento conectados para transformar estratégia em crescimento.">
+  <meta property="og:image" content="https://crescimentointegrado.com.br/crescimento/brand/img-0.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/crescimento/brand/espansione-favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/crescimento/brand/espansione-favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #001a3b;
+      --navy-deep: #000d20;
+      --navy-soft: #012a55;
+      --red: #c72638;
+      --red-light: #e4485a;
+      --white: #ffffff;
+      --muted: #aebbd0;
+      --line: rgba(255, 255, 255, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--white);
+      font-family: 'Poppins', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(228, 72, 90, 0.2), transparent 28rem),
+        radial-gradient(circle at 90% 90%, rgba(1, 48, 99, 0.85), transparent 34rem),
+        var(--navy-deep);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 40px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 36px 0 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      width: fit-content;
+      color: var(--white);
+      text-decoration: none;
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .brand img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      align-content: center;
+      padding: 64px 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--red-light);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(38px, 6vw, 72px);
+      font-weight: 600;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .intro {
+      max-width: 650px;
+      margin: 22px 0 42px;
+      color: var(--muted);
+      font-size: clamp(16px, 2vw, 19px);
+      line-height: 1.65;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .choice {
+      min-height: 220px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--white);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.055);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(12px);
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .choice:hover {
+      transform: translateY(-4px);
+      border-color: rgba(228, 72, 90, 0.72);
+      background: rgba(255, 255, 255, 0.085);
+    }
+
+    .choice:focus-visible {
+      outline: 3px solid var(--red-light);
+      outline-offset: 4px;
+    }
+
+    .choice-number {
+      color: var(--red-light);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+    }
+
+    .choice-copy h2 {
+      margin: 0 0 8px;
+      font-size: clamp(25px, 3vw, 34px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .choice-copy p {
+      max-width: 42ch;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .choice-action {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .arrow {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--red);
+      font-size: 21px;
+      transition: background 180ms ease, transform 180ms ease;
+    }
+
+    .choice:hover .arrow {
+      background: var(--red-light);
+      transform: translateX(3px);
+    }
+
+    footer {
+      padding-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: rgba(174, 187, 208, 0.72);
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .page { width: min(100% - 28px, 1120px); padding-top: 24px; }
+      main { padding: 56px 0; }
+      .choices { grid-template-columns: 1fr; }
+      .choice { min-height: 200px; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .choice, .arrow { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="brand" href="/" aria-label="Espansione — início">
+      <img src="/crescimento/brand/espansione-mark-white.png" alt="">
+      <span>Espansione</span>
+    </a>
+
+    <main>
+      <p class="eyebrow">Crescimento Integrado</p>
+      <h1>Estratégia que ganha forma e movimento.</h1>
+      <p class="intro">Escolha a frente que deseja acessar. Marca e desenvolvimento trabalham juntos para transformar clareza em crescimento consistente.</p>
+
+      <div class="choices" aria-label="Áreas da Espansione">
+        <a class="choice" href="/branding">
+          <span class="choice-number">01</span>
+          <div class="choice-copy">
+            <h2>Branding</h2>
+            <p>Posicionamento, identidade e estratégia de marca conectados ao negócio.</p>
+          </div>
+          <span class="choice-action">Acessar Branding <span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+
+        <a class="choice" href="https://desenvolvimento.crescimentointegrado.com.br">
+          <span class="choice-number">02</span>
+          <div class="choice-copy">
+            <h2>Desenvolvimento</h2>
+            <p>Competências, repertório e evolução para pessoas e organizações.</p>
+          </div>
+          <span class="choice-action">Acessar Desenvolvimento <span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+      </div>
+    </main>
+
+    <footer>
+      <span>Espansione · Crescimento Integrado</span>
+      <span>Estratégia, marca, negócios e pessoas.</span>
+    </footer>
+  </div>
+</body>
+</html>
