@@ -12,7 +12,7 @@ export default createApiHandler({
 
     const { data, error } = await db
       .from('mapa_assessments')
-      .select('id, token, status, cadastro_json, result_json, started_at, completed_at')
+      .select('id, token, status, cadastro_json, extras_json, result_json, started_at, completed_at')
       .is('projeto_id', null)
       .order('started_at', { ascending: false })
       .limit(500);
@@ -32,6 +32,7 @@ export default createApiHandler({
     const totalPerguntas = perguntasQuePontuam().length;
     const leads = (data || []).map((a) => {
       const c = a.cadastro_json || {};
+      const acquisition = a.extras_json?.acquisition || {};
       return {
         id: a.id,
         token: a.token,
@@ -44,6 +45,11 @@ export default createApiHandler({
         porte: c['CAD-MM-004'] || null,
         segmento: c['CAD-MM-005'] || null,
         contato: c['CAD-MM-006'] || null,
+        utm_source: acquisition.utm_source || null,
+        utm_medium: acquisition.utm_medium || null,
+        utm_campaign: acquisition.utm_campaign || null,
+        utm_content: acquisition.utm_content || null,
+        utm_term: acquisition.utm_term || null,
         respondidas: a.status === 'concluido' ? totalPerguntas : respostasPor[a.id] || 0,
         total_perguntas: totalPerguntas,
         score: a.result_json?.general_score ?? null,

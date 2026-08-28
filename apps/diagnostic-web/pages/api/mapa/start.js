@@ -6,6 +6,7 @@
 import crypto from 'crypto';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { CADASTRO_MATURIDADE } from '../../../lib/mapa-maturidade/catalog';
+import { sanitizarUtms } from '../../../lib/marketing/utm';
 import { whatsappValido } from '../../../lib/whatsapp/phone';
 
 function gerarToken() {
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
     if (idsValidos.has(k)) limpo[k] = typeof v === 'string' ? v.trim() : v;
   }
   limpo.empresa = limpo['CAD-MM-002'] || null; // atalho legível p/ listagens
+  const utms = sanitizarUtms(req.body?.utm);
 
   const token = gerarToken();
   const { data: nova, error } = await db
@@ -56,6 +58,9 @@ export default async function handler(req, res) {
         status: 'em_andamento',
         started_at: new Date().toISOString(),
         cadastro_json: limpo,
+        extras_json: Object.keys(utms).length
+          ? { acquisition: { ...utms, captured_at: new Date().toISOString() } }
+          : {},
       },
     ])
     .select('id, token, status')

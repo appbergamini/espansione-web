@@ -19,6 +19,11 @@ const COLUNAS = [
   { key: 'empresa', label: 'Empresa' },
   { key: 'contato', label: 'WhatsApp' },
   { key: 'segmento', label: 'Segmento' },
+  { key: 'utm_source', label: 'Origem' },
+  { key: 'utm_medium', label: 'Mídia' },
+  { key: 'utm_campaign', label: 'Campanha' },
+  { key: 'utm_content', label: 'Conteúdo' },
+  { key: 'utm_term', label: 'Termo' },
   { key: 'status', label: 'Status' },
   { key: 'score', label: 'Score' },
   { key: 'relatorio', label: 'Relatório', align: 'right' },
@@ -162,6 +167,11 @@ export default function AdminLeads() {
                           </td>
                           <td style={sx.td}>{l.contato || <span style={{ color: 'var(--text-secondary)' }}>—</span>}</td>
                           <td style={sx.td}>{l.segmento || '—'}</td>
+                          <td style={sx.td}>{l.utm_source || '—'}</td>
+                          <td style={sx.td}>{l.utm_medium || '—'}</td>
+                          <td style={sx.td}>{l.utm_campaign || '—'}</td>
+                          <td style={sx.td}>{l.utm_content || '—'}</td>
+                          <td style={sx.td}>{l.utm_term || '—'}</td>
                           <td style={sx.td}><span style={{ ...sx.pill, color: st.cor, background: st.bg }}>{st.txt}{progresso}</span></td>
                           <td style={sx.td}>
                             {l.score != null

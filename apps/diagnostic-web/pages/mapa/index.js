@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
 import { CADASTRO_MATURIDADE } from '../../lib/mapa-maturidade/catalog';
+import { sanitizarUtms } from '../../lib/marketing/utm';
 import { whatsappValido } from '../../lib/whatsapp/phone';
 import { MapaShell, MapaCard, sx, CORES } from '../../components/mapa/mapaTheme';
 
@@ -18,6 +19,7 @@ export default function MapaEntradaPage() {
   const [tentou, setTentou] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
+  const utms = useMemo(() => sanitizarUtms(router.query), [router.query]);
 
   const completo = useMemo(
     () => String(cadastro['CAD-MM-001'] || '').trim()
@@ -34,7 +36,7 @@ export default function MapaEntradaPage() {
     try {
       const r = await fetch('/api/mapa/start', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cadastro }),
+        body: JSON.stringify({ cadastro, utm: utms }),
       });
       const data = await r.json();
       if (!data.success) { setErro(data.error || 'Não foi possível iniciar.'); setEnviando(false); return; }
