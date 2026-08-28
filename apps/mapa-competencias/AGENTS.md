@@ -70,3 +70,40 @@ isso ficam aqui: o rewrite catch-all é o fallback de SPA — as rewrites rodam
 depois da checagem de arquivo estático, então `/assets/*` continua servido; e o
 `X-Robots-Tag: noindex` existe porque isto é protótipo em evolução e carrega o
 banco de itens da metodologia.
+
+## O SDK de analytics do Enter — o que ele faz, medido
+
+`src/main.tsx` chama `bootstrapGeneratedSiteAnalytics()` no boot, e o SDK
+(`@enter-pro/analytics-sdk`) tem `https://api.enter.pro/code/api/v1/track`
+embutido. Auditado em 27/08/2026 sobre o bundle **de produção**:
+
+**Não envia nada hoje, e isso está verificado.** O `import.meta.env` inlined no
+build é `{BASE_URL:"/",DEV:false,MODE:"production",PROD:true,SSR:false}` — nenhuma
+chave `VITE_ENTER_*`. Sem token, o bootstrap para em
+`if (!config.enabled || !config.endpoint || !config.token) return;` antes de criar
+transporte ou coletor. O `index.html` tem o comentário "DO NOT REMOVE THIS SCRIPT
+TAG" mas nenhuma script tag: nada injeta `__ENTER_ANALYTICS_ENV__` em runtime.
+
+**Duas ressalvas que importam:**
+
+1. **Marca o visitante mesmo desligado.** `getOrCreateVisitorIdentity()` roda
+   ANTES do portão e grava um UUID persistente + `first_seen_at` em
+   **localStorage e cookie** (`enter.analytics.visitor_id`). Só para de gravar se
+   `bootstrapGeneratedSiteAnalytics()` não for chamado — ou seja, exige mudança
+   no `main.tsx`, **e ela tem de vir do Enter** para sobreviver ao sync.
+2. **O SDK é fail-open.** `enabled: enabledRaw !== "false"` (com comentário no
+   fonte: "ligado por padrão, só um false explícito desliga"). A única coisa que
+   impedia a transmissão era a ausência do token.
+
+**Trava aplicada:** `VITE_ENTER_ANALYTICS_ENABLED=false` como env var do projeto
+Vercel, nos três ambientes. O Vite embute variáveis `VITE_*` no build, então
+`enabled` sai `false` dentro do bundle e o SDK desiste mesmo que um token
+apareça. **Não remova essa variável** sem trocar a trava por outra.
+
+Se algum dia o SDK for ativado, o payload leva: `visitor_id`, `session_id`, URL,
+path, título, referrer, UTMs, tipo de dispositivo, browser, SO, idioma, resolução
+de tela, eventos de sessão, **mensagens de erro** e métricas de performance. E o
+sistema de definições de evento suporta extratores `formField`/`formFields` — num
+app com formulário de identificação e 60 afirmações, uma definição remota
+conseguiria capturar respostas. Esse caminho exige também
+`VITE_ENTER_ANALYTICS_DEFINITIONS_ENDPOINT`, que não está definida.
