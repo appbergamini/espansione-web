@@ -2,11 +2,67 @@ import { supabaseAdmin } from './supabaseAdmin';
 import { BLOCKING_CHECKPOINT_STATUSES } from './checkpoints/structuredNotes';
 import { projectsRepo } from './repos/projectsRepo';
 import { outputsRepo } from './repos/outputsRepo';
+import { montarFormularios, TIPO_PARA_PUBLICO } from './identidade-final/paraIntake';
 
 // Este módulo é usado só pelo pipeline (server-side, via /api/engine/*).
 // Usa service role para bypassar RLS — as escritas em outputs,
 // logs_execucao, checkpoints etc não têm user authenticado correspondente.
 const supabase = supabaseAdmin;
+
+/**
+ * Lê as respostas do Mapa de Identidade FINAL e devolve no formato de
+ * `formularios`. A tradução em si é pura e vive em
+ * lib/identidade-final/paraIntake.js — aqui só o acesso ao banco.
+ *
+ * Silencioso de propósito: projeto que nunca comprou o FINAL não tem
+ * assessment, e isso não é erro. Falha de leitura vira warn e array
+ * vazio — o agente já sabe lidar com formulário ausente, e derrubar a
+ * execução da esteira inteira por causa disso seria pior.
+ */
+async function formulariosDoIdentidadeFinal(projetoId, tipo) {
+  const tipos = tipo ? [tipo] : Object.keys(TIPO_PARA_PUBLICO);
+  const alvos = tipos.filter((t) => TIPO_PARA_PUBLICO[t]);
+  if (alvos.length === 0) return [];
+
+  try {
+    const { data: assessment } = await supabase
+      .from('id_v2_assessments')
+      .select('id')
+      .eq('projeto_id', projetoId)
+      .eq('produto', 'identidade_final')
+      .maybeSingle();
+    if (!assessment) return [];
+
+    const { data: respondentes } = await supabase
+      .from('id_v2_respondents')
+      .select('id, publico, status, created_at, completed_at')
+      .eq('assessment_id', assessment.id)
+      .eq('status', 'completed');
+    if (!respondentes || respondentes.length === 0) return [];
+
+    const { data: answers } = await supabase
+      .from('id_v2_answers')
+      .select('respondent_id, question_id, value_num, value_text, value_json')
+      .in('respondent_id', respondentes.map((r) => r.id));
+
+    const linhas = [];
+    for (const t of alvos) {
+      const doPublico = respondentes
+        .filter((r) => r.publico === TIPO_PARA_PUBLICO[t])
+        .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+      linhas.push(...montarFormularios({
+        projetoId,
+        tipo: t,
+        respondentes: doPublico,
+        answers: (answers || []).filter((a) => doPublico.some((r) => r.id === a.respondent_id)),
+      }));
+    }
+    return linhas;
+  } catch (err) {
+    console.warn('[db.getFormularios] fallback identidade_final falhou:', err.message);
+    return [];
+  }
+}
 
 // =====================================================================
 // db.js
@@ -71,14 +127,26 @@ export const db = {
       .from('formularios')
       .select('*')
       .eq('projeto_id', projetoId);
-      
+
     if (tipo) {
       query = query.eq('tipo', tipo);
     }
 
     const { data, error } = await query.order('created_at', { ascending: true });
     if (error) throw new Error(`Erro getFormularios: ${error.message}`);
-    return data || [];
+    if (data && data.length > 0) return data;
+
+    // Projeto sem intake: pode ser um projeto novo, que respondeu o Mapa
+    // de Identidade FINAL em vez dos formulários antigos. Traduz.
+    //
+    // Este é o ÚNICO ponto onde o FINAL alcança a esteira — o pipeline
+    // monta o contexto de todo agente por aqui. Por isso nenhum agente
+    // precisou aprender o formato novo.
+    //
+    // A ordem importa: `formularios` ganha quando existe. Projeto antigo
+    // continua lendo exatamente o que lia; a tradução só entra no vazio,
+    // e por isso não há como ela alterar um projeto em andamento.
+    return await formulariosDoIdentidadeFinal(projetoId, tipo);
   },
 
   // ── Checkpoints ──────────────────────────────────────────────────
