@@ -1,0 +1,2 @@
+# script de sync roda em ubuntu na Action: CRLF quebraria o shebang
+*.sh text eol=lf

@@ -1,0 +1,108 @@
+# =====================================================================
+# Traz para o monorepo o que a Vanessa constroi na plataforma Enter Pro.
+#
+# Enter Pro --(sync automatico, bidirecional)--> appbergamini/MapadeCompetencias
+#                                                          |
+#                                    esta Action, 1x/dia --+--> PR no espansione-web
+#
+# Abre PR em vez de commitar direto: prototipo em evolucao quebra coisa, e o
+# diff precisa de olho humano antes de entrar no master.
+#
+# EXIGE o secret ENTER_SYNC_TOKEN (o MapadeCompetencias e privado) e a opcao
+# "Allow GitHub Actions to create and approve pull requests" ligada no repo.
+# =====================================================================
+name: Sync — Mapa de Competências (Enter)
+
+on:
+  schedule:
+    - cron: "0 9 * * 1-5" # 06:00 BRT, dias úteis
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-mapa-competencias
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Monorepo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repo que o Enter publica
+        uses: actions/checkout@v4
+        with:
+          repository: appbergamini/MapadeCompetencias
+          ref: enter-main
+          token: ${{ secrets.ENTER_SYNC_TOKEN }}
+          path: .enter-src
+          fetch-depth: 30
+
+      - name: Aplicar o sync
+        run: bash scripts/sync-mapa-competencias.sh .enter-src
+
+      - name: Conferir que o app ainda compila
+        run: |
+          corepack enable
+          pnpm install --filter @espansione/mapa-competencias... --frozen-lockfile=false
+          pnpm --filter @espansione/mapa-competencias type-check
+          pnpm --filter @espansione/mapa-competencias build
+
+      - name: Abrir ou atualizar o PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- apps/mapa-competencias; then
+            echo "Nada mudou no Enter desde o último sync."
+            exit 0
+          fi
+
+          SHA="$(git -C .enter-src rev-parse --short HEAD)"
+          BRANCH="sync/enter-main"
+
+          {
+            echo "Sync automático de \`appbergamini/MapadeCompetencias@${SHA}\` (branch \`enter-main\`)."
+            echo
+            echo "### Últimos commits do lado do Enter"
+            git -C .enter-src log --format='- `%h` %ad %s' --date=short -12
+            echo
+            echo "### Antes de aprovar"
+            echo "\`type-check\` e \`build\` de produção já rodaram nesta Action — se o PR existe, passaram."
+            echo "Vale abrir o preview e navegar as telas: o motor da metodologia muda com frequência do lado de lá."
+            echo
+            echo "---"
+            echo "\`apps/mapa-competencias/\` é **somente leitura** do nosso lado. O fluxo é Enter → monorepo"
+            echo "e nada volta para lá; qualquer alteração nossa dentro de \`src/\` some no próximo sync."
+            echo
+            echo "O \`package.json\` não é copiado cru: o script parte do arquivo do Enter e reaplica as 4"
+            echo "mudanças do monorepo (nome do pacote, \`build\` de produção, \`build:dev\`, \`type-check\`),"
+            echo "para que dependência nova adicionada lá chegue aqui em vez de sumir."
+          } > "${RUNNER_TEMP}/pr-body.md"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add apps/mapa-competencias
+          git commit -m "Sync do Mapa de Competencias com o Enter (${SHA})" \
+                     -m "Gerado por .github/workflows/sync-mapa-competencias.yml."
+
+          # Branch descartável, de dono único: o force é intencional.
+          git push --force origin "$BRANCH"
+
+          NUM="$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$NUM" ]; then
+            gh pr edit "$NUM" --body-file "${RUNNER_TEMP}/pr-body.md"
+            echo "PR #${NUM} atualizado."
+          else
+            gh pr create --base master --head "$BRANCH" \
+              --title "Sync do Mapa de Competências com o Enter (${SHA})" \
+              --body-file "${RUNNER_TEMP}/pr-body.md"
+          fi

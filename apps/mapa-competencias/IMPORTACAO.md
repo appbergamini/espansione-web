@@ -38,21 +38,35 @@ Mudanças mínimas, só o necessário para o app viver no monorepo:
 **Nada mais foi tocado.** O código-fonte em `src/` está idêntico ao do Enter,
 de propósito: é o que mantém a re-sincronização barata.
 
-## Como trazer atualizações do Enter
+## Como as atualizações do Enter chegam aqui
 
-Se a Vanessa continuar construindo lá, os caminhos dos arquivos batem 1:1:
+A Vanessa **continua construindo no Enter**. A Action
+`.github/workflows/sync-mapa-competencias.yml` roda todo dia útil às 06:00 BRT
+(e sob demanda por `workflow_dispatch`), espelha o `enter-main` para cá e
+**abre um PR** — nunca commita direto no master.
 
-```bash
-# uma vez:
-git remote add enter https://github.com/appbergamini/MapadeCompetencias.git
-
-# a cada vez:
-git fetch enter
-git diff enter/enter-main:src apps/mapa-competencias/src
+```
+Vanessa no Enter Pro
+      │  sync automático e bidirecional (da plataforma)
+      ▼
+appbergamini/MapadeCompetencias  (enter-main, privado)
+      │  esta Action, 1×/dia
+      ▼
+PR no espansione-web → apps/mapa-competencias
 ```
 
-Atenção: a sincronização do Enter é **bidirecional com o repo dele**, não com
-este monorepo. Editar aqui não volta para lá.
+**O fluxo tem um sentido só.** O sync do Enter é com o repo dele, não com este
+monorepo: o que for editado aqui não volta para lá e some no próximo sync. Por
+isso este diretório é **somente leitura** — ver `AGENTS.md`.
+
+Na mão, quando não quiser esperar a Action:
+
+```bash
+git fetch enter                       # remote já cadastrado
+git worktree add /tmp/enter enter/enter-main
+bash scripts/sync-mapa-competencias.sh /tmp/enter
+git diff -- apps/mapa-competencias
+```
 
 ## Pendências antes de qualquer deploy
 

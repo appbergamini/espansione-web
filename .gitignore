@@ -15,3 +15,6 @@ out
 .DS_Store
 .vercel
 supabase/.temp
+
+# checkout temporario do repo do Enter (workflow de sync)
+.enter-src
