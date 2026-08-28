@@ -32,10 +32,14 @@ function responseType(tipo) {
   if (/0 a 10|0-10/.test(t)) return 'escala_0_10';
   if (/ranking/.test(t)) return 'ranking_top3';
   if (/até 3|ate 3/.test(t)) return 'multipla_ate3';
+  // "curta múltipla" ANTES do "múltipla" genérico: na ordem anterior o
+  // /múltipla/ capturava "Aberta curta múltipla" e devolvia 'multipla',
+  // deixando aberta_curta_multipla inalcançável — justo o tipo que o
+  // renderizador usa para lista de até 3 itens livres.
+  if (/curta múltipla|curta multipla/.test(t)) return 'aberta_curta_multipla';
   if (/múltipla|multipla/.test(t)) return 'multipla';
   if (/seleção única|selecao unica/.test(t)) return 'selecao_unica';
   if (/estruturada/.test(t)) return 'aberta_estruturada_3';
-  if (/curta múltipla|curta multipla/.test(t)) return 'aberta_curta_multipla';
   if (/aberta longa/.test(t)) return 'aberta_longa';
   if (/aberta curta|resposta curta/.test(t)) return 'aberta_curta';
   if (/aberta/.test(t)) return 'aberta_longa';
