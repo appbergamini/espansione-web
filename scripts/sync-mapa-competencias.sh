@@ -20,7 +20,7 @@ DST="apps/mapa-competencias"
 [ -d "$DST" ]     || { echo "ERRO: '$DST' nao existe. Rode a partir da raiz do monorepo." >&2; exit 1; }
 
 # Arquivos que nascem AQUI e o Enter desconhece. O sync os preserva.
-NOSSOS=(IMPORTACAO.md CLAUDE.md AGENTS.md)
+NOSSOS=(IMPORTACAO.md CLAUDE.md AGENTS.md vercel.json)
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
