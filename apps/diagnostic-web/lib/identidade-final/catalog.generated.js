@@ -1,8 +1,10 @@
 // =====================================================================
 // GERADO AUTOMATICAMENTE — NÃO EDITAR À MÃO.
-// Fonte: data/identidade/mapa_identidade_final.xlsx.
+// Fontes: data/identidade/mapa_identidade_final.xlsx (instrumento)
+//         data/identidade/modulo_consultoria.json (módulo de consultoria)
 // Regenerar: node scripts/build-identidade-final.cjs
-// Perguntas: 106 · Indicadores comparáveis: 24
+// Perguntas: 117 (106 do instrumento + 11 do módulo de consultoria)
+// Indicadores comparáveis: 24
 // =====================================================================
 
 export const PUBLICOS_IDENTIDADE = [
@@ -37,7 +39,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "D-SD-02",
@@ -63,7 +69,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "D-SD-03",
@@ -83,7 +93,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-MAR-01",
@@ -124,7 +138,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-MAR-02",
@@ -165,7 +183,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-MAR-03",
@@ -206,7 +228,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-MAR-04",
@@ -247,7 +273,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-MAR-05",
@@ -288,7 +318,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-MAR-06",
@@ -329,7 +363,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-NEG-01",
@@ -370,7 +408,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-NEG-02",
@@ -411,7 +453,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-NEG-03",
@@ -452,7 +498,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-NEG-04",
@@ -493,7 +543,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-NEG-05",
@@ -534,7 +588,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-NEG-06",
@@ -575,7 +633,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-COM-01",
@@ -616,7 +678,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-COM-02",
@@ -657,7 +723,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-COM-03",
@@ -698,7 +768,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-COM-04",
@@ -739,7 +813,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-COM-05",
@@ -780,7 +858,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-COM-06",
@@ -821,7 +903,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-PES-01",
@@ -862,7 +948,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-PES-02",
@@ -903,7 +993,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-PES-03",
@@ -944,7 +1038,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-PES-04",
@@ -985,7 +1083,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-PES-05",
@@ -1026,7 +1128,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-PES-06",
@@ -1067,7 +1173,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-ESP-01",
@@ -1089,7 +1199,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": "p3_concorrentes"
   },
   {
     "id": "V30-SD-ESP-02",
@@ -1123,7 +1237,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": "p5_metas_12_meses"
   },
   {
     "id": "V30-SD-ESP-03",
@@ -1143,7 +1261,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-ESP-04",
@@ -1177,7 +1299,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-ESP-05",
@@ -1197,7 +1323,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-SD-ESP-06",
@@ -1217,7 +1347,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": "p5_mudaria_uma_coisa"
   },
   {
     "id": "D-CL-01",
@@ -1249,7 +1383,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "D-CL-02",
@@ -1273,7 +1411,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "D-CL-03",
@@ -1300,7 +1442,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-MAR-01",
@@ -1341,7 +1487,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-MAR-02",
@@ -1382,7 +1532,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-MAR-03",
@@ -1423,7 +1577,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-MAR-04",
@@ -1464,7 +1622,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-MAR-05",
@@ -1505,7 +1667,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-MAR-06",
@@ -1546,7 +1712,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-NEG-01",
@@ -1587,7 +1757,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-NEG-02",
@@ -1628,7 +1802,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-NEG-03",
@@ -1669,7 +1847,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-NEG-04",
@@ -1710,7 +1892,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-NEG-05",
@@ -1751,7 +1937,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-NEG-06",
@@ -1792,7 +1982,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-COM-01",
@@ -1833,7 +2027,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-COM-02",
@@ -1874,7 +2072,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-COM-03",
@@ -1915,7 +2117,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-COM-04",
@@ -1956,7 +2162,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-COM-05",
@@ -1997,7 +2207,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-COM-06",
@@ -2038,7 +2252,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-PES-01",
@@ -2079,7 +2297,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-PES-02",
@@ -2120,7 +2342,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-PES-03",
@@ -2161,7 +2387,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-PES-04",
@@ -2202,7 +2432,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-PES-05",
@@ -2243,7 +2477,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-PES-06",
@@ -2284,7 +2522,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-ESP-01",
@@ -2304,7 +2546,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-ESP-02",
@@ -2324,7 +2570,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-ESP-03",
@@ -2344,7 +2594,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-ESP-04",
@@ -2364,7 +2618,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-ESP-05",
@@ -2384,7 +2642,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "V30-CL-ESP-06",
@@ -2404,7 +2666,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-DAD-001",
@@ -2430,7 +2696,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-DAD-002",
@@ -2457,7 +2727,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-MAR-001",
@@ -2498,7 +2772,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-MAR-002",
@@ -2539,7 +2817,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-MAR-003",
@@ -2580,7 +2862,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-MAR-004",
@@ -2621,7 +2907,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-MAR-005",
@@ -2662,7 +2952,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-MAR-006",
@@ -2703,7 +2997,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-NEG-001",
@@ -2744,7 +3042,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-NEG-002",
@@ -2785,7 +3087,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-NEG-003",
@@ -2826,7 +3132,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-NEG-004",
@@ -2867,7 +3177,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-NEG-005",
@@ -2908,7 +3222,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-NEG-006",
@@ -2949,7 +3267,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-COM-001",
@@ -2990,7 +3312,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-COM-002",
@@ -3031,7 +3357,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-COM-003",
@@ -3072,7 +3402,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-COM-004",
@@ -3113,7 +3447,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-COM-005",
@@ -3154,7 +3492,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-COM-006",
@@ -3195,7 +3537,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-PES-001",
@@ -3236,7 +3582,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-PES-002",
@@ -3277,7 +3627,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-PES-003",
@@ -3318,7 +3672,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-PES-004",
@@ -3359,7 +3717,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-PES-005",
@@ -3400,7 +3762,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-PES-006",
@@ -3441,7 +3807,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": true,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-VAL-001",
@@ -3478,7 +3848,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-VAL-002",
@@ -3515,7 +3889,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-VAL-003",
@@ -3552,7 +3930,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-EXP-001",
@@ -3572,7 +3954,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-EXP-002",
@@ -3592,7 +3978,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "CLI-VAL-004",
@@ -3629,7 +4019,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": null,
-    "aberta": false
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "AB-SD-MAR-01",
@@ -3649,7 +4043,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Identificar a razão de origem e confrontá-la com o propósito, a proposta de valor e a atuação atual.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "AB-SD-MAR-02",
@@ -3669,7 +4067,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Construção ou revisão do propósito e avaliação do alinhamento entre os sócios.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "AB-SD-MAR-03",
@@ -3689,7 +4091,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Construção da EVP, marca empregadora e identificação dos fatores de atração e retenção.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "AB-SD-MAR-04",
@@ -3709,7 +4115,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Definição da percepção futura desejada e comparação com a imagem atual.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": "p5_visao_marca"
   },
   {
     "id": "AB-SD-NEG-01",
@@ -3729,7 +4139,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Construção da proposta de valor e comparação entre a visão dos diferentes sócios.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": "p2_oferta_cliente"
   },
   {
     "id": "AB-SD-NEG-02",
@@ -3749,7 +4163,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Identificar a barreira percebida como mais crítica e confrontá-la com os indicadores quantitativos.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
   },
   {
     "id": "AB-SD-NEG-03",
@@ -3769,7 +4187,11 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Mapear referências, modelos mentais e oportunidades de aprendizagem ou diferenciação.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": "p2_marca_admirada"
   },
   {
     "id": "AB-SD-PES-01",
@@ -3789,7 +4211,293 @@ export const CATALOGO_IDENTIDADE = [
     "pontua_maturidade": false,
     "regra_condicional": null,
     "uso_relatorio": "Identificar a causa humana percebida como mais crítica e orientar as trilhas de liderança e pessoas.",
-    "aberta": true
+    "aberta": true,
+    "ajuda": null,
+    "opcoes_valores": [],
+    "perfil": "todos",
+    "chave_intake": null
+  },
+  {
+    "id": "CONS-SD-ID-01",
+    "publico": "socios",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Nome do respondente",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "texto_curto",
+    "pergunta": "Qual é o seu nome completo?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": true,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": false,
+    "ajuda": "O nome é o que permite cruzar a sua resposta com o seu Mapeamento Comportamental. Sem ele, a leitura fica coletiva.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p1_nome_completo"
+  },
+  {
+    "id": "CONS-SD-ID-02",
+    "publico": "socios",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "E-mail do respondente",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "texto_curto",
+    "pergunta": "Qual é o seu e-mail?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": true,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": false,
+    "ajuda": "Usado para parear esta resposta com o seu Mapeamento Comportamental.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "_respondente_email"
+  },
+  {
+    "id": "CONS-CL-ID-01",
+    "publico": "colaboradores",
+    "sistema": "Perfil",
+    "objetivo": "Identificação",
+    "indicador": "Nome do respondente",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "texto_curto",
+    "pergunta": "Qual é o seu nome completo?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": false,
+    "ajuda": "Opcional. Se preferir responder sem se identificar, deixe em branco — a leitura coletiva não depende disso.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "a1_nome"
+  },
+  {
+    "id": "CONS-SD-COM-01",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "Canais ativos hoje",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "Quais canais de comunicação a empresa USA HOJE de forma recorrente?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Site, blog, redes (LinkedIn / Instagram / YouTube / TikTok / outras), e-mail marketing, podcasts, eventos próprios, mídia paga, PR, etc. Diga quais canais estão ATIVOS — não os planejados.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_canais_ativos_hoje"
+  },
+  {
+    "id": "CONS-SD-COM-02",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "Papel de cada canal",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "Para cada canal ativo, qual é o papel principal hoje?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Ex.: 'LinkedIn — autoridade institucional', 'Instagram — relação com cliente final', 'E-mail — pós-venda'. Se não souber, escreva 'sem direção definida'.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_canais_papel_principal"
+  },
+  {
+    "id": "CONS-SD-COM-03",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "Equipe de comunicação",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "Quem cuida da comunicação hoje?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Time interno (com quantas pessoas e papéis), agência terceirizada, freelancers, sócio acumulando, ninguém dedicado.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_equipe_comunicacao"
+  },
+  {
+    "id": "CONS-SD-COM-04",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "Faixa de orçamento",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "selecao_unica",
+    "pergunta": "Faixa anual de investimento em comunicação (incluindo mídia, agência, produção, eventos)",
+    "opcoes": [
+      "Até R$ 50 mil/ano",
+      "R$ 50 mil a R$ 150 mil/ano",
+      "R$ 150 mil a R$ 500 mil/ano",
+      "R$ 500 mil a R$ 1,5 milhão/ano",
+      "R$ 1,5 a R$ 5 milhões/ano",
+      "Acima de R$ 5 milhões/ano",
+      "Ainda não tenho orçamento definido",
+      "Prefiro não informar"
+    ],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": false,
+    "ajuda": null,
+    "opcoes_valores": [
+      "ate_50k",
+      "50k_150k",
+      "150k_500k",
+      "500k_1.5m",
+      "1.5m_5m",
+      "acima_5m",
+      "nao_definido",
+      "prefere_nao_informar"
+    ],
+    "perfil": "consultoria",
+    "chave_intake": "p5_orcamento_comunicacao_faixa"
+  },
+  {
+    "id": "CONS-SD-COM-05",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "Observações de orçamento",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "Observações sobre o orçamento (opcional)",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Ex.: 'crescemos 30% em mídia paga este ano', 'vamos investir mais em conteúdo próprio', 'não há orçamento dedicado mas há disposição', etc.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_orcamento_comunicacao_observacoes"
+  },
+  {
+    "id": "CONS-SD-COM-06",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "O que funciona",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "Na sua comunicação hoje, o que está funcionando?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Seja honesto. Achados aqui guiam onde o plano vai investir.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_comunicacao_funciona"
+  },
+  {
+    "id": "CONS-SD-COM-07",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "O que não funciona",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "E o que NÃO está funcionando?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Achados aqui guiam onde o plano vai cortar.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_comunicacao_nao_funciona"
+  },
+  {
+    "id": "CONS-SD-COM-08",
+    "publico": "socios",
+    "sistema": "Comunicação",
+    "objetivo": "Calibragem do plano",
+    "indicador": "Objetivos de comunicação 12m",
+    "indicador_codigo": null,
+    "classificacao": "Módulo consultoria",
+    "subperfil": "todos",
+    "score_family": "none",
+    "response_type": "aberta_longa",
+    "pergunta": "O que você espera DA COMUNICAÇÃO especificamente nos próximos 12 meses?",
+    "opcoes": [],
+    "max_escolhas": null,
+    "obrigatoria": false,
+    "pontua_maturidade": false,
+    "regra_condicional": null,
+    "uso_relatorio": null,
+    "aberta": true,
+    "ajuda": "Não é meta de negócio. É o que comunicação precisa ENTREGAR — ex.: posicionamento institucional, geração de demanda qualificada, atração de talento, recall em determinada audiência, presença em prêmios.",
+    "opcoes_valores": [],
+    "perfil": "consultoria",
+    "chave_intake": "p5_objetivos_comunicacao_12m"
   }
 ];
 

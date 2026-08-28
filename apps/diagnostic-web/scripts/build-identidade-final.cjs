@@ -13,6 +13,7 @@ const path = require('path');
 const XLSX = require('xlsx');
 
 const SRC = path.join(__dirname, '..', 'data', 'identidade', 'mapa_identidade_final.xlsx');
+const MODULO = path.join(__dirname, '..', 'data', 'identidade', 'modulo_consultoria.json');
 const OUT = path.join(__dirname, '..', 'lib', 'identidade-final', 'catalog.generated.js');
 
 const PUBLICOS = ['socios', 'colaboradores', 'clientes'];
@@ -62,9 +63,29 @@ function parseRegra(txt) {
   return { depende: m[1].trim(), valores: m[2].split(';').map((s) => s.trim()).filter(Boolean) };
 }
 
+// De-para: pergunta do FINAL → chave que a esteira lê no respostas_json.
+//
+// A esteira dos 15 agentes lê ~35 chaves POR NOME (r.p2_oferta_cliente e
+// afins). Quando uma pergunta do FINAL responde a mesma coisa que uma chave
+// do intake, ela declara isso aqui e o adapter (lib/identidade-final/
+// paraIntake.js) entrega ao agente no formato que ele já espera.
+//
+// Só entra par cujo conteúdo REALMENTE corresponde. Escala não vira texto:
+// MAR-02 mede diferenciação numa escala de 4 pontos e NÃO substitui
+// p2_diferenciais, que o agente espera em texto livre. Pares assim ficam
+// de fora e aparecem como lacuna no relatório do adapter.
+const CHAVE_INTAKE = {
+  'AB-SD-NEG-01': 'p2_oferta_cliente',    // o que vende / p/ quem / transformação
+  'AB-SD-NEG-03': 'p2_marca_admirada',    // empresas de referência
+  'AB-SD-MAR-04': 'p5_visao_marca',       // como quer ser reconhecida em 3 anos
+  'V30-SD-ESP-01': 'p3_concorrentes',     // nomes dos concorrentes (sem forte/fraco)
+  'V30-SD-ESP-02': 'p5_metas_12_meses',   // temas prioritários (não metas numéricas)
+  'V30-SD-ESP-06': 'p5_mudaria_uma_coisa', // principal desalinhamento
+};
+
 // normaliza uma linha (colunas variam por aba) num item de catálogo
 function normalizar({ id, publico, sistema, objetivo, indicador, pergunta, tipo, opcoes, score_family,
-  classificacao, obrigatoria, pontua, regra, subtipo, uso }) {
+  classificacao, obrigatoria, pontua, regra, subtipo, uso, ajuda, valores, perfil, chave_intake }) {
   const rt = responseType(tipo);
   const isEscala4 = rt === 'escala4_concordancia' || rt === 'escala4_frequencia';
   const isLista = ['selecao_unica', 'multipla', 'multipla_ate3', 'ranking_top3'].includes(rt);
@@ -88,6 +109,14 @@ function normalizar({ id, publico, sistema, objetivo, indicador, pergunta, tipo,
     regra_condicional: parseRegra(regra),
     uso_relatorio: uso || null,
     aberta: rt.startsWith('aberta'),
+    ajuda: ajuda || null,
+    // Códigos gravados no lugar do rótulo, quando o agente espera código
+    // (ex.: 'ate_50k' em vez de 'Até R$ 50 mil/ano'). Paralelo a `opcoes`.
+    opcoes_valores: valores ? parseLista(valores) : [],
+    // 'todos' = todo mundo responde. 'consultoria' = só cliente de
+    // consultoria; o funil pago nunca vê.
+    perfil: perfil || 'todos',
+    chave_intake: chave_intake || CHAVE_INTAKE[String(id)] || null,
   };
 }
 
@@ -138,6 +167,15 @@ function build() {
     }));
   }
 
+  // Módulo de consultoria — perguntas que só o cliente de consultoria vê.
+  // Vem de JSON, não da planilha: é infraestrutura da esteira (as chaves que
+  // os agentes leem por nome), não instrumento de metodologia. Ver o _doc do
+  // arquivo. Regenerar a partir de uma planilha nova não apaga o módulo.
+  const modulo = JSON.parse(fs.readFileSync(MODULO, 'utf8'));
+  for (const r of modulo.perguntas || []) {
+    catalogo.push(normalizar({ ...r, perfil: 'consultoria' }));
+  }
+
   // Matriz dos 24 indicadores comparáveis
   const matriz = sheet('Matriz_24_Indicadores')
     .filter((r) => r['Código'])
@@ -152,9 +190,11 @@ function build() {
   const header =
 `// =====================================================================
 // GERADO AUTOMATICAMENTE — NÃO EDITAR À MÃO.
-// Fonte: data/identidade/mapa_identidade_final.xlsx.
+// Fontes: data/identidade/mapa_identidade_final.xlsx (instrumento)
+//         data/identidade/modulo_consultoria.json (módulo de consultoria)
 // Regenerar: node scripts/build-identidade-final.cjs
-// Perguntas: ${catalogo.length} · Indicadores comparáveis: ${matriz.length}
+// Perguntas: ${catalogo.length} (${catalogo.filter((q) => q.perfil === 'todos').length} do instrumento + ${catalogo.filter((q) => q.perfil === 'consultoria').length} do módulo de consultoria)
+// Indicadores comparáveis: ${matriz.length}
 // =====================================================================
 
 export const PUBLICOS_IDENTIDADE = ${JSON.stringify(PUBLICOS, null, 2)};
@@ -170,6 +210,21 @@ export const MATRIZ_INDICADORES = ${JSON.stringify(matriz, null, 2)};
   // sanidade
   const dup = catalogo.map((q) => q.id).filter((id, i, a) => a.indexOf(id) !== i);
   if (dup.length) throw new Error('IDs duplicados: ' + [...new Set(dup)].join(', '));
+
+  // Módulo de consultoria: toda pergunta precisa declarar a chave que
+  // alimenta, e duas perguntas não podem disputar a mesma chave — senão uma
+  // sobrescreve a outra no respostas_json e o agente lê a errada.
+  const doModulo = catalogo.filter((q) => q.perfil === 'consultoria');
+  const semChave = doModulo.filter((q) => !q.chave_intake);
+  if (semChave.length) {
+    throw new Error('módulo consultoria sem chave_intake: ' + semChave.map((q) => q.id).join(', '));
+  }
+  const chaves = catalogo.map((q) => q.chave_intake).filter(Boolean);
+  const chaveDup = chaves.filter((k, i, a) => a.indexOf(k) !== i);
+  if (chaveDup.length) {
+    throw new Error('chave_intake duplicada: ' + [...new Set(chaveDup)].join(', '));
+  }
+
   const porPub = (p) => catalogo.filter((q) => q.publico === p);
   const nucleo = (p) => porPub(p).filter((q) => q.score_family === 'maturity');
   for (const p of PUBLICOS) {
