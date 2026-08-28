@@ -6,13 +6,14 @@
 import crypto from 'crypto';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { CADASTRO_MATURIDADE } from '../../../lib/mapa-maturidade/catalog';
+import { whatsappValido } from '../../../lib/whatsapp/phone';
 
 function gerarToken() {
   return crypto.randomBytes(24).toString('hex');
 }
 
 // campos essenciais do lead (os demais do cadastro são opcionais)
-const ESSENCIAIS = ['CAD-MM-001', 'CAD-MM-002', 'CAD-MM-006']; // nome, empresa, contato
+const ESSENCIAIS = ['CAD-MM-001', 'CAD-MM-002']; // nome e empresa
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -31,7 +32,10 @@ export default async function handler(req, res) {
   // valida os essenciais (por ID de campo do catálogo)
   const faltando = ESSENCIAIS.filter((id) => !String(cadastro[id] || '').trim());
   if (faltando.length) {
-    return res.status(422).json({ success: false, error: 'Preencha nome, empresa e contato', faltando });
+    return res.status(422).json({ success: false, error: 'Preencha nome e empresa', faltando });
+  }
+  if (!whatsappValido(cadastro['CAD-MM-006'])) {
+    return res.status(422).json({ success: false, error: 'Informe um WhatsApp válido com DDD', faltando: ['CAD-MM-006'] });
   }
 
   // mantém só chaves conhecidas do cadastro (sanitização)

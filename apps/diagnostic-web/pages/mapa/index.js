@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CADASTRO_MATURIDADE } from '../../lib/mapa-maturidade/catalog';
+import { whatsappValido } from '../../lib/whatsapp/phone';
 import { MapaShell, MapaCard, sx, CORES } from '../../components/mapa/mapaTheme';
 
 // =====================================================================
@@ -19,16 +20,12 @@ export default function MapaEntradaPage() {
   const [erro, setErro] = useState(null);
 
   const completo = useMemo(
-    () => ESSENCIAIS.every((id) => String(cadastro[id] || '').trim()),
+    () => String(cadastro['CAD-MM-001'] || '').trim()
+      && String(cadastro['CAD-MM-002'] || '').trim()
+      && whatsappValido(cadastro['CAD-MM-006']),
     [cadastro]
   );
   function setCad(id, v) { setCadastro((p) => ({ ...p, [id]: v })); }
-
-  // pré-preenche o contato quando vem da área logada (/mapa?email=...)
-  useEffect(() => {
-    const e = router.query.email;
-    if (e) setCadastro((p) => (p['CAD-MM-006'] ? p : { ...p, 'CAD-MM-006': e.toString() }));
-  }, [router.query.email]);
 
   async function iniciar() {
     if (!completo) { setTentou(true); return; }
@@ -61,7 +58,8 @@ export default function MapaEntradaPage() {
           {CADASTRO_MATURIDADE.map((c) => {
             const essencial = ESSENCIAIS.includes(c.id);
             const vazio = !String(cadastro[c.id] || '').trim();
-            const invalido = tentou && essencial && vazio;
+            const whatsappInvalido = c.id === 'CAD-MM-006' && !whatsappValido(cadastro[c.id]);
+            const invalido = tentou && essencial && (vazio || whatsappInvalido);
             return (
               <div key={c.id} style={sx.campo}>
                 <label style={sx.label}>{c.pergunta} {essencial && <span style={{ color: CORES.red }}>*</span>}</label>
@@ -75,6 +73,10 @@ export default function MapaEntradaPage() {
                   </div>
                 ) : (
                   <input className="mapa-input" value={cadastro[c.id] || ''} onChange={(e) => setCad(c.id, e.target.value)}
+                    type={c.id === 'CAD-MM-006' ? 'tel' : 'text'}
+                    inputMode={c.id === 'CAD-MM-006' ? 'tel' : undefined}
+                    autoComplete={c.id === 'CAD-MM-006' ? 'tel' : undefined}
+                    placeholder={c.id === 'CAD-MM-006' ? '(11) 99999-9999' : undefined}
                     style={invalido ? { borderColor: CORES.red } : undefined} />
                 )}
               </div>
@@ -87,7 +89,7 @@ export default function MapaEntradaPage() {
           </button>
         </div>
         {tentou && !completo && (
-          <p style={{ color: CORES.red, fontSize: '0.82rem', marginTop: '0.6rem' }}>Preencha ao menos nome, empresa e contato.</p>
+          <p style={{ color: CORES.red, fontSize: '0.82rem', marginTop: '0.6rem' }}>Preencha nome, empresa e um WhatsApp válido com DDD.</p>
         )}
         {erro && <p style={{ color: CORES.red, fontSize: '0.82rem', marginTop: '0.6rem' }}>{erro}</p>}
       </MapaCard>

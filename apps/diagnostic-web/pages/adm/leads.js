@@ -17,7 +17,7 @@ const COLUNAS = [
   { key: 'started_at', label: 'Data' },
   { key: 'nome', label: 'Lead' },
   { key: 'empresa', label: 'Empresa' },
-  { key: 'contato', label: 'Contato' },
+  { key: 'contato', label: 'WhatsApp' },
   { key: 'segmento', label: 'Segmento' },
   { key: 'status', label: 'Status' },
   { key: 'score', label: 'Score' },

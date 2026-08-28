@@ -6,10 +6,18 @@ import {
   CATALOGO_MATURIDADE,
   SISTEMAS_MATURIDADE,
   REGUA_MATURIDADE,
-  CADASTRO_MATURIDADE,
+  CADASTRO_MATURIDADE as CADASTRO_MATURIDADE_GERADO,
 } from './catalog.generated.js';
 
-export { CATALOGO_MATURIDADE, SISTEMAS_MATURIDADE, REGUA_MATURIDADE, CADASTRO_MATURIDADE };
+export { CATALOGO_MATURIDADE, SISTEMAS_MATURIDADE, REGUA_MATURIDADE };
+
+// Regra atual do funil: o canal de contato é exclusivamente WhatsApp.
+// Mantemos o arquivo gerado intacto e aplicamos a regra nesta camada de acesso.
+export const CADASTRO_MATURIDADE = CADASTRO_MATURIDADE_GERADO.map((campo) => (
+  campo.id === 'CAD-MM-006'
+    ? { ...campo, campo: 'WhatsApp', pergunta: 'Qual é seu WhatsApp com DDD para receber o resultado?' }
+    : campo
+));
 
 export const VALOR_NA = -1; // "Não sei/Não se aplica" — excluído do cálculo
 export const MAX_POR_PERGUNTA = 3;

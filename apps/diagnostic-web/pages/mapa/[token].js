@@ -8,6 +8,7 @@ import {
   condicionalVisivel,
   obrigatoriasFaltando,
 } from '../../lib/mapa-maturidade/catalog';
+import { whatsappValido } from '../../lib/whatsapp/phone';
 import { MapaShell, MapaCard as Card, sx, CORES } from '../../components/mapa/mapaTheme';
 
 // =====================================================================
@@ -244,7 +245,7 @@ export default function MapaMaturidadePage() {
             </div>
             {cadastroTentou && !cadastroCompleto && (
               <p style={{ color: '#C72638', fontSize: '0.82rem', marginTop: '0.6rem' }}>
-                Preencha ao menos nome, empresa e contato para continuar.
+                Preencha nome, empresa e um WhatsApp válido com DDD para continuar.
               </p>
             )}
           </Card>
@@ -347,13 +348,16 @@ export default function MapaMaturidadePage() {
 const estiloPergunta = { margin: '0.5rem 0 1.2rem', lineHeight: 1.55, fontSize: '1.12rem', color: CORES.text, fontWeight: 500 };
 
 function cadastroEssencialOk(cad) {
-  return ['CAD-MM-001', 'CAD-MM-002', 'CAD-MM-006'].every((id) => String(cad?.[id] || '').trim());
+  return String(cad?.['CAD-MM-001'] || '').trim()
+    && String(cad?.['CAD-MM-002'] || '').trim()
+    && whatsappValido(cad?.['CAD-MM-006']);
 }
 
 function CadastroCampo({ c, val, onChange, erro }) {
   const essencial = ['CAD-MM-001', 'CAD-MM-002', 'CAD-MM-006'].includes(c.id);
   const vazio = !String(val || '').trim();
-  const borda = erro && essencial && vazio ? '1px solid #C72638' : '1px solid rgba(255,255,255,0.16)';
+  const whatsappInvalido = c.id === 'CAD-MM-006' && !whatsappValido(val);
+  const borda = erro && essencial && (vazio || whatsappInvalido) ? '1px solid #C72638' : '1px solid rgba(255,255,255,0.16)';
   return (
     <div style={sx.ctxCampo}>
       <label style={sx.ctxLabel}>
@@ -369,6 +373,10 @@ function CadastroCampo({ c, val, onChange, erro }) {
         </div>
       ) : (
         <input value={val || ''} onChange={(e) => onChange(c.id, e.target.value)}
+          type={c.id === 'CAD-MM-006' ? 'tel' : 'text'}
+          inputMode={c.id === 'CAD-MM-006' ? 'tel' : undefined}
+          autoComplete={c.id === 'CAD-MM-006' ? 'tel' : undefined}
+          placeholder={c.id === 'CAD-MM-006' ? '(11) 99999-9999' : undefined}
           style={{ ...sx.ctxInput, border: borda }} />
       )}
     </div>

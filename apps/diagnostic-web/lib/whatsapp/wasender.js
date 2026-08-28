@@ -1,19 +1,7 @@
 // Envio de mensagens WhatsApp via WaSenderAPI (wasenderapi.com).
 // Env: WASENDERAPI (Bearer token da sessão conectada).
 
-// Extrai/normaliza um telefone BR do campo livre de contato para E.164.
-// Aceita "(11) 98765-4321", "11987654321", "5511987654321", "+55 11 ...".
-// Retorna null quando o texto não parece um telefone (ex.: é um e-mail).
-export function extrairTelefone(contato) {
-  const s = String(contato || '');
-  if (s.includes('@')) return null;
-  const digitos = s.replace(/\D/g, '');
-  if (digitos.length === 10 || digitos.length === 11) return `+55${digitos}`;
-  if ((digitos.length === 12 || digitos.length === 13) && digitos.startsWith('55')) return `+${digitos}`;
-  // internacional explícito (já veio com +)
-  if (/^\s*\+/.test(s) && digitos.length >= 8 && digitos.length <= 15) return `+${digitos}`;
-  return null;
-}
+export { extrairTelefone } from './phone';
 
 export async function sendWhatsAppText({ to, text }) {
   const key = process.env.WASENDERAPI;

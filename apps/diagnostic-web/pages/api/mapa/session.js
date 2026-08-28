@@ -7,6 +7,7 @@
 
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { perguntaById, labelFrequencia } from '../../../lib/mapa-maturidade/catalog';
+import { whatsappValido } from '../../../lib/whatsapp/phone';
 
 const VALORES_VALIDOS = [-1, 0, 1, 2, 3];
 
@@ -70,6 +71,9 @@ export default async function handler(req, res) {
     // cadastro/lead (jsonb) e extras não-pontuados (atributos de marca)
     const patch = {};
     if (cadastro && typeof cadastro === 'object') {
+      if ('CAD-MM-006' in cadastro && !whatsappValido(cadastro['CAD-MM-006'])) {
+        return res.status(422).json({ success: false, error: 'Informe um WhatsApp válido com DDD' });
+      }
       patch.cadastro_json = { ...(assessment.cadastro_json || {}), ...cadastro };
     }
     if (extras && typeof extras === 'object') {
