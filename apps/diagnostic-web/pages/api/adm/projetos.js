@@ -24,6 +24,10 @@ export default async function handler(req, res) {
       return res.status(403).json({ success: false, error: 'Perfil não encontrado' });
     }
 
+    if (!['master', 'admin'].includes(profile.role)) {
+      return res.status(403).json({ success: false, error: 'Sem permissão' });
+    }
+
     const isMaster = profile.role === 'master';
 
     const userEmail = user.email;

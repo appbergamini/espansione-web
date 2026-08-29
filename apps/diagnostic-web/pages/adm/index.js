@@ -29,7 +29,8 @@ export default function AdminPanel() {
         .eq('id', user.id)
         .single();
       if (!active) return;
-      if (profile?.role !== 'master' && profile?.role !== 'admin') router.replace('/dashboard');
+      if (profile?.role === 'digital') router.replace('/adm/leads');
+      else if (profile?.role !== 'master' && profile?.role !== 'admin') router.replace('/dashboard');
     }
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
