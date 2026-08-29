@@ -2,6 +2,10 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Logo from '../../components/Logo';
+import { supabase } from '../../lib/supabaseClient';
+import { getServerUser } from '../../lib/getServerUser';
+import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { ROLES_LEADS } from '../../lib/api/auth';
 
 // Painel de leads do funil do Mapa (teste grátis em /mapa). Master/admin.
 const STATUS = {
@@ -56,8 +60,28 @@ function comparar(a, b, key, direction) {
   return direction === 'asc' ? resultado : -resultado;
 }
 
-export default function AdminLeads() {
+// Porta de entrada da página: exige sessão e um dos papéis de ROLES_LEADS
+// (master/admin veem tudo; 'digital' só enxerga este painel).
+export async function getServerSideProps({ req, res }) {
+  const { user } = await getServerUser(req, res);
+  if (!user) return { redirect: { destination: '/login?next=/adm/leads', permanent: false } };
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile || !ROLES_LEADS.includes(profile.role)) {
+    return { redirect: { destination: '/dashboard', permanent: false } };
+  }
+
+  return { props: { role: profile.role } };
+}
+
+export default function AdminLeads({ role }) {
   const router = useRouter();
+  const soLeads = role === 'digital';
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
@@ -101,7 +125,11 @@ export default function AdminLeads() {
               <div style={{ height: '64px', width: '1px', background: 'var(--glass-border)' }} />
               <h1 style={{ fontSize: '1.5rem' }}>🧲 Leads do Mapa</h1>
             </div>
-            <button onClick={() => router.push('/adm')} style={sx.back}>← Painel</button>
+            {soLeads ? (
+              <button onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }} style={sx.back}>Sair</button>
+            ) : (
+              <button onClick={() => router.push('/adm')} style={sx.back}>← Painel</button>
+            )}
           </div>
 
           <div className="glass-card">

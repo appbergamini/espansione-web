@@ -8,6 +8,10 @@ import { httpErrors } from './http';
 
 const ROLES_ADMIN = ['master', 'admin'];
 
+// Papel do time de digital: enxerga apenas o painel de leads do funil (/adm/leads).
+// Qualquer outra rota /adm continua restrita a master/admin.
+export const ROLES_LEADS = [...ROLES_ADMIN, 'digital'];
+
 /** Exige um usuário autenticado. @returns o user. */
 export async function requireUser(req, res) {
   const { user } = await getServerUser(req, res);

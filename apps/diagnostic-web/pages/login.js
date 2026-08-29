@@ -28,7 +28,13 @@ export default function Login() {
         .single();
 
       const adminRoles = ['master', 'admin'];
-      router.push(adminRoles.includes(profile?.role) ? '/adm' : '/dashboard');
+      const destino = typeof router.query.next === 'string' && router.query.next.startsWith('/') && !router.query.next.startsWith('//')
+        ? router.query.next
+        // O time de digital só tem o painel de leads.
+        : profile?.role === 'digital' ? '/adm/leads'
+        : adminRoles.includes(profile?.role) ? '/adm'
+        : '/dashboard';
+      router.push(destino);
     } catch (err) {
       setErrorMsg(err.message || 'Erro ao entrar.');
     } finally {

@@ -1,13 +1,13 @@
-// GET /api/adm/leads — admin (master/admin). Lista os leads do funil do Mapa:
+// GET /api/adm/leads — admin (master/admin) e time de digital. Lista os leads do funil do Mapa:
 // quem preencheu o cadastro em /mapa (mapa_assessments sem projeto vinculado).
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { createApiHandler } from '../../../lib/api/http';
-import { requireRole } from '../../../lib/api/auth';
+import { requireRole, ROLES_LEADS } from '../../../lib/api/auth';
 import { perguntasQuePontuam } from '../../../lib/mapa-maturidade/catalog';
 
 export default createApiHandler({
   async GET(req, res) {
-    await requireRole(req, res);
+    await requireRole(req, res, ROLES_LEADS);
     const db = supabaseAdmin;
 
     const { data, error } = await db
