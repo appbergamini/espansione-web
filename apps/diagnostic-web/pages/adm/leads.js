@@ -13,24 +13,28 @@ const STATUS = {
   em_andamento: { txt: 'Em andamento', cor: '#fde68a', bg: 'rgba(234,179,8,0.15)' },
 };
 
+function horaBr(iso) {
+  try { return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
+}
+
 function dataBr(iso) {
-  try { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return '—'; }
+  try { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }); } catch { return '—'; }
 }
 
 const COLUNAS = [
-  { key: 'started_at', label: 'Data' },
-  { key: 'nome', label: 'Lead' },
-  { key: 'empresa', label: 'Empresa' },
-  { key: 'contato', label: 'WhatsApp' },
-  { key: 'segmento', label: 'Segmento' },
-  { key: 'utm_source', label: 'Origem' },
-  { key: 'utm_medium', label: 'Mídia' },
-  { key: 'utm_campaign', label: 'Campanha' },
-  { key: 'utm_content', label: 'Conteúdo' },
-  { key: 'utm_term', label: 'Termo' },
-  { key: 'status', label: 'Status' },
-  { key: 'score', label: 'Score' },
-  { key: 'relatorio', label: 'Relatório', align: 'right' },
+  { key: 'started_at', label: 'Data', largura: '7%' },
+  { key: 'nome', label: 'Lead', largura: '10%' },
+  { key: 'empresa', label: 'Empresa', largura: '10%' },
+  { key: 'contato', label: 'WhatsApp', largura: '9%' },
+  { key: 'segmento', label: 'Segmento', largura: '8%' },
+  { key: 'utm_source', label: 'Origem', largura: '7%' },
+  { key: 'utm_medium', label: 'Mídia', largura: '6%' },
+  { key: 'utm_campaign', label: 'Campanha', largura: '9%' },
+  { key: 'utm_content', label: 'Conteúdo', largura: '7.5%' },
+  { key: 'utm_term', label: 'Termo', largura: '6%' },
+  { key: 'status', label: 'Status', largura: '8.5%' },
+  { key: 'score', label: 'Score', largura: '7%' },
+  { key: 'relatorio', label: 'Relatório', largura: '4.5%', align: 'right' },
 ];
 
 function valorOrdenacao(lead, key) {
@@ -39,6 +43,13 @@ function valorOrdenacao(lead, key) {
   if (key === 'relatorio') return lead.status === 'concluido' ? 1 : 0;
   if (key === 'status') return STATUS[lead.status]?.txt || lead.status;
   return lead[key];
+}
+
+// UTMs podem vir com nomes de campanha enormes; cortamos a largura da coluna
+// e deixamos o valor inteiro no title (hover) para a tabela nao esticar.
+function Utm({ valor }) {
+  if (!valor) return '—';
+  return <span title={valor} style={sx.trunc}>{valor}</span>;
 }
 
 function comparar(a, b, key, direction) {
@@ -118,7 +129,7 @@ export default function AdminLeads({ role }) {
     <>
       <Head><title>Leads do Mapa · Espansione</title></Head>
       <div className="page-container">
-        <main className="container">
+        <main className="container" style={{ maxWidth: 1680 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <Logo size="lg" showTagline={false} />
@@ -149,7 +160,10 @@ export default function AdminLeads({ role }) {
               <div style={sx.empty}>Nenhum lead ainda.</div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <table style={{ width: '100%', minWidth: 1120, borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem', tableLayout: 'fixed' }}>
+                  <colgroup>
+                    {COLUNAS.map((coluna) => <col key={coluna.key} style={{ width: coluna.largura }} />)}
+                  </colgroup>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
                       {COLUNAS.map((coluna) => {
@@ -181,10 +195,13 @@ export default function AdminLeads({ role }) {
                   <tbody>
                     {leadsOrdenados.map((l) => {
                       const st = STATUS[l.status] || { txt: l.status || '—', cor: '#9aa3ad', bg: 'rgba(255,255,255,0.06)' };
-                      const progresso = l.status !== 'concluido' ? ` · ${l.respondidas}/${l.total_perguntas}` : '';
+                      const progresso = l.status !== 'concluido' ? `${l.respondidas}/${l.total_perguntas} respostas` : '';
                       return (
                         <tr key={l.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                          <td style={sx.td}>{dataBr(l.started_at)}</td>
+                          <td style={{ ...sx.td, whiteSpace: 'nowrap' }}>
+                            {dataBr(l.started_at)}
+                            <div style={sx.sub}>{horaBr(l.started_at)}</div>
+                          </td>
                           <td style={sx.td}>
                             {l.nome || <span style={{ color: 'var(--text-secondary)' }}>—</span>}
                             {l.papel && <div style={sx.sub}>{l.papel}</div>}
@@ -193,18 +210,24 @@ export default function AdminLeads({ role }) {
                             {l.empresa || <span style={{ color: 'var(--text-secondary)' }}>—</span>}
                             {l.porte && <div style={sx.sub}>{l.porte} pessoas</div>}
                           </td>
-                          <td style={sx.td}>{l.contato || <span style={{ color: 'var(--text-secondary)' }}>—</span>}</td>
-                          <td style={sx.td}>{l.segmento || '—'}</td>
-                          <td style={sx.td}>{l.utm_source || '—'}</td>
-                          <td style={sx.td}>{l.utm_medium || '—'}</td>
-                          <td style={sx.td}>{l.utm_campaign || '—'}</td>
-                          <td style={sx.td}>{l.utm_content || '—'}</td>
-                          <td style={sx.td}>{l.utm_term || '—'}</td>
-                          <td style={sx.td}><span style={{ ...sx.pill, color: st.cor, background: st.bg }}>{st.txt}{progresso}</span></td>
+                          <td style={sx.td}><span style={sx.trunc} title={l.contato || ''}>{l.contato || <span style={{ color: 'var(--text-secondary)' }}>—</span>}</span></td>
+                          <td style={sx.td}><span style={sx.trunc} title={l.segmento || ''}>{l.segmento || '—'}</span></td>
+                          <td style={sx.td}><Utm valor={l.utm_source} /></td>
+                          <td style={sx.td}><Utm valor={l.utm_medium} /></td>
+                          <td style={sx.td}><Utm valor={l.utm_campaign} /></td>
+                          <td style={sx.td}><Utm valor={l.utm_content} /></td>
+                          <td style={sx.td}><Utm valor={l.utm_term} /></td>
                           <td style={sx.td}>
-                            {l.score != null
-                              ? <><b>{Math.round(l.score)}%</b>{l.nivel ? <span style={{ color: 'var(--text-secondary)' }}> · N{l.nivel}</span> : null}</>
-                              : '—'}
+                            <span style={{ ...sx.pill, color: st.cor, background: st.bg }}>{st.txt}</span>
+                            {progresso && <div style={sx.sub}>{progresso}</div>}
+                          </td>
+                          <td style={sx.td}>
+                            {l.score != null ? (
+                              <>
+                                <b>{Math.round(l.score)}%</b>
+                                {l.nivel && <div style={{ ...sx.sub, ...sx.trunc }} title={l.nivel}>{l.nivel}</div>}
+                              </>
+                            ) : '—'}
                           </td>
                           <td style={{ ...sx.td, textAlign: 'right' }}>
                             {l.status === 'concluido'
@@ -227,10 +250,11 @@ export default function AdminLeads({ role }) {
 
 const sx = {
   back: { padding: '0.5rem 1rem', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 8, color: 'var(--text-secondary)', cursor: 'pointer' },
-  th: { padding: '0.8rem 1rem', fontWeight: 500 },
+  th: { padding: '0.7rem 0.6rem', fontWeight: 500 },
   sortButton: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem', width: '100%', padding: 0, border: 0, background: 'transparent', color: 'inherit', font: 'inherit', fontWeight: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' },
   sortIcon: { width: '1rem', color: '#fca5b0', fontSize: '0.85rem' },
-  td: { padding: '0.8rem 1rem', verticalAlign: 'top' },
+  td: { padding: '0.7rem 0.6rem', verticalAlign: 'top' },
+  trunc: { display: 'block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   sub: { color: 'var(--text-secondary)', fontSize: '0.78rem', marginTop: 2 },
   empty: { textAlign: 'center', padding: '2.5rem', color: 'var(--text-secondary)' },
   pill: { fontSize: '0.76rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 99, whiteSpace: 'nowrap' },
