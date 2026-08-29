@@ -1,5 +1,8 @@
 {
   "framework": "nextjs",
+  "regions": [
+    "pdx1"
+  ],
   "functions": {
     "pages/api/outputs/[projetoId]/[stage]/pdf.js": {
       "maxDuration": 60,
